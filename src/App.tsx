@@ -45,10 +45,11 @@ function App() {
             <CardBody>
               <Stack divider={<StackDivider />}>
                 <HStack p={{md: '2'}}>
-                  <Stack w={'100%'} direction={{base: 'column', md: 'row'}}>
+                  <Flex w={'100%'}
+                        flexDirection={{base: 'column', md: 'row'}}
+                        alignItems={{base: 'flex-start', md: 'center'}}
+                        >
                     <Stack w={{base: '100%', md: '180px'}}
-                           textAlign={{base: 'left', md: 'center'}}
-                           display={{base: 'flex', md: 'block'}}
                            direction={{base: 'row', md: 'column'}}
                            spacing={'0'}
                            alignItems={{base: 'baseline', md: 'center'}}
@@ -92,15 +93,16 @@ function App() {
                         </Button>
                       </HStack>
                     </Box>
-                  </Stack>
+                  </Flex>
                   <Spacer />
                   <ChevronRight display={{md: 'none'}} />
                 </HStack>
                 <HStack p={{md: '2'}}>
-                  <Stack w={'100%'} direction={{base: 'column', md: 'row'}}>
+                  <Flex w={'100%'}
+                        flexDirection={{base: 'column', md: 'row'}}
+                        alignItems={{base: 'flex-start', md: 'center'}}
+                        >
                     <Stack w={{base: '100%', md: '180px'}}
-                           textAlign={{base: 'left', md: 'center'}}
-                           display={{base: 'flex', md: 'block'}}
                            direction={{base: 'row', md: 'column'}}
                            spacing={'0'}
                            alignItems={{base: 'baseline', md: 'center'}}
@@ -153,7 +155,7 @@ function App() {
                         </Button>
                       </HStack>
                     </Box>
-                  </Stack>
+                  </Flex>
                   <Spacer />
                   <ChevronRight display={{md: 'none'}} />
                 </HStack>
@@ -170,11 +172,12 @@ function App() {
             
             <CardBody>
               <Stack divider={<StackDivider />}>
-              <HStack p={{md: '2'}}>
-                  <Stack w={'100%'} direction={{base: 'column', md: 'row'}}>
+                <HStack p={{md: '2'}}>
+                  <Flex w={'100%'}
+                        flexDirection={{base: 'column', md: 'row'}}
+                        alignItems={{base: 'flex-start', md: 'center'}}
+                        >
                     <Stack w={{base: '100%', md: '180px'}}
-                           textAlign={{base: 'left', md: 'center'}}
-                           display={{base: 'flex', md: 'block'}}
                            direction={{base: 'row', md: 'column'}}
                            spacing={'0'}
                            alignItems={{base: 'baseline', md: 'center'}}
@@ -212,7 +215,7 @@ function App() {
                         </Button>
                       </HStack>
                     </Box>
-                  </Stack>
+                  </Flex>
                   <Spacer />
                   <ChevronRight display={{md: 'none'}} />
                 </HStack>
