@@ -127,6 +127,12 @@ function App() {
                       <HStack mt={'2'}>
                         <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
                           <HStack>
+                            <Hash />
+                            <Text fontSize={'sm'} noOfLines={1} isTruncated={'true'}>
+                              信玄パイ
+                            </Text>
+                          </HStack>
+                          <HStack>
                             <GeoAlt />
                             <Text fontSize={'sm'} noOfLines={1} isTruncated={'true'}>
                               山梨県甲府市北口2丁目8番1号 山梨県立図書館 交流ルーム 102 号室
