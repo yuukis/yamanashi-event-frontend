@@ -75,8 +75,13 @@ function App() {
                         <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
                           <HStack>
                             <GeoAlt />
-                            <Text fontSize={'sm'} noOfLines={1} isTruncated={'true'}>
-                              山梨県甲府市中央4丁目3-20 コットンクラブ
+                            <Text fontSize={'sm'} noOfLines={1}>
+                              山梨県甲府市中央4丁目3-20
+                            </Text>
+                          </HStack>
+                          <HStack ml={'24px'} mt={{base: '0', md: '-0.5rem'}}>
+                            <Text fontSize={'sm'} noOfLines={1}>
+                              コットンクラブ
                             </Text>
                           </HStack>
                           <HStack>
@@ -130,14 +135,19 @@ function App() {
                         <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
                           <HStack>
                             <Hash />
-                            <Text fontSize={'sm'} noOfLines={1} isTruncated={'true'}>
+                            <Text fontSize={'sm'} noOfLines={1}>
                               信玄パイ
                             </Text>
                           </HStack>
                           <HStack>
                             <GeoAlt />
-                            <Text fontSize={'sm'} noOfLines={1} isTruncated={'true'}>
-                              山梨県甲府市北口2丁目8番1号 山梨県立図書館 交流ルーム 102 号室
+                            <Text fontSize={'sm'} noOfLines={1}>
+                              山梨県甲府市北口2丁目8番1号
+                            </Text>
+                          </HStack>
+                          <HStack ml={'24px'} mt={{base: '0', md: '-0.5rem'}}>
+                            <Text fontSize={'sm'} noOfLines={1}>
+                              山梨県立図書館 交流ルーム 102 号室
                             </Text>
                           </HStack>
                           <HStack>
