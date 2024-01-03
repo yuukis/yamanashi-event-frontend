@@ -47,20 +47,21 @@ function App() {
                 <HStack p={{md: '2'}}>
                   <Flex w={'100%'}
                         flexDirection={{base: 'column', md: 'row'}}
-                        alignItems={{base: 'flex-start', md: 'center'}}
+                        alignItems={{base: 'flex-start', md: 'stretch'}}
                         >
                     <Stack w={{base: '100%', md: '180px'}}
                            direction={{base: 'row', md: 'column'}}
                            spacing={'0'}
                            alignItems={{base: 'baseline', md: 'center'}}
+                           mt={{base: '0', md: '-0.5rem'}}
                            >
                       <HStack spacing={'0'}
                               justifyContent={{base: 'flex-start', md: 'center'}}
                               >
-                        <Text fontSize={{base: '2xl', md:'5xl'}} fontWeight={'bold'} letterSpacing={{md: '0.1rem'}}>
+                        <Text fontSize={{base: '2xl', md:'4xl'}} fontWeight={'bold'} letterSpacing={{md: '0.1rem'}}>
                           12
                         </Text>
-                        <Text fontSize={{base: '2xl', md:'5xl'}} fontWeight={'light'} letterSpacing={{md: '0.1rem'}}>
+                        <Text fontSize={{base: '2xl', md:'4xl'}} fontWeight={'light'} letterSpacing={{md: '0.1rem'}}>
                           /2
                         </Text>
                       </HStack>
@@ -70,6 +71,7 @@ function App() {
                         (土) 15:00-
                       </Text>
                     </Stack>
+                    <Box w={'2'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
                     <Box w={'100%'}>
                       <Heading fontSize={'1rem'}>
                         おいでなって！ビルド山梨
@@ -109,20 +111,21 @@ function App() {
                 <HStack p={{md: '2'}}>
                   <Flex w={'100%'}
                         flexDirection={{base: 'column', md: 'row'}}
-                        alignItems={{base: 'flex-start', md: 'center'}}
+                        alignItems={{base: 'flex-start', md: 'stretch'}}
                         >
                     <Stack w={{base: '100%', md: '180px'}}
                            direction={{base: 'row', md: 'column'}}
                            spacing={'0'}
                            alignItems={{base: 'baseline', md: 'center'}}
+                           mt={{base: '0', md: '-0.5rem'}}
                            >
                       <HStack spacing={'0'}
                               justifyContent={{base: 'flex-start', md: 'center'}}
                               >
-                        <Text fontSize={{base: '2xl', md:'5xl'}} fontWeight={'bold'} letterSpacing={{md: '0.1rem'}}>
+                        <Text fontSize={{base: '2xl', md:'4xl'}} fontWeight={'bold'} letterSpacing={{md: '0.1rem'}}>
                           1
                         </Text>
-                        <Text fontSize={{base: '2xl', md:'5xl'}} fontWeight={'light'} letterSpacing={{md: '0.1rem'}}>
+                        <Text fontSize={{base: '2xl', md:'4xl'}} fontWeight={'light'} letterSpacing={{md: '0.1rem'}}>
                           /28
                         </Text>
                       </HStack>
@@ -132,6 +135,7 @@ function App() {
                         (日) 13:00-
                       </Text>
                     </Stack>
+                    <Box w={'2'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
                     <Box w={'100%'}>
                       <Heading fontSize={'1rem'}>
                         [Shingen.py] ワイン産地を支える! Pythonで山梨の気象データ分析とWeb公開
@@ -193,20 +197,21 @@ function App() {
                 <HStack p={{md: '2'}}>
                   <Flex w={'100%'}
                         flexDirection={{base: 'column', md: 'row'}}
-                        alignItems={{base: 'flex-start', md: 'center'}}
+                        alignItems={{base: 'flex-start', md: 'stretch'}}
                         >
                     <Stack w={{base: '100%', md: '180px'}}
                            direction={{base: 'row', md: 'column'}}
                            spacing={'0'}
                            alignItems={{base: 'baseline', md: 'center'}}
+                           mt={{base: '0', md: '-0.5rem'}}
                            >
                       <HStack spacing={'0'}
                               justifyContent={{base: 'flex-start', md: 'center'}}
                               >
-                        <Text fontSize={{base: '2xl', md:'5xl'}} fontWeight={'bold'} letterSpacing={{md: '0.1rem'}}>
+                        <Text fontSize={{base: '2xl', md:'4xl'}} fontWeight={'bold'} letterSpacing={{md: '0.1rem'}}>
                           11
                         </Text>
-                        <Text fontSize={{base: '2xl', md:'5xl'}} fontWeight={'light'} letterSpacing={{md: '0.1rem'}}>
+                        <Text fontSize={{base: '2xl', md:'4xl'}} fontWeight={'light'} letterSpacing={{md: '0.1rem'}}>
                           /23
                         </Text>
                       </HStack>
@@ -216,6 +221,7 @@ function App() {
                         (木) 20:00-
                       </Text>
                     </Stack>
+                    <Box w={'2'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
                     <Box w={'100%'}>
                       <Heading fontSize={'1rem'}>
                       第23回 富士もくもく会（オンライン）
