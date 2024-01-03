@@ -64,7 +64,11 @@ function App() {
                           /2
                         </Text>
                       </HStack>
-                      <Text fontSize={'lg'}>(土) 15:00-</Text>
+                      <Text fontSize={'lg'}
+                            mt={{md: '-0.5rem'}}
+                            >
+                        (土) 15:00-
+                      </Text>
                     </Stack>
                     <Box w={'100%'}>
                       <Heading fontSize={'1rem'}>
@@ -122,7 +126,11 @@ function App() {
                           /28
                         </Text>
                       </HStack>
-                      <Text fontSize={'lg'}>(日) 13:00-</Text>
+                      <Text fontSize={'lg'}
+                            mt={{md: '-0.5rem'}}
+                            >
+                        (日) 13:00-
+                      </Text>
                     </Stack>
                     <Box w={'100%'}>
                       <Heading fontSize={'1rem'}>
@@ -202,7 +210,11 @@ function App() {
                           /23
                         </Text>
                       </HStack>
-                      <Text fontSize={'lg'}>(木) 20:00-</Text>
+                      <Text fontSize={'lg'}
+                            mt={{md: '-0.5rem'}}
+                            >
+                        (木) 20:00-
+                      </Text>
                     </Stack>
                     <Box w={'100%'}>
                       <Heading fontSize={'1rem'}>
