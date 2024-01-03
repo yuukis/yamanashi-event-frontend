@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import './style.css';
 import {
   Container,
@@ -23,6 +24,13 @@ import {
 } from '@chakra-icons/bootstrap';
 
 function App() {
+  useEffect(() => {
+    fetch('http://localhost:8000/events')
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error(error));
+  }, []);
+
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <Container maxW={'800px'} w={'100%'}>
