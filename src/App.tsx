@@ -45,10 +45,11 @@ function App() {
             <CardBody>
               <Stack divider={<StackDivider />}>
                 <HStack p={{md: '2'}}>
-                  <Stack w={'100%'} direction={{base: 'column', md: 'row'}}>
+                  <Flex w={'100%'}
+                        flexDirection={{base: 'column', md: 'row'}}
+                        alignItems={{base: 'flex-start', md: 'center'}}
+                        >
                     <Stack w={{base: '100%', md: '180px'}}
-                           textAlign={{base: 'left', md: 'center'}}
-                           display={{base: 'flex', md: 'block'}}
                            direction={{base: 'row', md: 'column'}}
                            spacing={'0'}
                            alignItems={{base: 'baseline', md: 'center'}}
@@ -63,7 +64,11 @@ function App() {
                           /2
                         </Text>
                       </HStack>
-                      <Text fontSize={'lg'}>(土) 15:00-</Text>
+                      <Text fontSize={'lg'}
+                            mt={{md: '-0.5rem'}}
+                            >
+                        (土) 15:00-
+                      </Text>
                     </Stack>
                     <Box w={'100%'}>
                       <Heading fontSize={'1rem'}>
@@ -74,8 +79,13 @@ function App() {
                         <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
                           <HStack>
                             <GeoAlt />
-                            <Text fontSize={'sm'} noOfLines={1} isTruncated={'true'}>
-                              山梨県甲府市中央4丁目3-20 コットンクラブ
+                            <Text fontSize={'sm'} noOfLines={1}>
+                              山梨県甲府市中央4丁目3-20
+                            </Text>
+                          </HStack>
+                          <HStack ml={'24px'} mt={{base: '0', md: '-0.5rem'}}>
+                            <Text fontSize={'sm'} noOfLines={1}>
+                              コットンクラブ
                             </Text>
                           </HStack>
                           <HStack>
@@ -92,15 +102,16 @@ function App() {
                         </Button>
                       </HStack>
                     </Box>
-                  </Stack>
+                  </Flex>
                   <Spacer />
                   <ChevronRight display={{md: 'none'}} />
                 </HStack>
                 <HStack p={{md: '2'}}>
-                  <Stack w={'100%'} direction={{base: 'column', md: 'row'}}>
+                  <Flex w={'100%'}
+                        flexDirection={{base: 'column', md: 'row'}}
+                        alignItems={{base: 'flex-start', md: 'center'}}
+                        >
                     <Stack w={{base: '100%', md: '180px'}}
-                           textAlign={{base: 'left', md: 'center'}}
-                           display={{base: 'flex', md: 'block'}}
                            direction={{base: 'row', md: 'column'}}
                            spacing={'0'}
                            alignItems={{base: 'baseline', md: 'center'}}
@@ -115,7 +126,11 @@ function App() {
                           /28
                         </Text>
                       </HStack>
-                      <Text fontSize={'lg'}>(日) 13:00-</Text>
+                      <Text fontSize={'lg'}
+                            mt={{md: '-0.5rem'}}
+                            >
+                        (日) 13:00-
+                      </Text>
                     </Stack>
                     <Box w={'100%'}>
                       <Heading fontSize={'1rem'}>
@@ -127,9 +142,20 @@ function App() {
                       <HStack mt={'2'}>
                         <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
                           <HStack>
+                            <Hash />
+                            <Text fontSize={'sm'} noOfLines={1}>
+                              信玄パイ
+                            </Text>
+                          </HStack>
+                          <HStack>
                             <GeoAlt />
-                            <Text fontSize={'sm'} noOfLines={1} isTruncated={'true'}>
-                              山梨県甲府市北口2丁目8番1号 山梨県立図書館 交流ルーム 102 号室
+                            <Text fontSize={'sm'} noOfLines={1}>
+                              山梨県甲府市北口2丁目8番1号
+                            </Text>
+                          </HStack>
+                          <HStack ml={'24px'} mt={{base: '0', md: '-0.5rem'}}>
+                            <Text fontSize={'sm'} noOfLines={1}>
+                              山梨県立図書館 交流ルーム 102 号室
                             </Text>
                           </HStack>
                           <HStack>
@@ -147,7 +173,7 @@ function App() {
                         </Button>
                       </HStack>
                     </Box>
-                  </Stack>
+                  </Flex>
                   <Spacer />
                   <ChevronRight display={{md: 'none'}} />
                 </HStack>
@@ -164,11 +190,12 @@ function App() {
             
             <CardBody>
               <Stack divider={<StackDivider />}>
-              <HStack p={{md: '2'}}>
-                  <Stack w={'100%'} direction={{base: 'column', md: 'row'}}>
+                <HStack p={{md: '2'}}>
+                  <Flex w={'100%'}
+                        flexDirection={{base: 'column', md: 'row'}}
+                        alignItems={{base: 'flex-start', md: 'center'}}
+                        >
                     <Stack w={{base: '100%', md: '180px'}}
-                           textAlign={{base: 'left', md: 'center'}}
-                           display={{base: 'flex', md: 'block'}}
                            direction={{base: 'row', md: 'column'}}
                            spacing={'0'}
                            alignItems={{base: 'baseline', md: 'center'}}
@@ -183,7 +210,11 @@ function App() {
                           /23
                         </Text>
                       </HStack>
-                      <Text fontSize={'lg'}>(木) 20:00-</Text>
+                      <Text fontSize={'lg'}
+                            mt={{md: '-0.5rem'}}
+                            >
+                        (木) 20:00-
+                      </Text>
                     </Stack>
                     <Box w={'100%'}>
                       <Heading fontSize={'1rem'}>
@@ -206,7 +237,7 @@ function App() {
                         </Button>
                       </HStack>
                     </Box>
-                  </Stack>
+                  </Flex>
                   <Spacer />
                   <ChevronRight display={{md: 'none'}} />
                 </HStack>
