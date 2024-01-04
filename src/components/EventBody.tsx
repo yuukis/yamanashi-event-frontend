@@ -6,7 +6,8 @@ import {
   Heading,
   Text,
   Button,
-  Flex
+  Flex,
+  useMediaQuery
 } from '@chakra-ui/react';
 import {
   Hash,
@@ -33,9 +34,11 @@ export function EventBody(data: any) {
   const group_name = event.group_name;
   const group_url = event.group_url;
 
+  const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
+
   return (
     <HStack p={{md: '2'}}
-            onClick={() => window.open(event_url)}
+            onClick={() => { if (!isDesktopScreenSize) window.open(event_url, '_self') }}
             >
     <Flex w={'100%'}
           flexDirection={{base: 'column', md: 'row'}}
