@@ -22,7 +22,7 @@ function App() {
   useEffect(() => {
     const getData = async () => {
       // const res = await axios.get('http://localhost:8000/events');
-      const res = await axios.get('http://api.event.yamanashi.dev/events');
+      const res = await axios.get('https://api.event.yamanashi.dev/events');
       setData(res.data);
     }
     getData();
