@@ -12,10 +12,13 @@ import {
   Card,
   CardBody,
   Heading,
-  Text
+  Text,
+  Link,
+  Spacer
 } from '@chakra-ui/react';
 import {
-  Calendar2EventFill
+  Calendar2EventFill,
+  Github
 } from '@chakra-icons/bootstrap';
 
 function App() {
@@ -55,9 +58,13 @@ function App() {
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
-      <Box p={'4'} bg={'white'}>
+      <Stack direction={'row'} alignItems={'center'} p={'4'} bg={'white'}>
         <Heading size={{base: 'sm', md: 'md'}} fontWeight={'normal'}>{ title }</Heading>
-      </Box>
+        <Spacer />
+        <Link href={'https://github.com/yuukis/yamanashi-event-frontend'} target={'_blank'}>
+          <Github boxSize={{base: '5', md: '6'}} />
+        </Link>
+      </Stack>
       <Box w={'100%'} h={{base: '320px', md: '480px'}} background={`url(${background}) center/cover no-repeat`} />
       <Container maxW={'800px'} w={'100%'} mt={{base: '-200px', md: '-320px'}}>
         <Stack spacing={'4'}>
