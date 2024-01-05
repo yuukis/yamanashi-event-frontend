@@ -117,18 +117,17 @@ export function EventBody(data: any) {
                   <People />
                   <Button size={'xs'} display={{ base: 'none', md: 'block' }}
                           onClick={() => window.open(group_url)}
-                          >
-                    {group_name}
-                  </Button>
-                  <Text fontSize={'sm'} display={{ base: 'block', md: 'none' }}>
-                    {group_name}
-                  </Text>
+                          >{group_name}</Button>
+                  <Text fontSize={'sm'}
+                        display={{ base: 'block', md: 'none' }}
+                        noOfLines={1}
+                        >{group_name}</Text>
                 </HStack>
               )}
               {group_name == null && owner_name && (
                 <HStack>
                   <Person />
-                  <Text fontSize={'sm'}>{owner_name}</Text>
+                  <Text fontSize={'sm'} noOfLines={1}>{owner_name}</Text>
                 </HStack>
               )}
             </Stack>
