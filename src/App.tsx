@@ -55,10 +55,11 @@ function App() {
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
-      <Container maxW={'800px'} w={'100%'}>
-        <Box p={'4'} mb={'8'}>
-          <Heading size={'md'}>{ title }</Heading>
-        </Box>
+      <Box p={'4'} bg={'white'}>
+        <Heading size={{base: 'sm', md: 'md'}} fontWeight={'normal'}>{ title }</Heading>
+      </Box>
+      <Box w={'100%'} h={{base: '320px', md: '480px'}} background={`url(${background}) center/cover no-repeat`} />
+      <Container maxW={'800px'} w={'100%'} mt={{base: '-200px', md: '-320px'}}>
         <Stack spacing={'4'}>
           <Card variant={'outline'} size={{base: 'sm', md: 'md'}} >            
             <CardBody>
