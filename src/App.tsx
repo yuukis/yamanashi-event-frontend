@@ -61,7 +61,22 @@ function App() {
       <Box w={'100%'} h={{base: '320px', md: '480px'}} background={`url(${background}) center/cover no-repeat`} />
       <Container maxW={'800px'} w={'100%'} mt={{base: '-200px', md: '-320px'}}>
         <Stack spacing={'4'}>
-          <Card variant={'outline'} size={{base: 'sm', md: 'md'}} >            
+          <Card variant={'filled'} size={{base: 'sm', md: 'md'}} opacity={'0.8'}>
+            <CardBody>
+              <Stack spacing={'2'}>
+                <Heading size={{base: 'xs', md: 'sm'}}>
+                  本サイトについて
+                </Heading>
+                <Text fontSize={{base: 'xs', md: 'sm'}}>
+                  { title }は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
+                </Text>
+                <Text fontSize={{base: 'xs', md: 'sm'}}>
+                  イベント情報は、<a href='https://connpass.com' target='_blank'>Connpass</a> から取得しています。
+                </Text>
+              </Stack>
+            </CardBody>
+          </Card>
+          <Card variant={'outline'} size={{base: 'sm', md: 'md'}}>            
             <CardBody>
               <Stack divider={<StackDivider />}>
                 <Stack direction={'row'} spacing={'2'}>
