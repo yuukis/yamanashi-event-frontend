@@ -18,13 +18,14 @@ import {
 
 export function EventBody(data: any) {
 
+  const day_of_week = ['日', '月', '火', '水', '木', '金', '土'];
   const event = data.event;
   const now_year = new Date().getFullYear();
   const start_year = new Date(event.started_at).getFullYear();
   const start_date = new Date(event.started_at);
   const start_month = start_date.getMonth() + 1;
   const start_day = start_date.getDate();
-  const day_of_week = ['日', '月', '火', '水', '木', '金', '土'][start_date.getDay()];
+  const start_dow = day_of_week[start_date.getDay()];
   const start_time = start_date.getHours() + ':' + ('0' + start_date.getMinutes()).slice(-2);
 
   const title = event.title;
@@ -79,7 +80,7 @@ export function EventBody(data: any) {
           <Text fontSize={'lg'}
                 mt={{md: '-0.5rem'}}
                 >
-            ({ day_of_week }) { start_time }-
+            ({ start_dow }) { start_time }-
           </Text>
         </Stack>
         <Box w={'2'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
