@@ -15,6 +15,7 @@ import {
   Hash,
   GeoAlt,
   Person,
+  People,
   ChevronRight,
 } from '@chakra-icons/bootstrap';
 
@@ -23,8 +24,8 @@ export function EventBody(data: any) {
   const day_of_week = ['日', '月', '火', '水', '木', '金', '土'];
   const event = data.event;
   const now_year = new Date().getFullYear();
-  const start_year = new Date(event.started_at).getFullYear();
   const start_date = new Date(event.started_at);
+  const start_year = start_date.getFullYear();
   const start_month = start_date.getMonth() + 1;
   const start_day = start_date.getDate();
   const start_dow = day_of_week[start_date.getDay()];
@@ -34,11 +35,13 @@ export function EventBody(data: any) {
   const sub_title = event.catch;
   const hash_tag = event.hash_tag;
   const address = event.address;
-  const event_url = event.event_url;
   const place = event.place;
+  const event_url = event.event_url;
   const owner_name = event.owner_name;
   const group_name = event.group_name;
   const group_url = event.group_url;
+
+  const address_array = [address, place].filter(Boolean);
 
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
 
@@ -98,34 +101,33 @@ export function EventBody(data: any) {
                   <Text fontSize={'sm'} noOfLines={1}>{ hash_tag }</Text>
                 </HStack>
               )}
-              {address && (
+              {address_array.length > 0 && (
                 <HStack>
                   <GeoAlt />
-                  <Text fontSize={'sm'} noOfLines={1}>{ address }</Text>
+                  <Text fontSize={'sm'} noOfLines={1}>{ address_array[0] }</Text>
                 </HStack>
               )}
-              {place && (
+              {address_array.length > 1 && (
                 <HStack ml={'24px'} mt={{base: '0', md: '-0.5rem'}}>
-                  <Text fontSize={'sm'} noOfLines={1}>{ place }</Text>
+                  <Text fontSize={'sm'} noOfLines={1}>{ address_array[1] }</Text>
                 </HStack>
               )}
               {group_name && (
                 <HStack>
-                  <Person />
+                  <People />
                   <Button size={'xs'} display={{ base: 'none', md: 'block' }}
                           onClick={() => window.open(group_url)}
-                          >
-                    {group_name}
-                  </Button>
-                  <Text fontSize={'sm'} display={{ base: 'block', md: 'none' }}>
-                    {group_name}
-                  </Text>
+                          >{group_name}</Button>
+                  <Text fontSize={'sm'}
+                        display={{ base: 'block', md: 'none' }}
+                        noOfLines={1}
+                        >{group_name}</Text>
                 </HStack>
               )}
               {group_name == null && owner_name && (
                 <HStack>
                   <Person />
-                  <Text fontSize={'sm'}>{owner_name}</Text>
+                  <Text fontSize={'sm'} noOfLines={1}>{owner_name}</Text>
                 </HStack>
               )}
             </Stack>
