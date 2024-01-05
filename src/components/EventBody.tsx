@@ -34,6 +34,7 @@ export function EventBody(data: any) {
   const address = event.address;
   const event_url = event.event_url;
   const place = event.place;
+  const owner_name = event.owner_name;
   const group_name = event.group_name;
   const group_url = event.group_url;
 
@@ -117,6 +118,12 @@ export function EventBody(data: any) {
                   <Text fontSize={'sm'} display={{ base: 'block', md: 'none' }}>
                     {group_name}
                   </Text>
+                </HStack>
+              )}
+              {group_name == null && owner_name && (
+                <HStack>
+                  <Person />
+                  <Text fontSize={'sm'}>{owner_name}</Text>
                 </HStack>
               )}
             </Stack>
