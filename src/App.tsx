@@ -5,19 +5,24 @@ import './style.css';
 import {
   Container,
   Box,
+  Center,
   Stack,
   StackDivider,
   Card,
   CardHeader,
   CardBody,
-  Heading
+  Heading,
+  Text
 } from '@chakra-ui/react';
 import {
   Calendar2EventFill
 } from '@chakra-icons/bootstrap';
 
 function App() {
+  const title = 'やまなし IT勉強会イベント(beta)';
   const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: []});
+
+  document.title = title;
 
   useEffect(() => {
     const getData = async () => {
@@ -52,9 +57,7 @@ function App() {
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <Container maxW={'800px'} w={'100%'}>
         <Box p={'4'} mb={'8'}>
-          <Heading size={'md'}>
-            やまなし IT勉強会イベント(beta)
-          </Heading>
+          <Heading size={'md'}>{ title }</Heading>
         </Box>
         <Stack spacing={'4'}>
           <Card variant={'outline'} size={{base: 'sm', md: 'md'}}>
@@ -104,6 +107,9 @@ function App() {
             </CardBody>
           </Card>
         </Stack>
+        <Center p={'4'}>
+          <Text fontSize={'xs'} color={'gray'}>{ title }</Text>
+        </Center>
       </Container>
     </Box>
   );
