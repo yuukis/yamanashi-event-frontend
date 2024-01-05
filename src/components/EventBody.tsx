@@ -19,6 +19,7 @@ import {
 export function EventBody(data: any) {
 
   const event = data.event;
+  const start_year = new Date(event.started_at).getFullYear();
   const start_date = new Date(event.started_at);
   const start_month = start_date.getMonth() + 1;
   const start_day = start_date.getDate();
@@ -48,10 +49,19 @@ export function EventBody(data: any) {
               direction={{base: 'row', md: 'column'}}
               spacing={'0'}
               alignItems={{base: 'baseline', md: 'center'}}
-              mt={{base: '0', md: '-0.5rem'}}
               >
           <HStack spacing={'0'}
                   justifyContent={{base: 'flex-start', md: 'center'}}
+                  >
+            <Text fontSize={'sm'}
+                  fontWeight={'light'}
+                  letterSpacing={{md: '0.1rem'}}
+                  mr={{base: '1', md: '0'}}
+                  >{ start_year }</Text>
+          </HStack>
+          <HStack spacing={'0'}
+                  justifyContent={{base: 'flex-start', md: 'center'}}
+                  mt={{base: '0', md: '-0.5rem'}}
                   >
             <Text fontSize={{base: '2xl', md:'4xl'}}
                   fontWeight={'bold'}
