@@ -9,7 +9,6 @@ import {
   Stack,
   StackDivider,
   Card,
-  CardHeader,
   CardBody,
   Heading,
   Text
@@ -60,18 +59,15 @@ function App() {
           <Heading size={'md'}>{ title }</Heading>
         </Box>
         <Stack spacing={'4'}>
-          <Card variant={'outline'} size={{base: 'sm', md: 'md'}}>
-            <CardHeader>
-              <Stack direction={'row'} spacing={'2'}>
-                <Calendar2EventFill />
-                <Heading size={'sm'}>
-                  直近開催イベント
-                </Heading>
-              </Stack>
-            </CardHeader>
-            
+          <Card variant={'outline'} size={{base: 'sm', md: 'md'}} >            
             <CardBody>
               <Stack divider={<StackDivider />}>
+                <Stack direction={'row'} spacing={'2'}>
+                  <Calendar2EventFill />
+                  <Heading size={{base: 'xs', md: 'sm'}}>
+                    直近開催イベント
+                  </Heading>
+                </Stack>
                 {data.isLoading && (
                   <SkeletonEventBody />
                 )}
@@ -86,14 +82,11 @@ function App() {
           </Card>
 
           <Card variant={'outline'} size={{base: 'sm', md: 'md'}}>
-            <CardHeader>
-              <Heading size={'sm'}>
-                終了したイベント
-              </Heading>
-            </CardHeader>
-            
             <CardBody>
               <Stack divider={<StackDivider />}>
+                <Heading size={{base: 'xs', md: 'sm'}}>
+                  終了したイベント
+                </Heading>
                 {data.isLoading && (
                   <SkeletonEventBody />
                 )}

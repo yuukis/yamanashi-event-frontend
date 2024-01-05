@@ -57,6 +57,7 @@ export function EventBody(data: any) {
               direction={{base: 'row', md: 'column'}}
               spacing={'0'}
               alignItems={{base: 'baseline', md: 'center'}}
+              mb={{base: '1', md: '0'}}
               >
           { now_year !== start_year && (
             <HStack spacing={'0'}
@@ -91,7 +92,7 @@ export function EventBody(data: any) {
         </Stack>
         <Box w={'2'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
         <Box w={'100%'}>
-          <Heading fontSize={'1rem'}>{ title }</Heading>
+          <Heading fontSize={'md'}>{ title }</Heading>
           <Text fontSize={'sm'} display={{base: 'none', md: 'flex'}}>{ sub_title }</Text>
           <HStack mt={'2'}>
             <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
