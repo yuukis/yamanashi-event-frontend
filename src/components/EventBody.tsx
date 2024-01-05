@@ -193,3 +193,12 @@ export function SkeletonEventBody() {
     </HStack>
   )
 }
+
+export function EmptyEventBody() {
+
+  return (
+    <Box p={{md: '2'}}>
+      <Text fontSize={'sm'}>イベントはありません</Text>
+    </Box>
+  )
+}

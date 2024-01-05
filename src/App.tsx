@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { EventBody, SkeletonEventBody } from './components/EventBody';
+import { EventBody, SkeletonEventBody, EmptyEventBody } from './components/EventBody';
 import './style.css';
 import {
   Container,
@@ -18,11 +18,13 @@ import {
 
 function App() {
   const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const getData = async () => {
       // const res = await axios.get('http://localhost:8000/events');
       const res = await axios.get('https://api.event.yamanashi.dev/events');
+      setIsLoading(false);
       setData(res.data);
     }
     getData();
@@ -49,8 +51,11 @@ function App() {
             
             <CardBody>
               <Stack divider={<StackDivider />}>
-                {data.length === 0 && (
+                {isLoading && (
                   <SkeletonEventBody />
+                )}
+                {!isLoading && data.length === 0 && (
+                  <EmptyEventBody />
                 )}
                 {data.filter((data) => {
                   const now = new Date();
@@ -75,8 +80,11 @@ function App() {
             
             <CardBody>
               <Stack divider={<StackDivider />}>
-                {data.length === 0 && (
+                {isLoading && (
                   <SkeletonEventBody />
+                )}
+                {!isLoading && data.length === 0 && (
+                  <EmptyEventBody />
                 )}
                 {data.filter((data) => {
                   const now = new Date();
