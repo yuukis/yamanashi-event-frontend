@@ -24,8 +24,8 @@ export function EventBody(data: any) {
   const day_of_week = ['日', '月', '火', '水', '木', '金', '土'];
   const event = data.event;
   const now_year = new Date().getFullYear();
-  const start_year = new Date(event.started_at).getFullYear();
   const start_date = new Date(event.started_at);
+  const start_year = start_date.getFullYear();
   const start_month = start_date.getMonth() + 1;
   const start_day = start_date.getDate();
   const start_dow = day_of_week[start_date.getDay()];
@@ -35,8 +35,8 @@ export function EventBody(data: any) {
   const sub_title = event.catch;
   const hash_tag = event.hash_tag;
   const address = event.address;
-  const event_url = event.event_url;
   const place = event.place;
+  const event_url = event.event_url;
   const owner_name = event.owner_name;
   const group_name = event.group_name;
   const group_url = event.group_url;
