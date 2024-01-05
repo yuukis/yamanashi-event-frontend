@@ -7,6 +7,8 @@ import {
   Text,
   Button,
   Flex,
+  Skeleton,
+  SkeletonCircle,
   useMediaQuery
 } from '@chakra-ui/react';
 import {
@@ -145,6 +147,51 @@ export function EventBody(data: any) {
       </Flex>
       <Spacer />
       <ChevronRight display={{md: 'none'}} />
+    </HStack>
+  )
+}
+
+export function SkeletonEventBody() {
+
+  const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
+
+  return (
+    <HStack p={{md: '2'}}>
+      <Flex w={'100%'}
+          flexDirection={{base: 'column', md: 'row'}}
+          alignItems={{base: 'flex-start', md: 'stretch'}}
+          >
+        <Stack w={{base: '100%', md: '180px'}}
+              direction={{base: 'row', md: 'column'}}
+              alignItems={{base: 'baseline', md: 'center'}}
+              mb={'0.5rem'}
+              >
+          <Skeleton height={{base: '1.2rem', md: '2rem'}}
+                    width={{base: '4rem', md: '5rem'}}
+                    />
+          <Skeleton height={{base: '0.875rem', md: '1.2rem'}}
+                    width={{base: '3rem', md: '6rem'}}
+                    />
+        </Stack>
+        <Box w={'2'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'100%'}>
+          <Skeleton height={{base: '0.875rem', md: '1rem'}}
+                    width={{base: '12rem', md: '12rem'}}
+                    />
+          <HStack mt={'2'}>
+            <Stack p={'2'} spacing={{base: '0.2rem', md: '0.5rem'}}>
+              <HStack>
+                <SkeletonCircle size={'1rem'} />
+                <Skeleton height={'0.875rem'} width={'6rem'} />
+              </HStack>
+              <HStack>
+                <SkeletonCircle size={'1rem'} />
+                <Skeleton height={'0.875rem'} width={'4rem'} />
+              </HStack>
+            </Stack>
+          </HStack>
+        </Box>
+      </Flex>
     </HStack>
   )
 }
