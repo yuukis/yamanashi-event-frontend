@@ -66,7 +66,10 @@ function App() {
         </Link>
       </Stack>
       <Box w={'100%'} h={{base: '320px', md: '480px'}} background={`url(${background}) center/cover no-repeat`} />
-      <Container maxW={'800px'} w={'100%'} mt={{base: '-200px', md: '-320px'}}>
+      <Container maxW={'800px'} w={'100%'}
+                 mt={{base: '-200px', md: '-320px'}}
+                 p={{base: '0', md: '4'}}
+                 >
         <Stack spacing={'4'}>
           <Card variant={'filled'} size={{base: 'sm', md: 'md'}} opacity={'0.8'}>
             <CardBody>
@@ -83,7 +86,10 @@ function App() {
               </Stack>
             </CardBody>
           </Card>
-          <Card variant={'outline'} size={{base: 'sm', md: 'md'}}>            
+          <Card variant={{base: 'unstyled', md: 'outline'}}
+                size={{base: 'sm', md: 'md'}}
+                padding={{base: '4', md: '0'}}
+                >
             <CardBody>
               <Stack divider={<StackDivider />}>
                 <Stack direction={'row'} spacing={'2'}>
@@ -105,7 +111,10 @@ function App() {
             </CardBody>
           </Card>
 
-          <Card variant={'outline'} size={{base: 'sm', md: 'md'}}>
+          <Card variant={{base: 'unstyled', md: 'outline'}}
+                size={{base: 'sm', md: 'md'}}
+                padding={{base: '4', md: '0'}}
+                >
             <CardBody>
               <Stack divider={<StackDivider />}>
                 <Heading size={{base: 'xs', md: 'sm'}}>
