@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { EventBody } from './components/EventBody';
+import { EventBody, SkeletonEventBody } from './components/EventBody';
 import './style.css';
 import {
   Container,
@@ -49,6 +49,9 @@ function App() {
             
             <CardBody>
               <Stack divider={<StackDivider />}>
+                {data.length === 0 && (
+                  <SkeletonEventBody />
+                )}
                 {data.filter((data) => {
                   const now = new Date();
                   const start = new Date((data as { started_at: string }).started_at);
@@ -72,6 +75,9 @@ function App() {
             
             <CardBody>
               <Stack divider={<StackDivider />}>
+                {data.length === 0 && (
+                  <SkeletonEventBody />
+                )}
                 {data.filter((data) => {
                   const now = new Date();
                   const start = new Date((data as { started_at: string }).started_at);
