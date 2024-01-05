@@ -53,6 +53,9 @@ function App() {
                   const now = new Date();
                   const start = new Date((data as { started_at: string }).started_at);
                   return now <= start;
+                }).sort((data) => {
+                  const start = new Date((data as { started_at: string }).started_at);
+                  return start.getTime();
                 }).map((data) => {
                   return <EventBody event={data} />
                 })}
@@ -73,6 +76,9 @@ function App() {
                   const now = new Date();
                   const start = new Date((data as { started_at: string }).started_at);
                   return now > start;
+                }).sort((data) => {
+                  const start = new Date((data as { started_at: string }).started_at);
+                  return -start.getTime();
                 }).map((data) => {
                   return <EventBody event={data} />
                 })}
