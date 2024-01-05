@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { EventBody, SkeletonEventBody, EmptyEventBody } from './components/EventBody';
 import './style.css';
+import background from "./assets/images/background.jpg"
 import {
   Container,
   Box,
