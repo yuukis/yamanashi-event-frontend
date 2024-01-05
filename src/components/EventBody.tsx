@@ -153,8 +153,6 @@ export function EventBody(data: any) {
 
 export function SkeletonEventBody() {
 
-  const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
-
   return (
     <HStack p={{md: '2'}}>
       <Flex w={'100%'}
