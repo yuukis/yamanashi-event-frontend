@@ -57,9 +57,7 @@ function App() {
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <Container maxW={'800px'} w={'100%'}>
         <Box p={'4'} mb={'8'}>
-          <Heading size={'md'}>
-            やまなし IT勉強会イベント(beta)
-          </Heading>
+          <Heading size={'md'}>{ title }</Heading>
         </Box>
         <Stack spacing={'4'}>
           <Card variant={'outline'} size={{base: 'sm', md: 'md'}}>
