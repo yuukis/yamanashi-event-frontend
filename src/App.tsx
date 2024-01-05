@@ -17,7 +17,10 @@ import {
 } from '@chakra-icons/bootstrap';
 
 function App() {
+  const title = 'やまなし IT勉強会イベント(beta)';
   const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: []});
+
+  document.title = title;
 
   useEffect(() => {
     const getData = async () => {
