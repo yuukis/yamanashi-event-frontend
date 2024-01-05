@@ -41,6 +41,8 @@ export function EventBody(data: any) {
   const group_name = event.group_name;
   const group_url = event.group_url;
 
+  const address_array = [address, place].filter(Boolean);
+
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
 
   return (
@@ -99,15 +101,15 @@ export function EventBody(data: any) {
                   <Text fontSize={'sm'} noOfLines={1}>{ hash_tag }</Text>
                 </HStack>
               )}
-              {address && (
+              {address_array.length > 0 && (
                 <HStack>
                   <GeoAlt />
-                  <Text fontSize={'sm'} noOfLines={1}>{ address }</Text>
+                  <Text fontSize={'sm'} noOfLines={1}>{ address_array[0] }</Text>
                 </HStack>
               )}
-              {place && (
+              {address_array.length > 1 && (
                 <HStack ml={'24px'} mt={{base: '0', md: '-0.5rem'}}>
-                  <Text fontSize={'sm'} noOfLines={1}>{ place }</Text>
+                  <Text fontSize={'sm'} noOfLines={1}>{ address_array[1] }</Text>
                 </HStack>
               )}
               {group_name && (
