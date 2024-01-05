@@ -17,15 +17,33 @@ import {
 } from '@chakra-icons/bootstrap';
 
 function App() {
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: []});
 
   useEffect(() => {
     const getData = async () => {
       // const res = await axios.get('http://localhost:8000/events');
       const res = await axios.get('https://api.event.yamanashi.dev/events');
-      setIsLoading(false);
-      setData(res.data);
+      const events = res.data;
+      const data = {
+        isLoading: false,
+        pastEvents: events.filter((data: any) => {
+          const now = new Date();
+          const start = new Date(data.started_at);
+          return now > start;
+        }).sort((data: any) => {
+          const start = new Date(data.started_at);
+          return -start.getTime();
+        }),
+        futureEvents: events.filter((data: any) => {
+          const now = new Date();
+          const start = new Date(data.started_at);
+          return now <= start;
+        }).sort((data: any) => {
+          const start = new Date(data.started_at);
+          return start.getTime();
+        })
+      }
+      setData(data);
     }
     getData();
   }, []);
@@ -51,20 +69,13 @@ function App() {
             
             <CardBody>
               <Stack divider={<StackDivider />}>
-                {isLoading && (
+                {data.isLoading && (
                   <SkeletonEventBody />
                 )}
-                {!isLoading && data.length === 0 && (
+                {!data.isLoading && data.futureEvents.length === 0 && (
                   <EmptyEventBody />
                 )}
-                {data.filter((data) => {
-                  const now = new Date();
-                  const start = new Date((data as { started_at: string }).started_at);
-                  return now <= start;
-                }).sort((data) => {
-                  const start = new Date((data as { started_at: string }).started_at);
-                  return start.getTime();
-                }).map((data) => {
+                {data.futureEvents.map((data) => {
                   return <EventBody event={data} />
                 })}
               </Stack>
@@ -80,20 +91,13 @@ function App() {
             
             <CardBody>
               <Stack divider={<StackDivider />}>
-                {isLoading && (
+                {data.isLoading && (
                   <SkeletonEventBody />
                 )}
-                {!isLoading && data.length === 0 && (
+                {!data.isLoading && data.pastEvents.length === 0 && (
                   <EmptyEventBody />
                 )}
-                {data.filter((data) => {
-                  const now = new Date();
-                  const start = new Date((data as { started_at: string }).started_at);
-                  return now > start;
-                }).sort((data) => {
-                  const start = new Date((data as { started_at: string }).started_at);
-                  return -start.getTime();
-                }).map((data) => {
+                {data.pastEvents.map((data) => {
                   return <EventBody event={data} />
                 })}
               </Stack>
