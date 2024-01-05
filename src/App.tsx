@@ -49,7 +49,11 @@ function App() {
             
             <CardBody>
               <Stack divider={<StackDivider />}>
-                {data.map((data) => {
+                {data.filter((data) => {
+                  const now = new Date();
+                  const start = new Date((data as { started_at: string }).started_at);
+                  return now <= start;
+                }).map((data) => {
                   return <EventBody event={data} />
                 })}
               </Stack>
@@ -65,7 +69,11 @@ function App() {
             
             <CardBody>
               <Stack divider={<StackDivider />}>
-                {data.map((data) => {
+                {data.filter((data) => {
+                  const now = new Date();
+                  const start = new Date((data as { started_at: string }).started_at);
+                  return now > start;
+                }).map((data) => {
                   return <EventBody event={data} />
                 })}
               </Stack>
