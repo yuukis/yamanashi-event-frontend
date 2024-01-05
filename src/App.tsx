@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { EventBody, SkeletonEventBody, EmptyEventBody } from './components/EventBody';
 import './style.css';
+import background from "./assets/images/background.jpg"
 import {
   Container,
   Box,
@@ -54,12 +55,28 @@ function App() {
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
-      <Container maxW={'800px'} w={'100%'}>
-        <Box p={'4'} mb={'8'}>
-          <Heading size={'md'}>{ title }</Heading>
-        </Box>
+      <Box p={'4'} bg={'white'}>
+        <Heading size={{base: 'sm', md: 'md'}} fontWeight={'normal'}>{ title }</Heading>
+      </Box>
+      <Box w={'100%'} h={{base: '320px', md: '480px'}} background={`url(${background}) center/cover no-repeat`} />
+      <Container maxW={'800px'} w={'100%'} mt={{base: '-200px', md: '-320px'}}>
         <Stack spacing={'4'}>
-          <Card variant={'outline'} size={{base: 'sm', md: 'md'}} >            
+          <Card variant={'filled'} size={{base: 'sm', md: 'md'}} opacity={'0.8'}>
+            <CardBody>
+              <Stack spacing={'2'}>
+                <Heading size={{base: 'xs', md: 'sm'}}>
+                  本サイトについて
+                </Heading>
+                <Text fontSize={{base: 'xs', md: 'sm'}}>
+                  { title }は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
+                </Text>
+                <Text fontSize={{base: 'xs', md: 'sm'}}>
+                  イベント情報は、<a href='https://connpass.com' target='_blank'>Connpass</a> から取得しています。
+                </Text>
+              </Stack>
+            </CardBody>
+          </Card>
+          <Card variant={'outline'} size={{base: 'sm', md: 'md'}}>            
             <CardBody>
               <Stack divider={<StackDivider />}>
                 <Stack direction={'row'} spacing={'2'}>
