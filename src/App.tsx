@@ -5,12 +5,14 @@ import './style.css';
 import {
   Container,
   Box,
+  Center,
   Stack,
   StackDivider,
   Card,
   CardHeader,
   CardBody,
-  Heading
+  Heading,
+  Text
 } from '@chakra-ui/react';
 import {
   Calendar2EventFill
@@ -107,6 +109,9 @@ function App() {
             </CardBody>
           </Card>
         </Stack>
+        <Center p={'4'}>
+          <Text fontSize={'xs'} color={'gray'}>{ title }</Text>
+        </Center>
       </Container>
     </Box>
   );
