@@ -15,6 +15,7 @@ import {
   Hash,
   GeoAlt,
   Person,
+  People,
   ChevronRight,
 } from '@chakra-icons/bootstrap';
 
@@ -111,7 +112,7 @@ export function EventBody(data: any) {
               )}
               {group_name && (
                 <HStack>
-                  <Person />
+                  <People />
                   <Button size={'xs'} display={{ base: 'none', md: 'block' }}
                           onClick={() => window.open(group_url)}
                           >
