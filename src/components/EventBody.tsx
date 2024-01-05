@@ -91,10 +91,10 @@ export function EventBody(data: any) {
           </Text>
         </Stack>
         <Box w={'2'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
-        <Box w={'100%'}>
+        <Box w={'100%'} position={'relative'}>
           <Heading fontSize={'md'}>{ title }</Heading>
           <Text fontSize={'sm'} display={{base: 'none', md: 'flex'}}>{ sub_title }</Text>
-          <HStack mt={'2'}>
+          <HStack mt={'2'} pr={{md: '100px'}}>
             <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
               {hash_tag && (
                 <HStack>
@@ -132,20 +132,21 @@ export function EventBody(data: any) {
                 </HStack>
               )}
             </Stack>
-            <Spacer />
-            <Button w={'120px'}
-                    size={'lg'}
+          </HStack>
+          <Button w={'100px'}
+                    size={'md'}
                     colorScheme='red'
-                    alignSelf={'flex-end'}
-                    display={{base: 'none', md: 'flex'}}
+                    display={{base: 'none', md: 'block'}}
+                    position={'absolute'}
+                    bottom={'0'}
+                    right={'0'}
                     onClick={() => window.open(event_url)}
                     >
-              <HStack>
-                <ChevronRight />
-                <Text letterSpacing={'0.2rem'}>詳細</Text>
-              </HStack>
-            </Button>
-          </HStack>
+            <HStack>
+              <ChevronRight />
+              <Text letterSpacing={'0.2rem'}>詳細</Text>
+            </HStack>
+          </Button>
         </Box>
       </Flex>
       <Spacer />
