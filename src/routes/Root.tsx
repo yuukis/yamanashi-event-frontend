@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { EventBody, SkeletonEventBody, EmptyEventBody } from './components/EventBody';
-import './style.css';
-import background from "./assets/images/background.jpg"
+import { EventBody, SkeletonEventBody, EmptyEventBody } from '../components/EventBody';
+import '../style.css';
+import background from "../assets/images/background.jpg"
 import {
   Container,
   Box,
@@ -22,7 +22,7 @@ import {
   Github
 } from '@chakra-icons/bootstrap';
 
-function App() {
+function Root() {
   const title = 'やまなし IT勉強会イベント(beta)';
   const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: []});
 
@@ -160,4 +160,4 @@ function App() {
   );
 }
 
-export default App;
+export default Root;
