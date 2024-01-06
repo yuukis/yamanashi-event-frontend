@@ -5,12 +5,17 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import Root from './routes/Root.jsx'
+import List from './routes/List.jsx'
 import { ChakraProvider } from '@chakra-ui/react'
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Root />,
+  },
+  {
+    path: "/:year",
+    element: <List />,
   },
 ]);
 
