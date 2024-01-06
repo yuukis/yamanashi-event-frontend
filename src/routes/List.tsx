@@ -22,7 +22,11 @@ import {
 } from '@chakra-icons/bootstrap';
 
 function List() {
-  let { year } = useParams();
+  let { year: param_year } = useParams();
+  const year = parseInt(param_year as string);
+  const prev_year = year - 1;
+  const next_year = year + 1;
+
   const title = 'やまなし IT勉強会イベント(beta)';
   const [data, setData] = useState({isLoading: true, events: []});
 
@@ -71,6 +75,15 @@ function List() {
                   <Heading size={{base: 'xs', md: 'sm'}}>
                     { year }年 開催イベント
                   </Heading>
+                  <Spacer />
+                  <Button size={'xs'}
+                          variant={'outline'}
+                          onClick={() => {window.open('/' + prev_year, '_self')}}
+                          >← { prev_year }年</Button>
+                  <Button size={'xs'}
+                          variant={'outline'}
+                          onClick={() => {window.open('/' + next_year, '_self')}}
+                          >{ next_year }年 →</Button>
                 </Stack>
                 {data.isLoading && (
                   <SkeletonEventBody />
