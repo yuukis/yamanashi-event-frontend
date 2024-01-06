@@ -48,7 +48,9 @@ function List() {
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <Stack direction={'row'} alignItems={'center'} p={'4'} bg={'white'}>
-        <Heading size={{base: 'sm', md: 'md'}} fontWeight={'normal'}>{ title }</Heading>
+        <Link href={'/'}>
+          <Heading size={{base: 'sm', md: 'md'}} fontWeight={'normal'}>{ title }</Heading>
+        </Link>
         <Spacer />
         <Link href={'https://github.com/yuukis/yamanashi-event-frontend'} target={'_blank'}>
           <Github boxSize={{base: '5', md: '6'}} />
