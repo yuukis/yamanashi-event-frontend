@@ -1,30 +1,48 @@
-# React + TypeScript + Vite
+# Yamanashi Tech Events
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![top](https://github.com/yuukis/yamanashi-event-frontend/assets/2931035/c27d18ce-bace-49dd-bc7c-5fd95a080548)
 
-Currently, two official plugins are available:
+## About the project
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This project is a web application that displays  tech events in Yamanashi prefecture.
 
-## Expanding the ESLint configuration
+This application is available at the following URL.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+https://event.yamanashi.dev
 
-- Configure the top-level `parserOptions` property like this:
+## Getting Started
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+### Prerequisites
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+- Node.js 14.17.0
+- Yarn 1.22.10
+
+### Installation
+
+1. Clone the repo
+   ```sh
+   $ git clone
+    ```
+2. Install packages
+    ```sh
+    $ yarn install
+    ```
+3. Run the app
+    ```sh
+    $ yarn dev
+    ```
+4. Open http://localhost:5173
+
+## License
+
+Distributed under the Apache License, Version 2.0. See `LICENSE` for more information.
+
+## Contact
+
+Yuuki Shimizu - [@yuuki_maxio](https://x.com/yuuki_maxio) 
+
+## Acknowledgements
+
+* [shingen.py](https://shingenpy.connpass.com)
+  - python user community in Yamanashi, Japan
+* [Connpass](https://connpass.com)
