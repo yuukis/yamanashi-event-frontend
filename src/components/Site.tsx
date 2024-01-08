@@ -25,12 +25,20 @@ export function SiteHeader(prop: any) {
   const title = prop.title;
 
   return (
-    <Stack direction={'row'} alignItems={'center'} p={'4'} bg={'white'}>
+    <Stack h={{base: '10', md: '12'}}
+           p={{base: '3', md: '4'}}
+           direction={'row'}
+           alignItems={'center'}
+           bg={'white'}
+           >
       <Link href={'/'}>
-        <Heading size={{base: 'sm', md: 'md'}} fontWeight={'normal'}>{ title }</Heading>
+        <Heading size={{base: 'sm', md: 'md'}}
+                 fontWeight={'normal'}
+                 noOfLines={1}
+                 >{ title }</Heading>
       </Link>
       <Spacer />
-      <Box display={{base: 'none', md: 'block'}}><ICalendarButton /></Box>
+      <Box display={{base: 'none', md: 'flow'}}><ICalendarButton /></Box>
       <Link href={'https://github.com/yuukis/yamanashi-event-frontend'} target={'_blank'}>
         <Github boxSize={{base: '5', md: '6'}} />
       </Link>
@@ -43,7 +51,7 @@ export function ICalendarButton() {
   return (
     <Popover>
       <PopoverTrigger>
-        <Button variant={'outline'} size={'xs'}>
+        <Button variant={'ghost'} size={'sm'}>
           <Calendar3 mr={'2'} />
           <Text>iCalendar URL</Text>
         </Button>
