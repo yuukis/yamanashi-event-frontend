@@ -20,6 +20,7 @@ import {
   PopoverBody,
   PopoverFooter
 } from '@chakra-ui/react';
+import { isMobile } from 'react-device-detect';
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
   
 export function SiteHeader(prop: any) {
@@ -80,16 +81,18 @@ export function ICalendarButton() {
                   />
           </Stack>
         </PopoverBody>
-        <PopoverFooter>
-          <List fontSize={'sm'} p={'2'}>
-            <ListItem>
-              <ListIcon as={CaretRightFill} />
-              <Link href={'https://calendar.google.com/calendar/r/settings/addbyurl'} target={'_blank'}>
-                Google カレンダーに登録する
-              </Link>
-            </ListItem>
-          </List>
-        </PopoverFooter>
+        {!isMobile && (
+          <PopoverFooter>
+            <List fontSize={'sm'} p={'2'}>
+              <ListItem>
+                <ListIcon as={CaretRightFill} />
+                <Link href={'https://calendar.google.com/calendar/r/settings/addbyurl'} target={'_blank'}>
+                  Google カレンダーに登録する
+                </Link>
+              </ListItem>
+            </List>
+          </PopoverFooter>
+        )}
       </PopoverContent>
     </Popover>
   )
