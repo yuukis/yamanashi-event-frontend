@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from "react-router-dom";
 import axios from 'axios';
+import { SiteHeader } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody } from '../components/EventBody';
 import '../style.css';
 import {
@@ -14,12 +15,8 @@ import {
   Heading,
   Text,
   Button,
-  Link,
   Spacer
 } from '@chakra-ui/react';
-import {
-  Github
-} from '@chakra-icons/bootstrap';
 
 function List() {
   let { year: param_year } = useParams();
@@ -51,15 +48,7 @@ function List() {
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
-      <Stack direction={'row'} alignItems={'center'} p={'4'} bg={'white'}>
-        <Link href={'/'}>
-          <Heading size={{base: 'sm', md: 'md'}} fontWeight={'normal'}>{ title }</Heading>
-        </Link>
-        <Spacer />
-        <Link href={'https://github.com/yuukis/yamanashi-event-frontend'} target={'_blank'}>
-          <Github boxSize={{base: '5', md: '6'}} />
-        </Link>
-      </Stack>
+      <SiteHeader title={ title } />
       <Container maxW={'800px'} w={'100%'}
                  mt={'4'}
                  p={{base: '0', md: '4'}}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { SiteHeader } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody } from '../components/EventBody';
 import '../style.css';
 import background from "../assets/images/background.jpg"
@@ -13,13 +14,10 @@ import {
   CardBody,
   Heading,
   Text,
-  Button,
-  Link,
-  Spacer
+  Button
 } from '@chakra-ui/react';
 import {
-  Calendar2EventFill,
-  Github
+  Calendar2EventFill
 } from '@chakra-icons/bootstrap';
 
 function Root() {
@@ -59,15 +57,7 @@ function Root() {
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
-      <Stack direction={'row'} alignItems={'center'} p={'4'} bg={'white'}>
-        <Link href={'/'}>
-          <Heading size={{base: 'sm', md: 'md'}} fontWeight={'normal'}>{ title }</Heading>
-        </Link>
-        <Spacer />
-        <Link href={'https://github.com/yuukis/yamanashi-event-frontend'} target={'_blank'}>
-          <Github boxSize={{base: '5', md: '6'}} />
-        </Link>
-      </Stack>
+      <SiteHeader title={ title } />
       <Box w={'100%'} h={{base: '320px', md: '480px'}} background={`url(${background}) center/cover no-repeat`} />
       <Container maxW={'800px'} w={'100%'}
                  mt={{base: '-200px', md: '-320px'}}
