@@ -14,8 +14,8 @@ https://event.yamanashi.dev
 
 ### Prerequisites
 
-- Node.js 14.17.0
-- Yarn 1.22.10
+- Node.js 21.4.0
+- Yarn 1.22.21
 
 ### Installation
 
