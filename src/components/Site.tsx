@@ -9,6 +9,7 @@ import {
   ListIcon,
   Text,
   Button,
+  IconButton,
   Input,
   Popover,
   PopoverTrigger,
@@ -25,15 +26,21 @@ export function SiteHeader(prop: any) {
   const title = prop.title;
 
   return (
-    <Stack direction={'row'} alignItems={'center'} p={'4'} bg={'white'}>
+    <Stack h={{base: '10', md: '12'}}
+           p={'3'}
+           direction={'row'}
+           alignItems={'center'}
+           bg={'white'}
+           >
       <Link href={'/'}>
-        <Heading size={{base: 'sm', md: 'md'}} fontWeight={'normal'}>{ title }</Heading>
+        <Heading size={{base: 'sm', md: 'md'}}
+                 fontWeight={'normal'}
+                 noOfLines={1}
+                 >{ title }</Heading>
       </Link>
       <Spacer />
       <Box display={{base: 'none', md: 'block'}}><ICalendarButton /></Box>
-      <Link href={'https://github.com/yuukis/yamanashi-event-frontend'} target={'_blank'}>
-        <Github boxSize={{base: '5', md: '6'}} />
-      </Link>
+      <GithubButton />
     </Stack>
   );
 }
@@ -43,9 +50,9 @@ export function ICalendarButton() {
   return (
     <Popover>
       <PopoverTrigger>
-        <Button variant={'outline'} size={'xs'}>
+        <Button variant={'ghost'}>
           <Calendar3 mr={'2'} />
-          <Text>iCalendar URL</Text>
+          <Text fontWeight={'normal'} fontSize={'sm'}>iCalendar</Text>
         </Button>
       </PopoverTrigger>
       <PopoverContent>
@@ -79,6 +86,48 @@ export function ICalendarButton() {
               </ListItem>
             </List>
           </Stack>
+        </PopoverBody>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export function GithubButton() {
+
+  return (
+    <Popover>
+      <PopoverTrigger>
+        <IconButton aria-label='Git repo' variant={'ghost'} icon={<Github />} />
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverArrow />
+        <PopoverHeader>
+          <Text fontSize={'sm'}>
+            git repo
+          </Text>
+        </PopoverHeader>
+        <PopoverCloseButton />
+        <PopoverBody>
+          <List fontSize={'sm'}>
+            <ListItem p={'2'}>
+              <ListIcon as={Github} />
+              <Link href={'https://github.com/yuukis/yamanashi-event-frontend'} target={'_blank'}>
+                yuukis/yamanashi-event-frontend
+              </Link>
+            </ListItem>
+            <ListItem p={'2'}>
+              <ListIcon as={Github} />
+              <Link href={'https://github.com/yuukis/yamanashi-event-api'} target={'_blank'}>
+                yuukis/yamanashi-event-api
+              </Link>
+            </ListItem>
+            <ListItem p={'2'}>
+              <ListIcon as={Github} />
+              <Link href={'https://github.com/yuukis/yamanashi-event-icalendar'} target={'_blank'}>
+                yuukis/yamanashi-event-icalendar
+              </Link>
+            </ListItem>
+          </List>
         </PopoverBody>
       </PopoverContent>
     </Popover>
