@@ -1,5 +1,6 @@
 import {
   Heading,
+  Box,
   Stack,
   Spacer,
   Link,
@@ -29,7 +30,7 @@ export function SiteHeader(prop: any) {
         <Heading size={{base: 'sm', md: 'md'}} fontWeight={'normal'}>{ title }</Heading>
       </Link>
       <Spacer />
-      <ICalendarButton />
+      <Box display={{base: 'none', md: 'block'}}><ICalendarButton /></Box>
       <Link href={'https://github.com/yuukis/yamanashi-event-frontend'} target={'_blank'}>
         <Github boxSize={{base: '5', md: '6'}} />
       </Link>
