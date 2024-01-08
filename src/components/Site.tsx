@@ -17,8 +17,10 @@ import {
   PopoverArrow,
   PopoverHeader,
   PopoverCloseButton,
-  PopoverBody
+  PopoverBody,
+  PopoverFooter
 } from '@chakra-ui/react';
+import { isMobile } from 'react-device-detect';
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
   
 export function SiteHeader(prop: any) {
@@ -77,6 +79,10 @@ export function ICalendarButton() {
                     inputElement.select();
                   }}
                   />
+          </Stack>
+        </PopoverBody>
+        {!isMobile && (
+          <PopoverFooter>
             <List fontSize={'sm'} p={'2'}>
               <ListItem>
                 <ListIcon as={CaretRightFill} />
@@ -85,8 +91,8 @@ export function ICalendarButton() {
                 </Link>
               </ListItem>
             </List>
-          </Stack>
-        </PopoverBody>
+          </PopoverFooter>
+        )}
       </PopoverContent>
     </Popover>
   )
