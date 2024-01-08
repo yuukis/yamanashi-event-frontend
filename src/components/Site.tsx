@@ -17,7 +17,8 @@ import {
   PopoverArrow,
   PopoverHeader,
   PopoverCloseButton,
-  PopoverBody
+  PopoverBody,
+  PopoverFooter
 } from '@chakra-ui/react';
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
   
@@ -77,16 +78,18 @@ export function ICalendarButton() {
                     inputElement.select();
                   }}
                   />
-            <List fontSize={'sm'} p={'2'}>
-              <ListItem>
-                <ListIcon as={CaretRightFill} />
-                <Link href={'https://calendar.google.com/calendar/r/settings/addbyurl'} target={'_blank'}>
-                  Google カレンダーに登録する
-                </Link>
-              </ListItem>
-            </List>
           </Stack>
         </PopoverBody>
+        <PopoverFooter>
+          <List fontSize={'sm'} p={'2'}>
+            <ListItem>
+              <ListIcon as={CaretRightFill} />
+              <Link href={'https://calendar.google.com/calendar/r/settings/addbyurl'} target={'_blank'}>
+                Google カレンダーに登録する
+              </Link>
+            </ListItem>
+          </List>
+        </PopoverFooter>
       </PopoverContent>
     </Popover>
   )
