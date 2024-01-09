@@ -20,9 +20,7 @@ import {
 import { isMobile } from 'react-device-detect';
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
   
-export function SiteHeader(prop: any) {
-
-  const title = prop.title;
+export function SiteHeader() {
 
   return (
     <Stack h={{base: '10', md: '12'}}
@@ -35,7 +33,9 @@ export function SiteHeader(prop: any) {
         <Heading size={{base: 'sm', md: 'md'}}
                  fontWeight={'normal'}
                  noOfLines={1}
-                 >{ title }</Heading>
+                 >
+          <strong>Yamanashi</strong> Developer Hub <small>[BETA]</small>
+        </Heading>
       </Link>
       <Spacer />
       <Box display={{base: 'none', md: 'block'}}><ICalendarButton /></Box>
@@ -68,7 +68,7 @@ export function ICalendarButton() {
               以下の URL をコピーして、Google カレンダーなどのカレンダーに登録すると、
               カレンダー上でイベントが表示されるようになります
             </Text>
-            <Input value={'https://event.yamanashi.dev/calendar.ics'}
+            <Input value={'https://hub.yamanashi.dev/event.ics'}
                   size={'sm'}
                   contentEditable
                   onSelect={(e) => {

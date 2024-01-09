@@ -21,10 +21,7 @@ import {
 } from '@chakra-icons/bootstrap';
 
 function Root() {
-  const title = 'やまなし IT勉強会イベント(beta)';
   const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: []});
-
-  document.title = title;
 
   useEffect(() => {
     const getData = async () => {
@@ -57,7 +54,7 @@ function Root() {
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
-      <SiteHeader title={ title } />
+      <SiteHeader />
       <Box w={'100%'} h={{base: '320px', md: '480px'}} background={`url(${background}) center/cover no-repeat`} />
       <Container maxW={'800px'} w={'100%'}
                  mt={{base: '-200px', md: '-320px'}}
@@ -71,7 +68,7 @@ function Root() {
                   本サイトについて
                 </Heading>
                 <Text fontSize={{base: 'xs', md: 'sm'}}>
-                  { title }は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
+                  Yamanashi Developer Hub は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
                 </Text>
                 <Text fontSize={{base: 'xs', md: 'sm'}}>
                   イベント情報は、<a href='https://connpass.com' target='_blank'>Connpass</a> から取得しています。
@@ -145,7 +142,7 @@ function Root() {
           </Card>
         </Stack>
         <Center p={'4'}>
-          <Text fontSize={'xs'} color={'gray'}>{ title }</Text>
+          <Text fontSize={'xs'} color={'gray'}>Yamanashi Developer Hub</Text>
         </Center>
       </Container>
     </Box>

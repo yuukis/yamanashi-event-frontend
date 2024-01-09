@@ -24,10 +24,9 @@ function List() {
   const prev_year = year - 1;
   const next_year = year + 1;
 
-  const title = 'やまなし IT勉強会イベント(beta)';
   const [data, setData] = useState({isLoading: true, events: []});
 
-  document.title = year + '年 開催イベント - ' + title;
+  document.title = year + '年 開催イベント - Yamanashi Developer Hub';
 
   useEffect(() => {
     const getData = async () => {
@@ -48,7 +47,7 @@ function List() {
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
-      <SiteHeader title={ title } />
+      <SiteHeader />
       <Container maxW={'800px'} w={'100%'}
                  mt={'4'}
                  p={{base: '0', md: '4'}}
@@ -106,7 +105,7 @@ function List() {
           </Card>
         </Stack>
         <Center p={'4'}>
-          <Text fontSize={'xs'} color={'gray'}>{ title }</Text>
+          <Text fontSize={'xs'} color={'gray'}>Yamanashi Developer Hub</Text>
         </Center>
       </Container>
     </Box>
