@@ -68,7 +68,7 @@ export function ICalendarButton() {
               以下の URL をコピーして、Google カレンダーなどのカレンダーに登録すると、
               カレンダー上でイベントが表示されるようになります
             </Text>
-            <Input value={'https://event.yamanashi.dev/calendar.ics'}
+            <Input value={'https://hub.yamanashi.dev/event.ics'}
                   size={'sm'}
                   contentEditable
                   onSelect={(e) => {
