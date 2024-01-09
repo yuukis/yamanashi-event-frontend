@@ -4,9 +4,6 @@ import {
   Stack,
   Spacer,
   Link,
-  List,
-  ListItem,
-  ListIcon,
   Text,
   Button,
   IconButton,
@@ -83,14 +80,12 @@ export function ICalendarButton() {
         </PopoverBody>
         {!isMobile && (
           <PopoverFooter>
-            <List fontSize={'sm'} p={'2'}>
-              <ListItem>
-                <ListIcon as={CaretRightFill} />
-                <Link href={'https://calendar.google.com/calendar/r/settings/addbyurl'} target={'_blank'}>
-                  Google カレンダーに登録する
-                </Link>
-              </ListItem>
-            </List>
+            <Button w={'100%'} variant={'ghost'} size={'sm'}
+                    onClick={() => { window.open('https://calendar.google.com/calendar/r/settings/addbyurl', '_blank') }}>
+              <CaretRightFill mr={'2'} />
+              <Text fontWeight={'normal'}>Google カレンダーに登録する</Text>
+              <Spacer />
+            </Button>
           </PopoverFooter>
         )}
       </PopoverContent>
@@ -114,26 +109,24 @@ export function GithubButton() {
         </PopoverHeader>
         <PopoverCloseButton />
         <PopoverBody>
-          <List fontSize={'sm'}>
-            <ListItem p={'2'}>
-              <ListIcon as={Github} />
-              <Link href={'https://github.com/yuukis/yamanashi-event-frontend'} target={'_blank'}>
-                yuukis/yamanashi-event-frontend
-              </Link>
-            </ListItem>
-            <ListItem p={'2'}>
-              <ListIcon as={Github} />
-              <Link href={'https://github.com/yuukis/yamanashi-event-api'} target={'_blank'}>
-                yuukis/yamanashi-event-api
-              </Link>
-            </ListItem>
-            <ListItem p={'2'}>
-              <ListIcon as={Github} />
-              <Link href={'https://github.com/yuukis/yamanashi-event-icalendar'} target={'_blank'}>
-                yuukis/yamanashi-event-icalendar
-              </Link>
-            </ListItem>
-          </List>
+          <Button w={'100%'} variant={'ghost'} size={'sm'}
+                  onClick={() => { window.open('https://github.com/yuukis/yamanashi-event-frontend', '_blank') }}>
+            <Github mr={'2'} />
+            <Text fontWeight={'normal'}>yuukis/yamanashi-event-frontend</Text>
+            <Spacer />
+          </Button>
+          <Button w={'100%'} variant={'ghost'} size={'sm'}
+                  onClick={() => { window.open('https://github.com/yuukis/yamanashi-event-api', '_blank') }}>
+            <Github mr={'2'} />
+            <Text fontWeight={'normal'}>yuukis/yamanashi-event-api</Text>
+            <Spacer />
+          </Button>
+          <Button w={'100%'} variant={'ghost'} size={'sm'}
+                  onClick={() => { window.open('https://github.com/yuukis/yamanashi-event-icalendar', '_blank') }}>
+            <Github mr={'2'} />
+            <Text fontWeight={'normal'}>yuukis/yamanashi-event-icalendar</Text>
+            <Spacer />
+          </Button>
         </PopoverBody>
       </PopoverContent>
     </Popover>
