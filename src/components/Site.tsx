@@ -23,24 +23,29 @@ import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
 export function SiteHeader() {
 
   return (
-    <Stack h={{base: '10', md: '12'}}
-           p={'3'}
-           direction={'row'}
-           alignItems={'center'}
-           bg={'white'}
-           >
-      <Link href={'/'}>
-        <Heading size={{base: 'sm', md: 'md'}}
-                 fontWeight={'normal'}
-                 noOfLines={1}
-                 >
-          <strong>Yamanashi</strong> Developer Hub <small>[BETA]</small>
-        </Heading>
-      </Link>
-      <Spacer />
-      <Box display={{base: 'none', md: 'block'}}><ICalendarButton /></Box>
-      <GithubButton />
-    </Stack>
+    <Box w={'100%'} bg={'white'}>
+      <Stack h={{base: '12', md: '16'}}
+             maxW={'800px'} 
+             m={'auto'}
+             p={'4'}
+             direction={'row'}
+             alignItems={'center'}
+             bg={'white'}
+             >
+        <Link href={'/'}>
+          <Heading size={{base: 'sm', md: 'md'}}
+                  fontWeight={'normal'}
+                  noOfLines={1}
+                  >
+            <strong>Yamanashi</strong> Developer Hub <small>[BETA]</small>
+          </Heading>
+        </Link>
+        <Spacer />
+        <Box display={{base: 'none', md: 'block'}}><ICalendarButton /></Box>
+        <GithubButton />
+      </Stack>
+      <Box h={2} bg={'#ffd980'} />
+    </Box>
   );
 }
 
