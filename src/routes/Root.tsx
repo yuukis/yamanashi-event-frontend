@@ -17,9 +17,6 @@ import {
   Image,
   Button
 } from '@chakra-ui/react';
-import {
-  Calendar2EventFill
-} from '@chakra-icons/bootstrap';
 
 function Root() {
   const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: []});
