@@ -71,9 +71,11 @@ function Root() {
                  position={{md: 'absolute'}}
                  right={{md: '0'}}
                  />
-          <Box pr={{md: '320px'}}>
-            <Heading size={{base: 'sm', md: 'md'}}>
-              本サイトについて
+          <Stack pr={{md: '320px'}} color={'gray.600'}>
+            <Heading size={{base: 'md', md: 'lg'}} mb={'4'}>
+              <Text fontWeight={'bold'} as={'span'} color={'#ff6e61'}>Yamanashi </Text>
+              <Text fontWeight={'normal'} as={'span'} color={'#8ac770'}>Developer </Text>
+              <Text fontWeight={'normal'} as={'span'} color={'#38a9cc'}>Hub</Text>
             </Heading>
             <Text fontSize={{base: 'sm', md: 'md'}}>
               Yamanashi Developer Hub は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
@@ -81,25 +83,26 @@ function Root() {
             <Text fontSize={{base: 'sm', md: 'md'}}>
               イベント情報は、<a href='https://connpass.com' target='_blank'>Connpass</a> から取得しています。
             </Text>
-          </Box>          
+          </Stack>          
         </Container>
       </Box>
       <Container maxW={'800px'} w={'100%'}
                  p={{base: '0', md: '4'}}
                  >
-        <Stack spacing={'4'}>
+        <Stack>
+          <Heading size={{base: 'sm', md: 'md'}}
+                   ml={{base: '4', md: '0'}}
+                   mt={'4'}
+                   color={'gray.600'}
+                   >
+            直近開催イベント
+          </Heading>
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
                 padding={{base: '4', md: '0'}}
                 >
             <CardBody>
               <Stack divider={<StackDivider />}>
-                <Stack direction={'row'} spacing={'2'}>
-                  <Calendar2EventFill />
-                  <Heading size={{base: 'xs', md: 'sm'}}>
-                    直近開催イベント
-                  </Heading>
-                </Stack>
                 {data.isLoading && (
                   <SkeletonEventBody />
                 )}
@@ -113,15 +116,19 @@ function Root() {
             </CardBody>
           </Card>
 
+          <Heading size={{base: 'sm', md: 'md'}}
+                   ml={{base: '4', md: '0'}}
+                   mt={'4'}
+                   color={'gray.600'}
+                   >
+            終了したイベント
+          </Heading>
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
                 padding={{base: '4', md: '0'}}
                 >
             <CardBody>
               <Stack divider={<StackDivider />}>
-                <Heading size={{base: 'xs', md: 'sm'}}>
-                  終了したイベント
-                </Heading>
                 {data.isLoading && (
                   <SkeletonEventBody />
                 )}

@@ -90,7 +90,7 @@ export function EventBody(data: any) {
             ({ start_dow }) { start_time }-
           </Text>
         </Stack>
-        <Box w={'2'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1'} bg={'#ffd980'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
         <Box w={'100%'} position={'relative'}>
           <Heading fontSize={'md'}>{ title }</Heading>
           <Text fontSize={'sm'} display={{base: 'none', md: 'flex'}}>{ sub_title }</Text>
@@ -135,7 +135,7 @@ export function EventBody(data: any) {
           </HStack>
           <Button w={'100px'}
                     size={'md'}
-                    colorScheme='red'
+                    colorScheme={'red'}
                     display={{base: 'none', md: 'block'}}
                     position={'absolute'}
                     bottom={'0'}
