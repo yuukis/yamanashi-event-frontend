@@ -15,8 +15,10 @@ import {
   Heading,
   Text,
   Image,
-  Button
+  Button,
+  Link
 } from '@chakra-ui/react';
+import { ExternalLinkIcon } from "@chakra-ui/icons";
 
 function Root() {
   const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: []});
@@ -78,7 +80,11 @@ function Root() {
               Yamanashi Developer Hub は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
             </Text>
             <Text fontSize={{base: 'sm', md: 'md'}}>
-              イベント情報は、<a href='https://connpass.com' target='_blank'>Connpass</a> から取得しています。
+              イベント情報は、
+              <Link color='red.500' href='https://connpass.com' isExternal>
+                connpass<ExternalLinkIcon mx={'2px'} />
+              </Link>
+              から取得しています。
             </Text>
           </Stack>          
         </Container>
