@@ -53,26 +53,35 @@ function List() {
                  p={{base: '0', md: '4'}}
                  >
         <Stack spacing={'4'}>
+          <Stack direction={'row'} spacing={'2'}
+                 ml={{base: '4', md: '0'}}
+                 mr={{base: '4', md: '0'}}
+                 display={'flex'} alignItems={'flex-end'}
+                 >
+            <Heading size={{base: 'sm', md: 'md'}}
+                     mt={'4'}
+                     color={'gray.600'}
+                     >
+              { year }年 開催イベント
+            </Heading>
+            <Spacer />
+            <Button size={'xs'}
+                    variant={'ghost'}
+                    colorScheme={'red'}
+                    onClick={() => {window.open('/' + prev_year, '_self')}}
+                    >← { prev_year }年</Button>
+            <Button size={'xs'}
+                    variant={'ghost'}
+                    colorScheme={'red'}
+                    onClick={() => {window.open('/' + next_year, '_self')}}
+                    >{ next_year }年 →</Button>
+          </Stack>
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
                 padding={{base: '4', md: '0'}}
                 >
             <CardBody>
               <Stack divider={<StackDivider />}>
-                <Stack direction={'row'} spacing={'2'}>
-                  <Heading size={{base: 'xs', md: 'sm'}}>
-                    { year }年 開催イベント
-                  </Heading>
-                  <Spacer />
-                  <Button size={'xs'}
-                          variant={'outline'}
-                          onClick={() => {window.open('/' + prev_year, '_self')}}
-                          >← { prev_year }年</Button>
-                  <Button size={'xs'}
-                          variant={'outline'}
-                          onClick={() => {window.open('/' + next_year, '_self')}}
-                          >{ next_year }年 →</Button>
-                </Stack>
                 {data.isLoading && (
                   <SkeletonEventBody />
                 )}

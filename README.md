@@ -1,14 +1,14 @@
-# Yamanashi Tech Events
+# Yamanashi Developer Hub
 
-![top](https://github.com/yuukis/yamanashi-event-frontend/assets/2931035/c27d18ce-bace-49dd-bc7c-5fd95a080548)
+![top](https://github.com/yuukis/yamanashi-event-frontend/assets/2931035/62e92d84-7014-4d2e-b5b1-ae2bd5221bce)
 
 ## About the project
 
-This project is a web application that displays  tech events in Yamanashi prefecture.
+This project is a web application that displays tech events in Yamanashi prefecture.
 
 This application is available at the following URL.
 
-https://event.yamanashi.dev
+https://hub.yamanashi.dev
 
 ## Getting Started
 

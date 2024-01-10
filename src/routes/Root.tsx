@@ -3,7 +3,7 @@ import axios from 'axios';
 import { SiteHeader } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody } from '../components/EventBody';
 import '../style.css';
-import background from "../assets/images/background.jpg"
+import background from "../assets/images/background.png"
 import {
   Container,
   Box,
@@ -14,11 +14,9 @@ import {
   CardBody,
   Heading,
   Text,
+  Image,
   Button
 } from '@chakra-ui/react';
-import {
-  Calendar2EventFill
-} from '@chakra-icons/bootstrap';
 
 function Root() {
   const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: []});
@@ -55,39 +53,53 @@ function Root() {
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <SiteHeader />
-      <Box w={'100%'} h={{base: '320px', md: '480px'}} background={`url(${background}) center/cover no-repeat`} />
+      <Box bg={'linen'} p={4}>
+        <Container maxW={'800px'}
+                   w={'100%'}
+                   h={{md: '320px'}}
+                   display={'flex'}
+                   alignItems={'center'}
+                   position={'relative'}
+                   flexDirection={{base: 'column', md: 'row'}}
+                   >
+          <Image src={background}
+                 boxSize={{base: '80%', md: '320px'}}
+                 alt='Yamanashi Developer Hub'
+                 position={{md: 'absolute'}}
+                 right={{md: '0'}}
+                 />
+          <Stack pr={{md: '320px'}} color={'gray.600'}>
+            <Heading size={{base: 'md', md: 'lg'}} mb={'4'}>
+              <Text fontWeight={'bold'} as={'span'} color={'#ff6e61'}>Yamanashi </Text>
+              <Text fontWeight={'normal'} as={'span'} color={'#8ac770'}>Developer </Text>
+              <Text fontWeight={'normal'} as={'span'} color={'#38a9cc'}>Hub</Text>
+            </Heading>
+            <Text fontSize={{base: 'sm', md: 'md'}}>
+              Yamanashi Developer Hub は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
+            </Text>
+            <Text fontSize={{base: 'sm', md: 'md'}}>
+              イベント情報は、<a href='https://connpass.com' target='_blank'>Connpass</a> から取得しています。
+            </Text>
+          </Stack>          
+        </Container>
+      </Box>
       <Container maxW={'800px'} w={'100%'}
-                 mt={{base: '-200px', md: '-320px'}}
                  p={{base: '0', md: '4'}}
                  >
-        <Stack spacing={'4'}>
-          <Card variant={'filled'} size={{base: 'sm', md: 'md'}} opacity={'0.8'}>
-            <CardBody>
-              <Stack spacing={'2'}>
-                <Heading size={{base: 'xs', md: 'sm'}}>
-                  本サイトについて
-                </Heading>
-                <Text fontSize={{base: 'xs', md: 'sm'}}>
-                  Yamanashi Developer Hub は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
-                </Text>
-                <Text fontSize={{base: 'xs', md: 'sm'}}>
-                  イベント情報は、<a href='https://connpass.com' target='_blank'>Connpass</a> から取得しています。
-                </Text>
-              </Stack>
-            </CardBody>
-          </Card>
+        <Stack>
+          <Heading size={{base: 'sm', md: 'md'}}
+                   ml={{base: '4', md: '0'}}
+                   mt={'4'}
+                   color={'gray.600'}
+                   >
+            直近開催イベント
+          </Heading>
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
                 padding={{base: '4', md: '0'}}
                 >
             <CardBody>
               <Stack divider={<StackDivider />}>
-                <Stack direction={'row'} spacing={'2'}>
-                  <Calendar2EventFill />
-                  <Heading size={{base: 'xs', md: 'sm'}}>
-                    直近開催イベント
-                  </Heading>
-                </Stack>
                 {data.isLoading && (
                   <SkeletonEventBody />
                 )}
@@ -101,15 +113,19 @@ function Root() {
             </CardBody>
           </Card>
 
+          <Heading size={{base: 'sm', md: 'md'}}
+                   ml={{base: '4', md: '0'}}
+                   mt={'4'}
+                   color={'gray.600'}
+                   >
+            終了したイベント
+          </Heading>
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
                 padding={{base: '4', md: '0'}}
                 >
             <CardBody>
               <Stack divider={<StackDivider />}>
-                <Heading size={{base: 'xs', md: 'sm'}}>
-                  終了したイベント
-                </Heading>
                 {data.isLoading && (
                   <SkeletonEventBody />
                 )}
