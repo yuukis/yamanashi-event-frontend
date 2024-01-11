@@ -178,7 +178,9 @@ export function SkeletonEventBody() {
                     width={{base: '3rem', md: '6rem'}}
                     />
         </Stack>
-        <Box w={'2'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'gray.200'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'gray.200'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
         <Box w={'100%'}>
           <Skeleton height={{base: '0.875rem', md: '1rem'}}
                     width={{base: '12rem', md: '12rem'}}
