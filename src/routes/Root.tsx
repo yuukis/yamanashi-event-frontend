@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { SiteHeader } from '../components/Site';
+import { SiteHeader, SelectYearButtons } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody } from '../components/EventBody';
 import '../style.css';
 import background from "../assets/images/background.png"
@@ -15,7 +15,6 @@ import {
   Heading,
   Text,
   Image,
-  Button,
   Link
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from "@chakra-ui/icons";
@@ -153,16 +152,7 @@ function Root() {
                 padding={{base: '4', md: '0'}}
                 >
             <CardBody>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2015', '_self')}}>2015年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2016', '_self')}}>2016年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2017', '_self')}}>2017年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2018', '_self')}}>2018年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2019', '_self')}}>2019年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2020', '_self')}}>2020年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2021', '_self')}}>2021年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2022', '_self')}}>2022年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2023', '_self')}}>2023年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2024', '_self')}}>2024年</Button>
+              <SelectYearButtons />
             </CardBody>
           </Card>
         </Stack>

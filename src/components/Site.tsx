@@ -139,3 +139,24 @@ export function GithubButton() {
     </Popover>
   )
 }
+
+export function SelectYearButtons() {
+
+  const current_year = new Date().getFullYear();
+  const start_year = 2015;
+  const years = [];
+
+  for (let y = start_year; y <= current_year; y++) {
+    years.push(y);
+  }
+
+  return (
+    <>
+      {years.map((year) => (
+        <Button key={year} size={'sm'} m={'1'}
+                onClick={() => { window.open(`/${year}`, '_self'); }}
+                >{`${year}年`}</Button>
+      ))}
+    </>
+  );
+}
