@@ -93,15 +93,21 @@ export function EventBody(data: any) {
             ({ start_dow }) { start_time }-
           </Text>
         </Stack>
-        <Box w={'1px'} bg={'#ff6e61'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
-        <Box w={'1px'} bg={'#a5de8c'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
-        <Box w={'1px'} bg={'#4abfe3'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
+        <Show above='md'>
+          <Stack spacing={'2px'} direction={'row'} mr={'4'}>
+            <Box w={'1px'} bg={'#ff6e61'} />
+            <Box w={'1px'} bg={'#a5de8c'} />
+            <Box w={'1px'} bg={'#4abfe3'} />
+          </Stack>
+        </Show>
         <Box w={'100%'} position={'relative'}>
           <Heading fontSize={'md'} color={'#207c97'}>
             <Show above='md'><Link href={event_url} isExternal>{ title }</Link></Show>
             <Show below='md'>{ title }</Show>
           </Heading>
-          <Text fontSize={'sm'} display={{base: 'none', md: 'flex'}}>{ sub_title }</Text>
+          <Show above='md'>
+            <Text fontSize={'sm'}>{ sub_title }</Text>
+          </Show>
           <HStack mt={'2'} pr={{md: '100px'}}>
             <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
               {hash_tag && (
@@ -124,13 +130,16 @@ export function EventBody(data: any) {
               {group_name && (
                 <HStack>
                   <People />
-                  <Button size={'xs'} display={{ base: 'none', md: 'block' }}
-                          onClick={() => window.open(group_url)}
-                          >{group_name}</Button>
-                  <Text fontSize={'sm'}
-                        display={{ base: 'block', md: 'none' }}
-                        noOfLines={1}
-                        >{group_name}</Text>
+                  <Show above='md'>
+                    <Button size={'xs'}
+                            onClick={() => window.open(group_url)}
+                            >{group_name}</Button>
+                  </Show>
+                  <Show below='md'>
+                    <Text fontSize={'sm'}
+                          noOfLines={1}
+                          >{group_name}</Text>
+                  </Show>
                 </HStack>
               )}
               {group_name == null && owner_name && (
@@ -141,24 +150,25 @@ export function EventBody(data: any) {
               )}
             </Stack>
           </HStack>
-          <Button w={'100px'}
-                    size={'md'}
-                    colorScheme={'red'}
-                    display={{base: 'none', md: 'block'}}
-                    position={'absolute'}
-                    bottom={'0'}
-                    right={'0'}
-                    onClick={() => window.open(event_url)}
-                    >
-            <HStack>
-              <ChevronRight />
-              <Text letterSpacing={'0.2rem'}>詳細</Text>
-            </HStack>
-          </Button>
+          <Show above='md'>
+            <Button w={'100px'}
+                      size={'md'}
+                      colorScheme={'red'}
+                      position={'absolute'}
+                      bottom={'0'}
+                      right={'0'}
+                      onClick={() => window.open(event_url)}
+                      >
+              <HStack>
+                <ChevronRight />
+                <Text letterSpacing={'0.2rem'}>詳細</Text>
+              </HStack>
+            </Button>
+          </Show>
         </Box>
       </Flex>
       <Spacer />
-      <ChevronRight display={{md: 'none'}} />
+      <Show below='md'><ChevronRight /></Show>
     </HStack>
   )
 }
@@ -183,9 +193,13 @@ export function SkeletonEventBody() {
                     width={{base: '3rem', md: '6rem'}}
                     />
         </Stack>
-        <Box w={'1px'} bg={'gray.200'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
-        <Box w={'1px'} bg={'gray.200'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
-        <Box w={'1px'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
+        <Show above='md'>
+          <Stack spacing={'2px'} direction={'row'} mr={'4'}>
+            <Box w={'1px'} bg={'gray.200'} />
+            <Box w={'1px'} bg={'gray.200'} />
+            <Box w={'1px'} bg={'gray.200'} />
+          </Stack>
+        </Show>
         <Box w={'100%'}>
           <Skeleton height={{base: '0.875rem', md: '1rem'}}
                     width={{base: '12rem', md: '12rem'}}

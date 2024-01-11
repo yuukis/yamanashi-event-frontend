@@ -88,9 +88,11 @@ function Root() {
           </Stack>          
         </Container>
       </Box>
-      <Box h={'1px'} bg={'#4abfe3'} mb={'2px'}></Box>
-      <Box h={'1px'} bg={'#a5de8c'} mb={'2px'}></Box>
-      <Box h={'1px'} bg={'#ff6e61'} mb={'2px'}></Box>
+      <Stack spacing={'2px'}>
+        <Box h={'1px'} bg={'#4abfe3'} />
+        <Box h={'1px'} bg={'#a5de8c'} />
+        <Box h={'1px'} bg={'#ff6e61'} />
+      </Stack>
       <Container maxW={'800px'} w={'100%'}
                  p={{base: '0', md: '4'}}
                  >
