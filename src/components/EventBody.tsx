@@ -95,7 +95,7 @@ export function EventBody(data: any) {
         <Box w={'1px'} bg={'#a5de8c'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
         <Box w={'1px'} bg={'#4abfe3'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
         <Box w={'100%'} position={'relative'}>
-          <Heading fontSize={'md'}>{ title }</Heading>
+          <Heading fontSize={'md'} color={'#207c97'}>{ title }</Heading>
           <Text fontSize={'sm'} display={{base: 'none', md: 'flex'}}>{ sub_title }</Text>
           <HStack mt={'2'} pr={{md: '100px'}}>
             <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
