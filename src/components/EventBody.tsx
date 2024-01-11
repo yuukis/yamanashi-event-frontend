@@ -153,7 +153,7 @@ export function EventBody(data: any) {
           <Show above='md'>
             <Button w={'100px'}
                       size={'md'}
-                      colorScheme={'red'}
+                      colorScheme={'impact'}
                       position={'absolute'}
                       bottom={'0'}
                       right={'0'}
