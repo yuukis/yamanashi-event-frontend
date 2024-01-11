@@ -11,7 +11,8 @@ import {
   Skeleton,
   SkeletonCircle,
   useMediaQuery,
-  Show
+  Show,
+  Hide
 } from '@chakra-ui/react';
 import {
   Hash,
@@ -168,7 +169,7 @@ export function EventBody(data: any) {
         </Box>
       </Flex>
       <Spacer />
-      <Show below='md'><ChevronRight /></Show>
+      <Hide above='md'><ChevronRight /></Hide>
     </HStack>
   )
 }
