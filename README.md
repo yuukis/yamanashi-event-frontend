@@ -1,6 +1,6 @@
 # Yamanashi Developer Hub
 
-![top](https://github.com/yuukis/yamanashi-event-frontend/assets/2931035/62e92d84-7014-4d2e-b5b1-ae2bd5221bce)
+![top](https://github.com/yuukis/yamanashi-event-frontend/assets/2931035/edc8ad79-0658-442d-b2b1-3e589a30f9e4)
 
 ## About the project
 
