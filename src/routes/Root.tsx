@@ -80,7 +80,7 @@ function Root() {
             </Text>
             <Text fontSize={{base: 'sm', md: 'md'}}>
               イベント情報は、
-              <Link color='red.500' href='https://connpass.com' isExternal>
+              <Link color={'#207c97'} href='https://connpass.com' isExternal>
                 connpass<ExternalLinkIcon mx={'2px'} />
               </Link>
               から取得しています。
