@@ -71,16 +71,16 @@ function Root() {
                  />
           <Stack pr={{md: '320px'}} color={'gray.600'}>
             <Heading size={{base: 'md', md: 'lg'}} mb={'4'} textAlign={{base: 'center', md: 'left'}}>
-              <Text fontWeight={'bold'} as={'span'} color={'#ff6e61'}>Yamanashi </Text>
-              <Text fontWeight={'normal'} as={'span'} color={'#8ac770'}>Developer </Text>
-              <Text fontWeight={'normal'} as={'span'} color={'#38a9cc'}>Hub</Text>
+              <Text fontWeight={'bold'} as={'span'} color={'impact.500'}>Yamanashi </Text>
+              <Text fontWeight={'normal'} as={'span'} color={'secondary.700'}>Developer </Text>
+              <Text fontWeight={'normal'} as={'span'} color={'primary.600'}>Hub</Text>
             </Heading>
             <Text fontSize={{base: 'sm', md: 'md'}}>
               Yamanashi Developer Hub は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
             </Text>
             <Text fontSize={{base: 'sm', md: 'md'}}>
               イベント情報は、
-              <Link color={'#207c97'} href='https://connpass.com' isExternal>
+              <Link color={'primary.800'} href='https://connpass.com' isExternal>
                 connpass<ExternalLinkIcon mx={'2px'} />
               </Link>
               から取得しています。
@@ -89,9 +89,9 @@ function Root() {
         </Container>
       </Box>
       <Stack spacing={'2px'}>
-        <Box h={'1px'} bg={'#4abfe3'} />
-        <Box h={'1px'} bg={'#a5de8c'} />
-        <Box h={'1px'} bg={'#ff6e61'} />
+        <Box h={'1px'} bg={'primary.500'} />
+        <Box h={'1px'} bg={'secondary.500'} />
+        <Box h={'1px'} bg={'impact.500'} />
       </Stack>
       <Container maxW={'800px'} w={'100%'}
                  p={{base: '0', md: '4'}}
