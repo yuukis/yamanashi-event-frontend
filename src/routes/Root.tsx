@@ -71,7 +71,7 @@ function Root() {
                  right={{md: '0'}}
                  />
           <Stack pr={{md: '320px'}} color={'gray.600'}>
-            <Heading size={{base: 'md', md: 'lg'}} mb={'4'}>
+            <Heading size={{base: 'md', md: 'lg'}} mb={'4'} textAlign={{base: 'center', md: 'left'}}>
               <Text fontWeight={'bold'} as={'span'} color={'#ff6e61'}>Yamanashi </Text>
               <Text fontWeight={'normal'} as={'span'} color={'#8ac770'}>Developer </Text>
               <Text fontWeight={'normal'} as={'span'} color={'#38a9cc'}>Hub</Text>
