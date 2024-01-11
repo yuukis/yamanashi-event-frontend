@@ -58,6 +58,7 @@ export function EventBody(data: any) {
               spacing={'0'}
               alignItems={{base: 'baseline', md: 'center'}}
               mb={{base: '1', md: '0'}}
+              color={'gray.600'}
               >
           { now_year !== start_year && (
             <HStack spacing={'0'}
