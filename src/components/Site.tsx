@@ -44,8 +44,9 @@ export function SiteHeader() {
         <Box display={{base: 'none', md: 'block'}}><ICalendarButton /></Box>
         <GithubButton />
       </Stack>
-      <Box h={1} bg={'#ffb947'} />
-      <Box h={1} bg={'#ffd980'} />
+      <Box h={'1px'} bg={'#ff6e61'} mb={'2px'}></Box>
+      <Box h={'1px'} bg={'#a5de8c'} mb={'2px'}></Box>
+      <Box h={'1px'} bg={'#4abfe3'} mb={'2px'}></Box>
     </Box>
   );
 }
@@ -137,4 +138,25 @@ export function GithubButton() {
       </PopoverContent>
     </Popover>
   )
+}
+
+export function SelectYearButtons() {
+
+  const current_year = new Date().getFullYear();
+  const start_year = 2015;
+  const years = [];
+
+  for (let y = start_year; y <= current_year; y++) {
+    years.push(y);
+  }
+
+  return (
+    <>
+      {years.map((year) => (
+        <Button key={year} size={'sm'} m={'1'}
+                onClick={() => { window.open(`/${year}`, '_self'); }}
+                >{`${year}年`}</Button>
+      ))}
+    </>
+  );
 }

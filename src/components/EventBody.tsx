@@ -58,6 +58,7 @@ export function EventBody(data: any) {
               spacing={'0'}
               alignItems={{base: 'baseline', md: 'center'}}
               mb={{base: '1', md: '0'}}
+              color={'gray.600'}
               >
           { now_year !== start_year && (
             <HStack spacing={'0'}
@@ -90,7 +91,9 @@ export function EventBody(data: any) {
             ({ start_dow }) { start_time }-
           </Text>
         </Stack>
-        <Box w={'1'} bg={'#ffd980'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'#ff6e61'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'#a5de8c'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'#4abfe3'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
         <Box w={'100%'} position={'relative'}>
           <Heading fontSize={'md'}>{ title }</Heading>
           <Text fontSize={'sm'} display={{base: 'none', md: 'flex'}}>{ sub_title }</Text>
@@ -175,7 +178,9 @@ export function SkeletonEventBody() {
                     width={{base: '3rem', md: '6rem'}}
                     />
         </Stack>
-        <Box w={'2'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'gray.200'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'gray.200'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'gray.200'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
         <Box w={'100%'}>
           <Skeleton height={{base: '0.875rem', md: '1rem'}}
                     width={{base: '12rem', md: '12rem'}}

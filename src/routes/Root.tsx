@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { SiteHeader } from '../components/Site';
+import { SiteHeader, SelectYearButtons } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody } from '../components/EventBody';
 import '../style.css';
 import background from "../assets/images/background.png"
@@ -15,7 +15,6 @@ import {
   Heading,
   Text,
   Image,
-  Button,
   Link
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from "@chakra-ui/icons";
@@ -71,7 +70,7 @@ function Root() {
                  right={{md: '0'}}
                  />
           <Stack pr={{md: '320px'}} color={'gray.600'}>
-            <Heading size={{base: 'md', md: 'lg'}} mb={'4'}>
+            <Heading size={{base: 'md', md: 'lg'}} mb={'4'} textAlign={{base: 'center', md: 'left'}}>
               <Text fontWeight={'bold'} as={'span'} color={'#ff6e61'}>Yamanashi </Text>
               <Text fontWeight={'normal'} as={'span'} color={'#8ac770'}>Developer </Text>
               <Text fontWeight={'normal'} as={'span'} color={'#38a9cc'}>Hub</Text>
@@ -89,13 +88,16 @@ function Root() {
           </Stack>          
         </Container>
       </Box>
+      <Box h={'1px'} bg={'#4abfe3'} mb={'2px'}></Box>
+      <Box h={'1px'} bg={'#a5de8c'} mb={'2px'}></Box>
+      <Box h={'1px'} bg={'#ff6e61'} mb={'2px'}></Box>
       <Container maxW={'800px'} w={'100%'}
                  p={{base: '0', md: '4'}}
                  >
         <Stack>
           <Heading size={{base: 'sm', md: 'md'}}
                    ml={{base: '4', md: '0'}}
-                   mt={'4'}
+                   mt={'8'}
                    color={'gray.600'}
                    >
             直近開催イベント
@@ -121,7 +123,7 @@ function Root() {
 
           <Heading size={{base: 'sm', md: 'md'}}
                    ml={{base: '4', md: '0'}}
-                   mt={'4'}
+                   mt={'8'}
                    color={'gray.600'}
                    >
             終了したイベント
@@ -150,16 +152,7 @@ function Root() {
                 padding={{base: '4', md: '0'}}
                 >
             <CardBody>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2015', '_self')}}>2015年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2016', '_self')}}>2016年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2017', '_self')}}>2017年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2018', '_self')}}>2018年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2019', '_self')}}>2019年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2020', '_self')}}>2020年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2021', '_self')}}>2021年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2022', '_self')}}>2022年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2023', '_self')}}>2023年</Button>
-              <Button size={'sm'} m={'1'} onClick={() => {window.open('/2024', '_self')}}>2024年</Button>
+              <SelectYearButtons />
             </CardBody>
           </Card>
         </Stack>
