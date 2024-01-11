@@ -44,8 +44,9 @@ export function SiteHeader() {
         <Box display={{base: 'none', md: 'block'}}><ICalendarButton /></Box>
         <GithubButton />
       </Stack>
-      <Box h={1} bg={'#ffb947'} />
-      <Box h={1} bg={'#ffd980'} />
+      <Box h={'1px'} bg={'#ff6e61'} mb={'2px'}></Box>
+      <Box h={'1px'} bg={'#a5de8c'} mb={'2px'}></Box>
+      <Box h={'1px'} bg={'#4abfe3'} mb={'2px'}></Box>
     </Box>
   );
 }

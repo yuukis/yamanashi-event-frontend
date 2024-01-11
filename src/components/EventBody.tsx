@@ -90,7 +90,9 @@ export function EventBody(data: any) {
             ({ start_dow }) { start_time }-
           </Text>
         </Stack>
-        <Box w={'1'} bg={'#ffd980'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'#ff6e61'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'#a5de8c'} mr={'2px'} display={{base: 'none', md: 'block'}}></Box>
+        <Box w={'1px'} bg={'#4abfe3'} mr={'4'} display={{base: 'none', md: 'block'}}></Box>
         <Box w={'100%'} position={'relative'}>
           <Heading fontSize={'md'}>{ title }</Heading>
           <Text fontSize={'sm'} display={{base: 'none', md: 'flex'}}>{ sub_title }</Text>
