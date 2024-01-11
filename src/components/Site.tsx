@@ -33,7 +33,7 @@ export function SiteHeader() {
              alignItems={'center'}
              bg={'white'}
              >
-        <Link href={'/'}>
+        <Link href={'/'} _hover={{textDecoration: 'none', opacity: '0.6'}}>
           <Heading size={{base: 'sm', md: 'md'}}
                   fontWeight={'normal'}
                   noOfLines={1}
