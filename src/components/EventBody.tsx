@@ -95,13 +95,13 @@ export function EventBody(data: any) {
         </Stack>
         <Show above='md'>
           <Stack spacing={'2px'} direction={'row'} mr={'4'}>
-            <Box w={'1px'} bg={'#ff6e61'} />
-            <Box w={'1px'} bg={'#a5de8c'} />
-            <Box w={'1px'} bg={'#4abfe3'} />
+            <Box w={'1px'} bg={'impact.500'} />
+            <Box w={'1px'} bg={'secondary.500'} />
+            <Box w={'1px'} bg={'primary.500'} />
           </Stack>
         </Show>
         <Box w={'100%'} position={'relative'}>
-          <Heading fontSize={'md'} color={'#207c97'}>
+          <Heading fontSize={'md'} color={'primary.800'}>
             <Show above='md'><Link href={event_url} isExternal>{ title }</Link></Show>
             <Show below='md'>{ title }</Show>
           </Heading>
@@ -153,7 +153,7 @@ export function EventBody(data: any) {
           <Show above='md'>
             <Button w={'100px'}
                       size={'md'}
-                      colorScheme={'red'}
+                      colorScheme={'impact'}
                       position={'absolute'}
                       bottom={'0'}
                       right={'0'}

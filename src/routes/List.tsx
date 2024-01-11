@@ -67,12 +67,12 @@ function List() {
             <Spacer />
             <Button size={'xs'}
                     variant={'ghost'}
-                    colorScheme={'red'}
+                    colorScheme={'impact'}
                     onClick={() => {window.open('/' + prev_year, '_self')}}
                     >← { prev_year }年</Button>
             <Button size={'xs'}
                     variant={'ghost'}
-                    colorScheme={'red'}
+                    colorScheme={'impact'}
                     onClick={() => {window.open('/' + next_year, '_self')}}
                     >{ next_year }年 →</Button>
           </Stack>

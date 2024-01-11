@@ -46,9 +46,9 @@ export function SiteHeader() {
         <GithubButton />
       </Stack>
       <Stack spacing={'2px'}>
-        <Box h={'1px'} bg={'#ff6e61'} />
-        <Box h={'1px'} bg={'#a5de8c'} />
-        <Box h={'1px'} bg={'#4abfe3'} />
+        <Box h={'1px'} bg={'impact.500'} />
+        <Box h={'1px'} bg={'secondary.500'} />
+        <Box h={'1px'} bg={'primary.500'} />
       </Stack>
     </Box>
   );
