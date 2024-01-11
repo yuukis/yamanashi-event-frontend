@@ -15,7 +15,8 @@ import {
   PopoverHeader,
   PopoverCloseButton,
   PopoverBody,
-  PopoverFooter
+  PopoverFooter,
+  Show
 } from '@chakra-ui/react';
 import { isMobile } from 'react-device-detect';
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
@@ -32,7 +33,7 @@ export function SiteHeader() {
              alignItems={'center'}
              bg={'white'}
              >
-        <Link href={'/'}>
+        <Link href={'/'} _hover={{textDecoration: 'none', opacity: '0.6'}}>
           <Heading size={{base: 'sm', md: 'md'}}
                   fontWeight={'normal'}
                   noOfLines={1}
@@ -41,12 +42,14 @@ export function SiteHeader() {
           </Heading>
         </Link>
         <Spacer />
-        <Box display={{base: 'none', md: 'block'}}><ICalendarButton /></Box>
+        <Show above='md'><ICalendarButton /></Show>
         <GithubButton />
       </Stack>
-      <Box h={'1px'} bg={'#ff6e61'} mb={'2px'}></Box>
-      <Box h={'1px'} bg={'#a5de8c'} mb={'2px'}></Box>
-      <Box h={'1px'} bg={'#4abfe3'} mb={'2px'}></Box>
+      <Stack spacing={'2px'}>
+        <Box h={'1px'} bg={'#ff6e61'} />
+        <Box h={'1px'} bg={'#a5de8c'} />
+        <Box h={'1px'} bg={'#4abfe3'} />
+      </Stack>
     </Box>
   );
 }
