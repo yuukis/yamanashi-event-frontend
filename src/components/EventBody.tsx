@@ -49,13 +49,18 @@ export function EventBody(data: any) {
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
 
   return (
-    <HStack p={{md: '2'}}
-            onClick={() => { if (!isDesktopScreenSize) window.open(event_url, '_self') }}
-            >
+    <HStack p={'2'}
+            {...(!isDesktopScreenSize && (
+              {
+                onClick: () => window.open(event_url, '_self'),
+                _active: {bg: 'gray.100'},
+              }
+            ))}>
       <Flex w={'100%'}
-          flexDirection={{base: 'column', md: 'row'}}
-          alignItems={{base: 'flex-start', md: 'stretch'}}
-          >
+            ml={{base: '2', md: '0'}}
+            flexDirection={{base: 'column', md: 'row'}}
+            alignItems={{base: 'flex-start', md: 'stretch'}}
+            >
         <Stack w={{base: '100%', md: '180px'}}
               direction={{base: 'row', md: 'column'}}
               spacing={'0'}
@@ -177,7 +182,7 @@ export function EventBody(data: any) {
 export function SkeletonEventBody() {
 
   return (
-    <HStack p={{md: '2'}}>
+    <HStack p={{base: '4', md: '2'}}>
       <Flex w={'100%'}
           flexDirection={{base: 'column', md: 'row'}}
           alignItems={{base: 'flex-start', md: 'stretch'}}
@@ -226,7 +231,7 @@ export function SkeletonEventBody() {
 export function EmptyEventBody() {
 
   return (
-    <Box p={{md: '2'}}>
+    <Box p={{base: '4', md: '2'}}>
       <Text fontSize={'sm'}>イベントはありません</Text>
     </Box>
   )

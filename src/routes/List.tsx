@@ -78,10 +78,10 @@ function List() {
           </Stack>
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
-                padding={{base: '4', md: '0'}}
+                p={'0'}
                 >
             <CardBody>
-              <Stack divider={<StackDivider />}>
+              <Stack spacing={{base: '0', md: '0.5em'}} divider={<StackDivider />}>
                 {data.isLoading && (
                   <SkeletonEventBody />
                 )}
@@ -97,7 +97,7 @@ function List() {
 
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
-                padding={{base: '4', md: '0'}}
+                p={{base: '4', md: '0'}}
                 >
             <CardBody>
               <SelectYearButtons />
