@@ -136,11 +136,11 @@ export function EventBody(data: any) {
                             onClick={() => window.open(group_url)}
                             >{group_name}</Button>
                   </Show>
-                  <Show below='md'>
+                  <Hide above='md'>
                     <Text fontSize={'sm'}
                           noOfLines={1}
                           >{group_name}</Text>
-                  </Show>
+                  </Hide>
                 </HStack>
               )}
               {group_name == null && owner_name && (
