@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { SiteHeader, SelectYearButtons } from '../components/Site';
-import { EventBody, SkeletonEventBody, EmptyEventBody } from '../components/EventBody';
+import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import '../style.css';
 import background from "../assets/images/background.png"
 import {
@@ -20,12 +20,25 @@ import {
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 
 function Root() {
-  const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: []});
+  const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: [], errorMessage: ''});
 
   useEffect(() => {
     const getData = async () => {
-      // const res = await axios.get('http://localhost:8000/events');
-      const res = await axios.get('https://api.event.yamanashi.dev/events');
+      let res = null;
+      try {
+        res = await axios.get('https://api.event.yamanashi.dev/events');
+      }
+      catch (err: any) {
+        const data = {
+          isLoading: false,
+          pastEvents: [],
+          futureEvents: [],
+          errorMessage: err.message
+        }
+        setData(data);
+        return;
+      }
+
       const events = res.data;
       const data = {
         isLoading: false,
@@ -44,7 +57,8 @@ function Root() {
         }).sort((data: any) => {
           const start = new Date(data.started_at);
           return start.getTime();
-        })
+        }),
+        errorMessage: ''
       }
       setData(data);
     }
@@ -110,15 +124,17 @@ function Root() {
                 >
             <CardBody>
               <Stack spacing={{base: '0', md: '0.5em'}} divider={<StackDivider />}>
-                {data.isLoading && (
+                {data.isLoading ? (
                   <SkeletonEventBody />
-                )}
-                {!data.isLoading && data.futureEvents.length === 0 && (
+                ) : data.errorMessage ? (
+                  <ErrorEventBody message={ data.errorMessage } />
+                ) : data.futureEvents.length === 0 ? (
                   <EmptyEventBody />
-                )}
-                {data.futureEvents.map((data) => {
-                  return <EventBody event={data} />
-                })}
+                ) : (
+                  data.futureEvents.map((data) => {
+                    return <EventBody event={data} />
+                  }
+                ))}
               </Stack>
             </CardBody>
           </Card>
@@ -136,15 +152,17 @@ function Root() {
                 >
             <CardBody>
               <Stack spacing={{base: '0', md: '0.5em'}} divider={<StackDivider />}>
-                {data.isLoading && (
+                {data.isLoading ? (
                   <SkeletonEventBody />
-                )}
-                {!data.isLoading && data.pastEvents.length === 0 && (
+                ) : data.errorMessage ? (
+                  <ErrorEventBody message={ data.errorMessage } />
+                ) : data.pastEvents.length === 0 ? (
                   <EmptyEventBody />
-                )}
-                {data.pastEvents.map((data) => {
-                  return <EventBody event={data} />
-                })}
+                ) : (
+                  data.pastEvents.map((data) => {
+                    return <EventBody event={data} />
+                  }
+                ))}
               </Stack>
             </CardBody>
           </Card>
