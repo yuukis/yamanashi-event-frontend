@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from "react-router-dom";
 import axios from 'axios';
 import { SiteHeader, SelectYearButtons } from '../components/Site';
-import { EventBody, SkeletonEventBody, EmptyEventBody } from '../components/EventBody';
+import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import '../style.css';
 import {
   Container,
@@ -24,21 +24,34 @@ function List() {
   const prev_year = year - 1;
   const next_year = year + 1;
 
-  const [data, setData] = useState({isLoading: true, events: []});
+  const [data, setData] = useState({isLoading: true, events: [], errorMessage: ''});
 
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
 
   useEffect(() => {
     const getData = async () => {
-      // const res = await axios.get('http://localhost:8000/events');
-      const res = await axios.get(`https://api.event.yamanashi.dev/events/in/${year}`);
+      let res = null;
+      try {
+        res = await axios.get(`https://api.event.yamanashi.dev/events/in/${year}`);
+      }
+      catch (err: any) {
+        const data = {
+          isLoading: false,
+          events: [],
+          errorMessage: err.message
+        }
+        setData(data);
+        return;
+      }
+
       const events = res.data;
       const data = {
         isLoading: false,
         events: events.sort((data: any) => {
           const start = new Date(data.started_at);
           return start.getTime();
-        })
+        }),
+        errorMessage: ''
       }
       setData(data);
     }
@@ -82,15 +95,17 @@ function List() {
                 >
             <CardBody>
               <Stack spacing={{base: '0', md: '0.5em'}} divider={<StackDivider />}>
-                {data.isLoading && (
+              {data.isLoading ? (
                   <SkeletonEventBody />
-                )}
-                {!data.isLoading && data.events.length === 0 && (
+                ) : data.errorMessage ? (
+                  <ErrorEventBody message={ data.errorMessage } />
+                ) : data.events.length === 0 ? (
                   <EmptyEventBody />
-                )}
-                {data.events.map((data) => {
-                  return <EventBody event={data} />
-                })}
+                ) : (
+                  data.events.map((data) => {
+                    return <EventBody event={data} />
+                  }
+                ))}
               </Stack>
             </CardBody>
           </Card>
