@@ -20,6 +20,7 @@ import {
   Person,
   People,
   ChevronRight,
+  ExclamationTriangleFill,
 } from '@chakra-icons/bootstrap';
 
 export function EventBody(data: any) {
@@ -234,5 +235,22 @@ export function EmptyEventBody() {
     <Box p={{base: '4', md: '2'}}>
       <Text fontSize={'sm'}>イベントはありません</Text>
     </Box>
+  )
+}
+
+export function ErrorEventBody(prop: any) {
+
+  const message = prop.message;
+
+  return (
+    <Stack direction={'row'} p={{base: '4', md: '2'}} spacing={'4'} color={'impact.500'}>
+      <ExclamationTriangleFill boxSize={'2rem'} />
+      <Stack>
+        <Text fontSize={'sm'} fontWeight={'bold'}>イベント情報の取得に失敗しました</Text>
+        {message && (
+          <Text fontSize={'sm'}>{ message }</Text>
+        )}
+      </Stack>
+    </Stack>
   )
 }
