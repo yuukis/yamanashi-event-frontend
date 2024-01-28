@@ -44,16 +44,16 @@ function Root() {
         isLoading: false,
         pastEvents: events.filter((data: any) => {
           const now = new Date();
-          const start = new Date(data.started_at);
-          return now > start;
+          const end = new Date(data.ended_at);
+          return now > end;
         }).sort((data: any) => {
           const start = new Date(data.started_at);
           return -start.getTime();
         }),
         futureEvents: events.filter((data: any) => {
           const now = new Date();
-          const start = new Date(data.started_at);
-          return now <= start;
+          const end = new Date(data.ended_at);
+          return now <= end;
         }).sort((data: any) => {
           const start = new Date(data.started_at);
           return start.getTime();
