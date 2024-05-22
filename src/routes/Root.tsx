@@ -22,6 +22,8 @@ import { ExternalLinkIcon } from "@chakra-ui/icons";
 function Root() {
   const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: [], errorMessage: ''});
 
+  document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
+
   useEffect(() => {
     const getData = async () => {
       let res = null;
