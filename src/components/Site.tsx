@@ -1,3 +1,4 @@
+import icon from "../assets/images/icon.png"
 import {
   Heading,
   Box,
@@ -5,6 +6,7 @@ import {
   Spacer,
   Link,
   Text,
+  Image,
   Button,
   IconButton,
   Input,
@@ -34,12 +36,18 @@ export function SiteHeader() {
              bg={'white'}
              >
         <Link href={'/'} _hover={{textDecoration: 'none', opacity: '0.6'}}>
-          <Heading size={{base: 'sm', md: 'md'}}
-                  fontWeight={'normal'}
-                  noOfLines={1}
-                  >
-            <strong>Yamanashi</strong> Developer Hub <small>[BETA]</small>
-          </Heading>
+          <Stack direction={'row'} spacing={'3'} alignItems={'center'}>
+            <Image src={icon}
+                   boxSize={{base: '6', md: '8'}}
+                   alt='Yamanashi Developer Hub'
+                   />
+            <Heading size={{base: 'sm', md: 'md'}}
+                     fontWeight={'normal'}
+                     noOfLines={1}
+                     >
+              <strong>Yamanashi</strong> Developer Hub <small>[BETA]</small>
+            </Heading>
+          </Stack>
         </Link>
         <Spacer />
         <Show above='md'><ICalendarButton /></Show>
