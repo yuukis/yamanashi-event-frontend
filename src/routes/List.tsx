@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from "react-router-dom";
 import axios from 'axios';
-import { SiteHeader, SelectYearButtons } from '../components/Site';
+import { SiteHeader, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import '../style.css';
 import {
@@ -24,7 +24,12 @@ function List() {
   const prev_year = year - 1;
   const next_year = year + 1;
 
-  const [data, setData] = useState({isLoading: true, events: [], errorMessage: ''});
+  const [data, setData] = useState({
+    isLoading: true,
+    events: [],
+    lastModified: null,
+    errorMessage: ''
+  });
 
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
 
@@ -38,6 +43,7 @@ function List() {
         const data = {
           isLoading: false,
           events: [],
+          lastModified: null,
           errorMessage: err.message
         }
         setData(data);
@@ -51,6 +57,7 @@ function List() {
           const start = new Date(data.started_at);
           return start.getTime();
         }),
+        lastModified: res.headers['last-modified'],
         errorMessage: ''
       }
       setData(data);
@@ -65,10 +72,11 @@ function List() {
                  mt={'4'}
                  p={{base: '0', md: '4'}}
                  >
-        <Stack spacing={'4'}>
+        <Stack>
           <Stack direction={'row'} spacing={'2'}
                  ml={{base: '4', md: '0'}}
                  mr={{base: '4', md: '0'}}
+                 mb={'2'}
                  display={'flex'} alignItems={'flex-end'}
                  >
             <Heading size={{base: 'sm', md: 'md'}}
@@ -109,6 +117,9 @@ function List() {
               </Stack>
             </CardBody>
           </Card>
+          {data.lastModified &&
+            <FooterLastModified lastModified={ data.lastModified } />
+          }
 
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { SiteHeader, SelectYearButtons } from '../components/Site';
+import { SiteHeader, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import '../style.css';
 import background from "../assets/images/background.png"
@@ -20,7 +20,13 @@ import {
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 
 function Root() {
-  const [data, setData] = useState({isLoading: true, pastEvents: [], futureEvents: [], errorMessage: ''});
+  const [data, setData] = useState({
+    isLoading: true,
+    pastEvents: [],
+    futureEvents: [],
+    lastModified: null,
+    errorMessage: ''
+  });
 
   document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
 
@@ -35,6 +41,7 @@ function Root() {
           isLoading: false,
           pastEvents: [],
           futureEvents: [],
+          lastModified: null,
           errorMessage: err.message
         }
         setData(data);
@@ -60,6 +67,7 @@ function Root() {
           const start = new Date(data.started_at);
           return start.getTime();
         }),
+        lastModified: res.headers['last-modified'],
         errorMessage: ''
       }
       setData(data);
@@ -116,6 +124,7 @@ function Root() {
           <Heading size={{base: 'sm', md: 'md'}}
                    ml={{base: '4', md: '0'}}
                    mt={'8'}
+                   mb={'2'}
                    color={'gray.600'}
                    >
             直近開催イベント
@@ -140,10 +149,14 @@ function Root() {
               </Stack>
             </CardBody>
           </Card>
+          {data.lastModified &&
+            <FooterLastModified lastModified={ data.lastModified } />
+          }
 
           <Heading size={{base: 'sm', md: 'md'}}
                    ml={{base: '4', md: '0'}}
                    mt={'8'}
+                   mb={'2'}
                    color={'gray.600'}
                    >
             終了したイベント
@@ -168,6 +181,9 @@ function Root() {
               </Stack>
             </CardBody>
           </Card>
+          {data.lastModified &&
+            <FooterLastModified lastModified={ data.lastModified } />
+          }
 
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
