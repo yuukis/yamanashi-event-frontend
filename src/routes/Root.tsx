@@ -124,6 +124,7 @@ function Root() {
           <Heading size={{base: 'sm', md: 'md'}}
                    ml={{base: '4', md: '0'}}
                    mt={'8'}
+                   mb={'2'}
                    color={'gray.600'}
                    >
             直近開催イベント
@@ -155,6 +156,7 @@ function Root() {
           <Heading size={{base: 'sm', md: 'md'}}
                    ml={{base: '4', md: '0'}}
                    mt={'8'}
+                   mb={'2'}
                    color={'gray.600'}
                    >
             終了したイベント

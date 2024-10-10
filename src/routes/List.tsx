@@ -72,10 +72,11 @@ function List() {
                  mt={'4'}
                  p={{base: '0', md: '4'}}
                  >
-        <Stack spacing={'4'}>
+        <Stack>
           <Stack direction={'row'} spacing={'2'}
                  ml={{base: '4', md: '0'}}
                  mr={{base: '4', md: '0'}}
+                 mb={'2'}
                  display={'flex'} alignItems={'flex-end'}
                  >
             <Heading size={{base: 'sm', md: 'md'}}
