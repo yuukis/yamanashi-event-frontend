@@ -21,6 +21,7 @@ import {
   Show
 } from '@chakra-ui/react';
 import { isMobile } from 'react-device-detect';
+import { RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
   
 export function SiteHeader() {
@@ -169,5 +170,28 @@ export function SelectYearButtons() {
                 >{`${year}年`}</Button>
       ))}
     </>
+  );
+}
+
+export function FooterLastModified(prop: any) {
+  
+  const lastModified = new Date(prop.lastModified);
+  const lastModifiedString = lastModified ? lastModified.toLocaleString() : '---';
+
+  return (
+    <Stack direction={'row'}
+           alignItems={'center'}
+           ml={{base: '4', md: '0'}}
+           mb={4}
+           spacing={2}
+           >
+      <RepeatClockIcon w={{base: '3', md: '4'}}
+                       h={{base: '3', md: '4'}}
+                       color={'gray'}
+                       />
+      <Text fontSize={{base: 'xs', md: 'sm'}} color={'gray'}>
+        最終更新: { lastModifiedString }
+      </Text>
+    </Stack>
   );
 }
