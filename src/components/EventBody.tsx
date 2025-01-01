@@ -5,6 +5,7 @@ import {
   Spacer,
   Heading,
   Text,
+  Image,
   Button,
   Link,
   Flex,
@@ -44,6 +45,7 @@ export function EventBody(data: any) {
   const owner_name = event.owner_name;
   const group_name = event.group_name;
   const group_url = event.group_url;
+  const group_image_url = event.group_image_url;
 
   const address_array = [address, place].filter(Boolean);
 
@@ -158,6 +160,16 @@ export function EventBody(data: any) {
             </Stack>
           </HStack>
           <Show above='md'>
+            {group_image_url && (
+              <Image src={ group_image_url }
+                    w={'80px'}
+                    h={'54px'}
+                    fit={'contain'}
+                    position={'absolute'}
+                    top={'0'}
+                    right={'0'}
+                    />
+            )}
             <Button w={'100px'}
                       size={'md'}
                       colorScheme={'impact'}
