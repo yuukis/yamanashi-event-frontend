@@ -5,6 +5,7 @@ import {
   Spacer,
   Heading,
   Text,
+  Image,
   Button,
   Link,
   Flex,
@@ -44,6 +45,7 @@ export function EventBody(data: any) {
   const owner_name = event.owner_name;
   const group_name = event.group_name;
   const group_url = event.group_url;
+  const group_image_url = event.group_image_url;
 
   const address_array = [address, place].filter(Boolean);
 
@@ -107,13 +109,13 @@ export function EventBody(data: any) {
             <Box w={'1px'} bg={'primary.500'} />
           </Stack>
         </Show>
-        <Box w={'100%'} position={'relative'}>
-          <Heading fontSize={'md'} color={'primary.800'}>
+        <Box w={'100%'} position={'relative'} minH={{md: '120px'}}>
+          <Heading fontSize={'md'} color={'primary.800'} pr={{md: '100px'}}>
             <Show above='md'><Link href={event_url} isExternal>{ title }</Link></Show>
             <Show below='md'>{ title }</Show>
           </Heading>
           <Show above='md'>
-            <Text fontSize={'sm'}>{ sub_title }</Text>
+            <Text fontSize={'sm'} pr={{md: '100px'}}>{ sub_title }</Text>
           </Show>
           <HStack mt={'2'} pr={{md: '100px'}}>
             <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
@@ -158,6 +160,16 @@ export function EventBody(data: any) {
             </Stack>
           </HStack>
           <Show above='md'>
+            {group_image_url && (
+              <Image src={ group_image_url }
+                    w={'80px'}
+                    h={'54px'}
+                    fit={'contain'}
+                    position={'absolute'}
+                    top={'0'}
+                    right={'0'}
+                    />
+            )}
             <Button w={'100px'}
                       size={'md'}
                       colorScheme={'impact'}
