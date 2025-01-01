@@ -33,8 +33,10 @@ function Root() {
   useEffect(() => {
     const getData = async () => {
       let res = null;
+      let group_res = null;
       try {
         res = await axios.get('https://api.event.yamanashi.dev/events');
+        group_res = await axios.get('https://api.event.yamanashi.dev/groups');
       }
       catch (err: any) {
         const data = {
@@ -48,7 +50,18 @@ function Root() {
         return;
       }
 
-      const events = res.data;
+      let groups: { [key: string]: any } = {};
+      group_res.data.forEach((group: any) => {
+        groups[group.key] = group;
+      });
+      const events = res.data.map((event: any) => {
+        let group_key = event.group_key;
+        if (group_key in groups) {
+          let group = groups[group_key];
+          event.group_image_url = group.image_url;
+        }
+        return event;
+      });
       const data = {
         isLoading: false,
         pastEvents: events.filter((data: any) => {
