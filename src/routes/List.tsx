@@ -66,7 +66,10 @@ function List() {
       });
       const data = {
         isLoading: false,
-        events: events.sort((data: any) => {
+        events: events.filter((data: any) => {
+        const open_status = data.open_status;
+        return open_status !== 'cancelled';
+        }).sort((data: any) => {
           const start = new Date(data.started_at);
           return start.getTime();
         }),

@@ -68,6 +68,9 @@ function Root() {
           const now = new Date();
           const end = new Date(data.ended_at);
           return now > end;
+        }).filter((data: any) => {
+          const open_status = data.open_status;
+          return open_status !== 'cancelled';
         }).sort((data: any) => {
           const start = new Date(data.started_at);
           return -start.getTime();
@@ -76,6 +79,9 @@ function Root() {
           const now = new Date();
           const end = new Date(data.ended_at);
           return now <= end;
+        }).filter((data: any) => {
+          const open_status = data.open_status;
+          return open_status !== 'cancelled';
         }).sort((data: any) => {
           const start = new Date(data.started_at);
           return start.getTime();
