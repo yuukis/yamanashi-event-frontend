@@ -65,17 +65,15 @@ function Root() {
       const data = {
         isLoading: false,
         pastEvents: events.filter((data: any) => {
-          const now = new Date();
-          const end = new Date(data.ended_at);
-          return now > end;
+          const open_status = data.open_status;
+          return open_status !== 'cancelled' && open_status === 'close';
         }).sort((data: any) => {
           const start = new Date(data.started_at);
           return -start.getTime();
         }),
         futureEvents: events.filter((data: any) => {
-          const now = new Date();
-          const end = new Date(data.ended_at);
-          return now <= end;
+          const open_status = data.open_status;
+          return open_status !== 'cancelled' && open_status !== 'close';
         }).sort((data: any) => {
           const start = new Date(data.started_at);
           return start.getTime();
