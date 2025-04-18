@@ -118,7 +118,7 @@ function Root() {
               <Link color={'primary.800'} href='https://connpass.com' isExternal>
                 connpass<ExternalLinkIcon mx={'2px'} />
               </Link>
-              から取得しています。
+              またはコミュニティが提供するイベントカレンダーから取得しています。
             </Text>
           </Stack>          
         </Container>
