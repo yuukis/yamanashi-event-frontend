@@ -152,13 +152,12 @@ export function GithubButton() {
   )
 }
 
-export function SelectYearButtons() {
+export function SelectYearButtons({startYear} : { startYear: number }) {
 
-  const current_year = new Date().getFullYear();
-  const start_year = 2015;
+  const currentYear = new Date().getFullYear();
   const years = [];
 
-  for (let y = start_year; y <= current_year; y++) {
+  for (let y = startYear; y <= currentYear; y++) {
     years.push(y);
   }
 

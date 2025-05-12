@@ -18,7 +18,7 @@ import {
   Spacer
 } from '@chakra-ui/react';
 
-function List() {
+function List({ startYear} : {startYear: number}) {
   let { year: param_year } = useParams();
   const year = parseInt(param_year as string);
   const prev_year = year - 1;
@@ -102,11 +102,15 @@ function List() {
               { year }年 開催イベント
             </Heading>
             <Spacer />
-            <Button size={'xs'}
-                    variant={'ghost'}
-                    colorScheme={'impact'}
-                    onClick={() => {window.open('/' + prev_year, '_self')}}
+            {
+              prev_year >= startYear && (
+                    <Button size={'xs'}
+                            variant={'ghost'}
+                            colorScheme={'impact'}
+                            onClick={() => {window.open('/' + prev_year, '_self')}}
                     >← { prev_year }年</Button>
+                )
+            }
             <Button size={'xs'}
                     variant={'ghost'}
                     colorScheme={'impact'}
@@ -142,7 +146,7 @@ function List() {
                 p={{base: '4', md: '0'}}
                 >
             <CardBody>
-              <SelectYearButtons />
+              <SelectYearButtons startYear={startYear}/>
             </CardBody>
           </Card>
         </Stack>
