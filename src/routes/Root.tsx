@@ -19,7 +19,7 @@ import {
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 
-function Root() {
+function Root({startYear}: {startYear: number}) {
   const [data, setData] = useState({
     isLoading: true,
     pastEvents: [],
@@ -201,7 +201,7 @@ function Root() {
                 padding={{base: '4', md: '0'}}
                 >
             <CardBody>
-              <SelectYearButtons />
+              <SelectYearButtons startYear={startYear}/>
             </CardBody>
           </Card>
         </Stack>

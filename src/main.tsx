@@ -9,14 +9,16 @@ import List from './routes/List.jsx'
 import AppTheme from './theme.tsx'
 import { ChakraProvider } from '@chakra-ui/react'
 
+const START_YEAR = 2015;
+
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Root />,
+    element: <Root startYear={START_YEAR} />,
   },
   {
     path: "/:year",
-    element: <List />,
+    element: <List startYear={START_YEAR}/>,
   },
 ]);
 
