@@ -18,6 +18,7 @@ import {
   Link
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from "@chakra-ui/icons";
+import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 
 function Root({startYear}: {startYear: number}) {
   const [data, setData] = useState({
@@ -67,17 +68,11 @@ function Root({startYear}: {startYear: number}) {
         pastEvents: events.filter((data: any) => {
           const open_status = data.open_status;
           return open_status !== 'cancelled' && open_status === 'close';
-        }).sort((data: any) => {
-          const start = new Date(data.started_at);
-          return -start.getTime();
-        }),
+        }).sort(sortByStartedAtDesc),
         futureEvents: events.filter((data: any) => {
           const open_status = data.open_status;
           return open_status !== 'cancelled' && open_status !== 'close';
-        }).sort((data: any) => {
-          const start = new Date(data.started_at);
-          return start.getTime();
-        }),
+        }).sort(sortByStartedAtAsc),
         lastModified: res.headers['last-modified'],
         errorMessage: ''
       }

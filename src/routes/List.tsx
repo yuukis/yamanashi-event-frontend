@@ -17,6 +17,7 @@ import {
   Button,
   Spacer
 } from '@chakra-ui/react';
+import { sortByStartedAtAsc } from '../utils/eventSort';
 
 function List({ startYear} : {startYear: number}) {
   let { year: param_year } = useParams();
@@ -67,12 +68,9 @@ function List({ startYear} : {startYear: number}) {
       const data = {
         isLoading: false,
         events: events.filter((data: any) => {
-        const open_status = data.open_status;
-        return open_status !== 'cancelled';
-        }).sort((data: any) => {
-          const start = new Date(data.started_at);
-          return start.getTime();
-        }),
+          const open_status = data.open_status;
+          return open_status !== 'cancelled';
+        }).sort(sortByStartedAtAsc),
         lastModified: res.headers['last-modified'],
         errorMessage: ''
       }
