@@ -67,16 +67,18 @@ function Root({startYear}: {startYear: number}) {
         pastEvents: events.filter((data: any) => {
           const open_status = data.open_status;
           return open_status !== 'cancelled' && open_status === 'close';
-        }).sort((data: any) => {
-          const start = new Date(data.started_at);
-          return -start.getTime();
+        }).sort((a: any, b: any) => {
+          const startA = new Date(a.started_at);
+          const startB = new Date(b.started_at);
+          return startB.getTime() - startA.getTime();
         }),
         futureEvents: events.filter((data: any) => {
           const open_status = data.open_status;
           return open_status !== 'cancelled' && open_status !== 'close';
-        }).sort((data: any) => {
-          const start = new Date(data.started_at);
-          return start.getTime();
+        }).sort((a: any, b: any) => {
+          const startA = new Date(a.started_at);
+          const startB = new Date(b.started_at);
+          return startA.getTime() - startB.getTime();
         }),
         lastModified: res.headers['last-modified'],
         errorMessage: ''
