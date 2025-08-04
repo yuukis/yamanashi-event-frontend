@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import icon from "../assets/images/icon.png"
+import { NotificationButton } from '../components/Notification';
 import {
   Heading,
   Box,
@@ -25,6 +27,13 @@ import { RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
   
 export function SiteHeader() {
+  const [showNotification, setShowNotification] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash === "#notify") {
+      setShowNotification(true);
+    }
+  }, []);
 
   return (
     <Box w={'100%'} bg={'white'}>
@@ -52,6 +61,7 @@ export function SiteHeader() {
         </Link>
         <Spacer />
         <Show above='md'><ICalendarButton /></Show>
+        {showNotification && <NotificationButton />}
         <GithubButton />
       </Stack>
       <Stack spacing={'2px'}>
