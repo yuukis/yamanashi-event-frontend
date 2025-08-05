@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { SiteHeader, SelectYearButtons, FooterLastModified } from '../components/Site';
+import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import '../style.css';
 import background from "../assets/images/background.png"
 import {
   Container,
   Box,
-  Center,
   Stack,
   StackDivider,
   Card,
@@ -200,9 +199,7 @@ function Root({startYear}: {startYear: number}) {
             </CardBody>
           </Card>
         </Stack>
-        <Center p={'4'}>
-          <Text fontSize={'xs'} color={'gray'}>Yamanashi Developer Hub</Text>
-        </Center>
+        <SiteFooter />
       </Container>
     </Box>
   );

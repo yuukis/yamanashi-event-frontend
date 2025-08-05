@@ -1,19 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useParams } from "react-router-dom";
 import axios from 'axios';
-import { SiteHeader, SelectYearButtons, FooterLastModified } from '../components/Site';
+import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import '../style.css';
 import {
   Container,
   Box,
-  Center,
   Stack,
   StackDivider,
   Card,
   CardBody,
   Heading,
-  Text,
   Button,
   Spacer
 } from '@chakra-ui/react';
@@ -148,9 +146,7 @@ function List({ startYear} : {startYear: number}) {
             </CardBody>
           </Card>
         </Stack>
-        <Center p={'4'}>
-          <Text fontSize={'xs'} color={'gray'}>Yamanashi Developer Hub</Text>
-        </Center>
+        <SiteFooter />
       </Container>
     </Box>
   );

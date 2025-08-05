@@ -4,6 +4,7 @@ import { NotificationButton } from '../components/Notification';
 import {
   Heading,
   Box,
+  Center,
   Stack,
   Spacer,
   Link,
@@ -70,6 +71,14 @@ export function SiteHeader() {
         <Box h={'1px'} bg={'primary.500'} />
       </Stack>
     </Box>
+  );
+}
+
+export function SiteFooter() {
+  return (
+    <Center p={'4'}>
+      <Text fontSize={'xs'} color={'gray'}>Yamanashi Developer Hub</Text>
+    </Center>
   );
 }
 
