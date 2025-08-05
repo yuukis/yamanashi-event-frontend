@@ -77,7 +77,20 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <Center p={'4'}>
-      <Text fontSize={'xs'} color={'gray'}>Yamanashi Developer Hub</Text>
+      <Text fontSize={'xs'} color={'gray'}>
+        Yamanashi{' '}
+        <span
+          style={{ textDecoration: 'none', cursor: 'pointer' }}
+          onClick={() => {
+            window.location.hash = '#notify';
+            window.scrollTo(0, 0);
+            window.location.reload();
+          }}
+        >
+          Developer
+        </span>{' '}
+        Hub
+      </Text>
     </Center>
   );
 }
