@@ -112,7 +112,7 @@ export function NotificationButton() {
     return outputArray;
   }
 
-  const isNotifyAvailableOnIOS = isIOS && window.navigator.standalone;
+  const isNotifyAvailableOnIOS = isIOS && (window.navigator as any).standalone;
 
   return (
     <Popover isOpen={isOpen} onOpen={onOpen} onClose={onClose}>
