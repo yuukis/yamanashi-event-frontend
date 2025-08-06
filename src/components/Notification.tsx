@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useDisclosure } from "@chakra-ui/react";
 import { BellFill, BellSlash } from '@chakra-icons/bootstrap';
 import {
   Stack,
@@ -15,12 +16,15 @@ import {
   PopoverBody,
   PopoverFooter
 } from '@chakra-ui/react';
+import { isIOS } from 'react-device-detect';
 
 export function NotificationButton() {
 
   const [isNotifyAvailable, setIsNotifyAvailable] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const VAPID = import.meta.env.VITE_PUBLIC_VAPID_KEY as string;
   const API_URL = import.meta.env.VITE_SUBSCRIPTION_API_URL as string;
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const sendSubscriptionToServer = (subscription: PushSubscription) => {
     return fetch(`${API_URL}/subscribe`, {
@@ -57,36 +61,41 @@ export function NotificationButton() {
   }, []);
 
   const handleNotifyButtonClick = async () => {
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-      alert('このブラウザは通知に対応していません');
-      return;
-    }
-
-    if (!isNotifyAvailable) {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        alert('通知が許可されませんでした');
+    setIsLoading(true);
+    try {
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+        alert('このブラウザは通知に対応していません');
         return;
       }
 
-      const registration = await navigator.serviceWorker.ready;
+      if (!isNotifyAvailable) {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          alert('通知が許可されませんでした');
+          return;
+        }
 
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID),
-      });
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID),
+        });
 
-      await sendSubscriptionToServer(subscription);
-
-      setIsNotifyAvailable(true);
-    } else {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      if (subscription) {
-        await removeSubscriptionFromServer(subscription);
-        await subscription.unsubscribe();
+        await sendSubscriptionToServer(subscription);
+        setIsNotifyAvailable(true);
+      } else {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          await removeSubscriptionFromServer(subscription);
+          await subscription.unsubscribe();
+        }
+        setIsNotifyAvailable(false);
       }
-      setIsNotifyAvailable(false);
+      onClose();
+
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -103,44 +112,60 @@ export function NotificationButton() {
     return outputArray;
   }
 
+  const isNotifyAvailableOnIOS = isIOS && (window.navigator as any).standalone;
+
   return (
-    <>
-      {isNotifyAvailable &&
-        <IconButton aria-label='Notification' variant={'ghost'} icon={<BellFill />}
-          onClick={handleNotifyButtonClick}>
-        </IconButton>
-      }
-      {!isNotifyAvailable &&
-        <Popover>
-          <PopoverTrigger>
-            <IconButton aria-label='Notification' variant={'ghost'} icon={<BellSlash />} />
-          </PopoverTrigger>
-          <PopoverContent>
-            <PopoverArrow />
-            <PopoverHeader>
-              <Text fontSize={'sm'}>
-                新着イベント通知（開発中）
-              </Text>
-            </PopoverHeader>
-            <PopoverCloseButton />
-            <PopoverBody>
-              <Stack>
-                <Text fontSize={'xs'}>
-                  新しくイベントが登録されたら通知します<br />
-                  （お使いの環境によっては、通知が正しく動作しない場合があります）
-                </Text>
-              </Stack>
-            </PopoverBody>
-            <PopoverFooter>
-              <Button w={'100%'} variant={'ghost'} size={'sm'} onClick={handleNotifyButtonClick}>
-                <BellFill mr={'2'} />
-                <Text fontWeight={'normal'}>通知する</Text>
-                <Spacer />
-              </Button>
-            </PopoverFooter>
-          </PopoverContent>
-        </Popover>
-      }
-    </>
-  )
+    <Popover isOpen={isOpen} onOpen={onOpen} onClose={onClose}>
+      <PopoverTrigger>
+        <IconButton
+          aria-label='Notification'
+          variant={'ghost'}
+          icon={isNotifyAvailable ? <BellFill /> : <BellSlash />}
+          onClick={onOpen}
+        />
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverArrow />
+        <PopoverHeader>
+          <Text fontSize={'sm'}>
+            新着イベント通知（開発中）
+          </Text>
+        </PopoverHeader>
+        <PopoverCloseButton />
+        <PopoverBody>
+          <Stack>
+            <Text fontSize={'xs'}>
+              新しくイベントが登録されたら通知します<br />
+              （お使いの環境によっては、通知が正しく動作しない場合があります）
+            </Text>
+          </Stack>
+        </PopoverBody>
+        <PopoverFooter>
+          {!isIOS || isNotifyAvailableOnIOS ? (
+            <Button w={'100%'} variant={'ghost'} size={'sm'}
+                    onClick={handleNotifyButtonClick}
+                    isLoading={isLoading}
+            >
+              {isNotifyAvailable ? (
+                <>
+                  <BellSlash mr={'2'} />
+                  <Text fontWeight={'normal'}>通知を解除する</Text>
+                </>
+              ) : (
+                <>
+                  <BellFill mr={'2'} />
+                  <Text fontWeight={'normal'}>通知を受け取る</Text>
+                </>
+              )}
+              <Spacer />
+            </Button>
+          ) : (
+            <Text fontSize={'xs'} color={'red.500'}>
+              ブラウザの共有メニューから「ホーム画面に追加」を行うと、通知が有効になります
+            </Text>
+          )}
+        </PopoverFooter>
+      </PopoverContent>
+    </Popover>
+  );
 }
