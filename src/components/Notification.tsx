@@ -16,6 +16,7 @@ import {
   PopoverBody,
   PopoverFooter
 } from '@chakra-ui/react';
+import { isIOS } from 'react-device-detect';
 
 export function NotificationButton() {
 
@@ -111,6 +112,8 @@ export function NotificationButton() {
     return outputArray;
   }
 
+  const isNotifyAvailableOnIOS = isIOS && window.navigator.standalone;
+
   return (
     <Popover isOpen={isOpen} onOpen={onOpen} onClose={onClose}>
       <PopoverTrigger>
@@ -138,20 +141,29 @@ export function NotificationButton() {
           </Stack>
         </PopoverBody>
         <PopoverFooter>
-          <Button w={'100%'} variant={'ghost'} size={'sm'} onClick={handleNotifyButtonClick}>
-            {isNotifyAvailable ? (
-              <>
-                <BellSlash mr={'2'} />
-                <Text fontWeight={'normal'}>通知を解除する</Text>
-              </>
-            ) : (
-              <>
-                <BellFill mr={'2'} />
-                <Text fontWeight={'normal'}>通知を受け取る</Text>
-              </>
-            )}
-            <Spacer />
-          </Button>
+          {!isIOS || isNotifyAvailableOnIOS ? (
+            <Button w={'100%'} variant={'ghost'} size={'sm'}
+                    onClick={handleNotifyButtonClick}
+                    isLoading={isLoading}
+            >
+              {isNotifyAvailable ? (
+                <>
+                  <BellSlash mr={'2'} />
+                  <Text fontWeight={'normal'}>通知を解除する</Text>
+                </>
+              ) : (
+                <>
+                  <BellFill mr={'2'} />
+                  <Text fontWeight={'normal'}>通知を受け取る</Text>
+                </>
+              )}
+              <Spacer />
+            </Button>
+          ) : (
+            <Text fontSize={'xs'} color={'red.500'}>
+              ブラウザの共有メニューから「ホーム画面に追加」を行うと、通知が有効になります
+            </Text>
+          )}
         </PopoverFooter>
       </PopoverContent>
     </Popover>
