@@ -104,43 +104,46 @@ export function NotificationButton() {
   }
 
   return (
-    <>
-      {isNotifyAvailable &&
-        <IconButton aria-label='Notification' variant={'ghost'} icon={<BellFill />}
-          onClick={handleNotifyButtonClick}>
-        </IconButton>
-      }
-      {!isNotifyAvailable &&
-        <Popover>
-          <PopoverTrigger>
-            <IconButton aria-label='Notification' variant={'ghost'} icon={<BellSlash />} />
-          </PopoverTrigger>
-          <PopoverContent>
-            <PopoverArrow />
-            <PopoverHeader>
-              <Text fontSize={'sm'}>
-                新着イベント通知（開発中）
-              </Text>
-            </PopoverHeader>
-            <PopoverCloseButton />
-            <PopoverBody>
-              <Stack>
-                <Text fontSize={'xs'}>
-                  新しくイベントが登録されたら通知します<br />
-                  （お使いの環境によっては、通知が正しく動作しない場合があります）
-                </Text>
-              </Stack>
-            </PopoverBody>
-            <PopoverFooter>
-              <Button w={'100%'} variant={'ghost'} size={'sm'} onClick={handleNotifyButtonClick}>
+    <Popover>
+      <PopoverTrigger>
+        <IconButton aria-label='Notification'
+                    variant={'ghost'}
+                    icon={isNotifyAvailable ? <BellFill /> : <BellSlash />}
+        />
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverArrow />
+        <PopoverHeader>
+          <Text fontSize={'sm'}>
+            新着イベント通知（開発中）
+          </Text>
+        </PopoverHeader>
+        <PopoverCloseButton />
+        <PopoverBody>
+          <Stack>
+            <Text fontSize={'xs'}>
+              新しくイベントが登録されたら通知します<br />
+              （お使いの環境によっては、通知が正しく動作しない場合があります）
+            </Text>
+          </Stack>
+        </PopoverBody>
+        <PopoverFooter>
+          <Button w={'100%'} variant={'ghost'} size={'sm'} onClick={handleNotifyButtonClick}>
+            {isNotifyAvailable ? (
+              <>
+                <BellSlash mr={'2'} />
+                <Text fontWeight={'normal'}>通知を解除する</Text>
+              </>
+            ) : (
+              <>
                 <BellFill mr={'2'} />
-                <Text fontWeight={'normal'}>通知する</Text>
-                <Spacer />
-              </Button>
-            </PopoverFooter>
-          </PopoverContent>
-        </Popover>
-      }
-    </>
+                <Text fontWeight={'normal'}>通知を受け取る</Text>
+              </>
+            )}
+            <Spacer />
+          </Button>
+        </PopoverFooter>
+      </PopoverContent>
+    </Popover>
   )
 }
