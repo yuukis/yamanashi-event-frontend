@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useDisclosure } from "@chakra-ui/react";
 import { BellFill, BellSlash } from '@chakra-icons/bootstrap';
 import {
   Stack,
@@ -21,6 +22,7 @@ export function NotificationButton() {
   const [isNotifyAvailable, setIsNotifyAvailable] = useState(false);
   const VAPID = import.meta.env.VITE_PUBLIC_VAPID_KEY as string;
   const API_URL = import.meta.env.VITE_SUBSCRIPTION_API_URL as string;
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const sendSubscriptionToServer = (subscription: PushSubscription) => {
     return fetch(`${API_URL}/subscribe`, {
@@ -88,6 +90,8 @@ export function NotificationButton() {
       }
       setIsNotifyAvailable(false);
     }
+
+    onClose();
   };
 
   function urlBase64ToUint8Array(base64String: string) {
@@ -104,11 +108,13 @@ export function NotificationButton() {
   }
 
   return (
-    <Popover>
+    <Popover isOpen={isOpen} onOpen={onOpen} onClose={onClose}>
       <PopoverTrigger>
-        <IconButton aria-label='Notification'
-                    variant={'ghost'}
-                    icon={isNotifyAvailable ? <BellFill /> : <BellSlash />}
+        <IconButton
+          aria-label='Notification'
+          variant={'ghost'}
+          icon={isNotifyAvailable ? <BellFill /> : <BellSlash />}
+          onClick={onOpen}
         />
       </PopoverTrigger>
       <PopoverContent>
@@ -145,5 +151,5 @@ export function NotificationButton() {
         </PopoverFooter>
       </PopoverContent>
     </Popover>
-  )
+  );
 }
