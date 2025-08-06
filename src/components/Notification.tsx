@@ -20,6 +20,7 @@ import {
 export function NotificationButton() {
 
   const [isNotifyAvailable, setIsNotifyAvailable] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const VAPID = import.meta.env.VITE_PUBLIC_VAPID_KEY as string;
   const API_URL = import.meta.env.VITE_SUBSCRIPTION_API_URL as string;
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -59,39 +60,42 @@ export function NotificationButton() {
   }, []);
 
   const handleNotifyButtonClick = async () => {
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-      alert('このブラウザは通知に対応していません');
-      return;
-    }
-
-    if (!isNotifyAvailable) {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        alert('通知が許可されませんでした');
+    setIsLoading(true);
+    try {
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+        alert('このブラウザは通知に対応していません');
         return;
       }
 
-      const registration = await navigator.serviceWorker.ready;
+      if (!isNotifyAvailable) {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          alert('通知が許可されませんでした');
+          return;
+        }
 
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID),
-      });
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID),
+        });
 
-      await sendSubscriptionToServer(subscription);
-
-      setIsNotifyAvailable(true);
-    } else {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      if (subscription) {
-        await removeSubscriptionFromServer(subscription);
-        await subscription.unsubscribe();
+        await sendSubscriptionToServer(subscription);
+        setIsNotifyAvailable(true);
+      } else {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          await removeSubscriptionFromServer(subscription);
+          await subscription.unsubscribe();
+        }
+        setIsNotifyAvailable(false);
       }
-      setIsNotifyAvailable(false);
-    }
+      onClose();
 
-    onClose();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   function urlBase64ToUint8Array(base64String: string) {
