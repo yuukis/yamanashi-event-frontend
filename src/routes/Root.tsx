@@ -3,7 +3,7 @@ import axios from 'axios';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import '../style.css';
-import background from "../assets/images/background.png"
+import eyecatch from "../assets/images/eyecatch.png"
 import {
   Container,
   Box,
@@ -92,7 +92,7 @@ function Root({startYear}: {startYear: number}) {
                    position={'relative'}
                    flexDirection={{base: 'column', md: 'row'}}
                    >
-          <Image src={background}
+          <Image src={eyecatch}
                  boxSize={{base: '80%', md: '320px'}}
                  alt='Yamanashi Developer Hub'
                  position={{md: 'absolute'}}
