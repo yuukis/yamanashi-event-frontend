@@ -4,6 +4,8 @@ import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '.
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
+import root_bg from "../assets/images/root_bg.png";
+import root_top_bg from "../assets/images/root_top_bg.png";
 import {
   Container,
   Box,
@@ -83,45 +85,55 @@ function Root({startYear}: {startYear: number}) {
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <SiteHeader />
-      <Box bg={'linen'} p={4}>
-        <Container maxW={'800px'}
-                   w={'100%'}
-                   h={{md: '320px'}}
-                   display={'flex'}
-                   alignItems={'center'}
-                   position={'relative'}
-                   flexDirection={{base: 'column', md: 'row'}}
-                   >
-          <Image src={eyecatch}
-                 boxSize={{base: '80%', md: '320px'}}
-                 alt='Yamanashi Developer Hub'
-                 position={{md: 'absolute'}}
-                 right={{md: '0'}}
-                 />
-          <Stack pr={{md: '320px'}} color={'gray.600'}>
-            <Heading size={{base: 'md', md: 'lg'}} mb={'4'} textAlign={{base: 'center', md: 'left'}}>
-              <Text fontWeight={'bold'} as={'span'} color={'impact.500'}>Yamanashi </Text>
-              <Text fontWeight={'normal'} as={'span'} color={'secondary.700'}>Developer </Text>
-              <Text fontWeight={'normal'} as={'span'} color={'primary.600'}>Hub</Text>
-            </Heading>
-            <Text fontSize={{base: 'sm', md: 'md'}}>
-              Yamanashi Developer Hub は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
-            </Text>
-            <Text fontSize={{base: 'sm', md: 'md'}}>
-              イベント情報は、
-              <Link color={'primary.800'} href='https://connpass.com' isExternal>
-                connpass<ExternalLinkIcon mx={'2px'} />
-              </Link>
-              またはコミュニティが提供するイベントカレンダーから取得しています。
-            </Text>
-          </Stack>          
-        </Container>
+      <Box bg={'#fffafa'}
+           p={0}
+           bgImg={root_top_bg}
+           bgPos={'top'}
+           bgRepeat={'repeat-x'}
+           bgSize={{base: '100px', md: '50px'}}
+           >
+        <Box p={0}
+            bgImg={root_bg}
+            bgPos={'50% bottom'}
+            bgRepeat={'no-repeat'}
+            bgSize={{base: '200%', md: '960px'}}
+            >
+          <Container maxW={'800px'}
+                    p={{base: '8', md: '4'}}
+                    w={'100%'}
+                    h={{md: '320px'}}
+                    display={'flex'}
+                    alignItems={'center'}
+                    position={'relative'}
+                    flexDirection={{base: 'column', md: 'row'}}
+                    >
+            <Image src={eyecatch}
+                  boxSize={{base: '80%', md: '320px'}}
+                  alt='Yamanashi Developer Hub'
+                  position={{md: 'absolute'}}
+                  right={{md: '0'}}
+                  p={{base: '0', md: '8'}}
+                  />
+            <Stack pr={{md: '320px'}}>
+              <Heading size={{base: 'md', md: 'lg'}} mb={'8'} textAlign={{base: 'center', md: 'left'}}>
+                <Text as={'span'} color={'impact.500'}>Meet </Text>
+                <Text as={'span'} color={'secondary.700'}>the Engineer </Text>
+                <Text as={'span'} color={'primary.600'}>in Yamanashi</Text>
+              </Heading>
+              <Text fontSize={{base: 'sm', md: 'md'}}>
+                Yamanashi Developer Hub は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
+              </Text>
+              <Text fontSize={{base: 'sm', md: 'md'}}>
+                イベント情報は、
+                <Link color={'primary.800'} href='https://connpass.com' isExternal>
+                  connpass<ExternalLinkIcon mx={'2px'} />
+                </Link>
+                およびコミュニティが提供するイベントカレンダーから取得しています。
+              </Text>
+            </Stack>          
+          </Container>
+        </Box>
       </Box>
-      <Stack spacing={'2px'}>
-        <Box h={'1px'} bg={'primary.500'} />
-        <Box h={'1px'} bg={'secondary.500'} />
-        <Box h={'1px'} bg={'impact.500'} />
-      </Stack>
       <Container maxW={'800px'} w={'100%'}
                  p={{base: '0', md: '4'}}
                  >
