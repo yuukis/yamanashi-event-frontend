@@ -39,6 +39,7 @@ export function EventBody(data: any) {
   const title = event.title;
   const sub_title = event.catch;
   const hash_tag = event.hash_tag;
+  const hash_tag_url = "https://x.com/hashtag/" + encodeURIComponent(hash_tag);
   const address = event.address;
   const place = event.place;
   const event_url = event.event_url;
@@ -128,7 +129,8 @@ export function EventBody(data: any) {
               {hash_tag && (
                 <HStack>
                   <Hash />
-                  <Text fontSize={'sm'} noOfLines={1}>{ hash_tag }</Text>
+                  <Show above='md'><Text fontSize={'sm'} noOfLines={1}><Link href={hash_tag_url} isExternal>{ hash_tag }</Link></Text></Show>
+                  <Hide above='md'><Text fontSize={'sm'} noOfLines={1}>{ hash_tag }</Text></Hide>
                 </HStack>
               )}
               {address_array.length > 0 && (
