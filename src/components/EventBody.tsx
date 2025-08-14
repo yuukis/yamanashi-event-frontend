@@ -118,7 +118,7 @@ export function EventBody(data: any) {
                    }}
                    >
             <Show above='md'><Link href={event_url} isExternal>{ title }</Link></Show>
-            <Show below='md'>{ title }</Show>
+            <Hide above='md'>{ title }</Hide>
           </Heading>
           <Show above='md'>
             <Text fontSize={'sm'} pr={{md: '100px'}}>{ sub_title }</Text>
