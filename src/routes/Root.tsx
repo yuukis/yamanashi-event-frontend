@@ -115,10 +115,25 @@ function Root({startYear}: {startYear: number}) {
                   p={{base: '0', md: '8'}}
                   />
             <Stack pr={{md: '320px'}}>
-              <Heading size={{base: 'md', md: 'lg'}} mb={'8'} textAlign={{base: 'center', md: 'left'}}>
-                <Text as={'span'} color={'impact.500'}>Meet </Text>
-                <Text as={'span'} color={'secondary.700'}>the Engineer </Text>
-                <Text as={'span'} color={'primary.600'}>in Yamanashi</Text>
+              <Heading size={{base: 'lg', md: 'xl'}} mb={'4'} textAlign={{base: 'center', md: 'left'}}>
+                <Text as={'span'}
+                      fontWeight={'100'}
+                      whiteSpace={'nowrap'}
+                      display={'inline'}
+                      color={'impact.500'}
+                      >Meet </Text>
+                <Text as={'span'}
+                      fontWeight={'100'}
+                      whiteSpace={'nowrap'}
+                      display={'inline'}
+                      color={'secondary.700'}
+                      >the Engineer </Text>
+                <Text as={'span'}
+                      fontWeight={'100'}
+                      whiteSpace={'nowrap'}
+                      display={{ base: 'inline', md: 'block' }}
+                      color={'primary.600'}
+                      >in Yamanashi</Text>
               </Heading>
               <Text fontSize={{base: 'sm', md: 'md'}}>
                 Yamanashi Developer Hub は、山梨県内で開催されるIT勉強会の情報をまとめたサイトです。
