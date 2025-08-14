@@ -39,6 +39,7 @@ export function EventBody(data: any) {
   const title = event.title;
   const sub_title = event.catch;
   const hash_tag = event.hash_tag;
+  const hash_tag_url = "https://x.com/hashtag/" + encodeURIComponent(hash_tag);
   const address = event.address;
   const place = event.place;
   const event_url = event.event_url;
@@ -52,7 +53,7 @@ export function EventBody(data: any) {
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
 
   return (
-    <HStack p={'2'}
+    <HStack p={'2'} position={'relative'}
             {...(!isDesktopScreenSize && (
               {
                 onClick: () => window.open(event_url, '_self'),
@@ -109,10 +110,16 @@ export function EventBody(data: any) {
             <Box w={'1px'} bg={'primary.500'} />
           </Stack>
         </Show>
-        <Box w={'100%'} position={'relative'} minH={{md: '120px'}}>
-          <Heading fontSize={'md'} color={'primary.800'} pr={{md: '100px'}}>
+        <Box w={'100%'} minH={{md: '120px'}}>
+          <Heading fontSize={'md'}
+                   color={'primary.800'}
+                   pr={{
+                     base: group_image_url ? '60px' : '0px',
+                     md: '100px'
+                   }}
+                   >
             <Show above='md'><Link href={event_url} isExternal>{ title }</Link></Show>
-            <Show below='md'>{ title }</Show>
+            <Hide above='md'>{ title }</Hide>
           </Heading>
           <Show above='md'>
             <Text fontSize={'sm'} pr={{md: '100px'}}>{ sub_title }</Text>
@@ -122,7 +129,8 @@ export function EventBody(data: any) {
               {hash_tag && (
                 <HStack>
                   <Hash />
-                  <Text fontSize={'sm'} noOfLines={1}>{ hash_tag }</Text>
+                  <Show above='md'><Text fontSize={'sm'} noOfLines={1}><Link href={hash_tag_url} isExternal>{ hash_tag }</Link></Text></Show>
+                  <Hide above='md'><Text fontSize={'sm'} noOfLines={1}>{ hash_tag }</Text></Hide>
                 </HStack>
               )}
               {address_array.length > 0 && (
@@ -159,23 +167,23 @@ export function EventBody(data: any) {
               )}
             </Stack>
           </HStack>
+          {group_image_url && (
+            <Image src={ group_image_url }
+                  w={'80px'}
+                  h={'54px'}
+                  fit={'contain'}
+                  position={'absolute'}
+                  top={{base: '4', md: '2'}}
+                  right={{base: '4', md: '4'}}
+                  />
+          )}
           <Show above='md'>
-            {group_image_url && (
-              <Image src={ group_image_url }
-                    w={'80px'}
-                    h={'54px'}
-                    fit={'contain'}
-                    position={'absolute'}
-                    top={'0'}
-                    right={'0'}
-                    />
-            )}
             <Button w={'100px'}
                       size={'md'}
                       colorScheme={'impact'}
                       position={'absolute'}
-                      bottom={'0'}
-                      right={'0'}
+                      bottom={'2'}
+                      right={'4'}
                       onClick={() => window.open(event_url)}
                       >
               <HStack>

@@ -39,7 +39,27 @@ const theme = extendTheme({
       800: '#609e47',
       900: '#4c8835',
     },
-  }
+  },
+  styles: {
+    global: {
+      a: {
+        textDecoration: 'underline',
+        _hover: {
+          textDecoration: 'none',
+        },
+      }
+    }
+  },
+  components: {
+    Link: {
+      baseStyle: {
+        textDecoration: 'underline',
+        _hover: {
+          textDecoration: 'none',
+        },
+      },
+    },
+  },
 })
 
 const AppTheme = extendTheme(theme)

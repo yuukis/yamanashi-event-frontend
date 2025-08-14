@@ -46,7 +46,7 @@ export function SiteHeader() {
              alignItems={'center'}
              bg={'white'}
              >
-        <Link href={'/'} _hover={{textDecoration: 'none', opacity: '0.6'}}>
+        <Link href={'/'} style={{textDecoration: 'none'}} _hover={{opacity: '0.6'}}>
           <Stack direction={'row'} spacing={'3'} alignItems={'center'}>
             <Image src={icon}
                    boxSize={{base: '6', md: '8'}}
