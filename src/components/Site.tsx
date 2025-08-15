@@ -30,7 +30,7 @@ export function SiteHeader() {
   return (
     <Box w={'100%'} bg={'white'}>
       <Stack h={{base: '12', md: '16'}}
-             maxW={'800px'} 
+             maxW={'980px'} 
              m={'auto'}
              p={'4'}
              direction={'row'}

@@ -80,7 +80,7 @@ function List({ startYear} : {startYear: number}) {
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <SiteHeader />
-      <Container maxW={'800px'} w={'100%'}
+      <Container maxW={'980px'} w={'100%'}
                  mt={'4'}
                  p={{base: '0', md: '4'}}
                  >
