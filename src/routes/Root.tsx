@@ -112,7 +112,7 @@ function Root({startYear}: {startYear: number}) {
                   alt='Yamanashi Developer Hub'
                   position={{md: 'absolute'}}
                   right={{md: '0'}}
-                  p={{base: '0', md: '8'}}
+                  p={{base: '0', md: '4'}}
                   />
             <Stack pr={{md: '320px'}}>
               <Heading size={{base: 'lg', md: 'xl'}} mb={'4'} textAlign={{base: 'center', md: 'left'}}>
