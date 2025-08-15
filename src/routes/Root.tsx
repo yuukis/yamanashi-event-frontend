@@ -98,7 +98,7 @@ function Root({startYear}: {startYear: number}) {
             bgRepeat={'no-repeat'}
             bgSize={{base: '200%', md: '960px'}}
             >
-          <Container maxW={'800px'}
+          <Container maxW={'860px'}
                     p={{base: '8', md: '4'}}
                     w={'100%'}
                     h={{md: '320px'}}
@@ -149,7 +149,7 @@ function Root({startYear}: {startYear: number}) {
           </Container>
         </Box>
       </Box>
-      <Container maxW={'800px'} w={'100%'}
+      <Container maxW={'980px'} w={'100%'}
                  p={{base: '0', md: '4'}}
                  >
         <Stack>
