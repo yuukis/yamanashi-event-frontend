@@ -65,7 +65,7 @@ export function EventBody(data: any) {
             flexDirection={{base: 'column', md: 'row'}}
             alignItems={{base: 'flex-start', md: 'stretch'}}
             >
-        <Stack w={{base: '100%', md: '180px'}}
+        <Stack w={{base: '100%', md: '25%'}}
               direction={{base: 'row', md: 'column'}}
               spacing={'0'}
               alignItems={{base: 'baseline', md: 'center'}}
@@ -85,13 +85,13 @@ export function EventBody(data: any) {
           )}
           <HStack spacing={'0'}
                   justifyContent={{base: 'flex-start', md: 'center'}}
-                  mt={{base: '0', md: '-0.5rem'}}
+                  mt={{base: '0', md: '-0.5rem', lg: '-0.8rem'}}
                   >
-            <Text fontSize={{base: '2xl', md:'4xl'}}
+            <Text fontSize={{base: '2xl', md: '4xl', lg: '5xl'}}
                   fontWeight={'bold'}
                   letterSpacing={{md: '0.1rem'}}
                   >{ start_month }</Text>
-            <Text fontSize={{base: '2xl', md:'4xl'}}
+            <Text fontSize={{base: '2xl', md: '4xl', lg: '5xl'}}
                   fontWeight={'light'}
                   letterSpacing={{md: '0.1rem'}}
                   >
@@ -111,12 +111,13 @@ export function EventBody(data: any) {
           </Stack>
         </Show>
         <Box w={'100%'} minH={{md: '120px'}}>
-          <Heading fontSize={'md'}
+          <Heading fontSize={{base: 'md', lg: 'lg'}}
                    color={'primary.800'}
                    pr={{
                      base: group_image_url ? '60px' : '0px',
                      md: '100px'
                    }}
+                   letterSpacing={{base: '0', md: '0.05rem'}}
                    >
             <Show above='md'><Link href={event_url} isExternal>{ title }</Link></Show>
             <Hide above='md'>{ title }</Hide>
