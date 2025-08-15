@@ -158,6 +158,12 @@ export function GithubButton() {
             <Text fontWeight={'normal'}>yuukis/yamanashi-event-icalendar</Text>
             <Spacer />
           </Button>
+          <Button w={'100%'} variant={'ghost'} size={'sm'}
+                  onClick={() => { window.open('https://github.com/yuukis/yamanashi-event-notify-backend', '_blank') }}>
+            <Github mr={'2'} />
+            <Text fontWeight={'normal'}>yuukis/yamanashi-event-notify-backend</Text>
+            <Spacer />
+          </Button>
         </PopoverBody>
       </PopoverContent>
     </Popover>
