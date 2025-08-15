@@ -128,7 +128,7 @@ export function NotificationButton() {
         <PopoverArrow />
         <PopoverHeader>
           <Text fontSize={'sm'}>
-            新着イベント通知（開発中）
+            新着イベント通知
           </Text>
         </PopoverHeader>
         <PopoverCloseButton />

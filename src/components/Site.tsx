@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import icon from "../assets/images/icon.png"
 import { NotificationButton } from '../components/Notification';
 import {
@@ -28,14 +27,6 @@ import { RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
   
 export function SiteHeader() {
-  const [showNotification, setShowNotification] = useState(false);
-
-  useEffect(() => {
-    if (window.location.hash === "#notify") {
-      setShowNotification(true);
-    }
-  }, []);
-
   return (
     <Box w={'100%'} bg={'white'}>
       <Stack h={{base: '12', md: '16'}}
@@ -56,13 +47,13 @@ export function SiteHeader() {
                      fontWeight={'normal'}
                      noOfLines={1}
                      >
-              <strong>Yamanashi</strong> Developer Hub <small>[BETA]</small>
+              <strong>Yamanashi</strong> Developer Hub
             </Heading>
           </Stack>
         </Link>
         <Spacer />
         <Show above='md'><ICalendarButton /></Show>
-        {showNotification && <NotificationButton />}
+        <NotificationButton />
         <GithubButton />
       </Stack>
       <Stack spacing={'2px'}>
@@ -78,18 +69,7 @@ export function SiteFooter() {
   return (
     <Center p={'4'}>
       <Text fontSize={'xs'} color={'gray'}>
-        Yamanashi{' '}
-        <span
-          style={{ textDecoration: 'none', cursor: 'pointer' }}
-          onClick={() => {
-            window.location.hash = '#notify';
-            window.scrollTo(0, 0);
-            window.location.reload();
-          }}
-        >
-          Developer
-        </span>{' '}
-        Hub
+        Yamanashi Developer Hub
       </Text>
     </Center>
   );
@@ -176,6 +156,12 @@ export function GithubButton() {
                   onClick={() => { window.open('https://github.com/yuukis/yamanashi-event-icalendar', '_blank') }}>
             <Github mr={'2'} />
             <Text fontWeight={'normal'}>yuukis/yamanashi-event-icalendar</Text>
+            <Spacer />
+          </Button>
+          <Button w={'100%'} variant={'ghost'} size={'sm'}
+                  onClick={() => { window.open('https://github.com/yuukis/yamanashi-event-notify-backend', '_blank') }}>
+            <Github mr={'2'} />
+            <Text fontWeight={'normal'}>yuukis/yamanashi-event-notify-backend</Text>
             <Spacer />
           </Button>
         </PopoverBody>
