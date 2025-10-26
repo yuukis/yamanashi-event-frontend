@@ -6,7 +6,13 @@ import {
   Heading,
   Text,
   Image,
+  ButtonGroup,
   Button,
+  Menu,
+  MenuList,
+  MenuButton,
+  MenuItem,
+  IconButton,
   Link,
   Flex,
   Skeleton,
@@ -15,6 +21,7 @@ import {
   Show,
   Hide
 } from '@chakra-ui/react';
+import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Hash,
   GeoAlt,
@@ -47,6 +54,18 @@ export function EventBody(data: any) {
   const group_name = event.group_name;
   const group_url = event.group_url;
   const group_image_url = event.group_image_url;
+  const x_search_keywords_array = [];
+  if (hash_tag) {
+    x_search_keywords_array.push("#" + hash_tag);
+  }
+  x_search_keywords_array.push("\"" + title + "\"");
+  if (group_name) {
+    x_search_keywords_array.push("\"" + group_name+ "\"");
+  }
+  const start_date_str = start_date.toISOString().split('T')[0];
+  const x_search_since_until = "since:" + start_date_str + "_00:00:00_JST until:" + start_date_str + "_23:59:59_JST";
+  const x_search_query = x_search_since_until + " " + x_search_keywords_array.join(" OR ");
+  const event_x_search_url = "https://x.com/search?q=" + encodeURIComponent(x_search_query);
 
   const address_array = [address, place].filter(Boolean);
 
@@ -115,7 +134,7 @@ export function EventBody(data: any) {
                    color={'primary.800'}
                    pr={{
                      base: group_image_url ? '60px' : '0px',
-                     md: '100px'
+                     md: '140px'
                    }}
                    letterSpacing={{base: '0', md: '0.05rem'}}
                    >
@@ -123,9 +142,9 @@ export function EventBody(data: any) {
             <Hide above='md'>{ title }</Hide>
           </Heading>
           <Show above='md'>
-            <Text fontSize={'sm'} pr={{md: '100px'}}>{ sub_title }</Text>
+            <Text fontSize={'sm'} pr={{md: '140px'}}>{ sub_title }</Text>
           </Show>
-          <HStack mt={'2'} pr={{md: '100px'}}>
+          <HStack mt={'2'} pr={{md: '140px'}}>
             <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
               {hash_tag && (
                 <HStack>
@@ -179,19 +198,32 @@ export function EventBody(data: any) {
                   />
           )}
           <Show above='md'>
-            <Button w={'100px'}
-                      size={'md'}
-                      colorScheme={'impact'}
-                      position={'absolute'}
-                      bottom={'2'}
-                      right={'4'}
-                      onClick={() => window.open(event_url)}
-                      >
-              <HStack>
-                <ChevronRight />
-                <Text letterSpacing={'0.2rem'}>詳細</Text>
-              </HStack>
-            </Button>
+            <ButtonGroup isAttached
+                         size={'md'}
+                         colorScheme={'impact'}
+                         position={'absolute'}
+                         bottom={'2'}
+                         right={'4'}
+                         >
+              <Button w={'100px'} onClick={() => window.open(event_url)}>
+                <HStack>
+                  <Text letterSpacing={'0.2rem'}>詳細</Text>
+                </HStack>
+              </Button>
+              <Box h="full"
+                   w="1px"
+                   />
+              <Menu placement="bottom-end">
+                <MenuButton as={IconButton}
+                            aria-label='Options'
+                            icon={<ChevronDownIcon />}
+                            />
+                <MenuList>
+                  <MenuItem onClick={() => window.open(event_url)}>イベント詳細ページを表示</MenuItem>
+                  <MenuItem onClick={() => window.open(event_x_search_url)}>開催日当日の X 投稿を表示</MenuItem>
+                </MenuList>
+              </Menu>
+            </ButtonGroup>
           </Show>
         </Box>
       </Flex>
