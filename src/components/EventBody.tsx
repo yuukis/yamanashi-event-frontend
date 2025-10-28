@@ -220,7 +220,7 @@ export function EventBody(data: any) {
                             aria-label='Options'
                             icon={<ChevronDownIcon />}
                             />
-                <MenuList>
+                <MenuList fontSize={'sm'}>
                   <MenuItem icon={<FiExternalLink />}
                             onClick={() => window.open(event_url)}
                             >
