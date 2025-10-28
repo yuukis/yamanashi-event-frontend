@@ -21,6 +21,8 @@ import {
   Show,
   Hide
 } from '@chakra-ui/react';
+import { FaXTwitter } from "react-icons/fa6";
+import { FiExternalLink } from "react-icons/fi";
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Hash,
@@ -219,8 +221,16 @@ export function EventBody(data: any) {
                             icon={<ChevronDownIcon />}
                             />
                 <MenuList>
-                  <MenuItem onClick={() => window.open(event_url)}>イベント詳細ページを表示</MenuItem>
-                  <MenuItem onClick={() => window.open(event_x_search_url)}>開催日当日の X 投稿を表示</MenuItem>
+                  <MenuItem icon={<FiExternalLink />}
+                            onClick={() => window.open(event_url)}
+                            >
+                    情報提供元のページを開く
+                  </MenuItem>
+                  <MenuItem icon={<FaXTwitter />}
+                            onClick={() => window.open(event_x_search_url)}
+                            >
+                    イベント当日の X(Twitter) 投稿を検索する
+                  </MenuItem>
                 </MenuList>
               </Menu>
             </ButtonGroup>
