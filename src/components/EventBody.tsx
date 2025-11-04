@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react';
 import {
   Box,
   Stack,
   HStack,
+  VStack,
   Spacer,
   Heading,
   Text,
@@ -13,11 +15,17 @@ import {
   MenuButton,
   MenuItem,
   IconButton,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
   Link,
   Flex,
   Skeleton,
   SkeletonCircle,
   useMediaQuery,
+  useDisclosure,
   Show,
   Hide
 } from '@chakra-ui/react';
@@ -73,173 +81,283 @@ export function EventBody(data: any) {
 
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
 
+  const [isLongPress, setIsLongPress] = useState(false);
+  const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null);
+  const [moved, setMoved] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+    setMoved(false);
+
+    const timer = setTimeout(() => {
+      if (!moved) {
+        setIsLongPress(true);
+        onOpen();
+      }
+    }, 600); // 600ms for long press
+    setPressTimer(timer);
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPos) return;
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPos.x);
+    const dy = Math.abs(touch.clientY - touchStartPos.y);
+    if (dx > 10 || dy > 10) {
+      setMoved(true);
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        setPressTimer(null);
+      }
+    }
+  };
+  const handleTouchEnd = () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      setPressTimer(null);
+    }
+    if (!isLongPress && !moved) {
+      // Short press action
+      window.open(event_url, '_self');
+    }
+    setIsLongPress(false);
+    setMoved(false);
+  };
+  const resetState = () => {
+    setIsLongPress(false);
+    setMoved(false);
+    setTouchStartPos(null);
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      setPressTimer(null);
+    }
+  }
+
+  useEffect(() => {
+    if (!isOpen) {
+      resetState();
+    }
+  }, [isOpen]);
+
   return (
-    <HStack p={'2'} position={'relative'}
-            {...(!isDesktopScreenSize && (
-              {
-                onClick: () => window.open(event_url, '_self'),
+    <>
+      <HStack p={'2'} position={'relative'}
+              {...(!isDesktopScreenSize && {
+                onTouchStart: handleTouchStart,
+                onTouchMove: handleTouchMove,
+                onTouchEnd: handleTouchEnd,
                 _active: {bg: 'gray.100'},
-              }
-            ))}>
-      <Flex w={'100%'}
-            ml={{base: '2', md: '0'}}
-            flexDirection={{base: 'column', md: 'row'}}
-            alignItems={{base: 'flex-start', md: 'stretch'}}
-            >
-        <Stack w={{base: '100%', md: '25%'}}
-              direction={{base: 'row', md: 'column'}}
-              spacing={'0'}
-              alignItems={{base: 'baseline', md: 'center'}}
-              mb={{base: '1', md: '0'}}
-              color={'gray.600'}
+              })}>
+        <Flex w={'100%'}
+              ml={{base: '2', md: '0'}}
+              flexDirection={{base: 'column', md: 'row'}}
+              alignItems={{base: 'flex-start', md: 'stretch'}}
               >
-          { now_year !== start_year && (
+          <Stack w={{base: '100%', md: '25%'}}
+                direction={{base: 'row', md: 'column'}}
+                spacing={'0'}
+                alignItems={{base: 'baseline', md: 'center'}}
+                mb={{base: '1', md: '0'}}
+                color={'gray.600'}
+                >
+            { now_year !== start_year && (
+              <HStack spacing={'0'}
+                      justifyContent={{base: 'flex-start', md: 'center'}}
+                      >
+                <Text fontSize={'sm'}
+                      fontWeight={'light'}
+                      letterSpacing={{md: '0.1rem'}}
+                      mr={{base: '1', md: '0'}}
+                      >{ start_year }</Text>
+              </HStack>
+            )}
             <HStack spacing={'0'}
                     justifyContent={{base: 'flex-start', md: 'center'}}
+                    mt={{base: '0', md: '-0.5rem', lg: '-0.8rem'}}
                     >
-              <Text fontSize={'sm'}
+              <Text fontSize={{base: '2xl', md: '4xl', lg: '5xl'}}
+                    fontWeight={'bold'}
+                    letterSpacing={{md: '0.1rem'}}
+                    >{ start_month }</Text>
+              <Text fontSize={{base: '2xl', md: '4xl', lg: '5xl'}}
                     fontWeight={'light'}
                     letterSpacing={{md: '0.1rem'}}
-                    mr={{base: '1', md: '0'}}
-                    >{ start_year }</Text>
+                    >
+                /{ start_day }</Text>
             </HStack>
-          )}
-          <HStack spacing={'0'}
-                  justifyContent={{base: 'flex-start', md: 'center'}}
-                  mt={{base: '0', md: '-0.5rem', lg: '-0.8rem'}}
+            <Text fontSize={'lg'}
+                  mt={{md: '-0.5rem'}}
                   >
-            <Text fontSize={{base: '2xl', md: '4xl', lg: '5xl'}}
-                  fontWeight={'bold'}
-                  letterSpacing={{md: '0.1rem'}}
-                  >{ start_month }</Text>
-            <Text fontSize={{base: '2xl', md: '4xl', lg: '5xl'}}
-                  fontWeight={'light'}
-                  letterSpacing={{md: '0.1rem'}}
-                  >
-              /{ start_day }</Text>
-          </HStack>
-          <Text fontSize={'lg'}
-                mt={{md: '-0.5rem'}}
-                >
-            ({ start_dow }) { start_time }-
-          </Text>
-        </Stack>
-        <Show above='md'>
-          <Stack spacing={'2px'} direction={'row'} mr={'4'}>
-            <Box w={'1px'} bg={'impact.500'} />
-            <Box w={'1px'} bg={'secondary.500'} />
-            <Box w={'1px'} bg={'primary.500'} />
+              ({ start_dow }) { start_time }-
+            </Text>
           </Stack>
-        </Show>
-        <Box w={'100%'} minH={{md: '120px'}}>
-          <Heading fontSize={{base: 'md', lg: 'lg'}}
-                   color={'primary.800'}
-                   pr={{
-                     base: group_image_url ? '60px' : '0px',
-                     md: '140px'
-                   }}
-                   letterSpacing={{base: '0', md: '0.05rem'}}
-                   >
-            <Show above='md'><Link href={event_url} isExternal>{ title }</Link></Show>
-            <Hide above='md'>{ title }</Hide>
-          </Heading>
           <Show above='md'>
-            <Text fontSize={'sm'} pr={{md: '140px'}}>{ sub_title }</Text>
-          </Show>
-          <HStack mt={'2'} pr={{md: '140px'}}>
-            <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
-              {hash_tag && (
-                <HStack>
-                  <Hash />
-                  <Show above='md'><Text fontSize={'sm'} noOfLines={1}><Link href={hash_tag_url} isExternal>{ hash_tag }</Link></Text></Show>
-                  <Hide above='md'><Text fontSize={'sm'} noOfLines={1}>{ hash_tag }</Text></Hide>
-                </HStack>
-              )}
-              {address_array.length > 0 && (
-                <HStack>
-                  <GeoAlt />
-                  <Text fontSize={'sm'} noOfLines={1}>{ address_array[0] }</Text>
-                </HStack>
-              )}
-              {address_array.length > 1 && (
-                <HStack ml={'24px'} mt={{base: '0', md: '-0.5rem'}}>
-                  <Text fontSize={'sm'} noOfLines={1}>{ address_array[1] }</Text>
-                </HStack>
-              )}
-              {group_name && (
-                <HStack>
-                  <People />
-                  <Show above='md'>
-                    <Button size={'xs'}
-                            onClick={() => window.open(group_url)}
-                            >{group_name}</Button>
-                  </Show>
-                  <Hide above='md'>
-                    <Text fontSize={'sm'}
-                          noOfLines={1}
-                          >{group_name}</Text>
-                  </Hide>
-                </HStack>
-              )}
-              {group_name == null && owner_name && (
-                <HStack>
-                  <Person />
-                  <Text fontSize={'sm'} noOfLines={1}>{owner_name}</Text>
-                </HStack>
-              )}
+            <Stack spacing={'2px'} direction={'row'} mr={'4'}>
+              <Box w={'1px'} bg={'impact.500'} />
+              <Box w={'1px'} bg={'secondary.500'} />
+              <Box w={'1px'} bg={'primary.500'} />
             </Stack>
-          </HStack>
-          {group_image_url && (
-            <Image src={ group_image_url }
-                  w={'80px'}
-                  h={'54px'}
-                  fit={'contain'}
-                  position={'absolute'}
-                  top={{base: '4', md: '2'}}
-                  right={{base: '4', md: '4'}}
-                  />
-          )}
-          <Show above='md'>
-            <ButtonGroup isAttached
-                         size={'md'}
-                         colorScheme={'impact'}
-                         position={'absolute'}
-                         bottom={'2'}
-                         right={'4'}
-                         >
-              <Button w={'100px'} onClick={() => window.open(event_url)}>
-                <HStack>
-                  <Text letterSpacing={'0.2rem'}>詳細</Text>
-                </HStack>
-              </Button>
-              <Box h="full"
-                   w="1px"
-                   />
-              <Menu placement="bottom-end">
-                <MenuButton as={IconButton}
-                            aria-label='Options'
-                            icon={<ChevronDownIcon />}
-                            />
-                <MenuList fontSize={'sm'}>
-                  <MenuItem icon={<FiExternalLink />}
-                            onClick={() => window.open(event_url)}
-                            >
-                    情報提供元のページを開く
-                  </MenuItem>
-                  <MenuItem icon={<FaXTwitter />}
-                            onClick={() => window.open(event_x_search_url)}
-                            >
-                    イベント当日の X(Twitter) 投稿を検索する
-                  </MenuItem>
-                </MenuList>
-              </Menu>
-            </ButtonGroup>
           </Show>
-        </Box>
-      </Flex>
-      <Spacer />
-      <Hide above='md'><ChevronRight /></Hide>
-    </HStack>
+          <Box w={'100%'} minH={{md: '120px'}}>
+            <Heading fontSize={{base: 'md', lg: 'lg'}}
+                    color={'primary.800'}
+                    pr={{
+                      base: group_image_url ? '60px' : '0px',
+                      md: '140px'
+                    }}
+                    letterSpacing={{base: '0', md: '0.05rem'}}
+                    >
+              <Show above='md'><Link href={event_url} isExternal>{ title }</Link></Show>
+              <Hide above='md'>{ title }</Hide>
+            </Heading>
+            <Show above='md'>
+              <Text fontSize={'sm'} pr={{md: '140px'}}>{ sub_title }</Text>
+            </Show>
+            <HStack mt={'2'} pr={{md: '140px'}}>
+              <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
+                {hash_tag && (
+                  <HStack>
+                    <Hash />
+                    <Show above='md'><Text fontSize={'sm'} noOfLines={1}><Link href={hash_tag_url} isExternal>{ hash_tag }</Link></Text></Show>
+                    <Hide above='md'><Text fontSize={'sm'} noOfLines={1}>{ hash_tag }</Text></Hide>
+                  </HStack>
+                )}
+                {address_array.length > 0 && (
+                  <HStack>
+                    <GeoAlt />
+                    <Text fontSize={'sm'} noOfLines={1}>{ address_array[0] }</Text>
+                  </HStack>
+                )}
+                {address_array.length > 1 && (
+                  <HStack ml={'24px'} mt={{base: '0', md: '-0.5rem'}}>
+                    <Text fontSize={'sm'} noOfLines={1}>{ address_array[1] }</Text>
+                  </HStack>
+                )}
+                {group_name && (
+                  <HStack>
+                    <People />
+                    <Show above='md'>
+                      <Button size={'xs'}
+                              onClick={() => window.open(group_url)}
+                              >{group_name}</Button>
+                    </Show>
+                    <Hide above='md'>
+                      <Text fontSize={'sm'}
+                            noOfLines={1}
+                            >{group_name}</Text>
+                    </Hide>
+                  </HStack>
+                )}
+                {group_name == null && owner_name && (
+                  <HStack>
+                    <Person />
+                    <Text fontSize={'sm'} noOfLines={1}>{owner_name}</Text>
+                  </HStack>
+                )}
+              </Stack>
+            </HStack>
+            {group_image_url && (
+              <Image src={ group_image_url }
+                    w={'80px'}
+                    h={'54px'}
+                    fit={'contain'}
+                    position={'absolute'}
+                    top={{base: '4', md: '2'}}
+                    right={{base: '4', md: '4'}}
+                    />
+            )}
+            <Show above='md'>
+              <ButtonGroup isAttached
+                          size={'md'}
+                          colorScheme={'impact'}
+                          position={'absolute'}
+                          bottom={'2'}
+                          right={'4'}
+                          >
+                <Button w={'100px'} onClick={() => window.open(event_url)}>
+                  <HStack>
+                    <Text letterSpacing={'0.2rem'}>詳細</Text>
+                  </HStack>
+                </Button>
+                <Box h="full"
+                    w="1px"
+                    />
+                <Menu placement="bottom-end">
+                  <MenuButton as={IconButton}
+                              aria-label='Options'
+                              icon={<ChevronDownIcon />}
+                              />
+                  <MenuList fontSize={'sm'}>
+                    <MenuItem icon={<FiExternalLink />}
+                              onClick={() => window.open(event_url)}
+                              >
+                      情報提供元のページを開く
+                    </MenuItem>
+                    <MenuItem icon={<FaXTwitter />}
+                              onClick={() => window.open(event_x_search_url)}
+                              >
+                      イベント当日の X(Twitter) 投稿を検索
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+              </ButtonGroup>
+            </Show>
+          </Box>
+        </Flex>
+        <Spacer />
+        <Hide above='md'><ChevronRight /></Hide>
+      </HStack>
+
+      <Drawer placement="bottom"
+              isOpen={isOpen}
+              onClose={() => {
+                resetState();
+                onClose();
+              }}
+              >
+        <DrawerOverlay />
+        <DrawerContent pb={6}
+                       borderTopRadius="xl"
+                       animation="slide-up"
+                       >
+          <DrawerHeader textAlign="center"
+                        borderBottomWidth="1px"
+                        >
+            { title }
+          </DrawerHeader>
+          <DrawerBody>
+            <VStack spacing={2}>
+              <Button w="full"
+                      leftIcon={<FiExternalLink />}
+                      onClick={() => {
+                        window.open(event.event_url);
+                        onClose();
+                      }}
+                      >
+                情報提供元のページを開く
+              </Button>
+              <Button w="full"
+                      leftIcon={<FaXTwitter />}
+                      onClick={() => {
+                        window.open(event_x_search_url);
+                        onClose();
+                      }}
+                      >
+                イベント当日の X(Twitter) 投稿を検索
+              </Button>
+              <Button w="full"
+                      colorScheme="red"
+                      onClick={onClose}
+                      >
+                キャンセル
+              </Button>
+            </VStack>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    </>
   )
 }
 
