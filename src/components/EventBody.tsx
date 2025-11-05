@@ -82,7 +82,7 @@ export function EventBody(data: any) {
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
 
   const [isLongPress, setIsLongPress] = useState(false);
-  const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [pressTimer, setPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null);
   const [moved, setMoved] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
