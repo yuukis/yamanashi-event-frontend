@@ -30,7 +30,7 @@ import {
   Hide
 } from '@chakra-ui/react';
 import { FaXTwitter } from "react-icons/fa6";
-import { FiExternalLink } from "react-icons/fi";
+import { FiExternalLink, FiMap } from "react-icons/fi";
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Hash,
@@ -78,6 +78,8 @@ export function EventBody(data: any) {
   const event_x_search_url = "https://x.com/search?q=" + encodeURIComponent(x_search_query);
 
   const address_array = [address, place].filter(Boolean);
+
+  const event_map_url = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(address_array[0] || '');
 
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
 
@@ -229,7 +231,8 @@ export function EventBody(data: any) {
                 {address_array.length > 0 && (
                   <HStack>
                     <GeoAlt />
-                    <Text fontSize={'sm'} noOfLines={1}>{ address_array[0] }</Text>
+                    <Show above='md'><Text fontSize={'sm'} noOfLines={1}><Link href={event_map_url} isExternal>{ address_array[0] }</Link></Text></Show>
+                    <Hide above='md'><Text fontSize={'sm'} noOfLines={1}>{ address_array[0] }</Text></Hide>
                   </HStack>
                 )}
                 {address_array.length > 1 && (
@@ -340,6 +343,17 @@ export function EventBody(data: any) {
                       >
                 情報提供元のページを開く
               </Button>
+              {address_array.length > 0 && (
+                <Button w="full"
+                        leftIcon={<FiMap />}
+                        onClick={() => {
+                          window.open(event_map_url);
+                          onClose();
+                        }}
+                        >
+                  マップで会場を見る
+                </Button>
+              )}
               <Button w="full"
                       leftIcon={<FaXTwitter />}
                       onClick={() => {
