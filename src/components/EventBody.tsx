@@ -148,6 +148,8 @@ export function EventBody(data: any) {
                 onTouchStart: handleTouchStart,
                 onTouchMove: handleTouchMove,
                 onTouchEnd: handleTouchEnd,
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
                 _active: {bg: 'gray.100'},
               })}>
         <Flex w={'100%'}
