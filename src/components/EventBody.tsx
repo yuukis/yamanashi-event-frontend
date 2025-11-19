@@ -30,7 +30,7 @@ import {
   Hide
 } from '@chakra-ui/react';
 import { FaXTwitter } from "react-icons/fa6";
-import { FiExternalLink, FiMap } from "react-icons/fi";
+import { FiExternalLink, FiMap, FiMoreVertical } from "react-icons/fi";
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Hash,
@@ -89,6 +89,14 @@ export function EventBody(data: any) {
   const [moved, setMoved] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   
+  const handleMenuButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onOpen();
+  };
+  const handleMenuButtonTouch = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     setTouchStartPos({ x: touch.clientX, y: touch.clientY });
@@ -120,12 +128,11 @@ export function EventBody(data: any) {
       clearTimeout(pressTimer);
       setPressTimer(null);
     }
-    if (!isLongPress && !moved) {
+    if (!isLongPress && !moved && touchStartPos) {
       // Short press action
       window.open(event_url, '_self');
     }
-    setIsLongPress(false);
-    setMoved(false);
+    resetState();
   };
   const resetState = () => {
     setIsLongPress(false);
@@ -263,6 +270,22 @@ export function EventBody(data: any) {
                 )}
               </Stack>
             </HStack>
+            <Hide above='md'>
+              <IconButton aria-label='More options'
+                          icon={<FiMoreVertical />}
+                          size='sm'
+                          variant='ghost'
+                          position='absolute'
+                          top='0'
+                          right='0'
+                          onClick={handleMenuButtonClick}
+                          onTouchStart={handleMenuButtonTouch}
+                          onTouchMove={handleMenuButtonTouch}
+                          onTouchEnd={handleMenuButtonTouch}
+                          zIndex={1}
+                          />
+            </Hide>
+
             {group_image_url && (
               <Image src={ group_image_url }
                     w={'80px'}
@@ -286,9 +309,7 @@ export function EventBody(data: any) {
                     <Text letterSpacing={'0.2rem'}>詳細</Text>
                   </HStack>
                 </Button>
-                <Box h="full"
-                    w="1px"
-                    />
+                <Box h="full" w="1px" />
                 <Menu placement="bottom-end">
                   <MenuButton as={IconButton}
                               aria-label='Options'
