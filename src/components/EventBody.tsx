@@ -97,25 +97,67 @@ export function EventBody(data: any) {
     e.stopPropagation();
   };
 
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [scrollTimer, setScrollTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (Math.abs(currentScrollY - lastScrollY) > 5) {
+        setIsScrolling(true);
+        
+        if (scrollTimer) {
+          clearTimeout(scrollTimer);
+        }
+        
+        const timer = setTimeout(() => {
+          setIsScrolling(false);
+        }, 150); // judge scrolling stopped after 150ms of no scroll events
+        
+        setScrollTimer(timer);
+      }
+      
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimer) {
+        clearTimeout(scrollTimer);
+      }
+    };
+  }, [scrollTimer]);
+
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (isScrolling) {
+      return;
+    }
+    
     const touch = e.touches[0];
     setTouchStartPos({ x: touch.clientX, y: touch.clientY });
     setMoved(false);
 
     const timer = setTimeout(() => {
-      if (!moved) {
+      if (!moved && !isScrolling) {
         setIsLongPress(true);
         onOpen();
       }
-    }, 600); // 600ms for long press
+    }, 600);
     setPressTimer(timer);
   };
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartPos) return;
+    if (!touchStartPos || isScrolling) return;
+    
     const touch = e.touches[0];
     const dx = Math.abs(touch.clientX - touchStartPos.x);
     const dy = Math.abs(touch.clientY - touchStartPos.y);
-    if (dx > 10 || dy > 10) {
+    
+    if (dx > 8 || dy > 8) {
       setMoved(true);
       if (pressTimer) {
         clearTimeout(pressTimer);
@@ -128,8 +170,8 @@ export function EventBody(data: any) {
       clearTimeout(pressTimer);
       setPressTimer(null);
     }
-    if (!isLongPress && !moved && touchStartPos) {
-      // Short press action
+    
+    if (!isScrolling && !isLongPress && !moved && touchStartPos) {
       window.open(event_url, '_self');
     }
     resetState();
