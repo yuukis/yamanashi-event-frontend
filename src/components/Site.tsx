@@ -164,6 +164,18 @@ export function GithubButton() {
             <Text fontWeight={'normal'}>yuukis/yamanashi-event-notify-backend</Text>
             <Spacer />
           </Button>
+          <Button w={'100%'} variant={'ghost'} size={'sm'}
+                  onClick={() => { window.open('https://github.com/yuukis/yamanashi-event-stream', '_blank') }}>
+            <Github mr={'2'} />
+            <Text fontWeight={'normal'}>yuukis/yamanashi-event-stream</Text>
+            <Spacer />
+          </Button>
+          <Button w={'100%'} variant={'ghost'} size={'sm'}
+                  onClick={() => { window.open('https://github.com/yuukis/yamanashi-event-stream-x', '_blank') }}>
+            <Github mr={'2'} />
+            <Text fontWeight={'normal'}>yuukis/yamanashi-event-stream-x</Text>
+            <Spacer />
+          </Button>
         </PopoverBody>
       </PopoverContent>
     </Popover>
