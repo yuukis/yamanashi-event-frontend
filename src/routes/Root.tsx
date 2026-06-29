@@ -16,9 +16,10 @@ import {
   Heading,
   Text,
   Image,
-  Link
+  Link,
+  Button
 } from '@chakra-ui/react';
-import { ExternalLinkIcon } from "@chakra-ui/icons";
+import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 
 function Root({startYear}: {startYear: number}) {
@@ -145,6 +146,16 @@ function Root({startYear}: {startYear: number}) {
                 </Link>
                 およびコミュニティが提供するイベントカレンダーから取得しています。
               </Text>
+              <Box pt={'2'} textAlign={{base: 'center', md: 'left'}}>
+                <Button size={{base: 'sm', md: 'md'}}
+                        variant={'outline'}
+                        colorScheme={'primary'}
+                        leftIcon={<InfoOutlineIcon />}
+                        onClick={() => { window.open('/guide', '_self') }}
+                        >
+                  はじめての方へ
+                </Button>
+              </Box>
             </Stack>          
           </Container>
         </Box>
