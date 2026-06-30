@@ -8,6 +8,7 @@ import {
   Heading,
   Text,
   Image,
+  Badge,
   ButtonGroup,
   Button,
   Menu,
@@ -30,7 +31,7 @@ import {
   Hide
 } from '@chakra-ui/react';
 import { FaXTwitter } from "react-icons/fa6";
-import { FiExternalLink, FiMap, FiMoreVertical } from "react-icons/fi";
+import { FiArchive, FiExternalLink, FiMap, FiMoreVertical } from "react-icons/fi";
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Hash,
@@ -40,8 +41,13 @@ import {
   ChevronRight,
   ExclamationTriangleFill,
 } from '@chakra-icons/bootstrap';
+import type { EventWithGroup } from '../types/events';
 
-export function EventBody(data: any) {
+type EventBodyProps = {
+  event: EventWithGroup;
+};
+
+export function EventBody(data: EventBodyProps) {
 
   const day_of_week = ['日', '月', '火', '水', '木', '金', '土'];
   const event = data.event;
@@ -56,7 +62,7 @@ export function EventBody(data: any) {
   const title = event.title;
   const sub_title = event.catch;
   const hash_tag = event.hash_tag;
-  const hash_tag_url = "https://x.com/hashtag/" + encodeURIComponent(hash_tag);
+  const hash_tag_url = hash_tag ? "https://x.com/hashtag/" + encodeURIComponent(hash_tag) : "";
   const address = event.address;
   const place = event.place;
   const event_url = event.event_url;
@@ -64,6 +70,8 @@ export function EventBody(data: any) {
   const group_name = event.group_name;
   const group_url = event.group_url;
   const group_image_url = event.group_image_url;
+  const archive_source = event.archive_source;
+  const archive_url = event.archive_url;
   const x_search_keywords_array = [];
   if (hash_tag) {
     x_search_keywords_array.push("#" + hash_tag);
@@ -293,9 +301,13 @@ export function EventBody(data: any) {
                   <HStack>
                     <People />
                     <Show above='md'>
-                      <Button size={'xs'}
-                              onClick={() => window.open(group_url)}
-                              >{group_name}</Button>
+                      {group_url ? (
+                        <Button size={'xs'}
+                                onClick={() => window.open(group_url)}
+                                >{group_name}</Button>
+                      ) : (
+                        <Text fontSize={'sm'} noOfLines={1}>{group_name}</Text>
+                      )}
                     </Show>
                     <Hide above='md'>
                       <Text fontSize={'sm'}
@@ -307,7 +319,20 @@ export function EventBody(data: any) {
                 {group_name == null && owner_name && (
                   <HStack>
                     <Person />
-                    <Text fontSize={'sm'} noOfLines={1}>{owner_name}</Text>
+                      <Text fontSize={'sm'} noOfLines={1}>{owner_name}</Text>
+                  </HStack>
+                )}
+                {archive_source && (
+                  <HStack>
+                    <FiArchive />
+                    <Badge colorScheme="secondary" variant="subtle">
+                      アーカイブ
+                    </Badge>
+                    <Show above='md'>
+                      <Text fontSize={'xs'} color={'gray.600'} noOfLines={1}>
+                        {archive_source}
+                      </Text>
+                    </Show>
                   </HStack>
                 )}
               </Stack>
@@ -368,6 +393,13 @@ export function EventBody(data: any) {
                               >
                       イベント当日の X(Twitter) 投稿を検索
                     </MenuItem>
+                    {archive_url && (
+                      <MenuItem icon={<FiArchive />}
+                                onClick={() => window.open(archive_url)}
+                                >
+                        アーカイブ元を開く
+                      </MenuItem>
+                    )}
                   </MenuList>
                 </Menu>
               </ButtonGroup>
@@ -426,6 +458,17 @@ export function EventBody(data: any) {
                       >
                 イベント当日の X(Twitter) 投稿を検索
               </Button>
+              {archive_url && (
+                <Button w="full"
+                        leftIcon={<FiArchive />}
+                        onClick={() => {
+                          window.open(archive_url);
+                          onClose();
+                        }}
+                        >
+                  アーカイブ元を開く
+                </Button>
+              )}
               <Button w="full"
                       colorScheme="red"
                       onClick={onClose}

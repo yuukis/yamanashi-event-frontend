@@ -21,9 +21,19 @@ import {
 } from '@chakra-ui/react';
 import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
+import { enrichEventsWithGroups, isFutureEvent, isPastEvent } from '../utils/eventGroups';
+import type { ApiEvent, ApiGroup, EventWithGroup } from '../types/events';
+
+type RootState = {
+  isLoading: boolean;
+  pastEvents: EventWithGroup[];
+  futureEvents: EventWithGroup[];
+  lastModified: string | null;
+  errorMessage: string;
+};
 
 function Root({startYear}: {startYear: number}) {
-  const [data, setData] = useState({
+  const [data, setData] = useState<RootState>({
     isLoading: true,
     pastEvents: [],
     futureEvents: [],
@@ -53,28 +63,14 @@ function Root({startYear}: {startYear: number}) {
         return;
       }
 
-      let groups: { [key: string]: any } = {};
-      group_res.data.forEach((group: any) => {
-        groups[group.key] = group;
-      });
-      const events = res.data.map((event: any) => {
-        let group_key = event.group_key;
-        if (group_key in groups) {
-          let group = groups[group_key];
-          event.group_image_url = group.image_url;
-        }
-        return event;
-      });
+      const events = enrichEventsWithGroups(
+        res.data as ApiEvent[],
+        group_res.data as ApiGroup[],
+      );
       const data = {
         isLoading: false,
-        pastEvents: events.filter((data: any) => {
-          const open_status = data.open_status;
-          return open_status !== 'cancelled' && open_status === 'close';
-        }).sort(sortByStartedAtDesc),
-        futureEvents: events.filter((data: any) => {
-          const open_status = data.open_status;
-          return open_status !== 'cancelled' && open_status !== 'close';
-        }).sort(sortByStartedAtAsc),
+        pastEvents: events.filter(isPastEvent).sort(sortByStartedAtDesc),
+        futureEvents: events.filter(isFutureEvent).sort(sortByStartedAtAsc),
         lastModified: res.headers['last-modified'],
         errorMessage: ''
       }
@@ -144,7 +140,7 @@ function Root({startYear}: {startYear: number}) {
                 <Link color={'primary.800'} href='https://connpass.com' isExternal>
                   connpass<ExternalLinkIcon mx={'2px'} />
                 </Link>
-                およびコミュニティが提供するイベントカレンダーから取得しています。
+                、コミュニティが提供するイベントカレンダー、過去イベントアーカイブから取得しています。
               </Text>
               <Box pt={'2'} textAlign={{base: 'center', md: 'left'}}>
                 <Button size={{base: 'sm', md: 'md'}}
@@ -185,8 +181,8 @@ function Root({startYear}: {startYear: number}) {
                 ) : data.futureEvents.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  data.futureEvents.map((data) => {
-                    return <EventBody event={data} />
+                  data.futureEvents.map((event) => {
+                    return <EventBody key={event.uid} event={event} />
                   }
                 ))}
               </Stack>
@@ -217,8 +213,8 @@ function Root({startYear}: {startYear: number}) {
                 ) : data.pastEvents.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  data.pastEvents.map((data) => {
-                    return <EventBody event={data} />
+                  data.pastEvents.map((event) => {
+                    return <EventBody key={event.uid} event={event} />
                   }
                 ))}
               </Stack>

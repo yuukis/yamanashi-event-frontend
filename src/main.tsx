@@ -10,7 +10,7 @@ import Guide from './routes/Guide.jsx'
 import AppTheme from './theme.tsx'
 import { ChakraProvider } from '@chakra-ui/react'
 
-const START_YEAR = 2015;
+const START_YEAR = 2010;
 
 const router = createBrowserRouter([
   {
