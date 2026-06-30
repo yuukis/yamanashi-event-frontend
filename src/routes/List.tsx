@@ -16,6 +16,15 @@ import {
   Spacer
 } from '@chakra-ui/react';
 import { sortByStartedAtAsc } from '../utils/eventSort';
+import { enrichEventsWithGroups, isVisibleEvent } from '../utils/eventGroups';
+import type { ApiEvent, ApiGroup, EventWithGroup } from '../types/events';
+
+type ListState = {
+  isLoading: boolean;
+  events: EventWithGroup[];
+  lastModified: string | null;
+  errorMessage: string;
+};
 
 function List({ startYear} : {startYear: number}) {
   let { year: param_year } = useParams();
@@ -23,7 +32,7 @@ function List({ startYear} : {startYear: number}) {
   const prev_year = year - 1;
   const next_year = year + 1;
 
-  const [data, setData] = useState({
+  const [data, setData] = useState<ListState>({
     isLoading: true,
     events: [],
     lastModified: null,
@@ -51,24 +60,13 @@ function List({ startYear} : {startYear: number}) {
         return;
       }
 
-      let groups: { [key: string]: any } = {};
-      group_res.data.forEach((group: any) => {
-        groups[group.key] = group;
-      });
-      const events = res.data.map((event: any) => {
-        let group_key = event.group_key;
-        if (group_key in groups) {
-          let group = groups[group_key];
-          event.group_image_url = group.image_url;
-        }
-        return event;
-      });
+      const events = enrichEventsWithGroups(
+        res.data as ApiEvent[],
+        group_res.data as ApiGroup[],
+      );
       const data = {
         isLoading: false,
-        events: events.filter((data: any) => {
-          const open_status = data.open_status;
-          return open_status !== 'cancelled';
-        }).sort(sortByStartedAtAsc),
+        events: events.filter(isVisibleEvent).sort(sortByStartedAtAsc),
         lastModified: res.headers['last-modified'],
         errorMessage: ''
       }
@@ -126,8 +124,8 @@ function List({ startYear} : {startYear: number}) {
                 ) : data.events.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  data.events.map((data) => {
-                    return <EventBody event={data} />
+                  data.events.map((event) => {
+                    return <EventBody key={event.uid} event={event} />
                   }
                 ))}
               </Stack>
