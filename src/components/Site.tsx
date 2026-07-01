@@ -26,7 +26,7 @@ import {
   Tooltip,
   useDisclosure
 } from '@chakra-ui/react';
-import { RepeatClockIcon } from "@chakra-ui/icons";
+import { ChevronLeftIcon, ChevronRightIcon, RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
 import { fetchEvents } from '../utils/api';
 import type { ApiEvent } from '../types/events';
@@ -85,8 +85,12 @@ export function ICalendarButton() {
   const [events, setEvents] = useState<ApiEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [monthOffset, setMonthOffset] = useState(0);
   const today = useMemo(() => new Date(), []);
-  const monthStart = useMemo(() => new Date(today.getFullYear(), today.getMonth(), 1), [today]);
+  const monthStart = useMemo(
+    () => new Date(today.getFullYear(), today.getMonth() + monthOffset, 1),
+    [monthOffset, today],
+  );
   const monthLabel = monthStart.toLocaleDateString('ja-JP', {
     year: 'numeric',
     month: 'long',
@@ -133,8 +137,13 @@ export function ICalendarButton() {
     getData();
   }, [errorMessage, events.length, isLoading, isOpen]);
 
+  const closePopover = () => {
+    setMonthOffset(0);
+    onClose();
+  };
+
   return (
-    <Popover isOpen={isOpen} onOpen={onOpen} onClose={onClose} placement='bottom-end'>
+    <Popover isOpen={isOpen} onOpen={onOpen} onClose={closePopover} placement='bottom-end'>
       <PopoverTrigger>
         <Button variant={'ghost'}
                 aria-label='イベントカレンダー'
@@ -153,9 +162,25 @@ export function ICalendarButton() {
       <PopoverContent w={{base: 'calc(100vw - 24px)', md: '360px'}}>
         <PopoverArrow />
         <PopoverHeader>
-          <Text fontSize={'sm'}>
-            {monthLabel}のイベントカレンダー
-          </Text>
+          <HStack spacing={'2'} pr={'8'}>
+            <IconButton aria-label='前月を表示'
+                        icon={<ChevronLeftIcon />}
+                        size={'xs'}
+                        variant={'ghost'}
+                        isDisabled={monthOffset <= -1}
+                        onClick={() => setMonthOffset((current) => Math.max(current - 1, -1))}
+                        />
+            <Text fontSize={'sm'} flex={'1'} textAlign={'center'}>
+              {monthLabel}のイベントカレンダー
+            </Text>
+            <IconButton aria-label='次月を表示'
+                        icon={<ChevronRightIcon />}
+                        size={'xs'}
+                        variant={'ghost'}
+                        isDisabled={monthOffset >= 1}
+                        onClick={() => setMonthOffset((current) => Math.min(current + 1, 1))}
+                        />
+          </HStack>
         </PopoverHeader>
         <PopoverCloseButton />
         <PopoverBody>
