@@ -245,13 +245,13 @@ export function ICalendarButton() {
             <Stack borderTop={'1px solid'}
                    borderColor={'gray.100'}
                    pt={'3'}
+                   spacing={'2'}
                    >
-              <Text fontSize={'sm'}>
-                iCalendar で外部のカレンダーに表示する
+              <Text fontSize={'xs'} color={'gray.600'}>
+                連携用URL（iCalendar）
               </Text>
-              <Text fontSize={'xs'}>
-                以下の URL をコピーして、Google カレンダーなどのカレンダーに登録すると、
-                カレンダー上でイベントが表示されるようになります
+              <Text fontSize={'xs'} color={'gray.500'}>
+                外部カレンダーに追加したい方向けです。
               </Text>
               <Input value={'https://hub.yamanashi.dev/event.ics'}
                     size={'sm'}
@@ -268,7 +268,7 @@ export function ICalendarButton() {
           <Button w={'100%'} variant={'ghost'} size={'sm'}
                   onClick={() => { window.open('https://calendar.google.com/calendar/r/settings/addbyurl', '_blank') }}>
             <CaretRightFill mr={'2'} />
-            <Text fontWeight={'normal'}>Google カレンダーに登録する</Text>
+            <Text fontWeight={'normal'}>Google カレンダーで追加する</Text>
             <Spacer />
           </Button>
         </PopoverFooter>
