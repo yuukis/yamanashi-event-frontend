@@ -26,6 +26,7 @@ import {
   Tooltip,
   useDisclosure
 } from '@chakra-ui/react';
+import { isMobile } from 'react-device-detect';
 import { ChevronLeftIcon, ChevronRightIcon, RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
@@ -264,14 +265,16 @@ export function ICalendarButton() {
             </Stack>
           </Stack>
         </PopoverBody>
-        <PopoverFooter>
-          <Button w={'100%'} variant={'ghost'} size={'sm'}
-                  onClick={() => { window.open('https://calendar.google.com/calendar/r/settings/addbyurl', '_blank') }}>
-            <CaretRightFill mr={'2'} />
-            <Text fontWeight={'normal'}>Google カレンダーで追加する</Text>
-            <Spacer />
-          </Button>
-        </PopoverFooter>
+        {!isMobile && (
+          <PopoverFooter>
+            <Button w={'100%'} variant={'ghost'} size={'sm'}
+                    onClick={() => { window.open('https://calendar.google.com/calendar/r/settings/addbyurl', '_blank') }}>
+              <CaretRightFill mr={'2'} />
+              <Text fontWeight={'normal'}>Google カレンダーに登録する</Text>
+              <Spacer />
+            </Button>
+          </PopoverFooter>
+        )}
       </PopoverContent>
     </Popover>
   )
