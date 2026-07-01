@@ -217,17 +217,17 @@ export function ICalendarButton() {
             <IconButton aria-label='前月を表示'
                         icon={<ChevronLeftIcon />}
                         size={'xs'}
-                        variant={'ghost'}
+                        variant={'outline'}
                         isDisabled={monthOffset <= -1}
                         onClick={() => setMonthOffset((current) => Math.max(current - 1, -1))}
                         />
-            <Text fontSize={'sm'} flex={'1'} textAlign={'center'}>
-              {monthLabel}のイベントカレンダー
+            <Text fontSize={'md'} flex={'1'} textAlign={'center'} fontWeight={'bold'}>
+              {monthLabel}
             </Text>
             <IconButton aria-label='次月を表示'
                         icon={<ChevronRightIcon />}
                         size={'xs'}
-                        variant={'ghost'}
+                        variant={'outline'}
                         isDisabled={monthOffset >= 1}
                         onClick={() => setMonthOffset((current) => Math.min(current + 1, 1))}
                         />
