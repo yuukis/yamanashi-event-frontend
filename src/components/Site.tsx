@@ -171,16 +171,21 @@ export function ICalendarButton() {
   useEffect(() => {
     let timerId: number | undefined;
 
-    const updateToday = () => {
-      setToday(new Date());
-      scheduleNextUpdate();
-    };
     const scheduleNextUpdate = () => {
       if (timerId !== undefined) {
         window.clearTimeout(timerId);
       }
 
       timerId = window.setTimeout(updateToday, getMillisecondsUntilNextDay());
+    };
+    const updateToday = () => {
+      const nextToday = new Date();
+      setToday((currentToday) => (
+        formatEventDateKey(currentToday) === formatEventDateKey(nextToday)
+          ? currentToday
+          : nextToday
+      ));
+      scheduleNextUpdate();
     };
     const updateTodayAfterResume = () => {
       if (!document.hidden) {
@@ -458,7 +463,7 @@ function getMillisecondsUntilNextDay(): number {
   const now = new Date();
   const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
-  return nextDay.getTime() - now.getTime() + 1000;
+  return Math.max(0, nextDay.getTime() - now.getTime());
 }
 
 function formatEventTime(startedAt: string): string {
