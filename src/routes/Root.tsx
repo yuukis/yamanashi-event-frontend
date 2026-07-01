@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import '../style.css';
@@ -22,7 +21,10 @@ import {
 import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent } from '../utils/eventGroups';
-import type { ApiEvent, ApiGroup, EventWithGroup } from '../types/events';
+import { fetchEvents, fetchGroups } from '../utils/api';
+import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
+import { scrollToCurrentHash } from '../utils/hashScroll';
+import type { EventWithGroup } from '../types/events';
 
 type RootState = {
   isLoading: boolean;
@@ -45,11 +47,11 @@ function Root({startYear}: {startYear: number}) {
 
   useEffect(() => {
     const getData = async () => {
-      let res = null;
-      let group_res = null;
+      let eventsResponse = null;
+      let groups = null;
       try {
-        res = await axios.get('https://api.event.yamanashi.dev/events');
-        group_res = await axios.get('https://api.event.yamanashi.dev/groups');
+        eventsResponse = await fetchEvents();
+        groups = await fetchGroups();
       }
       catch (err: any) {
         const data = {
@@ -64,20 +66,51 @@ function Root({startYear}: {startYear: number}) {
       }
 
       const events = enrichEventsWithGroups(
-        res.data as ApiEvent[],
-        group_res.data as ApiGroup[],
+        eventsResponse.events,
+        groups,
       );
       const data = {
         isLoading: false,
         pastEvents: events.filter(isPastEvent).sort(sortByStartedAtDesc),
         futureEvents: events.filter(isFutureEvent).sort(sortByStartedAtAsc),
-        lastModified: res.headers['last-modified'],
+        lastModified: eventsResponse.lastModified,
         errorMessage: ''
       }
       setData(data);
     }
     getData();
   }, []);
+
+  useEffect(() => {
+    if (data.isLoading || data.errorMessage) {
+      return;
+    }
+
+    window.requestAnimationFrame(scrollToCurrentHash);
+  }, [data.errorMessage, data.isLoading, data.futureEvents, data.pastEvents]);
+
+  const renderEventBodies = (events: EventWithGroup[], anchoredDateKeys: Set<string>) => {
+    return events.map((event, index) => {
+      const eventDateKey = formatEventDateKey(new Date(event.started_at));
+      const previousEvent = events[index - 1];
+      const previousEventDateKey = previousEvent
+        ? formatEventDateKey(new Date(previousEvent.started_at))
+        : null;
+      const shouldAttachAnchor = eventDateKey !== previousEventDateKey
+        && !anchoredDateKeys.has(eventDateKey);
+      const anchorId = shouldAttachAnchor
+        ? getEventDateAnchorId(eventDateKey)
+        : undefined;
+
+      if (shouldAttachAnchor) {
+        anchoredDateKeys.add(eventDateKey);
+      }
+
+      return <EventBody key={event.uid} event={event} anchorId={anchorId} />;
+    });
+  };
+
+  const anchoredDateKeys = new Set<string>();
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
@@ -181,10 +214,8 @@ function Root({startYear}: {startYear: number}) {
                 ) : data.futureEvents.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  data.futureEvents.map((event) => {
-                    return <EventBody key={event.uid} event={event} />
-                  }
-                ))}
+                  renderEventBodies(data.futureEvents, anchoredDateKeys)
+                )}
               </Stack>
             </CardBody>
           </Card>
@@ -213,10 +244,8 @@ function Root({startYear}: {startYear: number}) {
                 ) : data.pastEvents.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  data.pastEvents.map((event) => {
-                    return <EventBody key={event.uid} event={event} />
-                  }
-                ))}
+                  renderEventBodies(data.pastEvents, anchoredDateKeys)
+                )}
               </Stack>
             </CardBody>
           </Card>

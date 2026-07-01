@@ -45,6 +45,7 @@ import type { EventWithGroup } from '../types/events';
 
 type EventBodyProps = {
   event: EventWithGroup;
+  anchorId?: string;
 };
 
 export function EventBody(data: EventBodyProps) {
@@ -203,6 +204,8 @@ export function EventBody(data: EventBodyProps) {
   return (
     <>
       <HStack p={'2'} position={'relative'}
+              id={data.anchorId}
+              scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
               {...(!isDesktopScreenSize && {
                 onTouchStart: handleTouchStart,
                 onTouchMove: handleTouchMove,
@@ -377,30 +380,34 @@ export function EventBody(data: EventBodyProps) {
                   </HStack>
                 </Button>
                 <Box h="full" w="1px" />
-                <Menu placement="bottom-end">
-                  <MenuButton as={IconButton}
-                              aria-label='Options'
-                              icon={<ChevronDownIcon />}
-                              />
-                  <MenuList fontSize={'sm'}>
-                    <MenuItem icon={<FiExternalLink />}
-                              onClick={() => window.open(event_url)}
-                              >
-                      情報提供元のページを開く
-                    </MenuItem>
-                    <MenuItem icon={<FaXTwitter />}
-                              onClick={() => window.open(event_x_search_url)}
-                              >
-                      イベント当日の X(Twitter) 投稿を検索
-                    </MenuItem>
-                    {archive_url && (
-                      <MenuItem icon={<FiArchive />}
-                                onClick={() => window.open(archive_url)}
-                                >
-                        アーカイブ元を開く
-                      </MenuItem>
-                    )}
-                  </MenuList>
+                <Menu placement="bottom-end" isLazy>
+                  {({ isOpen: isMenuOpen }) => (
+                    <>
+                      <MenuButton as={IconButton}
+                                  aria-label='Options'
+                                  icon={<ChevronDownIcon />}
+                                  />
+                      <MenuList fontSize={'sm'} display={isMenuOpen ? 'block' : 'none'}>
+                        <MenuItem icon={<FiExternalLink />}
+                                  onClick={() => window.open(event_url)}
+                                  >
+                          情報提供元のページを開く
+                        </MenuItem>
+                        <MenuItem icon={<FaXTwitter />}
+                                  onClick={() => window.open(event_x_search_url)}
+                                  >
+                          イベント当日の X(Twitter) 投稿を検索
+                        </MenuItem>
+                        {archive_url && (
+                          <MenuItem icon={<FiArchive />}
+                                    onClick={() => window.open(archive_url)}
+                                    >
+                            アーカイブ元を開く
+                          </MenuItem>
+                        )}
+                      </MenuList>
+                    </>
+                  )}
                 </Menu>
               </ButtonGroup>
             </Show>
