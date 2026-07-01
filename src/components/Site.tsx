@@ -1,5 +1,5 @@
 import icon from "../assets/images/icon.png"
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { NotificationButton } from '../components/Notification';
 import {
   Heading,
@@ -30,20 +30,27 @@ import { ChevronLeftIcon, ChevronRightIcon, RepeatClockIcon } from "@chakra-ui/i
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
+import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiEvent } from '../types/events';
   
 export function SiteHeader() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const keepHeaderVisibleUntil = useRef(0);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
-    const showHeader = () => setIsHeaderVisible(true);
+    const showHeader = () => {
+      keepHeaderVisibleUntil.current = Date.now() + 700;
+      setIsHeaderVisible(true);
+    };
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const scrollDifference = currentScrollY - lastScrollY;
 
       if (currentScrollY < 8) {
+        setIsHeaderVisible(true);
+      } else if (Date.now() < keepHeaderVisibleUntil.current) {
         setIsHeaderVisible(true);
       } else if (scrollDifference > 6) {
         setIsHeaderVisible(false);
@@ -309,7 +316,15 @@ function MiniEventCalendar({
               return;
             }
 
-            window.open(`/#${getEventAnchorId(dayEvents[0])}`, '_self');
+            const anchorId = getEventAnchorId(dayEvents[0]);
+
+            if (window.location.pathname === '/') {
+              window.location.hash = anchorId;
+              window.requestAnimationFrame(scrollToCurrentHash);
+              return;
+            }
+
+            window.open(`/#${anchorId}`, '_self');
           };
           const dayCell = (
             <Center key={day.key}

@@ -8,6 +8,7 @@ export function scrollToCurrentHash() {
   const target = document.getElementById(decodeURIComponent(hash.slice(1)));
 
   if (target) {
+    window.dispatchEvent(new Event('site-header-show'));
     target.scrollIntoView();
     window.requestAnimationFrame(() => {
       window.dispatchEvent(new Event('site-header-show'));
