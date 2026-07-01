@@ -23,6 +23,7 @@ import {
   PopoverFooter,
   SimpleGrid,
   HStack,
+  Tooltip,
   useDisclosure
 } from '@chakra-ui/react';
 import { RepeatClockIcon } from "@chakra-ui/icons";
@@ -91,8 +92,8 @@ export function ICalendarButton() {
     month: 'long',
   });
   const todayKey = formatDateKey(today);
-  const eventDateKeys = useMemo(() => {
-    const keys = new Set<string>();
+  const eventsByDate = useMemo(() => {
+    const eventMap = new Map<string, ApiEvent[]>();
 
     events.forEach((event) => {
       const eventDate = new Date(event.started_at);
@@ -100,11 +101,16 @@ export function ICalendarButton() {
         eventDate.getFullYear() === monthStart.getFullYear() &&
         eventDate.getMonth() === monthStart.getMonth()
       ) {
-        keys.add(formatDateKey(eventDate));
+        const key = formatDateKey(eventDate);
+        eventMap.set(key, [...(eventMap.get(key) ?? []), event]);
       }
     });
 
-    return keys;
+    eventMap.forEach((dayEvents) => {
+      dayEvents.sort((a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime());
+    });
+
+    return eventMap;
   }, [events, monthStart]);
   const calendarDays = useMemo(() => buildCalendarDays(monthStart), [monthStart]);
 
@@ -158,7 +164,7 @@ export function ICalendarButton() {
             <MiniEventCalendar
               calendarDays={calendarDays}
               todayKey={todayKey}
-              eventDateKeys={eventDateKeys}
+              eventsByDate={eventsByDate}
               isLoading={isLoading}
               errorMessage={errorMessage}
             />
@@ -200,13 +206,13 @@ export function ICalendarButton() {
 function MiniEventCalendar({
   calendarDays,
   todayKey,
-  eventDateKeys,
+  eventsByDate,
   isLoading,
   errorMessage,
 }: {
   calendarDays: CalendarDay[];
   todayKey: string;
-  eventDateKeys: Set<string>;
+  eventsByDate: Map<string, ApiEvent[]>;
   isLoading: boolean;
   errorMessage: string;
 }) {
@@ -225,12 +231,12 @@ function MiniEventCalendar({
           </Center>
         ))}
         {calendarDays.map((day) => {
-          const hasEvent = eventDateKeys.has(day.key);
+          const dayEvents = eventsByDate.get(day.key) ?? [];
+          const hasEvent = dayEvents.length > 0;
           const isToday = day.key === todayKey;
           const bg = getCalendarDayBg(isToday, hasEvent);
           const color = day.isCurrentMonth ? 'gray.800' : 'gray.300';
-
-          return (
+          const dayCell = (
             <Center key={day.key}
                     h={'9'}
                     borderRadius={'md'}
@@ -240,10 +246,28 @@ function MiniEventCalendar({
                     color={color}
                     fontSize={'sm'}
                     fontWeight={isToday || hasEvent ? 'bold' : 'normal'}
+                    tabIndex={hasEvent ? 0 : undefined}
+                    cursor={hasEvent ? 'help' : 'default'}
                     aria-label={`${day.date.getDate()}日${isToday ? ' 今日' : ''}${hasEvent ? ' イベントあり' : ''}`}
                     >
               {day.date.getDate()}
             </Center>
+          );
+
+          if (!hasEvent) {
+            return dayCell;
+          }
+
+          return (
+            <Tooltip key={day.key}
+                     label={<EventDayTooltip events={dayEvents} />}
+                     hasArrow
+                     maxW={{base: '240px', md: '280px'}}
+                     placement='top'
+                     openDelay={200}
+                     >
+              {dayCell}
+            </Tooltip>
           );
         })}
       </SimpleGrid>
@@ -267,6 +291,21 @@ function MiniEventCalendar({
           </HStack>
         </HStack>
       )}
+    </Stack>
+  );
+}
+
+function EventDayTooltip({ events }: { events: ApiEvent[] }) {
+  return (
+    <Stack spacing={'1'}>
+      {events.map((event) => (
+        <Text key={event.uid}
+              fontSize={'xs'}
+              lineHeight={'1.4'}
+              >
+          {formatEventTime(event.started_at)} {event.title}
+        </Text>
+      ))}
     </Stack>
   );
 }
@@ -301,6 +340,14 @@ function formatDateKey(date: Date): string {
   const day = `${date.getDate()}`.padStart(2, '0');
 
   return `${year}-${month}-${day}`;
+}
+
+function formatEventTime(startedAt: string): string {
+  return new Date(startedAt).toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 }
 
 function getCalendarDayBg(isToday: boolean, hasEvent: boolean) {
