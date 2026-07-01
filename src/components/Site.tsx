@@ -28,7 +28,7 @@ import {
 } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon, RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
-import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
+import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiEvent } from '../types/events';
@@ -316,7 +316,7 @@ function MiniEventCalendar({
               return;
             }
 
-            const anchorId = getEventAnchorId(dayEvents[0]);
+            const anchorId = getEventDateAnchorId(day.key);
 
             if (window.location.pathname === '/') {
               window.location.hash = anchorId;

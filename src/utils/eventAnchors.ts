@@ -1,5 +1,3 @@
-import type { ApiEvent } from '../types/events';
-
 export function formatEventDateKey(date: Date): string {
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
@@ -8,6 +6,6 @@ export function formatEventDateKey(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-export function getEventAnchorId(event: ApiEvent): string {
-  return `event-${event.uid.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+export function getEventDateAnchorId(dateKey: string): string {
+  return `event-${dateKey.replace(/-/g, '')}`;
 }

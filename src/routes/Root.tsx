@@ -22,6 +22,7 @@ import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent } from '../utils/eventGroups';
 import { fetchEvents, fetchGroups } from '../utils/api';
+import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { EventWithGroup } from '../types/events';
 
@@ -87,6 +88,29 @@ function Root({startYear}: {startYear: number}) {
 
     window.requestAnimationFrame(scrollToCurrentHash);
   }, [data.errorMessage, data.isLoading, data.futureEvents, data.pastEvents]);
+
+  const renderEventBodies = (events: EventWithGroup[], anchoredDateKeys: Set<string>) => {
+    return events.map((event, index) => {
+      const eventDateKey = formatEventDateKey(new Date(event.started_at));
+      const previousEvent = events[index - 1];
+      const previousEventDateKey = previousEvent
+        ? formatEventDateKey(new Date(previousEvent.started_at))
+        : null;
+      const shouldAttachAnchor = eventDateKey !== previousEventDateKey
+        && !anchoredDateKeys.has(eventDateKey);
+      const anchorId = shouldAttachAnchor
+        ? getEventDateAnchorId(eventDateKey)
+        : undefined;
+
+      if (shouldAttachAnchor) {
+        anchoredDateKeys.add(eventDateKey);
+      }
+
+      return <EventBody key={event.uid} event={event} anchorId={anchorId} />;
+    });
+  };
+
+  const anchoredDateKeys = new Set<string>();
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
@@ -190,10 +214,8 @@ function Root({startYear}: {startYear: number}) {
                 ) : data.futureEvents.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  data.futureEvents.map((event) => {
-                    return <EventBody key={event.uid} event={event} />
-                  }
-                ))}
+                  renderEventBodies(data.futureEvents, anchoredDateKeys)
+                )}
               </Stack>
             </CardBody>
           </Card>
@@ -222,10 +244,8 @@ function Root({startYear}: {startYear: number}) {
                 ) : data.pastEvents.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  data.pastEvents.map((event) => {
-                    return <EventBody key={event.uid} event={event} />
-                  }
-                ))}
+                  renderEventBodies(data.pastEvents, anchoredDateKeys)
+                )}
               </Stack>
             </CardBody>
           </Card>
