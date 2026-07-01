@@ -1,4 +1,5 @@
 import icon from "../assets/images/icon.png"
+import { useEffect, useMemo, useState } from 'react';
 import { NotificationButton } from '../components/Notification';
 import {
   Heading,
@@ -20,11 +21,14 @@ import {
   PopoverCloseButton,
   PopoverBody,
   PopoverFooter,
-  Show
+  SimpleGrid,
+  HStack,
+  useDisclosure
 } from '@chakra-ui/react';
-import { isMobile } from 'react-device-detect';
 import { RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
+import { fetchEvents } from '../utils/api';
+import type { ApiEvent } from '../types/events';
   
 export function SiteHeader() {
   return (
@@ -52,7 +56,7 @@ export function SiteHeader() {
           </Stack>
         </Link>
         <Spacer />
-        <Show above='md'><ICalendarButton /></Show>
+        <ICalendarButton />
         <NotificationButton />
         <GithubButton />
       </Stack>
@@ -76,52 +80,241 @@ export function SiteFooter() {
 }
 
 export function ICalendarButton() {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [events, setEvents] = useState<ApiEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const today = useMemo(() => new Date(), []);
+  const monthStart = useMemo(() => new Date(today.getFullYear(), today.getMonth(), 1), [today]);
+  const monthLabel = monthStart.toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+  });
+  const todayKey = formatDateKey(today);
+  const eventDateKeys = useMemo(() => {
+    const keys = new Set<string>();
+
+    events.forEach((event) => {
+      const eventDate = new Date(event.started_at);
+      if (
+        eventDate.getFullYear() === monthStart.getFullYear() &&
+        eventDate.getMonth() === monthStart.getMonth()
+      ) {
+        keys.add(formatDateKey(eventDate));
+      }
+    });
+
+    return keys;
+  }, [events, monthStart]);
+  const calendarDays = useMemo(() => buildCalendarDays(monthStart), [monthStart]);
+
+  useEffect(() => {
+    if (!isOpen || events.length > 0 || isLoading || errorMessage) {
+      return;
+    }
+
+    const getData = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetchEvents();
+        setEvents(res.events);
+      } catch (err: any) {
+        setErrorMessage(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getData();
+  }, [errorMessage, events.length, isLoading, isOpen]);
 
   return (
-    <Popover>
+    <Popover isOpen={isOpen} onOpen={onOpen} onClose={onClose} placement='bottom-end'>
       <PopoverTrigger>
-        <Button variant={'ghost'}>
-          <Calendar3 mr={'2'} />
-          <Text fontWeight={'normal'} fontSize={'sm'}>iCalendar</Text>
+        <Button variant={'ghost'}
+                aria-label='イベントカレンダー'
+                px={{base: '2', md: '4'}}
+                minW={{base: '10', md: 'auto'}}
+                >
+          <Calendar3 mr={{base: '0', md: '2'}} />
+          <Text display={{base: 'none', md: 'block'}}
+                fontWeight={'normal'}
+                fontSize={'sm'}
+                >
+            カレンダー
+          </Text>
         </Button>
       </PopoverTrigger>
-      <PopoverContent>
+      <PopoverContent w={{base: 'calc(100vw - 24px)', md: '360px'}}>
         <PopoverArrow />
         <PopoverHeader>
           <Text fontSize={'sm'}>
-            iCalendar で外部のカレンダーに表示する
+            {monthLabel}のイベントカレンダー
           </Text>
         </PopoverHeader>
         <PopoverCloseButton />
         <PopoverBody>
-          <Stack>
-            <Text fontSize={'xs'}>
-              以下の URL をコピーして、Google カレンダーなどのカレンダーに登録すると、
-              カレンダー上でイベントが表示されるようになります
-            </Text>
-            <Input value={'https://hub.yamanashi.dev/event.ics'}
-                  size={'sm'}
-                  contentEditable
-                  onSelect={(e) => {
-                    const inputElement = e.target as HTMLInputElement;
-                    inputElement.select();
-                  }}
-                  />
+          <Stack spacing={'4'}>
+            <MiniEventCalendar
+              calendarDays={calendarDays}
+              todayKey={todayKey}
+              eventDateKeys={eventDateKeys}
+              isLoading={isLoading}
+              errorMessage={errorMessage}
+            />
+            <Stack borderTop={'1px solid'}
+                   borderColor={'gray.100'}
+                   pt={'3'}
+                   >
+              <Text fontSize={'sm'}>
+                iCalendar で外部のカレンダーに表示する
+              </Text>
+              <Text fontSize={'xs'}>
+                以下の URL をコピーして、Google カレンダーなどのカレンダーに登録すると、
+                カレンダー上でイベントが表示されるようになります
+              </Text>
+              <Input value={'https://hub.yamanashi.dev/event.ics'}
+                    size={'sm'}
+                    isReadOnly
+                    onSelect={(e) => {
+                      const inputElement = e.target as HTMLInputElement;
+                      inputElement.select();
+                    }}
+                    />
+            </Stack>
           </Stack>
         </PopoverBody>
-        {!isMobile && (
-          <PopoverFooter>
-            <Button w={'100%'} variant={'ghost'} size={'sm'}
-                    onClick={() => { window.open('https://calendar.google.com/calendar/r/settings/addbyurl', '_blank') }}>
-              <CaretRightFill mr={'2'} />
-              <Text fontWeight={'normal'}>Google カレンダーに登録する</Text>
-              <Spacer />
-            </Button>
-          </PopoverFooter>
-        )}
+        <PopoverFooter>
+          <Button w={'100%'} variant={'ghost'} size={'sm'}
+                  onClick={() => { window.open('https://calendar.google.com/calendar/r/settings/addbyurl', '_blank') }}>
+            <CaretRightFill mr={'2'} />
+            <Text fontWeight={'normal'}>Google カレンダーに登録する</Text>
+            <Spacer />
+          </Button>
+        </PopoverFooter>
       </PopoverContent>
     </Popover>
   )
+}
+
+function MiniEventCalendar({
+  calendarDays,
+  todayKey,
+  eventDateKeys,
+  isLoading,
+  errorMessage,
+}: {
+  calendarDays: CalendarDay[];
+  todayKey: string;
+  eventDateKeys: Set<string>;
+  isLoading: boolean;
+  errorMessage: string;
+}) {
+  const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
+
+  return (
+    <Stack spacing={'2'}>
+      <SimpleGrid columns={7} spacing={'1'}>
+        {weekDays.map((day, index) => (
+          <Center key={day}
+                  h={'6'}
+                  fontSize={'xs'}
+                  color={index === 0 ? 'impact.700' : index === 6 ? 'primary.800' : 'gray.500'}
+                  >
+            {day}
+          </Center>
+        ))}
+        {calendarDays.map((day) => {
+          const hasEvent = eventDateKeys.has(day.key);
+          const isToday = day.key === todayKey;
+          const bg = getCalendarDayBg(isToday, hasEvent);
+          const color = day.isCurrentMonth ? 'gray.800' : 'gray.300';
+
+          return (
+            <Center key={day.key}
+                    h={'9'}
+                    borderRadius={'md'}
+                    border={'1px solid'}
+                    borderColor={isToday ? 'impact.500' : 'gray.100'}
+                    bg={bg}
+                    color={color}
+                    fontSize={'sm'}
+                    fontWeight={isToday || hasEvent ? 'bold' : 'normal'}
+                    aria-label={`${day.date.getDate()}日${isToday ? ' 今日' : ''}${hasEvent ? ' イベントあり' : ''}`}
+                    >
+              {day.date.getDate()}
+            </Center>
+          );
+        })}
+      </SimpleGrid>
+      {isLoading ? (
+        <Text fontSize={'xs'} color={'gray.500'}>イベント日を読み込み中です</Text>
+      ) : errorMessage ? (
+        <Text fontSize={'xs'} color={'impact.700'}>イベント日を取得できませんでした</Text>
+      ) : (
+        <HStack spacing={'3'} fontSize={'xs'} color={'gray.600'} flexWrap={'wrap'}>
+          <HStack spacing={'1'}>
+            <Box boxSize={'3'} borderRadius={'sm'} bg={'impact.100'} border={'1px solid'} borderColor={'impact.500'} />
+            <Text>今日</Text>
+          </HStack>
+          <HStack spacing={'1'}>
+            <Box boxSize={'3'} borderRadius={'sm'} bg={'secondary.100'} />
+            <Text>イベントあり</Text>
+          </HStack>
+          <HStack spacing={'1'}>
+            <Box boxSize={'3'} borderRadius={'sm'} bg={'primary.100'} border={'1px solid'} borderColor={'impact.500'} />
+            <Text>今日のイベント</Text>
+          </HStack>
+        </HStack>
+      )}
+    </Stack>
+  );
+}
+
+type CalendarDay = {
+  date: Date;
+  key: string;
+  isCurrentMonth: boolean;
+};
+
+function buildCalendarDays(monthStart: Date): CalendarDay[] {
+  const firstCalendarDate = new Date(monthStart);
+  firstCalendarDate.setDate(monthStart.getDate() - monthStart.getDay());
+  const days = [];
+
+  for (let i = 0; i < 42; i++) {
+    const date = new Date(firstCalendarDate);
+    date.setDate(firstCalendarDate.getDate() + i);
+    days.push({
+      date,
+      key: formatDateKey(date),
+      isCurrentMonth: date.getMonth() === monthStart.getMonth(),
+    });
+  }
+
+  return days;
+}
+
+function formatDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function getCalendarDayBg(isToday: boolean, hasEvent: boolean) {
+  if (isToday && hasEvent) {
+    return 'primary.100';
+  }
+  if (isToday) {
+    return 'impact.100';
+  }
+  if (hasEvent) {
+    return 'secondary.100';
+  }
+
+  return 'white';
 }
 
 export function GithubButton() {
