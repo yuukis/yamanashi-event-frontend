@@ -344,7 +344,10 @@ function EventDayTooltip({ events }: { events: ApiEvent[] }) {
               fontSize={'xs'}
               lineHeight={'1.4'}
               >
-          {formatEventTime(event.started_at)} {event.title}
+          <Text as={'span'} fontWeight={'bold'}>
+            {formatEventTime(event.started_at)}
+          </Text>{' '}
+          {event.title}
         </Text>
       ))}
     </Stack>
@@ -376,11 +379,11 @@ function buildCalendarDays(monthStart: Date): CalendarDay[] {
 }
 
 function formatEventTime(startedAt: string): string {
-  return new Date(startedAt).toLocaleTimeString('ja-JP', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
+  const startedAtDate = new Date(startedAt);
+  const hours = startedAtDate.getHours();
+  const minutes = `${startedAtDate.getMinutes()}`.padStart(2, '0');
+
+  return `${hours}:${minutes}-`;
 }
 
 function getCalendarDayBg(isToday: boolean, hasEvent: boolean) {
