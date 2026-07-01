@@ -259,8 +259,8 @@ function MiniEventCalendar({
           const dayEvents = eventsByDate.get(day.key) ?? [];
           const hasEvent = dayEvents.length > 0;
           const isToday = day.key === todayKey;
-          const bg = getCalendarDayBg(isToday, hasEvent);
-          const color = day.isCurrentMonth ? 'gray.800' : 'gray.300';
+          const bg = getCalendarDayBg(hasEvent);
+          const color = isToday ? 'impact.700' : day.isCurrentMonth ? 'gray.800' : 'gray.300';
           const dayLabel = `${day.date.getMonth() + 1}月${day.date.getDate()}日`;
           const jumpToEvent = () => {
             if (dayEvents.length === 0) {
@@ -273,11 +273,11 @@ function MiniEventCalendar({
             <Center key={day.key}
                     h={'9'}
                     borderRadius={'md'}
-                    border={'1px solid'}
+                    border={isToday ? '2px solid' : '1px solid'}
                     borderColor={isToday ? 'impact.500' : 'gray.100'}
                     bg={bg}
                     color={color}
-                    fontSize={'sm'}
+                    fontSize={isToday ? 'md' : 'sm'}
                     fontWeight={isToday || hasEvent ? 'bold' : 'normal'}
                     tabIndex={hasEvent ? 0 : undefined}
                     cursor={hasEvent ? 'pointer' : 'default'}
@@ -316,22 +316,7 @@ function MiniEventCalendar({
         <Text fontSize={'xs'} color={'gray.500'}>イベント日を読み込み中です</Text>
       ) : errorMessage ? (
         <Text fontSize={'xs'} color={'impact.700'}>イベント日を取得できませんでした</Text>
-      ) : (
-        <HStack spacing={'3'} fontSize={'xs'} color={'gray.600'} flexWrap={'wrap'}>
-          <HStack spacing={'1'}>
-            <Box boxSize={'3'} borderRadius={'sm'} bg={'impact.100'} border={'1px solid'} borderColor={'impact.500'} />
-            <Text>今日</Text>
-          </HStack>
-          <HStack spacing={'1'}>
-            <Box boxSize={'3'} borderRadius={'sm'} bg={'secondary.100'} />
-            <Text>イベントあり</Text>
-          </HStack>
-          <HStack spacing={'1'}>
-            <Box boxSize={'3'} borderRadius={'sm'} bg={'primary.100'} border={'1px solid'} borderColor={'impact.500'} />
-            <Text>今日のイベント</Text>
-          </HStack>
-        </HStack>
-      )}
+      ) : null}
     </Stack>
   );
 }
@@ -386,13 +371,7 @@ function formatEventTime(startedAt: string): string {
   return `${hours}:${minutes}-`;
 }
 
-function getCalendarDayBg(isToday: boolean, hasEvent: boolean) {
-  if (isToday && hasEvent) {
-    return 'primary.100';
-  }
-  if (isToday) {
-    return 'impact.100';
-  }
+function getCalendarDayBg(hasEvent: boolean) {
   if (hasEvent) {
     return 'secondary.100';
   }
