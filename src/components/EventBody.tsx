@@ -42,6 +42,7 @@ import {
   ExclamationTriangleFill,
 } from '@chakra-icons/bootstrap';
 import type { EventWithGroup } from '../types/events';
+import { getEventAnchorId } from '../utils/eventAnchors';
 
 type EventBodyProps = {
   event: EventWithGroup;
@@ -203,6 +204,8 @@ export function EventBody(data: EventBodyProps) {
   return (
     <>
       <HStack p={'2'} position={'relative'}
+              id={getEventAnchorId(event)}
+              scrollMarginTop={{base: '4rem', md: '5rem'}}
               {...(!isDesktopScreenSize && {
                 onTouchStart: handleTouchStart,
                 onTouchMove: handleTouchMove,

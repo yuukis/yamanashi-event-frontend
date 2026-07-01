@@ -28,6 +28,7 @@ import {
 } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon, RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
+import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
 import type { ApiEvent } from '../types/events';
   
@@ -95,7 +96,7 @@ export function ICalendarButton() {
     year: 'numeric',
     month: 'long',
   });
-  const todayKey = formatDateKey(today);
+  const todayKey = formatEventDateKey(today);
   const calendarDays = useMemo(() => buildCalendarDays(monthStart), [monthStart]);
   const eventsByDate = useMemo(() => {
     const eventMap = new Map<string, ApiEvent[]>();
@@ -103,7 +104,7 @@ export function ICalendarButton() {
 
     events.forEach((event) => {
       const eventDate = new Date(event.started_at);
-      const key = formatDateKey(eventDate);
+      const key = formatEventDateKey(eventDate);
 
       if (visibleDateKeys.has(key)) {
         eventMap.set(key, [...(eventMap.get(key) ?? []), event]);
@@ -260,6 +261,14 @@ function MiniEventCalendar({
           const isToday = day.key === todayKey;
           const bg = getCalendarDayBg(isToday, hasEvent);
           const color = day.isCurrentMonth ? 'gray.800' : 'gray.300';
+          const dayLabel = `${day.date.getMonth() + 1}月${day.date.getDate()}日`;
+          const jumpToEvent = () => {
+            if (dayEvents.length === 0) {
+              return;
+            }
+
+            window.open(`/#${getEventAnchorId(dayEvents[0])}`, '_self');
+          };
           const dayCell = (
             <Center key={day.key}
                     h={'9'}
@@ -271,8 +280,16 @@ function MiniEventCalendar({
                     fontSize={'sm'}
                     fontWeight={isToday || hasEvent ? 'bold' : 'normal'}
                     tabIndex={hasEvent ? 0 : undefined}
-                    cursor={hasEvent ? 'help' : 'default'}
-                    aria-label={`${day.date.getDate()}日${isToday ? ' 今日' : ''}${hasEvent ? ' イベントあり' : ''}`}
+                    cursor={hasEvent ? 'pointer' : 'default'}
+                    role={hasEvent ? 'link' : undefined}
+                    onClick={hasEvent ? jumpToEvent : undefined}
+                    onKeyDown={hasEvent ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        jumpToEvent();
+                      }
+                    } : undefined}
+                    aria-label={`${dayLabel}${isToday ? ' 今日' : ''}${hasEvent ? ' イベントあり' : ''}`}
                     >
               {day.date.getDate()}
             </Center>
@@ -350,20 +367,12 @@ function buildCalendarDays(monthStart: Date): CalendarDay[] {
     date.setDate(firstCalendarDate.getDate() + i);
     days.push({
       date,
-      key: formatDateKey(date),
+      key: formatEventDateKey(date),
       isCurrentMonth: date.getMonth() === monthStart.getMonth(),
     });
   }
 
   return days;
-}
-
-function formatDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
 }
 
 function formatEventTime(startedAt: string): string {
