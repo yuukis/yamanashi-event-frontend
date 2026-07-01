@@ -33,41 +33,83 @@ import { fetchEvents } from '../utils/api';
 import type { ApiEvent } from '../types/events';
   
 export function SiteHeader() {
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    const showHeader = () => setIsHeaderVisible(true);
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDifference = currentScrollY - lastScrollY;
+
+      if (currentScrollY < 8) {
+        setIsHeaderVisible(true);
+      } else if (scrollDifference > 6) {
+        setIsHeaderVisible(false);
+      } else if (scrollDifference < -6) {
+        setIsHeaderVisible(true);
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('site-header-show', showHeader);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('site-header-show', showHeader);
+    };
+  }, []);
+
   return (
-    <Box w={'100%'} bg={'white'}>
-      <Stack h={{base: '12', md: '16'}}
-             maxW={'980px'} 
-             m={'auto'}
-             p={'4'}
-             direction={'row'}
-             alignItems={'center'}
-             bg={'white'}
-             >
-        <Link href={'/'} style={{textDecoration: 'none'}} _hover={{opacity: '0.6'}}>
-          <Stack direction={'row'} spacing={'3'} alignItems={'center'}>
-            <Image src={icon}
-                   boxSize={{base: '6', md: '8'}}
-                   alt='Yamanashi Developer Hub'
-                   />
-            <Heading size={{base: 'sm', md: 'md'}}
-                     fontWeight={'normal'}
-                     noOfLines={1}
-                     >
-              <strong>Yamanashi</strong> Developer Hub
-            </Heading>
-          </Stack>
-        </Link>
-        <Spacer />
-        <ICalendarButton />
-        <NotificationButton />
-        <GithubButton />
-      </Stack>
-      <Stack spacing={'2px'}>
-        <Box h={'1px'} bg={'impact.500'} />
-        <Box h={'1px'} bg={'secondary.500'} />
-        <Box h={'1px'} bg={'primary.500'} />
-      </Stack>
-    </Box>
+    <>
+      <Box w={'100%'}
+           bg={'white'}
+           position={'fixed'}
+           top={'0'}
+           left={'0'}
+           right={'0'}
+           zIndex={'sticky'}
+           transform={isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)'}
+           transition={'transform 180ms ease-out'}
+           >
+        <Stack h={{base: '12', md: '16'}}
+               maxW={'980px'} 
+               m={'auto'}
+               p={'4'}
+               direction={'row'}
+               alignItems={'center'}
+               bg={'white'}
+               >
+          <Link href={'/'} style={{textDecoration: 'none'}} _hover={{opacity: '0.6'}}>
+            <Stack direction={'row'} spacing={'3'} alignItems={'center'}>
+              <Image src={icon}
+                     boxSize={{base: '6', md: '8'}}
+                     alt='Yamanashi Developer Hub'
+                     />
+              <Heading size={{base: 'sm', md: 'md'}}
+                       fontWeight={'normal'}
+                       noOfLines={1}
+                       >
+                <strong>Yamanashi</strong> Developer Hub
+              </Heading>
+            </Stack>
+          </Link>
+          <Spacer />
+          <ICalendarButton />
+          <NotificationButton />
+          <GithubButton />
+        </Stack>
+        <Stack spacing={'2px'}>
+          <Box h={'1px'} bg={'impact.500'} />
+          <Box h={'1px'} bg={'secondary.500'} />
+          <Box h={'1px'} bg={'primary.500'} />
+        </Stack>
+      </Box>
+      <Box h={{base: 'calc(3rem + 7px)', md: 'calc(4rem + 7px)'}} />
+    </>
   );
 }
 

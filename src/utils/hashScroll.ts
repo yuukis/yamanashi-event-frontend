@@ -9,5 +9,11 @@ export function scrollToCurrentHash() {
 
   if (target) {
     target.scrollIntoView();
+    window.requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('site-header-show'));
+    });
+    window.setTimeout(() => {
+      window.dispatchEvent(new Event('site-header-show'));
+    }, 120);
   }
 }

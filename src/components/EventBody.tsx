@@ -205,7 +205,7 @@ export function EventBody(data: EventBodyProps) {
     <>
       <HStack p={'2'} position={'relative'}
               id={getEventAnchorId(event)}
-              scrollMarginTop={{base: '4rem', md: '5rem'}}
+              scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
               {...(!isDesktopScreenSize && {
                 onTouchStart: handleTouchStart,
                 onTouchMove: handleTouchMove,
