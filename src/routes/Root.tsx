@@ -22,6 +22,7 @@ import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent } from '../utils/eventGroups';
 import { fetchEvents, fetchGroups } from '../utils/api';
+import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { EventWithGroup } from '../types/events';
 
 type RootState = {
@@ -78,6 +79,14 @@ function Root({startYear}: {startYear: number}) {
     }
     getData();
   }, []);
+
+  useEffect(() => {
+    if (data.isLoading || data.errorMessage) {
+      return;
+    }
+
+    window.requestAnimationFrame(scrollToCurrentHash);
+  }, [data.errorMessage, data.isLoading, data.futureEvents, data.pastEvents]);
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
