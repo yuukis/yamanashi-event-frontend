@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import '../style.css';
@@ -22,7 +21,8 @@ import {
 import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent } from '../utils/eventGroups';
-import type { ApiEvent, ApiGroup, EventWithGroup } from '../types/events';
+import { fetchEvents, fetchGroups } from '../utils/api';
+import type { EventWithGroup } from '../types/events';
 
 type RootState = {
   isLoading: boolean;
@@ -45,11 +45,11 @@ function Root({startYear}: {startYear: number}) {
 
   useEffect(() => {
     const getData = async () => {
-      let res = null;
-      let group_res = null;
+      let eventsResponse = null;
+      let groups = null;
       try {
-        res = await axios.get('https://api.event.yamanashi.dev/events');
-        group_res = await axios.get('https://api.event.yamanashi.dev/groups');
+        eventsResponse = await fetchEvents();
+        groups = await fetchGroups();
       }
       catch (err: any) {
         const data = {
@@ -64,14 +64,14 @@ function Root({startYear}: {startYear: number}) {
       }
 
       const events = enrichEventsWithGroups(
-        res.data as ApiEvent[],
-        group_res.data as ApiGroup[],
+        eventsResponse.events,
+        groups,
       );
       const data = {
         isLoading: false,
         pastEvents: events.filter(isPastEvent).sort(sortByStartedAtDesc),
         futureEvents: events.filter(isFutureEvent).sort(sortByStartedAtAsc),
-        lastModified: res.headers['last-modified'],
+        lastModified: eventsResponse.lastModified,
         errorMessage: ''
       }
       setData(data);
