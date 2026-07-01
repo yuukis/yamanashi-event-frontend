@@ -92,16 +92,16 @@ export function ICalendarButton() {
     month: 'long',
   });
   const todayKey = formatDateKey(today);
+  const calendarDays = useMemo(() => buildCalendarDays(monthStart), [monthStart]);
   const eventsByDate = useMemo(() => {
     const eventMap = new Map<string, ApiEvent[]>();
+    const visibleDateKeys = new Set(calendarDays.map((day) => day.key));
 
     events.forEach((event) => {
       const eventDate = new Date(event.started_at);
-      if (
-        eventDate.getFullYear() === monthStart.getFullYear() &&
-        eventDate.getMonth() === monthStart.getMonth()
-      ) {
-        const key = formatDateKey(eventDate);
+      const key = formatDateKey(eventDate);
+
+      if (visibleDateKeys.has(key)) {
         eventMap.set(key, [...(eventMap.get(key) ?? []), event]);
       }
     });
@@ -111,8 +111,7 @@ export function ICalendarButton() {
     });
 
     return eventMap;
-  }, [events, monthStart]);
-  const calendarDays = useMemo(() => buildCalendarDays(monthStart), [monthStart]);
+  }, [calendarDays, events]);
 
   useEffect(() => {
     if (!isOpen || events.length > 0 || isLoading || errorMessage) {
