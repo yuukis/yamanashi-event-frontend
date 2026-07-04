@@ -283,11 +283,42 @@ export function EventBody(data: EventBodyProps) {
               <Show above='md'><Link href={event_url} isExternal>{ title }</Link></Show>
               <Hide above='md'>{ title }</Hide>
             </Heading>
-            <Show above='md'>
-              <Text fontSize={'sm'} pr={{md: '140px'}}>{ sub_title }</Text>
-            </Show>
+            <Text fontSize={'sm'}
+                  pr={{
+                    base: group_image_url ? '60px' : '0px',
+                    md: '140px'
+                  }}
+                  >{ sub_title }</Text>
+            {archive_source && (
+              <Badge colorScheme="secondary" variant="subtle">
+                アーカイブ
+              </Badge>
+            )}
             <HStack mt={'2'} pr={{md: '140px'}}>
               <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
+                {keywords.length > 0 && (
+                  <HStack alignItems={'flex-start'} color={'gray.500'}>
+                    <Tags mt={'3px'} />
+                    <Wrap spacing={'1'}>
+                      {keywords.map((keyword) => (
+                        <WrapItem key={keyword}>
+                          <Tag size={'sm'}
+                               fontSize={'xs'}
+                               fontWeight={'normal'}
+                               bg={data.selectedKeyword === keyword ? 'gray.500' : 'blackAlpha.100'}
+                               color={data.selectedKeyword === keyword ? 'white' : 'gray.500'}
+                               {...(isDesktopScreenSize && data.onKeywordClick && {
+                                 cursor: 'pointer',
+                                 onClick: () => data.onKeywordClick?.(keyword),
+                               })}
+                               >
+                            {keyword}
+                          </Tag>
+                        </WrapItem>
+                      ))}
+                    </Wrap>
+                  </HStack>
+                )}
                 {hash_tag && (
                   <HStack>
                     <Hash />
@@ -330,42 +361,6 @@ export function EventBody(data: EventBodyProps) {
                   <HStack>
                     <Person />
                       <Text fontSize={'sm'} noOfLines={1}>{owner_name}</Text>
-                  </HStack>
-                )}
-                {archive_source && (
-                  <HStack>
-                    <FiArchive />
-                    <Badge colorScheme="secondary" variant="subtle">
-                      アーカイブ
-                    </Badge>
-                    <Show above='md'>
-                      <Text fontSize={'xs'} color={'gray.600'} noOfLines={1}>
-                        {archive_source}
-                      </Text>
-                    </Show>
-                  </HStack>
-                )}
-                {keywords.length > 0 && (
-                  <HStack alignItems={'flex-start'} color={'gray.500'}>
-                    <Tags mt={'3px'} />
-                    <Wrap spacing={'1'}>
-                      {keywords.map((keyword) => (
-                        <WrapItem key={keyword}>
-                          <Tag size={'sm'}
-                               fontSize={'xs'}
-                               fontWeight={'normal'}
-                               bg={data.selectedKeyword === keyword ? 'gray.500' : 'blackAlpha.100'}
-                               color={data.selectedKeyword === keyword ? 'white' : 'gray.500'}
-                               {...(isDesktopScreenSize && data.onKeywordClick && {
-                                 cursor: 'pointer',
-                                 onClick: () => data.onKeywordClick?.(keyword),
-                               })}
-                               >
-                            {keyword}
-                          </Tag>
-                        </WrapItem>
-                      ))}
-                    </Wrap>
                   </HStack>
                 )}
               </Stack>
