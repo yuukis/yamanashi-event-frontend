@@ -23,6 +23,9 @@ import {
   DrawerBody,
   Link,
   Flex,
+  Tag,
+  Wrap,
+  WrapItem,
   Skeleton,
   SkeletonCircle,
   useMediaQuery,
@@ -38,6 +41,7 @@ import {
   GeoAlt,
   Person,
   People,
+  Tags,
   ChevronRight,
   ExclamationTriangleFill,
 } from '@chakra-icons/bootstrap';
@@ -46,6 +50,8 @@ import type { EventWithGroup } from '../types/events';
 type EventBodyProps = {
   event: EventWithGroup;
   anchorId?: string;
+  selectedKeyword?: string | null;
+  onKeywordClick?: (keyword: string) => void;
 };
 
 export function EventBody(data: EventBodyProps) {
@@ -73,6 +79,7 @@ export function EventBody(data: EventBodyProps) {
   const group_image_url = event.group_image_url;
   const archive_source = event.archive_source;
   const archive_url = event.archive_url;
+  const keywords = event.keywords ?? [];
   const x_search_keywords_array = [];
   if (hash_tag) {
     x_search_keywords_array.push("#" + hash_tag);
@@ -336,6 +343,27 @@ export function EventBody(data: EventBodyProps) {
                         {archive_source}
                       </Text>
                     </Show>
+                  </HStack>
+                )}
+                {keywords.length > 0 && (
+                  <HStack alignItems={'flex-start'}>
+                    <Tags mt={'3px'} />
+                    <Wrap spacing={'1'}>
+                      {keywords.map((keyword) => (
+                        <WrapItem key={keyword}>
+                          <Tag size={'sm'}
+                               colorScheme={'primary'}
+                               variant={data.selectedKeyword === keyword ? 'solid' : 'subtle'}
+                               {...(isDesktopScreenSize && data.onKeywordClick && {
+                                 cursor: 'pointer',
+                                 onClick: () => data.onKeywordClick?.(keyword),
+                               })}
+                               >
+                            {keyword}
+                          </Tag>
+                        </WrapItem>
+                      ))}
+                    </Wrap>
                   </HStack>
                 )}
               </Stack>

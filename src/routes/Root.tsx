@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
+import { KeywordChipBar } from '../components/KeywordChipBar';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
 import root_bg from "../assets/images/root_bg.png";
@@ -21,6 +23,7 @@ import {
 import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent } from '../utils/eventGroups';
+import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { fetchEvents, fetchGroups } from '../utils/api';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { scrollToCurrentHash } from '../utils/hashScroll';
@@ -35,6 +38,8 @@ type RootState = {
 };
 
 function Root({startYear}: {startYear: number}) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedKeyword = searchParams.get('keyword');
   const [data, setData] = useState<RootState>({
     isLoading: true,
     pastEvents: [],
@@ -89,6 +94,17 @@ function Root({startYear}: {startYear: number}) {
     window.requestAnimationFrame(scrollToCurrentHash);
   }, [data.errorMessage, data.isLoading, data.futureEvents, data.pastEvents]);
 
+  const handleKeywordSelect = (keyword: string | null) => {
+    setSearchParams(keyword ? { keyword } : {});
+  };
+  const handleKeywordClick = (keyword: string) => {
+    handleKeywordSelect(selectedKeyword === keyword ? null : keyword);
+  };
+
+  const keywordCounts = countKeywords([...data.futureEvents, ...data.pastEvents]);
+  const futureEvents = filterEventsByKeyword(data.futureEvents, selectedKeyword);
+  const pastEvents = filterEventsByKeyword(data.pastEvents, selectedKeyword);
+
   const renderEventBodies = (events: EventWithGroup[], anchoredDateKeys: Set<string>) => {
     return events.map((event, index) => {
       const eventDateKey = formatEventDateKey(new Date(event.started_at));
@@ -106,7 +122,12 @@ function Root({startYear}: {startYear: number}) {
         anchoredDateKeys.add(eventDateKey);
       }
 
-      return <EventBody key={event.uid} event={event} anchorId={anchorId} />;
+      return <EventBody key={event.uid}
+                        event={event}
+                        anchorId={anchorId}
+                        selectedKeyword={selectedKeyword}
+                        onKeywordClick={handleKeywordClick}
+                        />;
     });
   };
 
@@ -201,6 +222,12 @@ function Root({startYear}: {startYear: number}) {
                    >
             直近開催イベント
           </Heading>
+          {!data.isLoading && !data.errorMessage && (
+            <KeywordChipBar keywords={keywordCounts}
+                            selected={selectedKeyword}
+                            onSelect={handleKeywordSelect}
+                            />
+          )}
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
                 p={'0'}
@@ -211,10 +238,10 @@ function Root({startYear}: {startYear: number}) {
                   <SkeletonEventBody />
                 ) : data.errorMessage ? (
                   <ErrorEventBody message={ data.errorMessage } />
-                ) : data.futureEvents.length === 0 ? (
+                ) : futureEvents.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  renderEventBodies(data.futureEvents, anchoredDateKeys)
+                  renderEventBodies(futureEvents, anchoredDateKeys)
                 )}
               </Stack>
             </CardBody>
@@ -241,10 +268,10 @@ function Root({startYear}: {startYear: number}) {
                   <SkeletonEventBody />
                 ) : data.errorMessage ? (
                   <ErrorEventBody message={ data.errorMessage } />
-                ) : data.pastEvents.length === 0 ? (
+                ) : pastEvents.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  renderEventBodies(data.pastEvents, anchoredDateKeys)
+                  renderEventBodies(pastEvents, anchoredDateKeys)
                 )}
               </Stack>
             </CardBody>
