@@ -101,7 +101,8 @@ function Root({startYear}: {startYear: number}) {
     handleKeywordSelect(selectedKeyword === keyword ? null : keyword);
   };
 
-  const keywordCounts = countKeywords([...data.futureEvents, ...data.pastEvents]);
+  const futureKeywordCounts = countKeywords(data.futureEvents);
+  const pastKeywordCounts = countKeywords(data.pastEvents);
   const futureEvents = filterEventsByKeyword(data.futureEvents, selectedKeyword);
   const pastEvents = filterEventsByKeyword(data.pastEvents, selectedKeyword);
 
@@ -223,7 +224,7 @@ function Root({startYear}: {startYear: number}) {
             直近開催イベント
           </Heading>
           {!data.isLoading && !data.errorMessage && (
-            <KeywordChipBar keywords={keywordCounts}
+            <KeywordChipBar keywords={futureKeywordCounts}
                             selected={selectedKeyword}
                             onSelect={handleKeywordSelect}
                             />
@@ -258,6 +259,12 @@ function Root({startYear}: {startYear: number}) {
                    >
             終了したイベント
           </Heading>
+          {!data.isLoading && !data.errorMessage && (
+            <KeywordChipBar keywords={pastKeywordCounts}
+                            selected={selectedKeyword}
+                            onSelect={handleKeywordSelect}
+                            />
+          )}
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
                 p={'0'}
