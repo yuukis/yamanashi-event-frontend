@@ -346,14 +346,16 @@ export function EventBody(data: EventBodyProps) {
                   </HStack>
                 )}
                 {keywords.length > 0 && (
-                  <HStack alignItems={'flex-start'}>
+                  <HStack alignItems={'flex-start'} color={'gray.500'}>
                     <Tags mt={'3px'} />
                     <Wrap spacing={'1'}>
                       {keywords.map((keyword) => (
                         <WrapItem key={keyword}>
                           <Tag size={'sm'}
-                               colorScheme={'primary'}
-                               variant={data.selectedKeyword === keyword ? 'solid' : 'subtle'}
+                               fontSize={'xs'}
+                               fontWeight={'normal'}
+                               bg={data.selectedKeyword === keyword ? 'gray.500' : 'blackAlpha.100'}
+                               color={data.selectedKeyword === keyword ? 'white' : 'gray.500'}
                                {...(isDesktopScreenSize && data.onKeywordClick && {
                                  cursor: 'pointer',
                                  onClick: () => data.onKeywordClick?.(keyword),

@@ -28,8 +28,17 @@ export function KeywordChipBar({ keywords, selected, onSelect }: KeywordChipBarP
         <WrapItem key={keyword}>
           <Button size={'xs'}
                   rounded={'full'}
-                  colorScheme={'impact'}
-                  variant={selected === keyword ? 'solid' : 'outline'}
+                  fontWeight={'normal'}
+                  {...(selected === keyword ? {
+                    bg: 'gray.600',
+                    color: 'white',
+                    _hover: { bg: 'gray.700' },
+                  } : {
+                    variant: 'outline',
+                    bg: 'white',
+                    color: 'gray.600',
+                    borderColor: 'gray.300',
+                  })}
                   onClick={() => onSelect(selected === keyword ? null : keyword)}
                   >
             {keyword}
