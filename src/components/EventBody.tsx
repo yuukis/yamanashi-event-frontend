@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import {
   Box,
   Stack,
@@ -45,6 +45,8 @@ import {
   ChevronRight,
   ExclamationTriangleFill,
 } from '@chakra-icons/bootstrap';
+import { formatEventDateKey } from '../utils/eventAnchors';
+import { subscribeNow, getNow } from '../utils/nowTicker';
 import type { EventWithGroup } from '../types/events';
 
 type EventBodyProps = {
@@ -58,13 +60,18 @@ export function EventBody(data: EventBodyProps) {
 
   const day_of_week = ['日', '月', '火', '水', '木', '金', '土'];
   const event = data.event;
-  const now_year = new Date().getFullYear();
+  const now = useSyncExternalStore(subscribeNow, getNow);
+  const now_year = now.getFullYear();
   const start_date = new Date(event.started_at);
+  const end_date = new Date(event.ended_at);
   const start_year = start_date.getFullYear();
   const start_month = start_date.getMonth() + 1;
   const start_day = start_date.getDate();
   const start_dow = day_of_week[start_date.getDay()];
   const start_time = start_date.getHours() + ':' + ('0' + start_date.getMinutes()).slice(-2);
+  const is_today = formatEventDateKey(start_date) === formatEventDateKey(now);
+  const has_ended = now.getTime() > end_date.getTime();
+  const is_ongoing = now.getTime() >= start_date.getTime() && !has_ended;
 
   const title = event.title;
   const sub_title = event.catch;
@@ -263,6 +270,19 @@ export function EventBody(data: EventBodyProps) {
                   >
               ({ start_dow }) { start_time }-
             </Text>
+            {(is_today || is_ongoing) && !has_ended && (
+              <Badge bg={'#f9f1e8'}
+                     color={'impact.700'}
+                     border={'1px solid'}
+                     borderColor={'impact.500'}
+                     fontSize={'xs'}
+                     fontWeight={'bold'}
+                     ml={{base: '2', md: '0'}}
+                     mt={{base: '0', md: '1'}}
+                     >
+                {is_ongoing ? '開催中' : '本日開催'}
+              </Badge>
+            )}
           </Stack>
           <Show above='md'>
             <Stack spacing={'2px'} direction={'row'} mr={'4'}>

@@ -1,5 +1,5 @@
 import icon from "../assets/images/icon.png"
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { NotificationButton } from '../components/Notification';
 import {
   Heading,
@@ -29,11 +29,18 @@ import {
 import { isMobile } from 'react-device-detect';
 import { ChevronLeftIcon, ChevronRightIcon, RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
+import { keyframes } from '@emotion/react';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
+import { subscribeNow, getNow } from '../utils/nowTicker';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiEvent } from '../types/events';
-  
+
+const todayBadgePulse = keyframes`
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+`;
+
 export function SiteHeader() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const keepHeaderVisibleUntil = useRef(0);
@@ -213,25 +220,66 @@ export function ICalendarButton() {
     };
   }, []);
 
+  const isUnmountedRef = useRef(false);
+
+  useEffect(() => () => {
+    isUnmountedRef.current = true;
+  }, []);
+
+  const loadEvents = () => {
+    setIsLoading(true);
+
+    fetchEvents()
+      .then((res) => {
+        if (!isUnmountedRef.current) {
+          setEvents(res.events);
+          setErrorMessage('');
+        }
+      })
+      .catch((err) => {
+        if (!isUnmountedRef.current) {
+          setErrorMessage(err.message);
+        }
+      })
+      .finally(() => {
+        if (!isUnmountedRef.current) {
+          setIsLoading(false);
+        }
+      });
+  };
+
   useEffect(() => {
-    if (!isOpen || events.length > 0 || isLoading || errorMessage) {
-      return;
+    loadEvents();
+  }, []);
+
+  const openCalendar = () => {
+    if (errorMessage) {
+      loadEvents();
     }
 
-    const getData = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetchEvents();
-        setEvents(res.events);
-      } catch (err: any) {
-        setErrorMessage(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    onOpen();
+  };
 
-    getData();
-  }, [errorMessage, events.length, isLoading, isOpen]);
+  const now = useSyncExternalStore(subscribeNow, getNow);
+
+  const hasEventToday = useMemo(
+    () => events.some((event) => (
+      formatEventDateKey(new Date(event.started_at)) === todayKey
+      && now.getTime() <= new Date(event.ended_at).getTime()
+    )),
+    [events, todayKey, now],
+  );
+
+  const hasOngoingEvent = useMemo(
+    () => events.some((event) => {
+      const nowTime = now.getTime();
+      return nowTime >= new Date(event.started_at).getTime() && nowTime <= new Date(event.ended_at).getTime();
+    }),
+    [events, now],
+  );
+
+  const isTodayHighlighted = hasEventToday || hasOngoingEvent;
+  const todayLabel = hasOngoingEvent ? '開催中' : '本日開催';
 
   const closePopover = () => {
     setMonthOffset(0);
@@ -239,19 +287,38 @@ export function ICalendarButton() {
   };
 
   return (
-    <Popover isOpen={isOpen} onOpen={onOpen} onClose={closePopover} placement='bottom-end'>
+    <Popover isOpen={isOpen} onOpen={openCalendar} onClose={closePopover} placement='bottom-end'>
       <PopoverTrigger>
         <Button variant={'ghost'}
-                aria-label='イベントカレンダー'
+                aria-label={isTodayHighlighted ? `${todayLabel}のイベントがあります` : 'イベントカレンダー'}
                 px={{base: '2', md: '4'}}
                 minW={{base: '10', md: 'auto'}}
+                bg={isTodayHighlighted ? '#f9f1e8' : undefined}
+                border={isTodayHighlighted ? '2px solid' : undefined}
+                borderColor={isTodayHighlighted ? 'impact.500' : undefined}
+                _hover={{bg: isTodayHighlighted ? '#f3e6d3' : 'gray.100'}}
                 >
-          <Calendar3 mr={{base: '0', md: '2'}} />
+          <Box position={'relative'} display={'inline-flex'}>
+            <Calendar3 mr={{base: '0', md: '2'}} color={isTodayHighlighted ? 'impact.700' : undefined} />
+            {isTodayHighlighted && (
+              <Box position={'absolute'}
+                   top={'-1px'}
+                   right={{base: '-1px', md: '5px'}}
+                   w={'8px'}
+                   h={'8px'}
+                   borderRadius={'full'}
+                   bg={'impact.600'}
+                   animation={`${todayBadgePulse} 1.6s ease-in-out infinite`}
+                   sx={{'@media (prefers-reduced-motion: reduce)': {animation: 'none'}}}
+                   />
+            )}
+          </Box>
           <Text display={{base: 'none', md: 'block'}}
-                fontWeight={'normal'}
+                fontWeight={isTodayHighlighted ? 'bold' : 'normal'}
                 fontSize={'sm'}
+                color={isTodayHighlighted ? 'impact.700' : undefined}
                 >
-            カレンダー
+            {isTodayHighlighted ? todayLabel : 'カレンダー'}
           </Text>
         </Button>
       </PopoverTrigger>
