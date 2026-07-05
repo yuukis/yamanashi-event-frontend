@@ -29,10 +29,23 @@ export function subscribeNow(listener: Listener): () => void {
   };
 }
 
+function handleVisibilityChange() {
+  if (!document.hidden && intervalId !== undefined) {
+    tick();
+  }
+}
+
 if (typeof document !== 'undefined') {
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && intervalId !== undefined) {
-      tick();
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+}
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+    if (intervalId !== undefined) {
+      window.clearInterval(intervalId);
+      intervalId = undefined;
     }
   });
 }
