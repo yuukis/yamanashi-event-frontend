@@ -252,6 +252,27 @@ export function ICalendarButton() {
     [events, todayKey],
   );
 
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => setNow(new Date()), 60000);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, []);
+
+  const hasOngoingEvent = useMemo(
+    () => events.some((event) => {
+      const nowTime = now.getTime();
+      return nowTime >= new Date(event.started_at).getTime() && nowTime <= new Date(event.ended_at).getTime();
+    }),
+    [events, now],
+  );
+
+  const isTodayHighlighted = hasEventToday || hasOngoingEvent;
+  const todayLabel = hasOngoingEvent ? '開催中' : '本日開催';
+
   const closePopover = () => {
     setMonthOffset(0);
     onClose();
@@ -261,17 +282,17 @@ export function ICalendarButton() {
     <Popover isOpen={isOpen} onOpen={onOpen} onClose={closePopover} placement='bottom-end'>
       <PopoverTrigger>
         <Button variant={'ghost'}
-                aria-label={hasEventToday ? '本日開催のイベントがあります' : 'イベントカレンダー'}
+                aria-label={isTodayHighlighted ? `${todayLabel}のイベントがあります` : 'イベントカレンダー'}
                 px={{base: '2', md: '4'}}
                 minW={{base: '10', md: 'auto'}}
-                bg={hasEventToday ? '#f9f1e8' : undefined}
-                border={hasEventToday ? '2px solid' : undefined}
-                borderColor={hasEventToday ? 'impact.500' : undefined}
-                _hover={{bg: hasEventToday ? '#f3e6d3' : 'gray.100'}}
+                bg={isTodayHighlighted ? '#f9f1e8' : undefined}
+                border={isTodayHighlighted ? '2px solid' : undefined}
+                borderColor={isTodayHighlighted ? 'impact.500' : undefined}
+                _hover={{bg: isTodayHighlighted ? '#f3e6d3' : 'gray.100'}}
                 >
           <Box position={'relative'} display={'inline-flex'}>
-            <Calendar3 mr={{base: '0', md: '2'}} color={hasEventToday ? 'impact.700' : undefined} />
-            {hasEventToday && (
+            <Calendar3 mr={{base: '0', md: '2'}} color={isTodayHighlighted ? 'impact.700' : undefined} />
+            {isTodayHighlighted && (
               <Box position={'absolute'}
                    top={'-1px'}
                    right={{base: '-1px', md: '5px'}}
@@ -284,11 +305,11 @@ export function ICalendarButton() {
             )}
           </Box>
           <Text display={{base: 'none', md: 'block'}}
-                fontWeight={hasEventToday ? 'bold' : 'normal'}
+                fontWeight={isTodayHighlighted ? 'bold' : 'normal'}
                 fontSize={'sm'}
-                color={hasEventToday ? 'impact.700' : undefined}
+                color={isTodayHighlighted ? 'impact.700' : undefined}
                 >
-            {hasEventToday ? '本日開催' : 'カレンダー'}
+            {isTodayHighlighted ? todayLabel : 'カレンダー'}
           </Text>
         </Button>
       </PopoverTrigger>
