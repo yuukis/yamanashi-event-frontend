@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import {
   Box,
   Stack,
@@ -46,6 +46,7 @@ import {
   ExclamationTriangleFill,
 } from '@chakra-icons/bootstrap';
 import { formatEventDateKey } from '../utils/eventAnchors';
+import { subscribeNow, getNow } from '../utils/nowTicker';
 import type { EventWithGroup } from '../types/events';
 
 type EventBodyProps = {
@@ -59,7 +60,7 @@ export function EventBody(data: EventBodyProps) {
 
   const day_of_week = ['日', '月', '火', '水', '木', '金', '土'];
   const event = data.event;
-  const [now, setNow] = useState(() => new Date());
+  const now = useSyncExternalStore(subscribeNow, getNow);
   const now_year = now.getFullYear();
   const start_date = new Date(event.started_at);
   const end_date = new Date(event.ended_at);
@@ -213,14 +214,6 @@ export function EventBody(data: EventBodyProps) {
       resetState();
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    const timerId = window.setInterval(() => setNow(new Date()), 60000);
-
-    return () => {
-      window.clearInterval(timerId);
-    };
-  }, []);
 
   return (
     <>

@@ -1,5 +1,5 @@
 import icon from "../assets/images/icon.png"
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { NotificationButton } from '../components/Notification';
 import {
   Heading,
@@ -32,6 +32,7 @@ import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
 import { keyframes } from '@emotion/react';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
+import { subscribeNow, getNow } from '../utils/nowTicker';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiEvent } from '../types/events';
 
@@ -247,15 +248,7 @@ export function ICalendarButton() {
     };
   }, []);
 
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const timerId = window.setInterval(() => setNow(new Date()), 60000);
-
-    return () => {
-      window.clearInterval(timerId);
-    };
-  }, []);
+  const now = useSyncExternalStore(subscribeNow, getNow);
 
   const hasEventToday = useMemo(
     () => events.some((event) => (
