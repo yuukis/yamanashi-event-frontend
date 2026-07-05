@@ -264,8 +264,10 @@ export function ICalendarButton() {
                 aria-label={hasEventToday ? '本日開催のイベントがあります' : 'イベントカレンダー'}
                 px={{base: '2', md: '4'}}
                 minW={{base: '10', md: 'auto'}}
-                bg={hasEventToday ? 'impact.100' : undefined}
-                _hover={{bg: hasEventToday ? 'impact.200' : 'gray.100'}}
+                bg={hasEventToday ? '#f9f1e8' : undefined}
+                border={hasEventToday ? '2px solid' : undefined}
+                borderColor={hasEventToday ? 'impact.500' : undefined}
+                _hover={{bg: hasEventToday ? '#f3e6d3' : 'gray.100'}}
                 >
           <Box position={'relative'} display={'inline-flex'}>
             <Calendar3 mr={{base: '0', md: '2'}} color={hasEventToday ? 'impact.700' : undefined} />
