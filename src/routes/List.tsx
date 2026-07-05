@@ -44,6 +44,7 @@ function List({ startYear} : {startYear: number}) {
   });
 
   const handleKeywordSelect = (keyword: string | null) => {
+    window.dispatchEvent(new Event('site-header-hold'));
     setSearchParams(keyword ? { keyword } : {});
   };
   const handleKeywordClick = (keyword: string) => {

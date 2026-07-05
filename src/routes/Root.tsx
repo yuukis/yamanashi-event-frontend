@@ -95,6 +95,7 @@ function Root({startYear}: {startYear: number}) {
   }, [data.errorMessage, data.isLoading, data.futureEvents, data.pastEvents]);
 
   const handleKeywordSelect = (keyword: string | null) => {
+    window.dispatchEvent(new Event('site-header-hold'));
     setSearchParams(keyword ? { keyword } : {});
   };
   const handleKeywordClick = (keyword: string) => {

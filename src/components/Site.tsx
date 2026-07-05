@@ -37,6 +37,7 @@ import type { ApiEvent } from '../types/events';
 export function SiteHeader() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const keepHeaderVisibleUntil = useRef(0);
+  const holdHeaderStateUntil = useRef(0);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -44,10 +45,18 @@ export function SiteHeader() {
       keepHeaderVisibleUntil.current = Date.now() + 700;
       setIsHeaderVisible(true);
     };
+    const holdHeaderState = () => {
+      holdHeaderStateUntil.current = Date.now() + 700;
+    };
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const scrollDifference = currentScrollY - lastScrollY;
+      lastScrollY = currentScrollY;
+
+      if (Date.now() < holdHeaderStateUntil.current) {
+        return;
+      }
 
       if (currentScrollY < 8) {
         setIsHeaderVisible(true);
@@ -58,16 +67,16 @@ export function SiteHeader() {
       } else if (scrollDifference < -6) {
         setIsHeaderVisible(true);
       }
-
-      lastScrollY = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('site-header-show', showHeader);
+    window.addEventListener('site-header-hold', holdHeaderState);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('site-header-show', showHeader);
+      window.removeEventListener('site-header-hold', holdHeaderState);
     };
   }, []);
 
