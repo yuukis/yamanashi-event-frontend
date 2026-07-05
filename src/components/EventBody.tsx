@@ -69,7 +69,8 @@ export function EventBody(data: EventBodyProps) {
   const start_dow = day_of_week[start_date.getDay()];
   const start_time = start_date.getHours() + ':' + ('0' + start_date.getMinutes()).slice(-2);
   const is_today = formatEventDateKey(start_date) === formatEventDateKey(now);
-  const is_ongoing = now.getTime() >= start_date.getTime() && now.getTime() <= end_date.getTime();
+  const has_ended = now.getTime() > end_date.getTime();
+  const is_ongoing = now.getTime() >= start_date.getTime() && !has_ended;
 
   const title = event.title;
   const sub_title = event.catch;
@@ -276,7 +277,7 @@ export function EventBody(data: EventBodyProps) {
                   >
               ({ start_dow }) { start_time }-
             </Text>
-            {(is_today || is_ongoing) && (
+            {(is_today || is_ongoing) && !has_ended && (
               <Badge bg={'#f9f1e8'}
                      color={'impact.700'}
                      border={'1px solid'}

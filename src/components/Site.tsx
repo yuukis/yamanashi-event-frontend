@@ -247,11 +247,6 @@ export function ICalendarButton() {
     };
   }, []);
 
-  const hasEventToday = useMemo(
-    () => events.some((event) => formatEventDateKey(new Date(event.started_at)) === todayKey),
-    [events, todayKey],
-  );
-
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -261,6 +256,14 @@ export function ICalendarButton() {
       window.clearInterval(timerId);
     };
   }, []);
+
+  const hasEventToday = useMemo(
+    () => events.some((event) => (
+      formatEventDateKey(new Date(event.started_at)) === todayKey
+      && now.getTime() <= new Date(event.ended_at).getTime()
+    )),
+    [events, todayKey, now],
+  );
 
   const hasOngoingEvent = useMemo(
     () => events.some((event) => {
