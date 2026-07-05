@@ -29,11 +29,17 @@ import {
 import { isMobile } from 'react-device-detect';
 import { ChevronLeftIcon, ChevronRightIcon, RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
+import { keyframes } from '@emotion/react';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiEvent } from '../types/events';
-  
+
+const todayBadgePulse = keyframes`
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+`;
+
 export function SiteHeader() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const keepHeaderVisibleUntil = useRef(0);
@@ -241,6 +247,11 @@ export function ICalendarButton() {
     };
   }, []);
 
+  const hasEventToday = useMemo(
+    () => events.some((event) => formatEventDateKey(new Date(event.started_at)) === todayKey),
+    [events, todayKey],
+  );
+
   const closePopover = () => {
     setMonthOffset(0);
     onClose();
@@ -250,16 +261,32 @@ export function ICalendarButton() {
     <Popover isOpen={isOpen} onOpen={onOpen} onClose={closePopover} placement='bottom-end'>
       <PopoverTrigger>
         <Button variant={'ghost'}
-                aria-label='イベントカレンダー'
+                aria-label={hasEventToday ? '本日開催のイベントがあります' : 'イベントカレンダー'}
                 px={{base: '2', md: '4'}}
                 minW={{base: '10', md: 'auto'}}
+                bg={hasEventToday ? 'impact.100' : undefined}
+                _hover={{bg: hasEventToday ? 'impact.200' : 'gray.100'}}
                 >
-          <Calendar3 mr={{base: '0', md: '2'}} />
+          <Box position={'relative'} display={'inline-flex'}>
+            <Calendar3 mr={{base: '0', md: '2'}} color={hasEventToday ? 'impact.700' : undefined} />
+            {hasEventToday && (
+              <Box position={'absolute'}
+                   top={'-1px'}
+                   right={{base: '-1px', md: '5px'}}
+                   w={'8px'}
+                   h={'8px'}
+                   borderRadius={'full'}
+                   bg={'impact.600'}
+                   animation={`${todayBadgePulse} 1.6s ease-in-out infinite`}
+                   />
+            )}
+          </Box>
           <Text display={{base: 'none', md: 'block'}}
-                fontWeight={'normal'}
+                fontWeight={hasEventToday ? 'bold' : 'normal'}
                 fontSize={'sm'}
+                color={hasEventToday ? 'impact.700' : undefined}
                 >
-            カレンダー
+            {hasEventToday ? '本日開催' : 'カレンダー'}
           </Text>
         </Button>
       </PopoverTrigger>
