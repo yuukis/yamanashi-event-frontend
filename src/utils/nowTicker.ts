@@ -15,6 +15,7 @@ export function subscribeNow(listener: Listener): () => void {
   listeners.add(listener);
 
   if (intervalId === undefined) {
+    tick();
     intervalId = window.setInterval(tick, TICK_INTERVAL_MS);
   }
 
@@ -26,6 +27,14 @@ export function subscribeNow(listener: Listener): () => void {
       intervalId = undefined;
     }
   };
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && intervalId !== undefined) {
+      tick();
+    }
+  });
 }
 
 export function getNow(): Date {
