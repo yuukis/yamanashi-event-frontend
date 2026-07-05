@@ -15,6 +15,7 @@ export type ApiEvent = {
   group_key?: string | null;
   group_name?: string | null;
   group_url?: string | null;
+  keywords?: string[] | null;
 };
 
 export type ApiGroup = {

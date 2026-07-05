@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import axios from 'axios';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
+import { KeywordChipBar } from '../components/KeywordChipBar';
 import '../style.css';
 import {
   Container,
@@ -17,6 +18,7 @@ import {
 } from '@chakra-ui/react';
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent } from '../utils/eventGroups';
+import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import type { ApiEvent, ApiGroup, EventWithGroup } from '../types/events';
 
 type ListState = {
@@ -32,12 +34,25 @@ function List({ startYear} : {startYear: number}) {
   const prev_year = year - 1;
   const next_year = year + 1;
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedKeyword = searchParams.get('keyword');
   const [data, setData] = useState<ListState>({
     isLoading: true,
     events: [],
     lastModified: null,
     errorMessage: ''
   });
+
+  const handleKeywordSelect = (keyword: string | null) => {
+    window.dispatchEvent(new Event('site-header-hold'));
+    setSearchParams(keyword ? { keyword } : {});
+  };
+  const handleKeywordClick = (keyword: string) => {
+    handleKeywordSelect(selectedKeyword === keyword ? null : keyword);
+  };
+
+  const keywordCounts = countKeywords(data.events);
+  const events = filterEventsByKeyword(data.events, selectedKeyword);
 
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
 
@@ -111,6 +126,12 @@ function List({ startYear} : {startYear: number}) {
                     onClick={() => {window.open('/' + next_year, '_self')}}
                     >{ next_year }年 →</Button>
           </Stack>
+          {!data.isLoading && !data.errorMessage && (
+            <KeywordChipBar keywords={keywordCounts}
+                            selected={selectedKeyword}
+                            onSelect={handleKeywordSelect}
+                            />
+          )}
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
                 p={'0'}
@@ -121,11 +142,15 @@ function List({ startYear} : {startYear: number}) {
                   <SkeletonEventBody />
                 ) : data.errorMessage ? (
                   <ErrorEventBody message={ data.errorMessage } />
-                ) : data.events.length === 0 ? (
+                ) : events.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  data.events.map((event) => {
-                    return <EventBody key={event.uid} event={event} />
+                  events.map((event) => {
+                    return <EventBody key={event.uid}
+                                      event={event}
+                                      selectedKeyword={selectedKeyword}
+                                      onKeywordClick={handleKeywordClick}
+                                      />
                   }
                 ))}
               </Stack>
