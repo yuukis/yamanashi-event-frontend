@@ -310,6 +310,7 @@ export function EventBody(data: EventBodyProps) {
                                bg={data.selectedKeyword === keyword ? 'gray.500' : 'blackAlpha.100'}
                                color={data.selectedKeyword === keyword ? 'white' : 'gray.500'}
                                {...(isDesktopScreenSize && data.onKeywordClick && {
+                                 as: 'button' as const,
                                  cursor: 'pointer',
                                  onClick: () => data.onKeywordClick?.(keyword),
                                })}
