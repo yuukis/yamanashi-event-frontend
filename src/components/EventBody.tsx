@@ -45,6 +45,7 @@ import {
   ChevronRight,
   ExclamationTriangleFill,
 } from '@chakra-icons/bootstrap';
+import { formatEventDateKey } from '../utils/eventAnchors';
 import type { EventWithGroup } from '../types/events';
 
 type EventBodyProps = {
@@ -65,6 +66,7 @@ export function EventBody(data: EventBodyProps) {
   const start_day = start_date.getDate();
   const start_dow = day_of_week[start_date.getDay()];
   const start_time = start_date.getHours() + ':' + ('0' + start_date.getMinutes()).slice(-2);
+  const is_today = formatEventDateKey(start_date) === formatEventDateKey(new Date());
 
   const title = event.title;
   const sub_title = event.catch;
@@ -263,6 +265,19 @@ export function EventBody(data: EventBodyProps) {
                   >
               ({ start_dow }) { start_time }-
             </Text>
+            {is_today && (
+              <Badge bg={'#f9f1e8'}
+                     color={'impact.700'}
+                     border={'1px solid'}
+                     borderColor={'impact.500'}
+                     fontSize={'xs'}
+                     fontWeight={'bold'}
+                     ml={{base: '2', md: '0'}}
+                     mt={{base: '0', md: '1'}}
+                     >
+                本日開催
+              </Badge>
+            )}
           </Stack>
           <Show above='md'>
             <Stack spacing={'2px'} direction={'row'} mr={'4'}>
