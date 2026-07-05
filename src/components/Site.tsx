@@ -220,33 +220,45 @@ export function ICalendarButton() {
     };
   }, []);
 
-  useEffect(() => {
-    let isCancelled = false;
+  const isUnmountedRef = useRef(false);
 
-    const getData = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetchEvents();
-        if (!isCancelled) {
+  useEffect(() => () => {
+    isUnmountedRef.current = true;
+  }, []);
+
+  const loadEvents = () => {
+    setIsLoading(true);
+
+    fetchEvents()
+      .then((res) => {
+        if (!isUnmountedRef.current) {
           setEvents(res.events);
+          setErrorMessage('');
         }
-      } catch (err: any) {
-        if (!isCancelled) {
+      })
+      .catch((err) => {
+        if (!isUnmountedRef.current) {
           setErrorMessage(err.message);
         }
-      } finally {
-        if (!isCancelled) {
+      })
+      .finally(() => {
+        if (!isUnmountedRef.current) {
           setIsLoading(false);
         }
-      }
-    };
+      });
+  };
 
-    getData();
-
-    return () => {
-      isCancelled = true;
-    };
+  useEffect(() => {
+    loadEvents();
   }, []);
+
+  const openCalendar = () => {
+    if (errorMessage) {
+      loadEvents();
+    }
+
+    onOpen();
+  };
 
   const now = useSyncExternalStore(subscribeNow, getNow);
 
@@ -275,7 +287,7 @@ export function ICalendarButton() {
   };
 
   return (
-    <Popover isOpen={isOpen} onOpen={onOpen} onClose={closePopover} placement='bottom-end'>
+    <Popover isOpen={isOpen} onOpen={openCalendar} onClose={closePopover} placement='bottom-end'>
       <PopoverTrigger>
         <Button variant={'ghost'}
                 aria-label={isTodayHighlighted ? `${todayLabel}のイベントがあります` : 'イベントカレンダー'}
