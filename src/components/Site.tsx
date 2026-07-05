@@ -214,24 +214,32 @@ export function ICalendarButton() {
   }, []);
 
   useEffect(() => {
-    if (!isOpen || events.length > 0 || isLoading || errorMessage) {
-      return;
-    }
+    let isCancelled = false;
 
     const getData = async () => {
       setIsLoading(true);
       try {
         const res = await fetchEvents();
-        setEvents(res.events);
+        if (!isCancelled) {
+          setEvents(res.events);
+        }
       } catch (err: any) {
-        setErrorMessage(err.message);
+        if (!isCancelled) {
+          setErrorMessage(err.message);
+        }
       } finally {
-        setIsLoading(false);
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     getData();
-  }, [errorMessage, events.length, isLoading, isOpen]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const closePopover = () => {
     setMonthOffset(0);
