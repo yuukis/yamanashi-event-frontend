@@ -304,6 +304,7 @@ export function ICalendarButton() {
                    borderRadius={'full'}
                    bg={'impact.600'}
                    animation={`${todayBadgePulse} 1.6s ease-in-out infinite`}
+                   sx={{'@media (prefers-reduced-motion: reduce)': {animation: 'none'}}}
                    />
             )}
           </Box>
