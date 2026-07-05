@@ -290,7 +290,9 @@ export function EventBody(data: EventBodyProps) {
                   }}
                   >{ sub_title }</Text>
             {archive_source && (
-              <Badge colorScheme="secondary" variant="subtle">
+              <Badge colorScheme="secondary" variant="subtle"
+                     display={'block'} w={'fit-content'}
+                     >
                 アーカイブ
               </Badge>
             )}
