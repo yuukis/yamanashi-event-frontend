@@ -33,6 +33,7 @@ import { keyframes } from '@emotion/react';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
 import { subscribeNow, getNow } from '../utils/nowTicker';
+import { subscribeHeaderVisibility, getHeaderVisible, HEADER_HEIGHT } from '../utils/headerVisibility';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiEvent } from '../types/events';
 
@@ -42,50 +43,7 @@ const todayBadgePulse = keyframes`
 `;
 
 export function SiteHeader() {
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-  const keepHeaderVisibleUntil = useRef(0);
-  const holdHeaderStateUntil = useRef(0);
-
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-    const showHeader = () => {
-      keepHeaderVisibleUntil.current = Date.now() + 700;
-      setIsHeaderVisible(true);
-    };
-    const holdHeaderState = () => {
-      holdHeaderStateUntil.current = Date.now() + 700;
-    };
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const scrollDifference = currentScrollY - lastScrollY;
-      lastScrollY = currentScrollY;
-
-      if (Date.now() < holdHeaderStateUntil.current) {
-        return;
-      }
-
-      if (currentScrollY < 8) {
-        setIsHeaderVisible(true);
-      } else if (Date.now() < keepHeaderVisibleUntil.current) {
-        setIsHeaderVisible(true);
-      } else if (scrollDifference > 6) {
-        setIsHeaderVisible(false);
-      } else if (scrollDifference < -6) {
-        setIsHeaderVisible(true);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('site-header-show', showHeader);
-    window.addEventListener('site-header-hold', holdHeaderState);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('site-header-show', showHeader);
-      window.removeEventListener('site-header-hold', holdHeaderState);
-    };
-  }, []);
+  const isHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
 
   return (
     <>
@@ -132,7 +90,7 @@ export function SiteHeader() {
           <Box h={'1px'} bg={'primary.500'} />
         </Stack>
       </Box>
-      <Box h={{base: 'calc(3rem + 7px)', md: 'calc(4rem + 7px)'}} />
+      <Box h={HEADER_HEIGHT} />
     </>
   );
 }
@@ -222,10 +180,6 @@ export function ICalendarButton() {
 
   const isUnmountedRef = useRef(false);
 
-  useEffect(() => () => {
-    isUnmountedRef.current = true;
-  }, []);
-
   const loadEvents = () => {
     setIsLoading(true);
 
@@ -249,7 +203,11 @@ export function ICalendarButton() {
   };
 
   useEffect(() => {
+    isUnmountedRef.current = false;
     loadEvents();
+    return () => {
+      isUnmountedRef.current = true;
+    };
   }, []);
 
   const openCalendar = () => {

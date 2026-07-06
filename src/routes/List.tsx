@@ -3,7 +3,9 @@ import { useParams, useSearchParams } from "react-router-dom";
 import axios from 'axios';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
-import { KeywordChipBar } from '../components/KeywordChipBar';
+import { ChipBar } from '../components/ChipBar';
+import { GroupSelector } from '../components/GroupSelector';
+import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import '../style.css';
 import {
   Container,
@@ -17,13 +19,14 @@ import {
   Spacer
 } from '@chakra-ui/react';
 import { sortByStartedAtAsc } from '../utils/eventSort';
-import { enrichEventsWithGroups, isVisibleEvent } from '../utils/eventGroups';
+import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import type { ApiEvent, ApiGroup, EventWithGroup } from '../types/events';
 
 type ListState = {
   isLoading: boolean;
   events: EventWithGroup[];
+  groups: ApiGroup[];
   lastModified: string | null;
   errorMessage: string;
 };
@@ -35,13 +38,23 @@ function List({ startYear} : {startYear: number}) {
   const next_year = year + 1;
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const selectedKeyword = searchParams.get('keyword');
+  const selectedGroup = searchParams.get('group');
+  // keyword と group は排他。手入力やブックマークなど、両方のクエリが
+  // 同時に付いた URL が渡された場合は group を優先する。
+  const selectedKeyword = selectedGroup ? null : searchParams.get('keyword');
   const [data, setData] = useState<ListState>({
     isLoading: true,
     events: [],
+    groups: [],
     lastModified: null,
     errorMessage: ''
   });
+
+  useEffect(() => {
+    if (searchParams.get('keyword') && searchParams.get('group')) {
+      setSearchParams({ group: searchParams.get('group')! });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleKeywordSelect = (keyword: string | null) => {
     window.dispatchEvent(new Event('site-header-hold'));
@@ -51,8 +64,18 @@ function List({ startYear} : {startYear: number}) {
     handleKeywordSelect(selectedKeyword === keyword ? null : keyword);
   };
 
+  const handleGroupSelect = (group: string | null) => {
+    window.dispatchEvent(new Event('site-header-hold'));
+    setSearchParams(group ? { group } : {});
+  };
+
   const keywordCounts = countKeywords(data.events);
-  const events = filterEventsByKeyword(data.events, selectedKeyword);
+  const groupCounts = countGroups(data.events, data.groups);
+  const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl, events: group.events }));
+  const selectedGroupName = selectedGroup
+    ? (data.groups.find((group) => group.key === selectedGroup)?.title ?? selectedGroup)
+    : null;
+  const events = filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup);
 
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
 
@@ -68,6 +91,7 @@ function List({ startYear} : {startYear: number}) {
         const data = {
           isLoading: false,
           events: [],
+          groups: [],
           lastModified: null,
           errorMessage: err.message
         }
@@ -75,13 +99,15 @@ function List({ startYear} : {startYear: number}) {
         return;
       }
 
+      const groups = group_res.data as ApiGroup[];
       const events = enrichEventsWithGroups(
         res.data as ApiEvent[],
-        group_res.data as ApiGroup[],
+        groups,
       );
       const data = {
         isLoading: false,
         events: events.filter(isVisibleEvent).sort(sortByStartedAtAsc),
+        groups,
         lastModified: res.headers['last-modified'],
         errorMessage: ''
       }
@@ -93,11 +119,21 @@ function List({ startYear} : {startYear: number}) {
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <SiteHeader />
+      <ActiveFilterBadge selectedKeyword={selectedKeyword}
+                         selectedGroupName={selectedGroupName}
+                         onClearKeyword={() => handleKeywordSelect(null)}
+                         onClearGroup={() => handleGroupSelect(null)}
+                         />
       <Container maxW={'980px'} w={'100%'}
                  mt={'4'}
                  p={{base: '0', md: '4'}}
                  >
         <Stack>
+          <GroupSelector groups={groupSelectorItems}
+                          selected={selectedGroup}
+                          onSelect={handleGroupSelect}
+                          isLoading={data.isLoading}
+                          />
           <Stack direction={'row'} spacing={'2'}
                  ml={{base: '4', md: '0'}}
                  mr={{base: '4', md: '0'}}
@@ -127,10 +163,12 @@ function List({ startYear} : {startYear: number}) {
                     >{ next_year }年 →</Button>
           </Stack>
           {!data.isLoading && !data.errorMessage && (
-            <KeywordChipBar keywords={keywordCounts}
-                            selected={selectedKeyword}
-                            onSelect={handleKeywordSelect}
-                            />
+            <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                     selected={selectedKeyword}
+                     onSelect={handleKeywordSelect}
+                     expandAriaLabel={'すべてのキーワードを表示'}
+                     collapseAriaLabel={'キーワードを折りたたむ'}
+                     />
           )}
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
