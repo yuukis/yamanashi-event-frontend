@@ -4,6 +4,7 @@ import axios from 'axios';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
+import { GroupSelector } from '../components/GroupSelector';
 import '../style.css';
 import {
   Container,
@@ -59,7 +60,7 @@ function List({ startYear} : {startYear: number}) {
 
   const keywordCounts = countKeywords(data.events);
   const groupCounts = countGroups(data.events);
-  const groupItems = groupCounts.map((group) => ({ value: group.key, label: group.name }));
+  const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl }));
   const events = filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup);
 
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
@@ -106,6 +107,11 @@ function List({ startYear} : {startYear: number}) {
                  p={{base: '0', md: '4'}}
                  >
         <Stack>
+          <GroupSelector groups={groupSelectorItems}
+                          selected={selectedGroup}
+                          onSelect={handleGroupSelect}
+                          isLoading={data.isLoading}
+                          />
           <Stack direction={'row'} spacing={'2'}
                  ml={{base: '4', md: '0'}}
                  mr={{base: '4', md: '0'}}
@@ -135,20 +141,12 @@ function List({ startYear} : {startYear: number}) {
                     >{ next_year }年 →</Button>
           </Stack>
           {!data.isLoading && !data.errorMessage && (
-            <>
-              <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
-                       selected={selectedKeyword}
-                       onSelect={handleKeywordSelect}
-                       expandAriaLabel={'すべてのキーワードを表示'}
-                       collapseAriaLabel={'キーワードを折りたたむ'}
-                       />
-              <ChipBar items={groupItems}
-                       selected={selectedGroup}
-                       onSelect={handleGroupSelect}
-                       expandAriaLabel={'すべてのコミュニティを表示'}
-                       collapseAriaLabel={'コミュニティを折りたたむ'}
-                       />
-            </>
+            <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                     selected={selectedKeyword}
+                     onSelect={handleKeywordSelect}
+                     expandAriaLabel={'すべてのキーワードを表示'}
+                     collapseAriaLabel={'キーワードを折りたたむ'}
+                     />
           )}
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
