@@ -45,15 +45,28 @@ function GroupBlock({ group, isSelected, onSelect }: GroupBlockProps) {
   const [isTruncated, setIsTruncated] = useState(false);
 
   useLayoutEffect(() => {
-    // isTruncated が変わると Tooltip の有無で DOM ノードが差し替わり、ref が
-    // 更新されるため、判定のたびに nameRef.current を読み直す(古いノードを
-    // 閉じ込めない)。
+    // -webkit-line-clamp を適用した要素自身の scrollHeight/clientHeight の比較は
+    // ブラウザによって挙動が揺れるため、クランプを外した不可視の複製を作って
+    // 本来必要な高さを測り、2行分の高さと比較する。
     const check = () => {
       const el = nameRef.current;
       if (!el) {
         return;
       }
-      setIsTruncated(el.scrollHeight > el.clientHeight + 1);
+      const clone = el.cloneNode(true) as HTMLElement;
+      clone.style.position = 'absolute';
+      clone.style.visibility = 'hidden';
+      clone.style.pointerEvents = 'none';
+      clone.style.left = '-9999px';
+      clone.style.top = '0';
+      clone.style.height = 'auto';
+      clone.style.maxHeight = 'none';
+      clone.style.display = 'block';
+      clone.style.width = `${el.clientWidth}px`;
+      document.body.appendChild(clone);
+      const naturalHeight = clone.scrollHeight;
+      document.body.removeChild(clone);
+      setIsTruncated(naturalHeight > el.clientHeight + 1);
     };
     check();
     // フォントの読み込みが遅れて折り返し位置が変わるケースに対応するため、
