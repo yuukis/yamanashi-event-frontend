@@ -33,6 +33,15 @@ https://hub.yamanashi.dev
     ```
 4. Open http://localhost:5173
 
+### Running tests
+
+This project uses [Vitest](https://vitest.dev) and [React Testing Library](https://testing-library.com/react).
+
+```sh
+$ yarn test        # watch mode
+$ yarn test:run     # run once (CI)
+```
+
 ## License
 
 Distributed under the Apache License, Version 2.0. See `LICENSE` for more information.
