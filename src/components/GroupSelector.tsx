@@ -34,6 +34,14 @@ const EXPAND_BUTTON_WIDTH = { base: '36px', md: '44px' };
 const IMAGE_SIZE = { base: '44px', md: '56px' };
 const NAME_HEIGHT = '2.4em';
 const SKELETON_COUNT = 8;
+// バッジの上半分がブロック上端からはみ出す分の余白。デスクトップの1段
+// 表示は overflow: hidden で折りたたむため、はみ出し分だけ行の高さと
+// 上パディングを広げてバッジが切れないようにする。
+const BADGE_OVERLAP = '10px';
+const ROW_HEIGHT_WITH_BADGE_OVERLAP = {
+  base: `calc(${BLOCK_HEIGHT.base} + ${BADGE_OVERLAP})`,
+  md: `calc(${BLOCK_HEIGHT.md} + ${BADGE_OVERLAP})`,
+};
 
 function shuffle<T>(items: T[]): T[] {
   const result = [...items];
@@ -110,18 +118,15 @@ function GroupBlock({ group, badge, isSelected, onSelect }: GroupBlockProps) {
               >
         {badge && (
           <Badge position={'absolute'}
-                 top={'1px'}
+                 top={'0'}
                  left={'50%'}
-                 transform={'translateX(-50%)'}
+                 transform={'translate(-50%, -50%)'}
                  bg={'#f9f1e8'}
                  color={'impact.700'}
                  border={'1px solid'}
                  borderColor={'impact.500'}
-                 borderRadius={'full'}
-                 fontSize={'7px'}
-                 lineHeight={'1.4'}
+                 fontSize={'xs'}
                  fontWeight={'bold'}
-                 px={'1.5'}
                  whiteSpace={'nowrap'}
                  zIndex={'1'}
                  >
@@ -311,7 +316,8 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
         <Flex gap={'2'}
               wrap={'wrap'}
               flex={'1'} minW={'0'}
-              maxH={isExpanded ? undefined : BLOCK_HEIGHT}
+              pt={BADGE_OVERLAP}
+              maxH={isExpanded ? undefined : ROW_HEIGHT_WITH_BADGE_OVERLAP}
               overflow={'hidden'}
               >
           {blocks}
@@ -321,6 +327,7 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
                   aria-label={isExpanded ? '閉じる' : 'もっとみる'}
                   w={EXPAND_BUTTON_WIDTH}
                   h={BLOCK_HEIGHT}
+                  mt={BADGE_OVERLAP}
                   flexShrink={0}
                   display={'flex'}
                   alignItems={'center'}
