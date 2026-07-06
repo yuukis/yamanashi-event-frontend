@@ -42,11 +42,17 @@ export type GroupEventDates = {
 
 export function countGroups(
   events: EventWithGroup[],
-  knownGroupKeys: Set<string>,
+  groups: ApiGroup[],
 ): { key: string; name: string; imageUrl?: string | null; count: number; events: GroupEventDates[] }[] {
+  const groupByKey = new Map(groups.map((group) => [group.key, group]));
   const counts = new Map<string, { name: string; imageUrl?: string | null; count: number; events: GroupEventDates[] }>();
   for (const event of events) {
-    if (!event.group_key || !event.group_name || !knownGroupKeys.has(event.group_key)) {
+    const group = event.group_key ? groupByKey.get(event.group_key) : undefined;
+    // event.group_name が欠けているデータでも、group_key が /groups に
+    // 存在するなら title をフォールバック名として扱い、集計対象から
+    // 漏らさないようにする。
+    const name = event.group_name || group?.title;
+    if (!event.group_key || !group || !name) {
       continue;
     }
     const entry = counts.get(event.group_key);
@@ -55,7 +61,7 @@ export function countGroups(
       entry.count += 1;
       entry.events.push(eventDates);
     } else {
-      counts.set(event.group_key, { name: event.group_name, imageUrl: event.group_image_url, count: 1, events: [eventDates] });
+      counts.set(event.group_key, { name, imageUrl: event.group_image_url, count: 1, events: [eventDates] });
     }
   }
   return [...counts.entries()]
