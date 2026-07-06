@@ -2,19 +2,26 @@ import { useEffect, useRef, useState } from 'react';
 import { Box, Flex, Button, IconButton, useMediaQuery } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 
-type KeywordChipBarProps = {
-  keywords: [string, number][];
+export type ChipItem = {
+  value: string;
+  label: string;
+};
+
+type ChipBarProps = {
+  items: ChipItem[];
   selected: string | null;
-  onSelect: (keyword: string | null) => void;
+  onSelect: (value: string | null) => void;
+  expandAriaLabel: string;
+  collapseAriaLabel: string;
 };
 
 // size=xs のボタン高 (1.5rem) に合わせて、折りたたみ時は1行分だけ見せる
 const COLLAPSED_ROW_HEIGHT = '1.5rem';
 
-export function KeywordChipBar({ keywords, selected, onSelect }: KeywordChipBarProps) {
-  const chips = keywords.map(([keyword]) => keyword);
-  if (selected && !chips.includes(selected)) {
-    chips.push(selected);
+export function ChipBar({ items, selected, onSelect, expandAriaLabel, collapseAriaLabel }: ChipBarProps) {
+  const chips = [...items];
+  if (selected && !chips.some((item) => item.value === selected)) {
+    chips.push({ value: selected, label: selected });
   }
 
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
@@ -23,7 +30,7 @@ export function KeywordChipBar({ keywords, selected, onSelect }: KeywordChipBarP
   const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
 
-  const chipsKey = chips.join('|');
+  const chipsKey = chips.map((item) => item.value).join('|');
 
   useEffect(() => {
     const el = rowRef.current;
@@ -47,13 +54,13 @@ export function KeywordChipBar({ keywords, selected, onSelect }: KeywordChipBarP
     return null;
   }
 
-  const chipButtons = chips.map((keyword) => (
-    <Button key={keyword}
+  const chipButtons = chips.map((item) => (
+    <Button key={item.value}
             size={'xs'}
             rounded={'full'}
             fontWeight={'normal'}
             flexShrink={0}
-            {...(selected === keyword ? {
+            {...(selected === item.value ? {
               bg: 'gray.600',
               color: 'white',
               _hover: { bg: 'gray.700' },
@@ -63,15 +70,15 @@ export function KeywordChipBar({ keywords, selected, onSelect }: KeywordChipBarP
               color: 'gray.600',
               borderColor: 'gray.300',
             })}
-            onClick={() => onSelect(selected === keyword ? null : keyword)}
+            onClick={() => onSelect(selected === item.value ? null : item.value)}
             >
-      {keyword}
+      {item.label}
     </Button>
   ));
 
   if (!isDesktopScreenSize) {
     return (
-      <Box className={'keyword-chip-bar'}
+      <Box className={'chip-bar'}
            position={'relative'}
            ml={'4'} mr={'4'} mb={'2'}
            >
@@ -102,7 +109,7 @@ export function KeywordChipBar({ keywords, selected, onSelect }: KeywordChipBarP
   }
 
   return (
-    <Flex className={'keyword-chip-bar'}
+    <Flex className={'chip-bar'}
           mb={'2'} gap={'2'}
           alignItems={'flex-start'}
           >
@@ -116,7 +123,7 @@ export function KeywordChipBar({ keywords, selected, onSelect }: KeywordChipBarP
         {chipButtons}
       </Flex>
       {(hasOverflow || isExpanded) && (
-        <IconButton aria-label={isExpanded ? 'キーワードを折りたたむ' : 'すべてのキーワードを表示'}
+        <IconButton aria-label={isExpanded ? collapseAriaLabel : expandAriaLabel}
                     icon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
                     size={'xs'}
                     rounded={'full'}
