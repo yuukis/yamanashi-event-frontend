@@ -65,7 +65,9 @@ function List({ startYear} : {startYear: number}) {
   const knownGroupKeys = new Set(data.groups.map((group) => group.key));
   const groupCounts = countGroups(data.events, knownGroupKeys);
   const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl, events: group.events }));
-  const selectedGroupName = groupCounts.find((group) => group.key === selectedGroup)?.name ?? null;
+  const selectedGroupName = selectedGroup
+    ? (data.groups.find((group) => group.key === selectedGroup)?.title ?? selectedGroup)
+    : null;
   const events = filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup);
 
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
