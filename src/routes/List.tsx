@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import axios from 'axios';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
-import { KeywordChipBar } from '../components/KeywordChipBar';
+import { ChipBar } from '../components/ChipBar';
 import '../style.css';
 import {
   Container,
@@ -17,7 +17,7 @@ import {
   Spacer
 } from '@chakra-ui/react';
 import { sortByStartedAtAsc } from '../utils/eventSort';
-import { enrichEventsWithGroups, isVisibleEvent } from '../utils/eventGroups';
+import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import type { ApiEvent, ApiGroup, EventWithGroup } from '../types/events';
 
@@ -36,6 +36,7 @@ function List({ startYear} : {startYear: number}) {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedKeyword = searchParams.get('keyword');
+  const selectedGroup = searchParams.get('group');
   const [data, setData] = useState<ListState>({
     isLoading: true,
     events: [],
@@ -51,8 +52,15 @@ function List({ startYear} : {startYear: number}) {
     handleKeywordSelect(selectedKeyword === keyword ? null : keyword);
   };
 
+  const handleGroupSelect = (group: string | null) => {
+    window.dispatchEvent(new Event('site-header-hold'));
+    setSearchParams(group ? { group } : {});
+  };
+
   const keywordCounts = countKeywords(data.events);
-  const events = filterEventsByKeyword(data.events, selectedKeyword);
+  const groupCounts = countGroups(data.events);
+  const groupItems = groupCounts.map((group) => ({ value: group.key, label: group.name }));
+  const events = filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup);
 
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
 
@@ -127,10 +135,20 @@ function List({ startYear} : {startYear: number}) {
                     >{ next_year }年 →</Button>
           </Stack>
           {!data.isLoading && !data.errorMessage && (
-            <KeywordChipBar keywords={keywordCounts}
-                            selected={selectedKeyword}
-                            onSelect={handleKeywordSelect}
-                            />
+            <>
+              <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                       selected={selectedKeyword}
+                       onSelect={handleKeywordSelect}
+                       expandAriaLabel={'すべてのキーワードを表示'}
+                       collapseAriaLabel={'キーワードを折りたたむ'}
+                       />
+              <ChipBar items={groupItems}
+                       selected={selectedGroup}
+                       onSelect={handleGroupSelect}
+                       expandAriaLabel={'すべてのコミュニティを表示'}
+                       collapseAriaLabel={'コミュニティを折りたたむ'}
+                       />
+            </>
           )}
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
