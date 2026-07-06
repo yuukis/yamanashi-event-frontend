@@ -5,6 +5,7 @@ import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '.
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
+import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import '../style.css';
 import {
   Container,
@@ -64,6 +65,7 @@ function List({ startYear} : {startYear: number}) {
   const knownGroupKeys = new Set(data.groups.map((group) => group.key));
   const groupCounts = countGroups(data.events, knownGroupKeys);
   const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl }));
+  const selectedGroupName = groupCounts.find((group) => group.key === selectedGroup)?.name ?? null;
   const events = filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup);
 
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
@@ -108,6 +110,11 @@ function List({ startYear} : {startYear: number}) {
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <SiteHeader />
+      <ActiveFilterBadge selectedKeyword={selectedKeyword}
+                         selectedGroupName={selectedGroupName}
+                         onClearKeyword={() => handleKeywordSelect(null)}
+                         onClearGroup={() => handleGroupSelect(null)}
+                         />
       <Container maxW={'980px'} w={'100%'}
                  mt={'4'}
                  p={{base: '0', md: '4'}}

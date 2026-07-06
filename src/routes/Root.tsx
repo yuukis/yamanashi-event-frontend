@@ -4,6 +4,7 @@ import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '.
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
+import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
 import root_bg from "../assets/images/root_bg.png";
@@ -118,6 +119,7 @@ function Root({startYear}: {startYear: number}) {
   const knownGroupKeys = new Set(data.groups.map((group) => group.key));
   const groupCounts = countGroups([...data.futureEvents, ...data.pastEvents], knownGroupKeys);
   const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl }));
+  const selectedGroupName = groupCounts.find((group) => group.key === selectedGroup)?.name ?? null;
   const futureEvents = filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup);
   const pastEvents = filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup);
 
@@ -152,6 +154,11 @@ function Root({startYear}: {startYear: number}) {
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <SiteHeader />
+      <ActiveFilterBadge selectedKeyword={selectedKeyword}
+                         selectedGroupName={selectedGroupName}
+                         onClearKeyword={() => handleKeywordSelect(null)}
+                         onClearGroup={() => handleGroupSelect(null)}
+                         />
       <Box bg={'#fffafa'}
            p={0}
            bgImg={root_top_bg}
