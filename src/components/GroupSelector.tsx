@@ -1,12 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Flex, Button, Image, Text, Skeleton, Tooltip, useMediaQuery } from '@chakra-ui/react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { Box, Flex, Button, Image, Text, Skeleton, Tooltip, Badge, useMediaQuery } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import { People } from '@chakra-icons/bootstrap';
+import { formatEventDateKey } from '../utils/eventAnchors';
+import { subscribeNow, getNow } from '../utils/nowTicker';
+
+export type GroupSelectorEvent = {
+  started_at: string;
+  ended_at: string;
+};
 
 export type GroupSelectorItem = {
   key: string;
   name: string;
   imageUrl?: string | null;
+  events: GroupSelectorEvent[];
 };
 
 type GroupSelectorProps = {
@@ -15,6 +23,8 @@ type GroupSelectorProps = {
   onSelect: (key: string | null) => void;
   isLoading: boolean;
 };
+
+type GroupBadgeType = 'ongoing' | 'today';
 
 const BLOCK_WIDTH = { base: '84px', md: '104px' };
 // 画像(IMAGE_SIZE) + gap + 2行分のコミュニティ名 + 上下padding を積み上げた高さ。
@@ -34,16 +44,54 @@ function shuffle<T>(items: T[]): T[] {
   return result;
 }
 
+// コミュニティが持つイベントの中に「開催中」「本日開催」に該当するものが
+// あるかどうかと、優先表示のための並び替えキー(該当イベントの開始日時の
+// うち最も早いもの)を求める。
+function getGroupBadge(events: GroupSelectorEvent[], now: Date): { type: GroupBadgeType | null; sortTime: number } {
+  let type: GroupBadgeType | null = null;
+  let sortTime = Infinity;
+  const todayKey = formatEventDateKey(now);
+
+  for (const event of events) {
+    const start = new Date(event.started_at);
+    const end = new Date(event.ended_at);
+    const hasEnded = now.getTime() > end.getTime();
+    if (hasEnded) {
+      continue;
+    }
+
+    const isOngoing = now.getTime() >= start.getTime();
+    const isToday = formatEventDateKey(start) === todayKey;
+    if (!isOngoing && !isToday) {
+      continue;
+    }
+
+    if (isOngoing) {
+      type = 'ongoing';
+    } else if (type !== 'ongoing') {
+      type = 'today';
+    }
+
+    if (start.getTime() < sortTime) {
+      sortTime = start.getTime();
+    }
+  }
+
+  return { type, sortTime };
+}
+
 type GroupBlockProps = {
   group: GroupSelectorItem;
+  badge: GroupBadgeType | null;
   isSelected: boolean;
   onSelect: () => void;
 };
 
-function GroupBlock({ group, isSelected, onSelect }: GroupBlockProps) {
+function GroupBlock({ group, badge, isSelected, onSelect }: GroupBlockProps) {
   return (
     <Tooltip label={group.name} hasArrow fontSize={'xs'}>
       <Button variant={'unstyled'}
+              position={'relative'}
               w={BLOCK_WIDTH}
               h={BLOCK_HEIGHT}
               flexShrink={0}
@@ -60,6 +108,26 @@ function GroupBlock({ group, isSelected, onSelect }: GroupBlockProps) {
               _hover={{ bg: isSelected ? 'gray.100' : 'gray.50' }}
               onClick={onSelect}
               >
+        {badge && (
+          <Badge position={'absolute'}
+                 top={'1px'}
+                 left={'50%'}
+                 transform={'translateX(-50%)'}
+                 bg={'#f9f1e8'}
+                 color={'impact.700'}
+                 border={'1px solid'}
+                 borderColor={'impact.500'}
+                 borderRadius={'full'}
+                 fontSize={'7px'}
+                 lineHeight={'1.4'}
+                 fontWeight={'bold'}
+                 px={'1.5'}
+                 whiteSpace={'nowrap'}
+                 zIndex={'1'}
+                 >
+            {badge === 'ongoing' ? '開催中' : '本日開催'}
+          </Badge>
+        )}
         <Box boxSize={IMAGE_SIZE}
              bg={'gray.100'}
              borderRadius={'md'}
@@ -94,8 +162,12 @@ function GroupBlock({ group, isSelected, onSelect }: GroupBlockProps) {
 
 export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSelectorProps) {
   const groupsKey = groups.map((group) => group.key).sort().join('|');
+  // ランダムな並び順は、コミュニティの集合が変わらない限り毎回の再描画で
+  // 変わらないよう固定する(バッジによる優先表示の判定とは独立させる)。
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const shuffledGroups = useMemo(() => shuffle(groups), [groupsKey]);
+  const shuffledKeys = useMemo(() => shuffle(groups.map((group) => group.key)), [groupsKey]);
+
+  const now = useSyncExternalStore(subscribeNow, getNow);
 
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -143,7 +215,19 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
     return null;
   }
 
-  const blockCount = isLoading ? SKELETON_COUNT : shuffledGroups.length;
+  const groupsByKey = new Map(groups.map((group) => [group.key, group]));
+  const badgeByKey = new Map(groups.map((group) => [group.key, getGroupBadge(group.events, now)]));
+
+  const badgedGroups = groups
+    .filter((group) => badgeByKey.get(group.key)!.type !== null)
+    .sort((a, b) => badgeByKey.get(a.key)!.sortTime - badgeByKey.get(b.key)!.sortTime);
+  const badgedKeys = new Set(badgedGroups.map((group) => group.key));
+  const otherGroups = shuffledKeys
+    .filter((key) => !badgedKeys.has(key))
+    .map((key) => groupsByKey.get(key)!);
+  const orderedGroups = [...badgedGroups, ...otherGroups];
+
+  const blockCount = isLoading ? SKELETON_COUNT : orderedGroups.length;
 
   const blocks = isLoading
     ? Array.from({length: SKELETON_COUNT}).map((_, i) => (
@@ -165,9 +249,10 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
           <Skeleton h={'0.75rem'} w={'60%'} />
         </Box>
       ))
-    : shuffledGroups.map((group) => (
+    : orderedGroups.map((group) => (
         <GroupBlock key={group.key}
                     group={group}
+                    badge={badgeByKey.get(group.key)!.type}
                     isSelected={selected === group.key}
                     onSelect={() => onSelect(selected === group.key ? null : group.key)}
                     />
