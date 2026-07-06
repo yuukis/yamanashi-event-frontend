@@ -35,8 +35,8 @@ export function isFutureEvent(event: ApiEvent) {
   return isVisibleEvent(event) && !isPastEvent(event);
 }
 
-export function countGroups(events: ApiEvent[]): { key: string; name: string; count: number }[] {
-  const counts = new Map<string, { name: string; count: number }>();
+export function countGroups(events: EventWithGroup[]): { key: string; name: string; imageUrl?: string | null; count: number }[] {
+  const counts = new Map<string, { name: string; imageUrl?: string | null; count: number }>();
   for (const event of events) {
     if (!event.group_key || !event.group_name) {
       continue;
@@ -45,11 +45,11 @@ export function countGroups(events: ApiEvent[]): { key: string; name: string; co
     if (entry) {
       entry.count += 1;
     } else {
-      counts.set(event.group_key, { name: event.group_name, count: 1 });
+      counts.set(event.group_key, { name: event.group_name, imageUrl: event.group_image_url, count: 1 });
     }
   }
   return [...counts.entries()]
-    .map(([key, { name, count }]) => ({ key, name, count }))
+    .map(([key, { name, imageUrl, count }]) => ({ key, name, imageUrl, count }))
     .sort((a, b) => b.count - a.count);
 }
 
