@@ -19,13 +19,13 @@ function handleScroll() {
   const scrollDifference = currentScrollY - lastScrollY;
   lastScrollY = currentScrollY;
 
-  if (Date.now() < holdStateUntil) {
+  if (performance.now() < holdStateUntil) {
     return;
   }
 
   if (currentScrollY < 8) {
     setVisible(true);
-  } else if (Date.now() < keepVisibleUntil) {
+  } else if (performance.now() < keepVisibleUntil) {
     setVisible(true);
   } else if (scrollDifference > 6) {
     setVisible(false);
@@ -35,12 +35,12 @@ function handleScroll() {
 }
 
 function handleShow() {
-  keepVisibleUntil = Date.now() + 700;
+  keepVisibleUntil = performance.now() + 700;
   setVisible(true);
 }
 
 function handleHold() {
-  holdStateUntil = Date.now() + 700;
+  holdStateUntil = performance.now() + 700;
 }
 
 function start() {
