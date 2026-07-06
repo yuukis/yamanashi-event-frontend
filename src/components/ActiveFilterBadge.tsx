@@ -1,5 +1,7 @@
+import { useSyncExternalStore } from 'react';
 import { Box, Container, HStack, IconButton, Text } from '@chakra-ui/react';
 import { SmallCloseIcon } from '@chakra-ui/icons';
+import { subscribeHeaderVisibility, getHeaderVisible } from '../utils/headerVisibility';
 
 type ActiveFilterBadgeProps = {
   selectedKeyword: string | null;
@@ -8,15 +10,16 @@ type ActiveFilterBadgeProps = {
   onClearGroup: () => void;
 };
 
-// ヘッダーはスクロールで自動的に隠れるため、絞り込み中であることに気づかず
-// スクロールしてしまわないよう、ヘッダーの表示状態に関係なく常に見える位置に
-// 独立して固定表示する。
+// 下スクロールでヘッダーが隠れている間はバッジもヘッダーに追随して画面上端まで
+// 詰め、隠れても絞り込み中であることに気づけるよう常に画面内に留める。
 export function ActiveFilterBadge({
   selectedKeyword,
   selectedGroupName,
   onClearKeyword,
   onClearGroup,
 }: ActiveFilterBadgeProps) {
+  const isHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
+
   if (!selectedKeyword && !selectedGroupName) {
     return null;
   }
@@ -28,10 +31,11 @@ export function ActiveFilterBadge({
 
   return (
     <Box position={'fixed'}
-         top={{base: 'calc(3rem + 7px)', md: 'calc(4rem + 7px)'}}
+         top={isHeaderVisible ? {base: 'calc(3rem + 7px)', md: 'calc(4rem + 7px)'} : '0'}
          left={'0'} right={'0'}
          zIndex={'banner'}
          pointerEvents={'none'}
+         transition={'top 180ms ease-out'}
          >
       <Container maxW={'980px'} px={{base: '4', md: '4'}}>
         <HStack w={'fit-content'}
