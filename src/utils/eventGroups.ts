@@ -34,3 +34,31 @@ export function isPastEvent(event: ApiEvent) {
 export function isFutureEvent(event: ApiEvent) {
   return isVisibleEvent(event) && !isPastEvent(event);
 }
+
+export function countGroups(events: ApiEvent[]): { key: string; name: string; count: number }[] {
+  const counts = new Map<string, { name: string; count: number }>();
+  for (const event of events) {
+    if (!event.group_key || !event.group_name) {
+      continue;
+    }
+    const entry = counts.get(event.group_key);
+    if (entry) {
+      entry.count += 1;
+    } else {
+      counts.set(event.group_key, { name: event.group_name, count: 1 });
+    }
+  }
+  return [...counts.entries()]
+    .map(([key, { name, count }]) => ({ key, name, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+export function filterEventsByGroup<T extends ApiEvent>(
+  events: T[],
+  groupKey: string | null,
+): T[] {
+  if (!groupKey) {
+    return events;
+  }
+  return events.filter((event) => event.group_key === groupKey);
+}
