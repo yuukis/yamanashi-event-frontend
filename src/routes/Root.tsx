@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
-import { KeywordChipBar } from '../components/KeywordChipBar';
+import { ChipBar } from '../components/ChipBar';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
 import root_bg from "../assets/images/root_bg.png";
@@ -22,7 +22,7 @@ import {
 } from '@chakra-ui/react';
 import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
-import { enrichEventsWithGroups, isFutureEvent, isPastEvent } from '../utils/eventGroups';
+import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { fetchEvents, fetchGroups } from '../utils/api';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
@@ -40,6 +40,7 @@ type RootState = {
 function Root({startYear}: {startYear: number}) {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedKeyword = searchParams.get('keyword');
+  const selectedGroup = searchParams.get('group');
   const [data, setData] = useState<RootState>({
     isLoading: true,
     pastEvents: [],
@@ -102,10 +103,17 @@ function Root({startYear}: {startYear: number}) {
     handleKeywordSelect(selectedKeyword === keyword ? null : keyword);
   };
 
+  const handleGroupSelect = (group: string | null) => {
+    window.dispatchEvent(new Event('site-header-hold'));
+    setSearchParams(group ? { group } : {});
+  };
+
   const futureKeywordCounts = countKeywords(data.futureEvents);
   const pastKeywordCounts = countKeywords(data.pastEvents);
-  const futureEvents = filterEventsByKeyword(data.futureEvents, selectedKeyword);
-  const pastEvents = filterEventsByKeyword(data.pastEvents, selectedKeyword);
+  const groupCounts = countGroups([...data.futureEvents, ...data.pastEvents]);
+  const groupItems = groupCounts.map((group) => ({ value: group.key, label: group.name }));
+  const futureEvents = filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup);
+  const pastEvents = filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup);
 
   const renderEventBodies = (events: EventWithGroup[], anchoredDateKeys: Set<string>) => {
     return events.map((event, index) => {
@@ -225,10 +233,20 @@ function Root({startYear}: {startYear: number}) {
             直近開催イベント
           </Heading>
           {!data.isLoading && !data.errorMessage && (
-            <KeywordChipBar keywords={futureKeywordCounts}
-                            selected={selectedKeyword}
-                            onSelect={handleKeywordSelect}
-                            />
+            <>
+              <ChipBar items={futureKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                       selected={selectedKeyword}
+                       onSelect={handleKeywordSelect}
+                       expandAriaLabel={'すべてのキーワードを表示'}
+                       collapseAriaLabel={'キーワードを折りたたむ'}
+                       />
+              <ChipBar items={groupItems}
+                       selected={selectedGroup}
+                       onSelect={handleGroupSelect}
+                       expandAriaLabel={'すべてのコミュニティを表示'}
+                       collapseAriaLabel={'コミュニティを折りたたむ'}
+                       />
+            </>
           )}
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
@@ -261,10 +279,20 @@ function Root({startYear}: {startYear: number}) {
             終了したイベント
           </Heading>
           {!data.isLoading && !data.errorMessage && (
-            <KeywordChipBar keywords={pastKeywordCounts}
-                            selected={selectedKeyword}
-                            onSelect={handleKeywordSelect}
-                            />
+            <>
+              <ChipBar items={pastKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                       selected={selectedKeyword}
+                       onSelect={handleKeywordSelect}
+                       expandAriaLabel={'すべてのキーワードを表示'}
+                       collapseAriaLabel={'キーワードを折りたたむ'}
+                       />
+              <ChipBar items={groupItems}
+                       selected={selectedGroup}
+                       onSelect={handleGroupSelect}
+                       expandAriaLabel={'すべてのコミュニティを表示'}
+                       collapseAriaLabel={'コミュニティを折りたたむ'}
+                       />
+            </>
           )}
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
