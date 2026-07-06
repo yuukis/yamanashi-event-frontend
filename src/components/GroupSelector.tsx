@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Flex, Button, Image, Text, Skeleton, useMediaQuery } from '@chakra-ui/react';
+import { Box, Flex, Button, Image, Text, Skeleton, Tooltip, useMediaQuery } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import { People } from '@chakra-icons/bootstrap';
 
@@ -20,6 +20,7 @@ const BLOCK_WIDTH = { base: '84px', md: '104px' };
 // 画像(IMAGE_SIZE) + gap + 2行分のコミュニティ名 + 上下padding を積み上げた高さ。
 // 1行のコミュニティ名でも2行のものと枠の高さが揃うよう、名前欄は常にこの高さを確保する。
 const BLOCK_HEIGHT = { base: '92px', md: '104px' };
+const EXPAND_BUTTON_WIDTH = { base: '36px', md: '44px' };
 const IMAGE_SIZE = { base: '44px', md: '56px' };
 const NAME_HEIGHT = '2.4em';
 const SKELETON_COUNT = 8;
@@ -31,6 +32,83 @@ function shuffle<T>(items: T[]): T[] {
     [result[i], result[j]] = [result[j], result[i]];
   }
   return result;
+}
+
+type GroupBlockProps = {
+  group: GroupSelectorItem;
+  isSelected: boolean;
+  onSelect: () => void;
+};
+
+function GroupBlock({ group, isSelected, onSelect }: GroupBlockProps) {
+  const nameRef = useRef<HTMLParagraphElement>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  useEffect(() => {
+    const el = nameRef.current;
+    if (!el) {
+      return;
+    }
+    const check = () => setIsTruncated(el.scrollHeight > el.clientHeight + 1);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, [group.name]);
+
+  const button = (
+    <Button variant={'unstyled'}
+            w={BLOCK_WIDTH}
+            h={BLOCK_HEIGHT}
+            flexShrink={0}
+            display={'flex'}
+            flexDirection={'column'}
+            alignItems={'center'}
+            justifyContent={'flex-start'}
+            gap={'1'}
+            p={'2'}
+            borderRadius={'md'}
+            border={'1px solid'}
+            borderColor={isSelected ? 'gray.600' : 'gray.200'}
+            bg={isSelected ? 'gray.100' : 'white'}
+            _hover={{ bg: isSelected ? 'gray.100' : 'gray.50' }}
+            onClick={onSelect}
+            >
+      <Box boxSize={IMAGE_SIZE}
+           bg={'gray.100'}
+           borderRadius={'md'}
+           display={'flex'}
+           alignItems={'center'}
+           justifyContent={'center'}
+           flexShrink={0}
+           >
+        {group.imageUrl ? (
+          <Image src={group.imageUrl} boxSize={'100%'} fit={'contain'} alt={group.name} />
+        ) : (
+          <People color={'gray.400'} />
+        )}
+      </Box>
+      <Text ref={nameRef}
+            fontSize={'xs'}
+            fontWeight={'normal'}
+            lineHeight={'1.2'}
+            textAlign={'center'}
+            whiteSpace={'normal'}
+            noOfLines={2}
+            w={'100%'}
+            h={NAME_HEIGHT}
+            wordBreak={'break-word'}
+            color={isSelected ? 'gray.700' : 'gray.600'}
+            >
+        {group.name}
+      </Text>
+    </Button>
+  );
+
+  return isTruncated ? (
+    <Tooltip label={group.name} hasArrow>
+      {button}
+    </Tooltip>
+  ) : button;
 }
 
 export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSelectorProps) {
@@ -87,52 +165,11 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
         </Box>
       ))
     : shuffledGroups.map((group) => (
-        <Button key={group.key}
-                variant={'unstyled'}
-                w={BLOCK_WIDTH}
-                h={BLOCK_HEIGHT}
-                flexShrink={0}
-                display={'flex'}
-                flexDirection={'column'}
-                alignItems={'center'}
-                justifyContent={'flex-start'}
-                gap={'1'}
-                p={'2'}
-                borderRadius={'md'}
-                border={'1px solid'}
-                borderColor={selected === group.key ? 'gray.600' : 'gray.200'}
-                bg={selected === group.key ? 'gray.100' : 'white'}
-                _hover={{ bg: selected === group.key ? 'gray.100' : 'gray.50' }}
-                onClick={() => onSelect(selected === group.key ? null : group.key)}
-                >
-          <Box boxSize={IMAGE_SIZE}
-               bg={'gray.100'}
-               borderRadius={'md'}
-               display={'flex'}
-               alignItems={'center'}
-               justifyContent={'center'}
-               flexShrink={0}
-               >
-            {group.imageUrl ? (
-              <Image src={group.imageUrl} boxSize={'100%'} fit={'contain'} alt={group.name} />
-            ) : (
-              <People color={'gray.400'} />
-            )}
-          </Box>
-          <Text fontSize={'xs'}
-                fontWeight={'normal'}
-                lineHeight={'1.2'}
-                textAlign={'center'}
-                whiteSpace={'normal'}
-                noOfLines={2}
-                w={'100%'}
-                h={NAME_HEIGHT}
-                wordBreak={'break-word'}
-                color={selected === group.key ? 'gray.700' : 'gray.600'}
-                >
-            {group.name}
-          </Text>
-        </Button>
+        <GroupBlock key={group.key}
+                    group={group}
+                    isSelected={selected === group.key}
+                    onSelect={() => onSelect(selected === group.key ? null : group.key)}
+                    />
       ));
 
   if (!isDesktopScreenSize) {
@@ -184,7 +221,7 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
       {(hasOverflow || isExpanded) && (
         <Button variant={'unstyled'}
                 aria-label={isExpanded ? '閉じる' : 'もっとみる'}
-                w={BLOCK_HEIGHT}
+                w={EXPAND_BUTTON_WIDTH}
                 h={BLOCK_HEIGHT}
                 flexShrink={0}
                 display={'flex'}
