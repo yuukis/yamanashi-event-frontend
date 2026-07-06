@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Button, Image, Text, Skeleton, Tooltip, useMediaQuery } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import { People } from '@chakra-icons/bootstrap';
@@ -41,95 +41,55 @@ type GroupBlockProps = {
 };
 
 function GroupBlock({ group, isSelected, onSelect }: GroupBlockProps) {
-  const nameRef = useRef<HTMLParagraphElement>(null);
-  const [isTruncated, setIsTruncated] = useState(false);
-
-  useLayoutEffect(() => {
-    // -webkit-line-clamp を適用した要素自身の scrollHeight/clientHeight の比較は
-    // ブラウザによって挙動が揺れるため、クランプを外した不可視の複製を作って
-    // 本来必要な高さを測り、2行分の高さと比較する。
-    const check = () => {
-      const el = nameRef.current;
-      if (!el) {
-        return;
-      }
-      const clone = el.cloneNode(true) as HTMLElement;
-      clone.style.position = 'absolute';
-      clone.style.visibility = 'hidden';
-      clone.style.pointerEvents = 'none';
-      clone.style.left = '-9999px';
-      clone.style.top = '0';
-      clone.style.height = 'auto';
-      clone.style.maxHeight = 'none';
-      clone.style.display = 'block';
-      clone.style.width = `${el.clientWidth}px`;
-      document.body.appendChild(clone);
-      const naturalHeight = clone.scrollHeight;
-      document.body.removeChild(clone);
-      setIsTruncated(naturalHeight > el.clientHeight + 1);
-    };
-    check();
-    // フォントの読み込みが遅れて折り返し位置が変わるケースに対応するため、
-    // 読み込み完了後にも再判定する。
-    document.fonts?.ready.then(check);
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, [group.name]);
-
-  const button = (
-    <Button variant={'unstyled'}
-            w={BLOCK_WIDTH}
-            h={BLOCK_HEIGHT}
-            flexShrink={0}
-            display={'flex'}
-            flexDirection={'column'}
-            alignItems={'center'}
-            justifyContent={'flex-start'}
-            gap={'1'}
-            p={'2'}
-            borderRadius={'md'}
-            border={'1px solid'}
-            borderColor={isSelected ? 'gray.600' : 'gray.200'}
-            bg={isSelected ? 'gray.100' : 'white'}
-            _hover={{ bg: isSelected ? 'gray.100' : 'gray.50' }}
-            onClick={onSelect}
-            >
-      <Box boxSize={IMAGE_SIZE}
-           bg={'gray.100'}
-           borderRadius={'md'}
-           display={'flex'}
-           alignItems={'center'}
-           justifyContent={'center'}
-           flexShrink={0}
-           >
-        {group.imageUrl ? (
-          <Image src={group.imageUrl} boxSize={'100%'} fit={'contain'} alt={group.name} />
-        ) : (
-          <People color={'gray.400'} />
-        )}
-      </Box>
-      <Text ref={nameRef}
-            fontSize={'xs'}
-            fontWeight={'normal'}
-            lineHeight={'1.2'}
-            textAlign={'center'}
-            whiteSpace={'normal'}
-            noOfLines={2}
-            w={'100%'}
-            h={NAME_HEIGHT}
-            wordBreak={'break-word'}
-            color={isSelected ? 'gray.700' : 'gray.600'}
-            >
-        {group.name}
-      </Text>
-    </Button>
-  );
-
-  return isTruncated ? (
+  return (
     <Tooltip label={group.name} hasArrow fontSize={'xs'}>
-      {button}
+      <Button variant={'unstyled'}
+              w={BLOCK_WIDTH}
+              h={BLOCK_HEIGHT}
+              flexShrink={0}
+              display={'flex'}
+              flexDirection={'column'}
+              alignItems={'center'}
+              justifyContent={'flex-start'}
+              gap={'1'}
+              p={'2'}
+              borderRadius={'md'}
+              border={'1px solid'}
+              borderColor={isSelected ? 'gray.600' : 'gray.200'}
+              bg={isSelected ? 'gray.100' : 'white'}
+              _hover={{ bg: isSelected ? 'gray.100' : 'gray.50' }}
+              onClick={onSelect}
+              >
+        <Box boxSize={IMAGE_SIZE}
+             bg={'gray.100'}
+             borderRadius={'md'}
+             display={'flex'}
+             alignItems={'center'}
+             justifyContent={'center'}
+             flexShrink={0}
+             >
+          {group.imageUrl ? (
+            <Image src={group.imageUrl} boxSize={'100%'} fit={'contain'} alt={group.name} />
+          ) : (
+            <People color={'gray.400'} />
+          )}
+        </Box>
+        <Text fontSize={'xs'}
+              fontWeight={'normal'}
+              lineHeight={'1.2'}
+              textAlign={'center'}
+              whiteSpace={'normal'}
+              noOfLines={2}
+              w={'100%'}
+              h={NAME_HEIGHT}
+              wordBreak={'break-word'}
+              color={isSelected ? 'gray.700' : 'gray.600'}
+              >
+          {group.name}
+        </Text>
+      </Button>
     </Tooltip>
-  ) : button;
+  );
 }
 
 export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSelectorProps) {
