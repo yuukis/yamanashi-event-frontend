@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
+import { GroupSelector } from '../components/GroupSelector';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
 import root_bg from "../assets/images/root_bg.png";
@@ -111,7 +112,7 @@ function Root({startYear}: {startYear: number}) {
   const futureKeywordCounts = countKeywords(data.futureEvents);
   const pastKeywordCounts = countKeywords(data.pastEvents);
   const groupCounts = countGroups([...data.futureEvents, ...data.pastEvents]);
-  const groupItems = groupCounts.map((group) => ({ value: group.key, label: group.name }));
+  const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl }));
   const futureEvents = filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup);
   const pastEvents = filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup);
 
@@ -224,6 +225,11 @@ function Root({startYear}: {startYear: number}) {
                  p={{base: '0', md: '4'}}
                  >
         <Stack>
+          <GroupSelector groups={groupSelectorItems}
+                          selected={selectedGroup}
+                          onSelect={handleGroupSelect}
+                          isLoading={data.isLoading}
+                          />
           <Heading size={{base: 'sm', md: 'md'}}
                    ml={{base: '4', md: '0'}}
                    mt={'8'}
@@ -233,20 +239,12 @@ function Root({startYear}: {startYear: number}) {
             直近開催イベント
           </Heading>
           {!data.isLoading && !data.errorMessage && (
-            <>
-              <ChipBar items={futureKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
-                       selected={selectedKeyword}
-                       onSelect={handleKeywordSelect}
-                       expandAriaLabel={'すべてのキーワードを表示'}
-                       collapseAriaLabel={'キーワードを折りたたむ'}
-                       />
-              <ChipBar items={groupItems}
-                       selected={selectedGroup}
-                       onSelect={handleGroupSelect}
-                       expandAriaLabel={'すべてのコミュニティを表示'}
-                       collapseAriaLabel={'コミュニティを折りたたむ'}
-                       />
-            </>
+            <ChipBar items={futureKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                     selected={selectedKeyword}
+                     onSelect={handleKeywordSelect}
+                     expandAriaLabel={'すべてのキーワードを表示'}
+                     collapseAriaLabel={'キーワードを折りたたむ'}
+                     />
           )}
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
@@ -279,20 +277,12 @@ function Root({startYear}: {startYear: number}) {
             終了したイベント
           </Heading>
           {!data.isLoading && !data.errorMessage && (
-            <>
-              <ChipBar items={pastKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
-                       selected={selectedKeyword}
-                       onSelect={handleKeywordSelect}
-                       expandAriaLabel={'すべてのキーワードを表示'}
-                       collapseAriaLabel={'キーワードを折りたたむ'}
-                       />
-              <ChipBar items={groupItems}
-                       selected={selectedGroup}
-                       onSelect={handleGroupSelect}
-                       expandAriaLabel={'すべてのコミュニティを表示'}
-                       collapseAriaLabel={'コミュニティを折りたたむ'}
-                       />
-            </>
+            <ChipBar items={pastKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                     selected={selectedKeyword}
+                     onSelect={handleKeywordSelect}
+                     expandAriaLabel={'すべてのキーワードを表示'}
+                     collapseAriaLabel={'キーワードを折りたたむ'}
+                     />
           )}
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
