@@ -142,28 +142,48 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
   const [hasOverflow, setHasOverflow] = useState(false);
   const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
 
+  // モバイル: 横スクロール行自体のオーバーフロー判定(フェード表示・展開ボタンとは無関係)
   useEffect(() => {
+    if (isDesktopScreenSize) {
+      return;
+    }
     const el = rowRef.current;
     if (!el) {
       return;
     }
     const check = () => {
-      setHasOverflow(
-        isDesktopScreenSize
-          ? el.scrollHeight > el.clientHeight + 1
-          : el.scrollWidth > el.clientWidth + 1
-      );
+      setHasOverflow(el.scrollWidth > el.clientWidth + 1);
       setIsScrolledToEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
     };
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
-  }, [groupsKey, isDesktopScreenSize, isExpanded, isLoading]);
+  }, [groupsKey, isDesktopScreenSize, isLoading]);
+
+  // デスクトップ: 「もっとみる」ボタンの有無で行の幅が変わってしまうと、
+  // ボタン表示の要否がボタン自身の表示状態に依存する堂々巡りになるため、
+  // ボタンを含めない全幅の非表示コピーで折り返しの要否だけを判定する。
+  useEffect(() => {
+    if (!isDesktopScreenSize) {
+      return;
+    }
+    const el = measureRef.current;
+    if (!el) {
+      return;
+    }
+    const check = () => setHasOverflow(el.scrollHeight > el.clientHeight + 1);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, [groupsKey, isDesktopScreenSize, isLoading]);
 
   if (!isLoading && groups.length === 0) {
     return null;
   }
+
+  const blockCount = isLoading ? SKELETON_COUNT : shuffledGroups.length;
 
   const blocks = isLoading
     ? Array.from({length: SKELETON_COUNT}).map((_, i) => (
@@ -226,38 +246,51 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
   }
 
   return (
-    <Flex className={'group-selector'}
-          mb={'2'} gap={'2'}
-          alignItems={'flex-start'}
-          >
-      <Flex ref={rowRef}
+    <Box className={'group-selector'} position={'relative'} mb={'2'}>
+      <Flex ref={measureRef}
+            position={'absolute'}
+            left={'0'} right={'0'} top={'0'}
+            visibility={'hidden'}
+            pointerEvents={'none'}
+            aria-hidden={'true'}
             gap={'2'}
             wrap={'wrap'}
-            flex={'1'} minW={'0'}
-            maxH={isExpanded ? undefined : BLOCK_HEIGHT}
+            maxH={BLOCK_HEIGHT}
             overflow={'hidden'}
             >
-        {blocks}
+        {Array.from({length: blockCount}).map((_, i) => (
+          <Box key={i} w={BLOCK_WIDTH} h={BLOCK_HEIGHT} flexShrink={0} />
+        ))}
       </Flex>
-      {(hasOverflow || isExpanded) && (
-        <Button variant={'unstyled'}
-                aria-label={isExpanded ? '閉じる' : 'もっとみる'}
-                w={EXPAND_BUTTON_WIDTH}
-                h={BLOCK_HEIGHT}
-                flexShrink={0}
-                display={'flex'}
-                alignItems={'center'}
-                justifyContent={'center'}
-                borderRadius={'md'}
-                border={'1px solid'}
-                borderColor={'gray.200'}
-                bg={'white'}
-                _hover={{ bg: 'gray.50' }}
-                onClick={() => setIsExpanded(!isExpanded)}
-                >
-          {isExpanded ? <ChevronUpIcon boxSize={5} color={'gray.600'} /> : <ChevronDownIcon boxSize={5} color={'gray.600'} />}
-        </Button>
-      )}
-    </Flex>
+      <Flex gap={'2'} alignItems={'flex-start'}>
+        <Flex gap={'2'}
+              wrap={'wrap'}
+              flex={'1'} minW={'0'}
+              maxH={isExpanded ? undefined : BLOCK_HEIGHT}
+              overflow={'hidden'}
+              >
+          {blocks}
+        </Flex>
+        {(hasOverflow || isExpanded) && (
+          <Button variant={'unstyled'}
+                  aria-label={isExpanded ? '閉じる' : 'もっとみる'}
+                  w={EXPAND_BUTTON_WIDTH}
+                  h={BLOCK_HEIGHT}
+                  flexShrink={0}
+                  display={'flex'}
+                  alignItems={'center'}
+                  justifyContent={'center'}
+                  borderRadius={'md'}
+                  border={'1px solid'}
+                  borderColor={'gray.200'}
+                  bg={'white'}
+                  _hover={{ bg: 'gray.50' }}
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  >
+            {isExpanded ? <ChevronUpIcon boxSize={5} color={'gray.600'} /> : <ChevronDownIcon boxSize={5} color={'gray.600'} />}
+          </Button>
+        )}
+      </Flex>
+    </Box>
   );
 }
