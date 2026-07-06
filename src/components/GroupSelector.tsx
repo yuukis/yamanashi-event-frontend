@@ -123,6 +123,7 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
                 fontWeight={'normal'}
                 lineHeight={'1.2'}
                 textAlign={'center'}
+                whiteSpace={'normal'}
                 noOfLines={2}
                 w={'100%'}
                 h={NAME_HEIGHT}
@@ -181,14 +182,22 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
         {blocks}
       </Flex>
       {(hasOverflow || isExpanded) && (
-        <Button size={'sm'}
-                variant={'ghost'}
-                color={'gray.600'}
+        <Button variant={'unstyled'}
+                aria-label={isExpanded ? '閉じる' : 'もっとみる'}
+                w={BLOCK_HEIGHT}
+                h={BLOCK_HEIGHT}
                 flexShrink={0}
-                rightIcon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                display={'flex'}
+                alignItems={'center'}
+                justifyContent={'center'}
+                borderRadius={'md'}
+                border={'1px solid'}
+                borderColor={'gray.200'}
+                bg={'white'}
+                _hover={{ bg: 'gray.50' }}
                 onClick={() => setIsExpanded(!isExpanded)}
                 >
-          {isExpanded ? '閉じる' : 'もっとみる'}
+          {isExpanded ? <ChevronUpIcon boxSize={5} color={'gray.600'} /> : <ChevronDownIcon boxSize={5} color={'gray.600'} />}
         </Button>
       )}
     </Flex>
