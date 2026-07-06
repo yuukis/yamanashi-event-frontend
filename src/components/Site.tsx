@@ -222,10 +222,6 @@ export function ICalendarButton() {
 
   const isUnmountedRef = useRef(false);
 
-  useEffect(() => () => {
-    isUnmountedRef.current = true;
-  }, []);
-
   const loadEvents = () => {
     setIsLoading(true);
 
@@ -249,7 +245,11 @@ export function ICalendarButton() {
   };
 
   useEffect(() => {
+    isUnmountedRef.current = false;
     loadEvents();
+    return () => {
+      isUnmountedRef.current = true;
+    };
   }, []);
 
   const openCalendar = () => {
