@@ -61,7 +61,7 @@ export function countGroups(
       entry.count += 1;
       entry.events.push(eventDates);
     } else {
-      counts.set(event.group_key, { name, imageUrl: event.group_image_url, count: 1, events: [eventDates] });
+      counts.set(event.group_key, { name, imageUrl: group.image_url, count: 1, events: [eventDates] });
     }
   }
   return [...counts.entries()]
