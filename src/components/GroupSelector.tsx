@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Button, Image, Text, Skeleton, Tooltip, useMediaQuery } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import { People } from '@chakra-icons/bootstrap';
@@ -44,13 +44,21 @@ function GroupBlock({ group, isSelected, onSelect }: GroupBlockProps) {
   const nameRef = useRef<HTMLParagraphElement>(null);
   const [isTruncated, setIsTruncated] = useState(false);
 
-  useEffect(() => {
-    const el = nameRef.current;
-    if (!el) {
-      return;
-    }
-    const check = () => setIsTruncated(el.scrollHeight > el.clientHeight + 1);
+  useLayoutEffect(() => {
+    // isTruncated が変わると Tooltip の有無で DOM ノードが差し替わり、ref が
+    // 更新されるため、判定のたびに nameRef.current を読み直す(古いノードを
+    // 閉じ込めない)。
+    const check = () => {
+      const el = nameRef.current;
+      if (!el) {
+        return;
+      }
+      setIsTruncated(el.scrollHeight > el.clientHeight + 1);
+    };
     check();
+    // フォントの読み込みが遅れて折り返し位置が変わるケースに対応するため、
+    // 読み込み完了後にも再判定する。
+    document.fonts?.ready.then(check);
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, [group.name]);
@@ -105,7 +113,7 @@ function GroupBlock({ group, isSelected, onSelect }: GroupBlockProps) {
   );
 
   return isTruncated ? (
-    <Tooltip label={group.name} hasArrow>
+    <Tooltip label={group.name} hasArrow fontSize={'xs'}>
       {button}
     </Tooltip>
   ) : button;
