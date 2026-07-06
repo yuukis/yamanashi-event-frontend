@@ -35,10 +35,13 @@ export function isFutureEvent(event: ApiEvent) {
   return isVisibleEvent(event) && !isPastEvent(event);
 }
 
-export function countGroups(events: EventWithGroup[]): { key: string; name: string; imageUrl?: string | null; count: number }[] {
+export function countGroups(
+  events: EventWithGroup[],
+  knownGroupKeys: Set<string>,
+): { key: string; name: string; imageUrl?: string | null; count: number }[] {
   const counts = new Map<string, { name: string; imageUrl?: string | null; count: number }>();
   for (const event of events) {
-    if (!event.group_key || !event.group_name) {
+    if (!event.group_key || !event.group_name || !knownGroupKeys.has(event.group_key)) {
       continue;
     }
     const entry = counts.get(event.group_key);

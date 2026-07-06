@@ -28,12 +28,13 @@ import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { fetchEvents, fetchGroups } from '../utils/api';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { scrollToCurrentHash } from '../utils/hashScroll';
-import type { EventWithGroup } from '../types/events';
+import type { ApiGroup, EventWithGroup } from '../types/events';
 
 type RootState = {
   isLoading: boolean;
   pastEvents: EventWithGroup[];
   futureEvents: EventWithGroup[];
+  groups: ApiGroup[];
   lastModified: string | null;
   errorMessage: string;
 };
@@ -46,6 +47,7 @@ function Root({startYear}: {startYear: number}) {
     isLoading: true,
     pastEvents: [],
     futureEvents: [],
+    groups: [],
     lastModified: null,
     errorMessage: ''
   });
@@ -65,6 +67,7 @@ function Root({startYear}: {startYear: number}) {
           isLoading: false,
           pastEvents: [],
           futureEvents: [],
+          groups: [],
           lastModified: null,
           errorMessage: err.message
         }
@@ -80,6 +83,7 @@ function Root({startYear}: {startYear: number}) {
         isLoading: false,
         pastEvents: events.filter(isPastEvent).sort(sortByStartedAtDesc),
         futureEvents: events.filter(isFutureEvent).sort(sortByStartedAtAsc),
+        groups,
         lastModified: eventsResponse.lastModified,
         errorMessage: ''
       }
@@ -111,7 +115,8 @@ function Root({startYear}: {startYear: number}) {
 
   const futureKeywordCounts = countKeywords(data.futureEvents);
   const pastKeywordCounts = countKeywords(data.pastEvents);
-  const groupCounts = countGroups([...data.futureEvents, ...data.pastEvents]);
+  const knownGroupKeys = new Set(data.groups.map((group) => group.key));
+  const groupCounts = countGroups([...data.futureEvents, ...data.pastEvents], knownGroupKeys);
   const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl }));
   const futureEvents = filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup);
   const pastEvents = filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup);

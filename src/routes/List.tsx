@@ -25,6 +25,7 @@ import type { ApiEvent, ApiGroup, EventWithGroup } from '../types/events';
 type ListState = {
   isLoading: boolean;
   events: EventWithGroup[];
+  groups: ApiGroup[];
   lastModified: string | null;
   errorMessage: string;
 };
@@ -41,6 +42,7 @@ function List({ startYear} : {startYear: number}) {
   const [data, setData] = useState<ListState>({
     isLoading: true,
     events: [],
+    groups: [],
     lastModified: null,
     errorMessage: ''
   });
@@ -59,7 +61,8 @@ function List({ startYear} : {startYear: number}) {
   };
 
   const keywordCounts = countKeywords(data.events);
-  const groupCounts = countGroups(data.events);
+  const knownGroupKeys = new Set(data.groups.map((group) => group.key));
+  const groupCounts = countGroups(data.events, knownGroupKeys);
   const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl }));
   const events = filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup);
 
@@ -77,6 +80,7 @@ function List({ startYear} : {startYear: number}) {
         const data = {
           isLoading: false,
           events: [],
+          groups: [],
           lastModified: null,
           errorMessage: err.message
         }
@@ -84,13 +88,15 @@ function List({ startYear} : {startYear: number}) {
         return;
       }
 
+      const groups = group_res.data as ApiGroup[];
       const events = enrichEventsWithGroups(
         res.data as ApiEvent[],
-        group_res.data as ApiGroup[],
+        groups,
       );
       const data = {
         isLoading: false,
         events: events.filter(isVisibleEvent).sort(sortByStartedAtAsc),
+        groups,
         lastModified: res.headers['last-modified'],
         errorMessage: ''
       }
