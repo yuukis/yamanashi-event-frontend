@@ -271,6 +271,7 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
            >
         <Flex ref={rowRef}
               gap={'2'}
+              pt={BADGE_OVERLAP}
               overflowX={'auto'}
               onScroll={(e) => {
                 const el = e.currentTarget;
