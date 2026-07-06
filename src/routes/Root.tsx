@@ -42,8 +42,10 @@ type RootState = {
 
 function Root({startYear}: {startYear: number}) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const selectedKeyword = searchParams.get('keyword');
   const selectedGroup = searchParams.get('group');
+  // keyword と group は排他。手入力やブックマークなど、両方のクエリが
+  // 同時に付いた URL が渡された場合は group を優先する。
+  const selectedKeyword = selectedGroup ? null : searchParams.get('keyword');
   const [data, setData] = useState<RootState>({
     isLoading: true,
     pastEvents: [],
@@ -54,6 +56,12 @@ function Root({startYear}: {startYear: number}) {
   });
 
   document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
+
+  useEffect(() => {
+    if (searchParams.get('keyword') && searchParams.get('group')) {
+      setSearchParams({ group: searchParams.get('group')! });
+    }
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     const getData = async () => {
@@ -116,8 +124,7 @@ function Root({startYear}: {startYear: number}) {
 
   const futureKeywordCounts = countKeywords(data.futureEvents);
   const pastKeywordCounts = countKeywords(data.pastEvents);
-  const knownGroupKeys = new Set(data.groups.map((group) => group.key));
-  const groupCounts = countGroups([...data.futureEvents, ...data.pastEvents], knownGroupKeys);
+  const groupCounts = countGroups([...data.futureEvents, ...data.pastEvents], data.groups);
   const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl, events: group.events }));
   const selectedGroupName = selectedGroup
     ? (data.groups.find((group) => group.key === selectedGroup)?.title ?? selectedGroup)
