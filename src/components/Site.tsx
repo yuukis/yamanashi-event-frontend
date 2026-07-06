@@ -33,7 +33,7 @@ import { keyframes } from '@emotion/react';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
 import { subscribeNow, getNow } from '../utils/nowTicker';
-import { subscribeHeaderVisibility, getHeaderVisible } from '../utils/headerVisibility';
+import { subscribeHeaderVisibility, getHeaderVisible, HEADER_HEIGHT } from '../utils/headerVisibility';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiEvent } from '../types/events';
 
@@ -90,7 +90,7 @@ export function SiteHeader() {
           <Box h={'1px'} bg={'primary.500'} />
         </Stack>
       </Box>
-      <Box h={{base: 'calc(3rem + 7px)', md: 'calc(4rem + 7px)'}} />
+      <Box h={HEADER_HEIGHT} />
     </>
   );
 }

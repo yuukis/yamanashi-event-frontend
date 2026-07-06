@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { Box, Container, HStack, IconButton, Text } from '@chakra-ui/react';
 import { SmallCloseIcon } from '@chakra-ui/icons';
-import { subscribeHeaderVisibility, getHeaderVisible } from '../utils/headerVisibility';
+import { subscribeHeaderVisibility, getHeaderVisible, HEADER_HEIGHT } from '../utils/headerVisibility';
 
 type ActiveFilterBadgeProps = {
   selectedKeyword: string | null;
@@ -31,7 +31,7 @@ export function ActiveFilterBadge({
 
   return (
     <Box position={'fixed'}
-         top={isHeaderVisible ? {base: 'calc(3rem + 7px)', md: 'calc(4rem + 7px)'} : '0'}
+         top={isHeaderVisible ? HEADER_HEIGHT : '0'}
          left={'0'} right={'0'}
          zIndex={'banner'}
          pointerEvents={'none'}

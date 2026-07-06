@@ -1,5 +1,10 @@
 type Listener = () => void;
 
+// SiteHeader の実高さ(ロゴ行 + 下線3本分)。ActiveFilterBadge がヘッダー
+// 直下に位置合わせする際にも同じ値を使うため、両方から参照できるように
+// ここで定義する。
+export const HEADER_HEIGHT = { base: 'calc(3rem + 7px)', md: 'calc(4rem + 7px)' };
+
 let isHeaderVisible = true;
 let lastScrollY = 0;
 let keepVisibleUntil = 0;
