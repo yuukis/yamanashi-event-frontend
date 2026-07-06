@@ -118,7 +118,7 @@ function Root({startYear}: {startYear: number}) {
   const pastKeywordCounts = countKeywords(data.pastEvents);
   const knownGroupKeys = new Set(data.groups.map((group) => group.key));
   const groupCounts = countGroups([...data.futureEvents, ...data.pastEvents], knownGroupKeys);
-  const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl }));
+  const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl, events: group.events }));
   const selectedGroupName = groupCounts.find((group) => group.key === selectedGroup)?.name ?? null;
   const futureEvents = filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup);
   const pastEvents = filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup);

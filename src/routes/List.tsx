@@ -64,7 +64,7 @@ function List({ startYear} : {startYear: number}) {
   const keywordCounts = countKeywords(data.events);
   const knownGroupKeys = new Set(data.groups.map((group) => group.key));
   const groupCounts = countGroups(data.events, knownGroupKeys);
-  const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl }));
+  const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl, events: group.events }));
   const selectedGroupName = groupCounts.find((group) => group.key === selectedGroup)?.name ?? null;
   const events = filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup);
 

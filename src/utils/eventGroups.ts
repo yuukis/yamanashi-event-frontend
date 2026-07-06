@@ -35,24 +35,31 @@ export function isFutureEvent(event: ApiEvent) {
   return isVisibleEvent(event) && !isPastEvent(event);
 }
 
+export type GroupEventDates = {
+  started_at: string;
+  ended_at: string;
+};
+
 export function countGroups(
   events: EventWithGroup[],
   knownGroupKeys: Set<string>,
-): { key: string; name: string; imageUrl?: string | null; count: number }[] {
-  const counts = new Map<string, { name: string; imageUrl?: string | null; count: number }>();
+): { key: string; name: string; imageUrl?: string | null; count: number; events: GroupEventDates[] }[] {
+  const counts = new Map<string, { name: string; imageUrl?: string | null; count: number; events: GroupEventDates[] }>();
   for (const event of events) {
     if (!event.group_key || !event.group_name || !knownGroupKeys.has(event.group_key)) {
       continue;
     }
     const entry = counts.get(event.group_key);
+    const eventDates = { started_at: event.started_at, ended_at: event.ended_at };
     if (entry) {
       entry.count += 1;
+      entry.events.push(eventDates);
     } else {
-      counts.set(event.group_key, { name: event.group_name, imageUrl: event.group_image_url, count: 1 });
+      counts.set(event.group_key, { name: event.group_name, imageUrl: event.group_image_url, count: 1, events: [eventDates] });
     }
   }
   return [...counts.entries()]
-    .map(([key, { name, imageUrl, count }]) => ({ key, name, imageUrl, count }))
+    .map(([key, { name, imageUrl, count, events: groupEvents }]) => ({ key, name, imageUrl, count, events: groupEvents }))
     .sort((a, b) => b.count - a.count);
 }
 
