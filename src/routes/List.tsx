@@ -6,18 +6,19 @@ import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '..
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
+import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
 import '../style.css';
 import {
   Container,
   Box,
   Stack,
-  StackDivider,
   Card,
   CardBody,
   Heading,
   Button,
   Spacer
 } from '@chakra-ui/react';
+import { AnimatePresence } from 'framer-motion';
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -175,7 +176,7 @@ function List({ startYear} : {startYear: number}) {
                 p={'0'}
                 >
             <CardBody>
-              <Stack spacing={{base: '0', md: '0.5em'}} divider={<StackDivider />}>
+              <Stack spacing={EVENT_LIST_SPACING}>
               {data.isLoading ? (
                   <SkeletonEventBody />
                 ) : data.errorMessage ? (
@@ -183,14 +184,17 @@ function List({ startYear} : {startYear: number}) {
                 ) : events.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  events.map((event) => {
-                    return <EventBody key={event.uid}
-                                      event={event}
-                                      selectedKeyword={selectedKeyword}
-                                      onKeywordClick={handleKeywordClick}
-                                      />
-                  }
-                ))}
+                  <AnimatePresence initial={false}>
+                    {events.map((event) => (
+                      <AnimatedEventItem key={event.uid}>
+                        <EventBody event={event}
+                                   selectedKeyword={selectedKeyword}
+                                   onKeywordClick={handleKeywordClick}
+                                   />
+                      </AnimatedEventItem>
+                    ))}
+                  </AnimatePresence>
+                )}
               </Stack>
             </CardBody>
           </Card>
