@@ -150,7 +150,7 @@ function Root({startYear}: {startYear: number}) {
         anchoredDateKeys.add(eventDateKey);
       }
 
-      return <AnimatedEventItem key={event.uid} eventKey={event.uid}>
+      return <AnimatedEventItem key={event.uid}>
               <EventBody event={event}
                         anchorId={anchorId}
                         selectedKeyword={selectedKeyword}

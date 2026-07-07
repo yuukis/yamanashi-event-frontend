@@ -186,7 +186,7 @@ function List({ startYear} : {startYear: number}) {
                 ) : (
                   <AnimatePresence initial={false}>
                     {events.map((event) => (
-                      <AnimatedEventItem key={event.uid} eventKey={event.uid}>
+                      <AnimatedEventItem key={event.uid}>
                         <EventBody event={event}
                                    selectedKeyword={selectedKeyword}
                                    onKeywordClick={handleKeywordClick}
