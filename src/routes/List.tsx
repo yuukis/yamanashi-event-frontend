@@ -6,6 +6,7 @@ import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '..
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
+import { AnimatedEventItem } from '../components/AnimatedEventItem';
 import '../style.css';
 import {
   Container,
@@ -15,12 +16,9 @@ import {
   CardBody,
   Heading,
   Button,
-  Spacer,
-  chakra
+  Spacer
 } from '@chakra-ui/react';
-import { AnimatePresence, motion } from 'framer-motion';
-
-const MotionEventItem = motion(chakra.div);
+import { AnimatePresence } from 'framer-motion';
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -188,24 +186,12 @@ function List({ startYear} : {startYear: number}) {
                 ) : (
                   <AnimatePresence initial={false}>
                     {events.map((event) => (
-                      <MotionEventItem key={event.uid}
-                                       layout
-                                       initial={{ opacity: 0 }}
-                                       animate={{ opacity: 1 }}
-                                       exit={{ opacity: 0 }}
-                                       transition={{ duration: 0.2 }}
-                                       sx={{
-                                         '&:not(:last-child)': {
-                                           borderBottomWidth: '1px',
-                                           borderColor: 'gray.200',
-                                         },
-                                       }}
-                                       >
+                      <AnimatedEventItem key={event.uid} eventKey={event.uid}>
                         <EventBody event={event}
                                    selectedKeyword={selectedKeyword}
                                    onKeywordClick={handleKeywordClick}
                                    />
-                      </MotionEventItem>
+                      </AnimatedEventItem>
                     ))}
                   </AnimatePresence>
                 )}

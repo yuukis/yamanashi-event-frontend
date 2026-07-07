@@ -5,6 +5,7 @@ import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '..
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
+import { AnimatedEventItem } from '../components/AnimatedEventItem';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
 import root_bg from "../assets/images/root_bg.png";
@@ -13,7 +14,6 @@ import {
   Container,
   Box,
   Stack,
-  StackDivider,
   Card,
   CardBody,
   Heading,
@@ -22,6 +22,7 @@ import {
   Link,
   Button
 } from '@chakra-ui/react';
+import { AnimatePresence } from 'framer-motion';
 import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
@@ -149,12 +150,13 @@ function Root({startYear}: {startYear: number}) {
         anchoredDateKeys.add(eventDateKey);
       }
 
-      return <EventBody key={event.uid}
-                        event={event}
+      return <AnimatedEventItem key={event.uid} eventKey={event.uid}>
+              <EventBody event={event}
                         anchorId={anchorId}
                         selectedKeyword={selectedKeyword}
                         onKeywordClick={handleKeywordClick}
-                        />;
+                        />
+            </AnimatedEventItem>;
     });
   };
 
@@ -272,7 +274,7 @@ function Root({startYear}: {startYear: number}) {
                 p={'0'}
                 >
             <CardBody>
-              <Stack spacing={{base: '0', md: '0.5em'}} divider={<StackDivider />}>
+              <Stack spacing={{base: '0', md: '0.5em'}}>
                 {data.isLoading ? (
                   <SkeletonEventBody />
                 ) : data.errorMessage ? (
@@ -280,7 +282,9 @@ function Root({startYear}: {startYear: number}) {
                 ) : futureEvents.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  renderEventBodies(futureEvents, anchoredDateKeys)
+                  <AnimatePresence initial={false}>
+                    {renderEventBodies(futureEvents, anchoredDateKeys)}
+                  </AnimatePresence>
                 )}
               </Stack>
             </CardBody>
@@ -310,7 +314,7 @@ function Root({startYear}: {startYear: number}) {
                 p={'0'}
                 >
             <CardBody>
-              <Stack spacing={{base: '0', md: '0.5em'}} divider={<StackDivider />}>
+              <Stack spacing={{base: '0', md: '0.5em'}}>
                 {data.isLoading ? (
                   <SkeletonEventBody />
                 ) : data.errorMessage ? (
@@ -318,7 +322,9 @@ function Root({startYear}: {startYear: number}) {
                 ) : pastEvents.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  renderEventBodies(pastEvents, anchoredDateKeys)
+                  <AnimatePresence initial={false}>
+                    {renderEventBodies(pastEvents, anchoredDateKeys)}
+                  </AnimatePresence>
                 )}
               </Stack>
             </CardBody>
