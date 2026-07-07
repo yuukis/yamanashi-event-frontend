@@ -2,12 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { scrollToCurrentHash } from './hashScroll';
 
 describe('scrollToCurrentHash', () => {
-  let rafSpy: ReturnType<typeof vi.spyOn>;
-
   beforeEach(() => {
     window.location.hash = '';
     vi.useFakeTimers();
-    rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
       cb(0);
       return 0;
     });
@@ -15,7 +13,6 @@ describe('scrollToCurrentHash', () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    rafSpy.mockRestore();
   });
 
   it('does nothing when there is no hash', () => {
