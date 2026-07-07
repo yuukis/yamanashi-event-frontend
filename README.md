@@ -10,6 +10,16 @@ This application is available at the following URL.
 
 https://hub.yamanashi.dev
 
+## Features
+
+- **Event listing** - Browse upcoming and past tech events in Yamanashi, grouped by year, with today's/ongoing events highlighted.
+- **Filter by keyword or community** - Narrow down events by keyword tag or by the community (group) hosting them.
+- **Event calendar** - View a monthly mini calendar of events from the header, with a shareable iCalendar URL to subscribe from external calendar apps.
+- **Push notifications** - Opt in to browser push notifications so you don't miss newly added events.
+- **Guide page** - A `/guide` page introducing the site and how to get started attending community events.
+
+Event data is sourced from [connpass](https://connpass.com) and community-provided event calendars/archives.
+
 ## Getting Started
 
 ### Prerequisites
