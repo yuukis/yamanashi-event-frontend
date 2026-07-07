@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
@@ -30,6 +30,7 @@ import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { fetchEvents, fetchGroups } from '../utils/api';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { scrollToCurrentHash } from '../utils/hashScroll';
+import { HEADER_HEIGHT } from '../utils/headerVisibility';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
 type RootState = {
@@ -110,6 +111,10 @@ function Root({startYear}: {startYear: number}) {
     window.requestAnimationFrame(scrollToCurrentHash);
   }, [data.errorMessage, data.isLoading, data.futureEvents, data.pastEvents]);
 
+  const heroOuterRef = useRef<HTMLDivElement | null>(null);
+  const heroInnerRef = useRef<HTMLDivElement | null>(null);
+  const heroContentRef = useRef<HTMLDivElement | null>(null);
+
   const handleKeywordSelect = (keyword: string | null) => {
     window.dispatchEvent(new Event('site-header-hold'));
     setSearchParams(keyword ? { keyword } : {});
@@ -170,20 +175,29 @@ function Root({startYear}: {startYear: number}) {
                          onClearKeyword={() => handleKeywordSelect(null)}
                          onClearGroup={() => handleGroupSelect(null)}
                          />
-      <Box bg={'#fffafa'}
-           p={0}
-           bgImg={root_top_bg}
-           bgPos={'top'}
-           bgRepeat={'repeat-x'}
-           bgSize={{base: '100px', md: '50px'}}
+      <Box ref={heroOuterRef}
+           position={'relative'}
            >
-        <Box p={0}
-            bgImg={root_bg}
-            bgPos={'50% bottom'}
-            bgRepeat={'no-repeat'}
-            bgSize={{base: '200%', md: '960px'}}
-            >
-          <Container maxW={'860px'}
+        <Box ref={heroInnerRef}
+             position={'sticky'}
+             top={HEADER_HEIGHT}
+             overflow={'hidden'}
+             >
+          <Box ref={heroContentRef}
+               bg={'#fffafa'}
+               p={0}
+               bgImg={root_top_bg}
+               bgPos={'top'}
+               bgRepeat={'repeat-x'}
+               bgSize={{base: '100px', md: '50px'}}
+               >
+            <Box p={0}
+                bgImg={root_bg}
+                bgPos={'50% bottom'}
+                bgRepeat={'no-repeat'}
+                bgSize={{base: '200%', md: '960px'}}
+                >
+              <Container maxW={'860px'}
                     p={{base: '8', md: '4'}}
                     w={'100%'}
                     h={{md: '320px'}}
@@ -240,8 +254,10 @@ function Root({startYear}: {startYear: number}) {
                   はじめての方へ
                 </Button>
               </Box>
-            </Stack>          
-          </Container>
+            </Stack>
+              </Container>
+            </Box>
+          </Box>
         </Box>
       </Box>
       <Container maxW={'980px'} w={'100%'}
