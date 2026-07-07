@@ -115,6 +115,60 @@ function Root({startYear}: {startYear: number}) {
   const heroInnerRef = useRef<HTMLDivElement | null>(null);
   const heroContentRef = useRef<HTMLDivElement | null>(null);
 
+  // 「はじめての方へ」ボタンとコミュニティブロックの間の背景色の境界を、
+  // スクロール量の半分だけ移動させるパララックス効果。
+  // outer は常に一定の高さ(コンテンツの2倍)を保つことでページ全体の
+  // reflow を避け、inner の高さだけをスクロールに応じて縮めることで
+  // 境界(inner の下端)がスクロール量の半分の速さで上がるようにする。
+  useEffect(() => {
+    const outer = heroOuterRef.current;
+    const inner = heroInnerRef.current;
+    const content = heroContentRef.current;
+    if (!outer || !inner || !content) {
+      return;
+    }
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    const PARALLAX_RATE = 0.5;
+    let naturalHeight = 0;
+    let ticking = false;
+
+    const applyParallax = () => {
+      ticking = false;
+      const overScroll = Math.max(0, window.scrollY - outer.offsetTop);
+      const displayHeight = Math.max(0, naturalHeight - overScroll * PARALLAX_RATE);
+      inner.style.height = `${displayHeight}px`;
+    };
+
+    const requestTick = () => {
+      if (!ticking) {
+        ticking = true;
+        window.requestAnimationFrame(applyParallax);
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      naturalHeight = content.getBoundingClientRect().height;
+      outer.style.height = `${naturalHeight * 2}px`;
+      requestTick();
+    });
+    resizeObserver.observe(content);
+
+    window.addEventListener('scroll', requestTick, { passive: true });
+    window.addEventListener('resize', requestTick);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('scroll', requestTick);
+      window.removeEventListener('resize', requestTick);
+      outer.style.height = '';
+      inner.style.height = '';
+    };
+  }, []);
+
   const handleKeywordSelect = (keyword: string | null) => {
     window.dispatchEvent(new Event('site-header-hold'));
     setSearchParams(keyword ? { keyword } : {});
