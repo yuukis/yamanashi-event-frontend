@@ -9,6 +9,12 @@ afterEach(() => {
   cleanup();
 });
 
+// jsdom does not implement scrollTo on elements; Chakra UI's Menu calls it
+// on open to scroll the active item into view.
+if (!window.HTMLElement.prototype.scrollTo) {
+  window.HTMLElement.prototype.scrollTo = () => {};
+}
+
 // jsdom does not implement matchMedia; Chakra UI's useMediaQuery depends on it.
 if (!window.matchMedia) {
   window.matchMedia = () => ({

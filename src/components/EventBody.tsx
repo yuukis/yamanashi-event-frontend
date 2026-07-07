@@ -56,6 +56,21 @@ type EventBodyProps = {
   onKeywordClick?: (keyword: string) => void;
 };
 
+function buildJstDayScopedSearchPrefix(start_date: Date): string {
+  const jst_date_formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const jst_date_parts = jst_date_formatter.formatToParts(start_date);
+  const jst_date_part = (type: string) => jst_date_parts.find((part) => part.type === type)?.value;
+  const start_date_str = `${jst_date_part('year')}-${jst_date_part('month')}-${jst_date_part('day')}`;
+  const since_time = Math.floor(new Date(start_date_str + "T00:00:00+09:00").getTime() / 1000);
+  const until_time = Math.floor(new Date(start_date_str + "T23:59:59+09:00").getTime() / 1000);
+  return "since_time:" + since_time + " until_time:" + until_time + " ";
+}
+
 export function EventBody(data: EventBodyProps) {
 
   const day_of_week = ['日', '月', '火', '水', '木', '金', '土'];
@@ -95,10 +110,12 @@ export function EventBody(data: EventBodyProps) {
   if (group_name) {
     x_search_keywords_array.push("\"" + group_name+ "\"");
   }
-  const start_date_str = start_date.toISOString().split('T')[0];
-  const x_search_since_until = "since:" + start_date_str + "_00:00:00_JST until:" + start_date_str + "_23:59:59_JST";
-  const x_search_query = x_search_since_until + " " + x_search_keywords_array.join(" OR ");
-  const event_x_search_url = "https://x.com/search?q=" + encodeURIComponent(x_search_query);
+  const x_search_since_until = has_ended ? buildJstDayScopedSearchPrefix(start_date) : "";
+  const x_search_query = x_search_since_until + x_search_keywords_array.join(" OR ");
+  const event_x_search_url = "https://x.com/search?q=" + encodeURIComponent(x_search_query) + "&f=live";
+  const x_search_label = has_ended
+    ? "イベント当日の X(Twitter) 投稿を検索"
+    : "イベントに関する X(Twitter) 投稿を検索";
 
   const address_array = [address, place].filter(Boolean);
 
@@ -444,7 +461,7 @@ export function EventBody(data: EventBodyProps) {
                         <MenuItem icon={<FaXTwitter />}
                                   onClick={() => window.open(event_x_search_url)}
                                   >
-                          イベント当日の X(Twitter) 投稿を検索
+                          { x_search_label }
                         </MenuItem>
                         {archive_url && (
                           <MenuItem icon={<FiArchive />}
@@ -511,7 +528,7 @@ export function EventBody(data: EventBodyProps) {
                         onClose();
                       }}
                       >
-                イベント当日の X(Twitter) 投稿を検索
+                { x_search_label }
               </Button>
               {archive_url && (
                 <Button w="full"
