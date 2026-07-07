@@ -96,7 +96,9 @@ export function EventBody(data: EventBodyProps) {
     x_search_keywords_array.push("\"" + group_name+ "\"");
   }
   const start_date_str = start_date.toISOString().split('T')[0];
-  const x_search_since_until = "since:" + start_date_str + "_00:00:00_JST until:" + start_date_str + "_23:59:59_JST";
+  const x_search_since_time = Math.floor(new Date(start_date_str + "T00:00:00+09:00").getTime() / 1000);
+  const x_search_until_time = Math.floor(new Date(start_date_str + "T23:59:59+09:00").getTime() / 1000);
+  const x_search_since_until = "since_time:" + x_search_since_time + " until_time:" + x_search_until_time;
   const x_search_query = x_search_since_until + " " + x_search_keywords_array.join(" OR ");
   const event_x_search_url = "https://x.com/search?q=" + encodeURIComponent(x_search_query);
 
