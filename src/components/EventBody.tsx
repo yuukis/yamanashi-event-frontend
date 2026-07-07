@@ -100,7 +100,7 @@ export function EventBody(data: EventBodyProps) {
   const x_search_until_time = Math.floor(new Date(start_date_str + "T23:59:59+09:00").getTime() / 1000);
   const x_search_since_until = "since_time:" + x_search_since_time + " until_time:" + x_search_until_time;
   const x_search_query = x_search_since_until + " " + x_search_keywords_array.join(" OR ");
-  const event_x_search_url = "https://x.com/search?q=" + encodeURIComponent(x_search_query);
+  const event_x_search_url = "https://x.com/search?q=" + encodeURIComponent(x_search_query) + "&f=live";
 
   const address_array = [address, place].filter(Boolean);
 
