@@ -95,7 +95,13 @@ export function EventBody(data: EventBodyProps) {
   if (group_name) {
     x_search_keywords_array.push("\"" + group_name+ "\"");
   }
-  const start_date_str = formatEventDateKey(start_date);
+  const jst_date_formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const start_date_str = jst_date_formatter.format(start_date);
   const x_search_since_time = Math.floor(new Date(start_date_str + "T00:00:00+09:00").getTime() / 1000);
   const x_search_until_time = Math.floor(new Date(start_date_str + "T23:59:59+09:00").getTime() / 1000);
   const x_search_since_until = "since_time:" + x_search_since_time + " until_time:" + x_search_until_time;

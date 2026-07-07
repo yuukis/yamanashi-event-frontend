@@ -147,6 +147,8 @@ describe('EventBody', () => {
     const expected_query = encodeURIComponent(`since_time:${since_time} until_time:${until_time} "甲府もくもく会 #1"`);
 
     expect(windowOpenSpy).toHaveBeenCalledWith(`https://x.com/search?q=${expected_query}&f=live`);
+
+    windowOpenSpy.mockRestore();
   });
 });
 
