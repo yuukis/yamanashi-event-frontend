@@ -11,13 +11,16 @@ import {
   Container,
   Box,
   Stack,
-  StackDivider,
   Card,
   CardBody,
   Heading,
   Button,
-  Spacer
+  Spacer,
+  chakra
 } from '@chakra-ui/react';
+import { AnimatePresence, motion } from 'framer-motion';
+
+const MotionEventItem = motion(chakra.div);
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -175,7 +178,7 @@ function List({ startYear} : {startYear: number}) {
                 p={'0'}
                 >
             <CardBody>
-              <Stack spacing={{base: '0', md: '0.5em'}} divider={<StackDivider />}>
+              <Stack spacing={{base: '0', md: '0.5em'}}>
               {data.isLoading ? (
                   <SkeletonEventBody />
                 ) : data.errorMessage ? (
@@ -183,14 +186,29 @@ function List({ startYear} : {startYear: number}) {
                 ) : events.length === 0 ? (
                   <EmptyEventBody />
                 ) : (
-                  events.map((event) => {
-                    return <EventBody key={event.uid}
-                                      event={event}
-                                      selectedKeyword={selectedKeyword}
-                                      onKeywordClick={handleKeywordClick}
-                                      />
-                  }
-                ))}
+                  <AnimatePresence initial={false}>
+                    {events.map((event) => (
+                      <MotionEventItem key={event.uid}
+                                       layout
+                                       initial={{ opacity: 0 }}
+                                       animate={{ opacity: 1 }}
+                                       exit={{ opacity: 0 }}
+                                       transition={{ duration: 0.2 }}
+                                       sx={{
+                                         '&:not(:last-child)': {
+                                           borderBottomWidth: '1px',
+                                           borderColor: 'gray.200',
+                                         },
+                                       }}
+                                       >
+                        <EventBody event={event}
+                                   selectedKeyword={selectedKeyword}
+                                   onKeywordClick={handleKeywordClick}
+                                   />
+                      </MotionEventItem>
+                    ))}
+                  </AnimatePresence>
+                )}
               </Stack>
             </CardBody>
           </Card>
