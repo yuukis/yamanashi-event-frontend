@@ -6,7 +6,7 @@ import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '..
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
-import { AnimatedEventItem } from '../components/AnimatedEventItem';
+import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
 import '../style.css';
 import {
   Container,
@@ -176,7 +176,7 @@ function List({ startYear} : {startYear: number}) {
                 p={'0'}
                 >
             <CardBody>
-              <Stack spacing={{base: '0', md: '0.5em'}}>
+              <Stack spacing={EVENT_LIST_SPACING}>
               {data.isLoading ? (
                   <SkeletonEventBody />
                 ) : data.errorMessage ? (
