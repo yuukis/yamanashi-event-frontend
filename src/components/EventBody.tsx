@@ -104,9 +104,14 @@ export function EventBody(data: EventBodyProps) {
   const start_date_str = jst_date_formatter.format(start_date);
   const x_search_since_time = Math.floor(new Date(start_date_str + "T00:00:00+09:00").getTime() / 1000);
   const x_search_until_time = Math.floor(new Date(start_date_str + "T23:59:59+09:00").getTime() / 1000);
-  const x_search_since_until = "since_time:" + x_search_since_time + " until_time:" + x_search_until_time;
-  const x_search_query = x_search_since_until + " " + x_search_keywords_array.join(" OR ");
+  const x_search_since_until = has_ended
+    ? "since_time:" + x_search_since_time + " until_time:" + x_search_until_time + " "
+    : "";
+  const x_search_query = x_search_since_until + x_search_keywords_array.join(" OR ");
   const event_x_search_url = "https://x.com/search?q=" + encodeURIComponent(x_search_query) + "&f=live";
+  const x_search_label = has_ended
+    ? "イベント当日の X(Twitter) 投稿を検索"
+    : "イベントに関する X(Twitter) 投稿を検索";
 
   const address_array = [address, place].filter(Boolean);
 
@@ -452,7 +457,7 @@ export function EventBody(data: EventBodyProps) {
                         <MenuItem icon={<FaXTwitter />}
                                   onClick={() => window.open(event_x_search_url)}
                                   >
-                          イベント当日の X(Twitter) 投稿を検索
+                          { x_search_label }
                         </MenuItem>
                         {archive_url && (
                           <MenuItem icon={<FiArchive />}
@@ -519,7 +524,7 @@ export function EventBody(data: EventBodyProps) {
                         onClose();
                       }}
                       >
-                イベント当日の X(Twitter) 投稿を検索
+                { x_search_label }
               </Button>
               {archive_url && (
                 <Button w="full"

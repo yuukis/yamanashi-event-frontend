@@ -150,6 +150,29 @@ describe('EventBody', () => {
 
     windowOpenSpy.mockRestore();
   });
+
+  it('opens a keyword-only X(Twitter) search (no since_time/until_time) for an event that has not ended yet', () => {
+    mockMatchMedia(true);
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    renderWithChakra(
+      <EventBody event={makeEvent({
+                   title: '甲府もくもく会 #1',
+                   started_at: '2026-01-15T19:00:00+09:00',
+                   ended_at: '2026-01-15T21:00:00+09:00',
+                 })}
+                 />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+
+    expect(screen.queryByText('イベント当日の X(Twitter) 投稿を検索')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('イベントに関する X(Twitter) 投稿を検索'));
+
+    const expected_query = encodeURIComponent('"甲府もくもく会 #1"');
+    expect(windowOpenSpy).toHaveBeenCalledWith(`https://x.com/search?q=${expected_query}&f=live`);
+
+    windowOpenSpy.mockRestore();
+  });
 });
 
 describe('EmptyEventBody', () => {
