@@ -101,7 +101,9 @@ export function EventBody(data: EventBodyProps) {
     month: '2-digit',
     day: '2-digit',
   });
-  const start_date_str = jst_date_formatter.format(start_date);
+  const jst_date_parts = jst_date_formatter.formatToParts(start_date);
+  const jst_date_part = (type: string) => jst_date_parts.find((part) => part.type === type)?.value;
+  const start_date_str = `${jst_date_part('year')}-${jst_date_part('month')}-${jst_date_part('day')}`;
   const x_search_since_time = Math.floor(new Date(start_date_str + "T00:00:00+09:00").getTime() / 1000);
   const x_search_until_time = Math.floor(new Date(start_date_str + "T23:59:59+09:00").getTime() / 1000);
   const x_search_since_until = has_ended
