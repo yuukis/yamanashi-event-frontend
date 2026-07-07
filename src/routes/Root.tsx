@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
@@ -13,6 +13,7 @@ import root_top_bg from "../assets/images/root_top_bg.png";
 import {
   Container,
   Box,
+  chakra,
   Stack,
   Card,
   CardBody,
@@ -22,7 +23,7 @@ import {
   Link,
   Button
 } from '@chakra-ui/react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
@@ -31,6 +32,8 @@ import { fetchEvents, fetchGroups } from '../utils/api';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiGroup, EventWithGroup } from '../types/events';
+
+const MotionBox = motion(chakra.div);
 
 type RootState = {
   isLoading: boolean;
@@ -42,6 +45,18 @@ type RootState = {
 };
 
 function Root({startYear}: {startYear: number}) {
+  const heroRef = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
+  const { scrollYProgress: heroScrollProgress } = useScroll({
+    target: heroRef,
+    offset: ['start end', 'end start'],
+  });
+  const starsY = useTransform(
+    heroScrollProgress,
+    [0, 1],
+    shouldReduceMotion ? ['0%', '0%'] : ['-20%', '20%']
+  );
+
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedGroup = searchParams.get('group');
   // keyword と group は排他。手入力やブックマークなど、両方のクエリが
@@ -170,18 +185,30 @@ function Root({startYear}: {startYear: number}) {
                          onClearKeyword={() => handleKeywordSelect(null)}
                          onClearGroup={() => handleGroupSelect(null)}
                          />
-      <Box bg={'#fffafa'}
+      <Box ref={heroRef}
+           bg={'#fffafa'}
            p={0}
-           bgImg={root_top_bg}
-           bgPos={'top'}
-           bgRepeat={'repeat-x'}
-           bgSize={{base: '100px', md: '50px'}}
+           position={'relative'}
+           overflow={'hidden'}
            >
+        <MotionBox position={'absolute'}
+                   top={'-20%'}
+                   left={0}
+                   right={0}
+                   height={'140%'}
+                   bgImg={root_top_bg}
+                   bgPos={'top'}
+                   bgRepeat={'repeat-x'}
+                   bgSize={{base: '100px', md: '50px'}}
+                   pointerEvents={'none'}
+                   style={{ y: starsY }}
+                   />
         <Box p={0}
             bgImg={root_bg}
             bgPos={'50% bottom'}
             bgRepeat={'no-repeat'}
             bgSize={{base: '200%', md: '960px'}}
+            position={'relative'}
             >
           <Container maxW={'860px'}
                     p={{base: '8', md: '4'}}
