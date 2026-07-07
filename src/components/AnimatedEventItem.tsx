@@ -5,8 +5,9 @@ import type { ReactNode } from 'react';
 const MotionEventItem = motion(chakra.div);
 
 // Stack の spacing prop と同じ値にすること。もともと StackDivider は spacing 分の
-// 余白を線の上下それぞれに付与していたため、Stack 側の spacing(上側の余白)に
-// 加えてここで marginBottom(下側の余白)を再現している。
+// 余白を線の上下それぞれに付与していたため、Stack 側の spacing(線の下側の余白)に
+// 加えて、ここでは paddingBottom で線の上側の余白を再現している(marginBottom だと
+// 余白が線の下側にしか付かず、線が上のカードに張り付いてしまう)。
 export const EVENT_LIST_SPACING = { base: '0', md: '0.5em' };
 
 export function AnimatedEventItem({ eventKey, children }: { eventKey: string; children: ReactNode }) {
@@ -19,7 +20,7 @@ export function AnimatedEventItem({ eventKey, children }: { eventKey: string; ch
                       transition={{ duration: 0.2 }}
                       sx={{
                         '&:not(:last-child)': {
-                          marginBottom: EVENT_LIST_SPACING,
+                          paddingBottom: EVENT_LIST_SPACING,
                           borderBottomWidth: '1px',
                           borderColor: 'gray.200',
                         },
