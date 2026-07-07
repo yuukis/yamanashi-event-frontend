@@ -126,6 +126,28 @@ describe('EventBody', () => {
     expect(screen.queryByRole('button', { name: 'React' })).not.toBeInTheDocument();
     expect(screen.getByText('React')).toBeInTheDocument();
   });
+
+  it('opens an X(Twitter) search scoped to the event day with since_time/until_time and f=live', () => {
+    mockMatchMedia(true);
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    renderWithChakra(
+      <EventBody event={makeEvent({
+                   title: '甲府もくもく会 #1',
+                   started_at: '2026-01-05T19:00:00+09:00',
+                   ended_at: '2026-01-05T21:00:00+09:00',
+                 })}
+                 />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    fireEvent.click(screen.getByText('イベント当日の X(Twitter) 投稿を検索'));
+
+    const since_time = Math.floor(new Date('2026-01-05T00:00:00+09:00').getTime() / 1000);
+    const until_time = Math.floor(new Date('2026-01-05T23:59:59+09:00').getTime() / 1000);
+    const expected_query = encodeURIComponent(`since_time:${since_time} until_time:${until_time} "甲府もくもく会 #1"`);
+
+    expect(windowOpenSpy).toHaveBeenCalledWith(`https://x.com/search?q=${expected_query}&f=live`);
+  });
 });
 
 describe('EmptyEventBody', () => {

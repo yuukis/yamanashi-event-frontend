@@ -95,7 +95,7 @@ export function EventBody(data: EventBodyProps) {
   if (group_name) {
     x_search_keywords_array.push("\"" + group_name+ "\"");
   }
-  const start_date_str = start_date.toISOString().split('T')[0];
+  const start_date_str = formatEventDateKey(start_date);
   const x_search_since_time = Math.floor(new Date(start_date_str + "T00:00:00+09:00").getTime() / 1000);
   const x_search_until_time = Math.floor(new Date(start_date_str + "T23:59:59+09:00").getTime() / 1000);
   const x_search_since_until = "since_time:" + x_search_since_time + " until_time:" + x_search_until_time;
