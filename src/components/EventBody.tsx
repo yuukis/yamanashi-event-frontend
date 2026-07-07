@@ -95,7 +95,7 @@ export function EventBody(data: EventBodyProps) {
   if (group_name) {
     x_search_keywords_array.push("\"" + group_name+ "\"");
   }
-  const jst_date_formatter = new Intl.DateTimeFormat('en-CA', {
+  const jst_date_formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Tokyo',
     year: 'numeric',
     month: '2-digit',
