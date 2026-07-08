@@ -50,7 +50,7 @@ function Root({startYear}: {startYear: number}) {
   const starsY = useTransform(
     scrollY,
     [0, 600],
-    shouldReduceMotion ? ['0%', '0%'] : ['-15%', '15%']
+    shouldReduceMotion ? ['0px', '0px'] : ['-15px', '15px']
   );
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -187,10 +187,10 @@ function Root({startYear}: {startYear: number}) {
            overflow={'hidden'}
            >
         <MotionBox position={'absolute'}
-                   top={'-20%'}
+                   top={{base: '-20px', md: '-15px'}}
                    left={0}
                    right={0}
-                   height={'140%'}
+                   height={{base: '240px', md: '130px'}}
                    bgImg={root_top_bg}
                    bgPos={'top'}
                    bgRepeat={'repeat-x'}
