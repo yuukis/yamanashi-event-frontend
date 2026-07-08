@@ -10,20 +10,11 @@ export const HEADER_HEIGHT = { base: 'calc(3rem + 7px)', md: 'calc(4rem + 7px)' 
 const STATIC_HEADER_RANGE = 72;
 
 // 「ページ上端付近」とみなすスクロール量(px)。この範囲では最上部ヘッダーと
-// 固定ヘッダーの位置ずれがこの値未満に収まるため、アニメーションなしで
-// 入れ替えても知覚されない。
+// 固定ヘッダーの位置ずれがこの値未満に収まる。
 const NEAR_TOP_RANGE = 8;
 
-// ヘッダーは2枚構成: ページ最上部の通常フローのヘッダー(ページと一緒に
-// スクロールして消える)と、上スクロール時にスライドインする固定ヘッダー。
-// isFixedHeaderVisible は後者の表示状態。ページ上端付近では最上部ヘッダーに
-// 役割を譲るため、固定ヘッダーは表示しない。
 let isFixedHeaderVisible = false;
-// 画面上端がヘッダー(最上部 or 固定)に覆われているか。ActiveFilterBadge が
-// ヘッダーと重ならない位置に退避するための状態。
 let isHeaderAreaOccupied = true;
-// ページ上端付近にいるか。ここでの固定ヘッダーの表示切り替えは、最上部
-// ヘッダーとの入れ替えを悟らせないためアニメーションなしで行う。
 let isNearTop = true;
 let lastScrollY = 0;
 let keepVisibleUntil = 0;
@@ -54,8 +45,7 @@ function handleScroll() {
 
   if (performance.now() >= holdStateUntil) {
     if (currentScrollY < NEAR_TOP_RANGE) {
-      // 上端付近では最上部ヘッダーがほぼ同じ位置にあるため、固定ヘッダーは
-      // 隠して役割を引き継ぐ。
+      // 上端付近は最上部ヘッダー(通常フロー)に役割を譲る
       isFixedHeaderVisible = false;
     } else if (performance.now() < keepVisibleUntil) {
       isFixedHeaderVisible = true;
@@ -120,14 +110,14 @@ export function getHeaderVisible(): boolean {
   return isFixedHeaderVisible;
 }
 
-// 画面上端がヘッダーに覆われているか。固定ヘッダー表示中に加え、ページ上端
-// 付近で最上部ヘッダーが画面内に残っている間も true になる。
+// 画面上端がヘッダー(最上部 or 固定)に覆われているか。ActiveFilterBadge が
+// ヘッダーと重ならない位置に退避するために使う。
 export function getHeaderAreaOccupied(): boolean {
   return isHeaderAreaOccupied;
 }
 
-// ページ上端付近にいるか。この間の固定ヘッダーの表示切り替えは、最上部
-// ヘッダーとの入れ替えを悟らせないためアニメーションなしで行う。
+// ページ上端付近にいるか。SiteHeader がヘッダー入れ替え時のアニメーション
+// 抑制に使う。
 export function getNearPageTop(): boolean {
   return isNearTop;
 }

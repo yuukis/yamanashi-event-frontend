@@ -81,17 +81,12 @@ function SiteHeaderContent() {
   );
 }
 
-// ヘッダーは2枚構成。最上部ヘッダーは通常フローに置き、ページと一緒に
-// スクロールして自然に消える。固定ヘッダーは上スクロール時にスライドイン
-// し、ページ上端付近では最上部ヘッダーに役割を譲って隠れる。両者は同一の
-// 見た目でページ上端付近では位置ずれが8px未満に収まるため、そこでの
-// 切り替えはアニメーションなしで行うことで入れ替えを悟らせない
-// (スライドさせると背面の最上部ヘッダーの上を下線が横切るのが見える)。
-// さらに上端付近では translateY で画面外へ逃がさず、その場で非表示にする。
-// ヘッダー内のふきだし(Popover)は親を visibility: hidden にしても自身の
-// visibility 指定で見え続けるため、画面外へ動かすとふきだしだけが上へ
-// ずれてしまう。その場に留めれば、ふきだしは同位置の最上部ヘッダーの
-// ボタンを指したまま自然に使い続けられる。
+// ヘッダーは2枚構成。最上部ヘッダーは通常フローでページと一緒にスクロール
+// して消え、固定ヘッダーは上スクロール時にスライドインする。ページ上端付近
+// では両者の位置ずれが8px未満に収まるため、固定ヘッダーは動かさず・
+// アニメーションなしでその場で非表示にして入れ替えを悟らせない。translateY
+// で画面外へ逃がすと、ヘッダー内のふきだし(Popover)だけが自身の
+// visibility 指定で見え続けたまま一緒にずれてしまう。
 export function SiteHeader() {
   const isFixedHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
   const isNearPageTop = useSyncExternalStore(subscribeHeaderVisibility, getNearPageTop);

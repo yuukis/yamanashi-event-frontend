@@ -32,10 +32,8 @@ import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors'
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
-// 星空レイヤーをヒーロー上端より上へはみ出させる量(px)。レイヤーが下へ
-// 追随したときにヒーロー上端との間に生じる領域をタイル上端と同色の
-// 塗り足しで埋め、星のない空が続いているように見せる。はみ出しの上端が
-// ビューポートに入らないよう、ヒーロー上端のページ内オフセット
+// 星空レイヤーを上へはみ出させる量(px)。下へ追随したときに生じる領域を
+// タイル上端と同色の塗り足しで埋める。ヒーロー上端のページ内オフセット
 // (≒ヘッダー高 71px)より大きい値にすること。
 const STARFIELD_BLEED = 120;
 // 星空タイル(root_top_bg.png)は幅:高さ = 1:2 なので、帯の高さは
@@ -185,13 +183,9 @@ function Root({startYear}: {startYear: number}) {
            position={'relative'}
            overflow={'hidden'}
            >
-        {/* 星空レイヤー。スクロールに追随して translateY で動かすため、親の
-            背景プロパティではなく専用の絶対配置レイヤーとして持つ。視差は
-            style.css の .starfield-parallax(スクロール駆動アニメーション)が
-            適用する。非対応ブラウザではアニメーションが無効になり、視差なしの
-            静的表示になる。上へはみ出させた分をタイル上端と同じ色 (#faf0e6) で
-            塗り、下へ追随したときに継ぎ目が見えないようにする。タイル下端は
-            親の背景色 (#fffafa) と同色なので下側の境界はそのまま馴染む。 */}
+        {/* 星空レイヤー。視差は style.css の .starfield-parallax が適用し、
+            非対応ブラウザでは静的表示になる。塗り足しの #faf0e6 はタイル
+            上端と、親背景の #fffafa はタイル下端と同色のため継ぎ目が出ない。 */}
         <Box aria-hidden={true}
              className={'starfield-parallax'}
              position={'absolute'}
