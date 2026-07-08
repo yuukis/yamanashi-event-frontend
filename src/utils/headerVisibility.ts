@@ -6,8 +6,18 @@ type Listener = () => void;
 export const HEADER_HEIGHT = { base: 'calc(3rem + 7px)', md: 'calc(4rem + 7px)' };
 
 // 最上部ヘッダー(通常フロー)がまだ画面内に残っているとみなすスクロール量
-// (px)。HEADER_HEIGHT の最大値(md: 4rem + 7px = 71px)を丸めた値。
-const STATIC_HEADER_RANGE = 72;
+// (px)。HEADER_HEIGHT(base: 3rem + 7px、md: 4rem + 7px)を丸めた値。
+const STATIC_HEADER_RANGE = { base: 56, md: 72 };
+
+// Chakra の md ブレークポイント
+let mdMediaQuery: MediaQueryList | null = null;
+
+function getStaticHeaderRange(): number {
+  if (!mdMediaQuery) {
+    mdMediaQuery = window.matchMedia('(min-width: 48em)');
+  }
+  return mdMediaQuery.matches ? STATIC_HEADER_RANGE.md : STATIC_HEADER_RANGE.base;
+}
 
 // 「ページ上端付近」とみなすスクロール量(px)。この範囲では最上部ヘッダーと
 // 固定ヘッダーの位置ずれがこの値未満に収まる。
@@ -33,21 +43,22 @@ function notifyIfChanged(previousSnapshot: string) {
 }
 
 function updateDerivedStates() {
-  isHeaderAreaOccupied = isFixedHeaderVisible || window.scrollY < STATIC_HEADER_RANGE;
+  isHeaderAreaOccupied = isFixedHeaderVisible || window.scrollY < getStaticHeaderRange();
   isNearTop = window.scrollY < NEAR_TOP_RANGE;
 }
 
 function handleScroll() {
   const previousSnapshot = snapshot();
+  const now = performance.now();
   const currentScrollY = window.scrollY;
   const scrollDifference = currentScrollY - lastScrollY;
   lastScrollY = currentScrollY;
 
-  if (performance.now() >= holdStateUntil) {
+  if (now >= holdStateUntil) {
     if (currentScrollY < NEAR_TOP_RANGE) {
       // 上端付近は最上部ヘッダー(通常フロー)に役割を譲る
       isFixedHeaderVisible = false;
-    } else if (performance.now() < keepVisibleUntil) {
+    } else if (now < keepVisibleUntil) {
       isFixedHeaderVisible = true;
     } else if (scrollDifference > 6) {
       isFixedHeaderVisible = false;

@@ -90,10 +90,33 @@ function SiteHeaderContent() {
 export function SiteHeader() {
   const isFixedHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
   const isNearPageTop = useSyncExternalStore(subscribeHeaderVisibility, getNearPageTop);
+  const staticHeaderRef = useRef<HTMLDivElement>(null);
+
+  // 同一内容のヘッダーが2枚あるため、操作可能・支援技術に可視なのは常に
+  // 1枚だけにする。固定ヘッダーが非表示の間は visibility: hidden がタブ順と
+  // アクセシビリティツリーから除外する。固定ヘッダーの表示中は、その下に
+  // 覆われて操作できない最上部ヘッダーを inert にして重複を消す。
+  // (inert は React 18 が属性として未対応のため ref で付与する)
+  useEffect(() => {
+    const staticHeader = staticHeaderRef.current;
+    if (!staticHeader) {
+      return;
+    }
+    if (isFixedHeaderVisible) {
+      staticHeader.setAttribute('inert', '');
+    } else {
+      staticHeader.removeAttribute('inert');
+    }
+  }, [isFixedHeaderVisible]);
 
   return (
     <>
-      <Box w={'100%'} bg={'white'} h={HEADER_HEIGHT}>
+      <Box ref={staticHeaderRef}
+           w={'100%'}
+           bg={'white'}
+           h={HEADER_HEIGHT}
+           aria-hidden={isFixedHeaderVisible ? true : undefined}
+           >
         <SiteHeaderContent />
       </Box>
       <Box w={'100%'}

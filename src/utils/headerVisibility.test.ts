@@ -138,6 +138,29 @@ describe('headerVisibility', () => {
     unsub();
   });
 
+  it('uses the base header height for the occupied range on narrow screens', () => {
+    // setup.ts の matchMedia モックは matches: false(base ブレークポイント扱い)
+    setScrollY(60);
+    const unsub = mod.subscribeHeaderVisibility(() => {});
+
+    expect(mod.getHeaderAreaOccupied()).toBe(false);
+    unsub();
+  });
+
+  it('uses the taller md header height for the occupied range on wide screens', () => {
+    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList);
+    setScrollY(60);
+    const unsub = mod.subscribeHeaderVisibility(() => {});
+
+    expect(mod.getHeaderAreaOccupied()).toBe(true);
+
+    setScrollY(80);
+    window.dispatchEvent(new Event('scroll'));
+    expect(mod.getHeaderAreaOccupied()).toBe(false);
+
+    unsub();
+  });
+
   it('reports the header area occupied while the fixed header is visible', () => {
     setScrollY(300);
     const unsub = mod.subscribeHeaderVisibility(() => {});
