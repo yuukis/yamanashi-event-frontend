@@ -87,6 +87,11 @@ function SiteHeaderContent() {
 // 見た目でページ上端付近では位置ずれが8px未満に収まるため、そこでの
 // 切り替えはアニメーションなしで行うことで入れ替えを悟らせない
 // (スライドさせると背面の最上部ヘッダーの上を下線が横切るのが見える)。
+// さらに上端付近では translateY で画面外へ逃がさず、その場で非表示にする。
+// ヘッダー内のふきだし(Popover)は親を visibility: hidden にしても自身の
+// visibility 指定で見え続けるため、画面外へ動かすとふきだしだけが上へ
+// ずれてしまう。その場に留めれば、ふきだしは同位置の最上部ヘッダーの
+// ボタンを指したまま自然に使い続けられる。
 export function SiteHeader() {
   const isFixedHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
   const isNearPageTop = useSyncExternalStore(subscribeHeaderVisibility, getNearPageTop);
@@ -103,7 +108,7 @@ export function SiteHeader() {
            left={'0'}
            right={'0'}
            zIndex={'sticky'}
-           transform={isFixedHeaderVisible ? 'translateY(0)' : 'translateY(-100%)'}
+           transform={isFixedHeaderVisible || isNearPageTop ? 'translateY(0)' : 'translateY(-100%)'}
            visibility={isFixedHeaderVisible ? 'visible' : 'hidden'}
            transition={isNearPageTop ? 'none' : 'transform 180ms ease-out, visibility 180ms ease-out'}
            >
