@@ -10,6 +10,15 @@ describe('getParallaxOffset', () => {
   it('clamps negative scrollY (overscroll) to 0', () => {
     expect(getParallaxOffset(-30, 0.5)).toBe(0);
   });
+
+  it('stays 0 until scrollY reaches the anchor top', () => {
+    expect(getParallaxOffset(0, 0.5, 70)).toBe(0);
+    expect(getParallaxOffset(70, 0.5, 70)).toBe(0);
+  });
+
+  it('scales only the distance scrolled past the anchor top', () => {
+    expect(getParallaxOffset(170, 0.5, 70)).toBe(50);
+  });
 });
 
 describe('startParallax', () => {
@@ -22,9 +31,12 @@ describe('startParallax', () => {
   beforeEach(() => {
     element = document.createElement('div');
     setScrollY(0);
+    // コールバックを同期実行するモック。実際の rAF と違い update() が
+    // frame を 0 に戻した後にハンドル値が代入されるため、0 を返して
+    // 「実行待ちなし」の状態を保つ。
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
       cb(0);
-      return 1;
+      return 0;
     });
   });
 
@@ -37,6 +49,23 @@ describe('startParallax', () => {
     const stop = startParallax(element, 0.5);
 
     expect(element.style.transform).toBe('translateY(100px)');
+
+    stop();
+  });
+
+  it('offsets by the anchor top when an anchor is given', () => {
+    const anchor = document.createElement('div');
+    Object.defineProperty(anchor, 'offsetTop', { value: 70, configurable: true });
+
+    const stop = startParallax(element, 0.5, anchor);
+
+    setScrollY(50);
+    window.dispatchEvent(new Event('scroll'));
+    expect(element.style.transform).toBe('translateY(0px)');
+
+    setScrollY(170);
+    window.dispatchEvent(new Event('scroll'));
+    expect(element.style.transform).toBe('translateY(50px)');
 
     stop();
   });

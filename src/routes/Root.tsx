@@ -37,9 +37,9 @@ import type { ApiGroup, EventWithGroup } from '../types/events';
 // 画面に固定。値が小さいほど遠景らしくゆっくり動く。
 const STARFIELD_PARALLAX_RATE = 0.5;
 // 星空レイヤーをヒーロー上端より上へはみ出させる量(px)。レイヤーが下へ
-// 追随したときに露出する領域を覆う。露出は最大でも
-// STARFIELD_PARALLAX_RATE * ヒーロー上端のページ内オフセット(≒ヘッダー高)
-// にしかならないため、これだけあれば十分足りる。
+// 追随したときに露出する領域を覆う。視差はヒーロー上端がビューポート上端を
+// 越えてから始まるため露出部分が画面に入ることは理論上ないが、端数や
+// レイアウト変動への保険として設けている。
 const STARFIELD_BLEED = 120;
 // 星空タイル(root_top_bg.png)は幅:高さ = 1:2 なので、帯の高さは
 // bgSize で指定する幅の2倍になる。
@@ -70,15 +70,20 @@ function Root({startYear}: {startYear: number}) {
   });
 
   const starfieldRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
 
   document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
 
   useEffect(() => {
     const starfield = starfieldRef.current;
-    if (!starfield) {
+    const hero = heroRef.current;
+    if (!starfield || !hero) {
       return;
     }
-    return startParallax(starfield, STARFIELD_PARALLAX_RATE);
+    // ヒーロー上端(≒固定ヘッダーの直下)がビューポート上端に達してから
+    // 視差を始める。これによりヘッダーの表示/非表示が切り替わる先頭付近の
+    // スクロールでは背景が動かず、星空がヒーローに張り付いたままになる。
+    return startParallax(starfield, STARFIELD_PARALLAX_RATE, hero);
   }, []);
 
   useEffect(() => {
@@ -193,7 +198,8 @@ function Root({startYear}: {startYear: number}) {
                          onClearKeyword={() => handleKeywordSelect(null)}
                          onClearGroup={() => handleGroupSelect(null)}
                          />
-      <Box bg={'#fffafa'}
+      <Box ref={heroRef}
+           bg={'#fffafa'}
            p={0}
            position={'relative'}
            overflow={'hidden'}
