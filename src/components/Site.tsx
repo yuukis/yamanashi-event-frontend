@@ -42,8 +42,8 @@ const todayBadgePulse = keyframes`
   50% { opacity: 0.5; transform: scale(1.2); }
 `;
 
-// 固定ヘッダーの表示境界をマークする要素の ref を返す。各ページの本文先頭の
-// 見出しに付けると、それより上では固定ヘッダーが表示されなくなる。
+// 固定ヘッダーの表示境界をマークする ref を返す。各ページの本文先頭の
+// 見出しに付ける。
 export function useFixedHeaderBoundary<T extends HTMLElement>() {
   const boundaryRef = useRef<T>(null);
 
