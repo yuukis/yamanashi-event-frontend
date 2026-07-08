@@ -33,7 +33,7 @@ import { keyframes } from '@emotion/react';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
 import { subscribeNow, getNow } from '../utils/nowTicker';
-import { subscribeHeaderVisibility, getHeaderVisible, HEADER_HEIGHT } from '../utils/headerVisibility';
+import { subscribeHeaderVisibility, getHeaderVisible, getNearPageTop, setFixedHeaderBoundary, HEADER_HEIGHT } from '../utils/headerVisibility';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiEvent } from '../types/events';
 
@@ -42,11 +42,102 @@ const todayBadgePulse = keyframes`
   50% { opacity: 0.5; transform: scale(1.2); }
 `;
 
+// 固定ヘッダーの表示境界をマークする ref を返す。各ページの本文先頭の
+// 見出しに付ける。
+export function useFixedHeaderBoundary<T extends HTMLElement>() {
+  const boundaryRef = useRef<T>(null);
+
+  useEffect(() => {
+    setFixedHeaderBoundary(boundaryRef.current);
+    return () => setFixedHeaderBoundary(null);
+  }, []);
+
+  return boundaryRef;
+}
+
+function SiteHeaderContent() {
+  return (
+    <>
+      <Stack h={{base: '12', md: '16'}}
+             maxW={'980px'}
+             m={'auto'}
+             p={'4'}
+             direction={'row'}
+             alignItems={'center'}
+             bg={'white'}
+             >
+        <Link href={'/'} style={{textDecoration: 'none'}} _hover={{opacity: '0.6'}}>
+          <Stack direction={'row'} spacing={'3'} alignItems={'center'}>
+            <Image src={icon}
+                   boxSize={{base: '6', md: '8'}}
+                   alt='Yamanashi Developer Hub'
+                   />
+            <Heading size={{base: 'sm', md: 'md'}}
+                     fontWeight={'normal'}
+                     noOfLines={1}
+                     >
+              <strong>Yamanashi</strong> Developer Hub
+            </Heading>
+          </Stack>
+        </Link>
+        <Spacer />
+        <ICalendarButton />
+        <NotificationButton />
+        <GithubButton />
+      </Stack>
+      <Stack spacing={'2px'}>
+        <Box h={'1px'} bg={'impact.500'} />
+        <Box h={'1px'} bg={'secondary.500'} />
+        <Box h={'1px'} bg={'primary.500'} />
+      </Stack>
+    </>
+  );
+}
+
+// ヘッダーは2枚構成。最上部ヘッダーは通常フローでページと一緒にスクロール
+// して消え、固定ヘッダーは上スクロール時にスライドインする。ページ上端付近
+// では両者の位置ずれが8px未満に収まるため、固定ヘッダーは動かさず・
+// アニメーションなしでその場で非表示にして入れ替えを悟らせない。translateY
+// で画面外へ逃がすと、ヘッダー内のふきだし(Popover)だけが自身の
+// visibility 指定で見え続けたまま一緒にずれてしまう。
 export function SiteHeader() {
-  const isHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
+  const isFixedHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
+  const isNearPageTop = useSyncExternalStore(subscribeHeaderVisibility, getNearPageTop);
+  const staticHeaderRef = useRef<HTMLDivElement>(null);
+
+  // 同一内容のヘッダーが2枚あるため、操作可能・支援技術に可視なのは常に
+  // 1枚だけにする。固定ヘッダーが非表示の間は visibility: hidden がタブ順と
+  // アクセシビリティツリーから除外する。固定ヘッダーの表示中は、その下に
+  // 覆われて操作できない最上部ヘッダーを inert にして重複を消す。
+  // (inert は React 18 が属性として未対応のため ref で付与する)
+  useEffect(() => {
+    const staticHeader = staticHeaderRef.current;
+    if (!staticHeader) {
+      return;
+    }
+    if (isFixedHeaderVisible) {
+      staticHeader.setAttribute('inert', '');
+    } else {
+      staticHeader.removeAttribute('inert');
+    }
+  }, [isFixedHeaderVisible]);
 
   return (
     <>
+      {/* 上端付近では最上部ヘッダーを固定ヘッダーより前面にする。慣性
+          スクロールの上端到達時、固定ヘッダーの非表示化が処理される前に
+          ラバーバンドが始まっても、前面の最上部ヘッダーがページと一緒に
+          引っ張られ、背面の固定ヘッダーが上端の隙間を埋める。 */}
+      <Box ref={staticHeaderRef}
+           w={'100%'}
+           bg={'white'}
+           h={HEADER_HEIGHT}
+           position={'relative'}
+           zIndex={isNearPageTop ? 'banner' : undefined}
+           aria-hidden={isFixedHeaderVisible ? true : undefined}
+           >
+        <SiteHeaderContent />
+      </Box>
       <Box w={'100%'}
            bg={'white'}
            position={'fixed'}
@@ -54,43 +145,12 @@ export function SiteHeader() {
            left={'0'}
            right={'0'}
            zIndex={'sticky'}
-           transform={isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)'}
-           transition={'transform 180ms ease-out'}
+           transform={isFixedHeaderVisible || isNearPageTop ? 'translateY(0)' : 'translateY(-100%)'}
+           visibility={isFixedHeaderVisible ? 'visible' : 'hidden'}
+           transition={isNearPageTop ? 'none' : 'transform 180ms ease-out, visibility 180ms ease-out'}
            >
-        <Stack h={{base: '12', md: '16'}}
-               maxW={'980px'} 
-               m={'auto'}
-               p={'4'}
-               direction={'row'}
-               alignItems={'center'}
-               bg={'white'}
-               >
-          <Link href={'/'} style={{textDecoration: 'none'}} _hover={{opacity: '0.6'}}>
-            <Stack direction={'row'} spacing={'3'} alignItems={'center'}>
-              <Image src={icon}
-                     boxSize={{base: '6', md: '8'}}
-                     alt='Yamanashi Developer Hub'
-                     />
-              <Heading size={{base: 'sm', md: 'md'}}
-                       fontWeight={'normal'}
-                       noOfLines={1}
-                       >
-                <strong>Yamanashi</strong> Developer Hub
-              </Heading>
-            </Stack>
-          </Link>
-          <Spacer />
-          <ICalendarButton />
-          <NotificationButton />
-          <GithubButton />
-        </Stack>
-        <Stack spacing={'2px'}>
-          <Box h={'1px'} bg={'impact.500'} />
-          <Box h={'1px'} bg={'secondary.500'} />
-          <Box h={'1px'} bg={'primary.500'} />
-        </Stack>
+        <SiteHeaderContent />
       </Box>
-      <Box h={HEADER_HEIGHT} />
     </>
   );
 }

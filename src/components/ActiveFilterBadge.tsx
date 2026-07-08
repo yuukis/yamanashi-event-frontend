@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { Box, Container, HStack, IconButton, Text } from '@chakra-ui/react';
 import { SmallCloseIcon } from '@chakra-ui/icons';
-import { subscribeHeaderVisibility, getHeaderVisible, HEADER_HEIGHT } from '../utils/headerVisibility';
+import { subscribeHeaderVisibility, getHeaderAreaOccupied, HEADER_HEIGHT } from '../utils/headerVisibility';
 
 type ActiveFilterBadgeProps = {
   selectedKeyword: string | null;
@@ -10,15 +10,16 @@ type ActiveFilterBadgeProps = {
   onClearGroup: () => void;
 };
 
-// 下スクロールでヘッダーが隠れている間はバッジもヘッダーに追随して画面上端まで
-// 詰め、隠れても絞り込み中であることに気づけるよう常に画面内に留める。
+// 画面上端がヘッダー(最上部 or 固定)に覆われている間はその下に退避し、
+// ヘッダーがない間は画面上端まで詰めて、絞り込み中であることに常に気づける
+// よう画面内に留める。
 export function ActiveFilterBadge({
   selectedKeyword,
   selectedGroupName,
   onClearKeyword,
   onClearGroup,
 }: ActiveFilterBadgeProps) {
-  const isHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
+  const isHeaderAreaOccupied = useSyncExternalStore(subscribeHeaderVisibility, getHeaderAreaOccupied);
 
   if (!selectedKeyword && !selectedGroupName) {
     return null;
@@ -31,7 +32,7 @@ export function ActiveFilterBadge({
 
   return (
     <Box position={'fixed'}
-         top={isHeaderVisible ? HEADER_HEIGHT : '0'}
+         top={isHeaderAreaOccupied ? HEADER_HEIGHT : '0'}
          left={'0'} right={'0'}
          zIndex={'banner'}
          pointerEvents={'none'}

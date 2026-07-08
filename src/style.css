@@ -1,1 +1,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+/*
+ * トップページの星空レイヤーのパララックス。JS でスクロールに追随させると
+ * コンポジタのスクロール描画に対して更新が1フレーム遅れてカクつくため、
+ * スクロール駆動アニメーションを使う。非対応ブラウザでは視差なしの静的表示。
+ * 1000px のスクロール区間で 800px 動かす = 追随率 0.8。
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .starfield-parallax {
+      animation-name: starfield-parallax;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root block);
+      animation-range: 0px 1000px;
+    }
+
+    @keyframes starfield-parallax {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(800px);
+      }
+    }
+  }
+}

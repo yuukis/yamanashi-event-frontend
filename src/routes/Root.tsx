@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
+import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
@@ -32,6 +32,14 @@ import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors'
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
+// 星空レイヤーを上へはみ出させる量(px)。下へ追随したときに生じる領域を
+// タイル上端と同色の塗り足しで埋める。ヒーロー上端のページ内オフセット
+// (≒ヘッダー高 71px)より大きい値にすること。
+const STARFIELD_BLEED = 120;
+// 星空タイル(root_top_bg.png)は幅:高さ = 1:2 なので、帯の高さは
+// bgSize で指定する幅の2倍になる。
+const STARFIELD_HEIGHT = 200;
+
 type RootState = {
   isLoading: boolean;
   pastEvents: EventWithGroup[];
@@ -55,6 +63,8 @@ function Root({startYear}: {startYear: number}) {
     lastModified: null,
     errorMessage: ''
   });
+
+  const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
 
   document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
 
@@ -172,12 +182,29 @@ function Root({startYear}: {startYear: number}) {
                          />
       <Box bg={'#fffafa'}
            p={0}
-           bgImg={root_top_bg}
-           bgPos={'top'}
-           bgRepeat={'repeat-x'}
-           bgSize={{base: '100px', md: '50px'}}
+           position={'relative'}
+           overflow={'hidden'}
            >
+        {/* 星空レイヤー。視差は style.css の .starfield-parallax が適用し、
+            非対応ブラウザでは静的表示になる。塗り足しの #faf0e6 はタイル
+            上端と、親背景の #fffafa はタイル下端と同色のため継ぎ目が出ない。 */}
+        <Box aria-hidden={true}
+             className={'starfield-parallax'}
+             position={'absolute'}
+             top={`-${STARFIELD_BLEED}px`}
+             left={0}
+             right={0}
+             h={`${STARFIELD_BLEED + STARFIELD_HEIGHT}px`}
+             bgColor={'#faf0e6'}
+             bgImg={root_top_bg}
+             bgPos={'bottom'}
+             bgRepeat={'repeat-x'}
+             bgSize={'100px'}
+             pointerEvents={'none'}
+             />
+        {/* position: relative で星空レイヤーより手前に重ねる */}
         <Box p={0}
+            position={'relative'}
             bgImg={root_bg}
             bgPos={'50% bottom'}
             bgRepeat={'no-repeat'}
@@ -253,7 +280,8 @@ function Root({startYear}: {startYear: number}) {
                           onSelect={handleGroupSelect}
                           isLoading={data.isLoading}
                           />
-          <Heading size={{base: 'sm', md: 'md'}}
+          <Heading ref={headerBoundaryRef}
+                   size={{base: 'sm', md: 'md'}}
                    ml={{base: '4', md: '0'}}
                    mt={'8'}
                    mb={'2'}
