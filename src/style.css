@@ -8,13 +8,11 @@
  * ため、スクロール駆動アニメーションでコンポジタに直接処理させる。
  * 非対応ブラウザでは @supports が外れて視差なしの静的表示になる。
  *
- * animation-range の開始位置はヒーロー上端のページ内オフセット
- * (= 固定ヘッダーのスペーサ高。utils/headerVisibility.ts の HEADER_HEIGHT
- * と同値)。ここから始めることで、ヘッダーの表示/非表示が切り替わる先頭
- * 付近のスクロールでは背景が動かない。1000px のスクロール区間で 800px
- * 動かす = 追随率 0.8。星空の帯(高さ200px)は画面上を (1 - 0.8) 倍の
- * 速度で上がっていくため、区間の終端 200px ÷ 0.2 = 1000px でちょうど
- * ビューポート外へ完全に出る。それ以降は動かなくてよい。
+ * 最上部ヘッダーは通常フローに置かれてページと一緒にスクロールして消える
+ * ため(components/Site.tsx)、視差はページ最上部(scrollY = 0)から
+ * 始めてよい。1000px のスクロール区間で 800px 動かす = 追随率 0.8。
+ * 星空の帯はヒーロー内を下方向へ追随していき、区間の終端よりずっと手前で
+ * ヒーロー(overflow: hidden)の外へ出てクリップされる。
  */
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: scroll()) {
@@ -24,14 +22,7 @@
       animation-timing-function: linear;
       animation-fill-mode: both;
       animation-timeline: scroll(root block);
-      animation-range: calc(3rem + 7px) calc(3rem + 7px + 1000px);
-    }
-
-    /* Chakra の md ブレークポイント(48em)以上ではヘッダーが高くなる */
-    @media screen and (min-width: 48em) {
-      .starfield-parallax {
-        animation-range: calc(4rem + 7px) calc(4rem + 7px + 1000px);
-      }
+      animation-range: 0px 1000px;
     }
 
     @keyframes starfield-parallax {

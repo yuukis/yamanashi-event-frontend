@@ -42,11 +42,57 @@ const todayBadgePulse = keyframes`
   50% { opacity: 0.5; transform: scale(1.2); }
 `;
 
+function SiteHeaderContent() {
+  return (
+    <>
+      <Stack h={{base: '12', md: '16'}}
+             maxW={'980px'}
+             m={'auto'}
+             p={'4'}
+             direction={'row'}
+             alignItems={'center'}
+             bg={'white'}
+             >
+        <Link href={'/'} style={{textDecoration: 'none'}} _hover={{opacity: '0.6'}}>
+          <Stack direction={'row'} spacing={'3'} alignItems={'center'}>
+            <Image src={icon}
+                   boxSize={{base: '6', md: '8'}}
+                   alt='Yamanashi Developer Hub'
+                   />
+            <Heading size={{base: 'sm', md: 'md'}}
+                     fontWeight={'normal'}
+                     noOfLines={1}
+                     >
+              <strong>Yamanashi</strong> Developer Hub
+            </Heading>
+          </Stack>
+        </Link>
+        <Spacer />
+        <ICalendarButton />
+        <NotificationButton />
+        <GithubButton />
+      </Stack>
+      <Stack spacing={'2px'}>
+        <Box h={'1px'} bg={'impact.500'} />
+        <Box h={'1px'} bg={'secondary.500'} />
+        <Box h={'1px'} bg={'primary.500'} />
+      </Stack>
+    </>
+  );
+}
+
+// ヘッダーは2枚構成。最上部ヘッダーは通常フローに置き、ページと一緒に
+// スクロールして自然に消える。固定ヘッダーは上スクロール時にスライドイン
+// し、ページ上端付近では最上部ヘッダーに役割を譲って隠れる。両者は同一の
+// 見た目なので、上端(ずれ8px未満)での切り替えは知覚されない。
 export function SiteHeader() {
-  const isHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
+  const isFixedHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
 
   return (
     <>
+      <Box w={'100%'} bg={'white'} h={HEADER_HEIGHT}>
+        <SiteHeaderContent />
+      </Box>
       <Box w={'100%'}
            bg={'white'}
            position={'fixed'}
@@ -54,43 +100,12 @@ export function SiteHeader() {
            left={'0'}
            right={'0'}
            zIndex={'sticky'}
-           transform={isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)'}
-           transition={'transform 180ms ease-out'}
+           transform={isFixedHeaderVisible ? 'translateY(0)' : 'translateY(-100%)'}
+           visibility={isFixedHeaderVisible ? 'visible' : 'hidden'}
+           transition={'transform 180ms ease-out, visibility 180ms ease-out'}
            >
-        <Stack h={{base: '12', md: '16'}}
-               maxW={'980px'} 
-               m={'auto'}
-               p={'4'}
-               direction={'row'}
-               alignItems={'center'}
-               bg={'white'}
-               >
-          <Link href={'/'} style={{textDecoration: 'none'}} _hover={{opacity: '0.6'}}>
-            <Stack direction={'row'} spacing={'3'} alignItems={'center'}>
-              <Image src={icon}
-                     boxSize={{base: '6', md: '8'}}
-                     alt='Yamanashi Developer Hub'
-                     />
-              <Heading size={{base: 'sm', md: 'md'}}
-                       fontWeight={'normal'}
-                       noOfLines={1}
-                       >
-                <strong>Yamanashi</strong> Developer Hub
-              </Heading>
-            </Stack>
-          </Link>
-          <Spacer />
-          <ICalendarButton />
-          <NotificationButton />
-          <GithubButton />
-        </Stack>
-        <Stack spacing={'2px'}>
-          <Box h={'1px'} bg={'impact.500'} />
-          <Box h={'1px'} bg={'secondary.500'} />
-          <Box h={'1px'} bg={'primary.500'} />
-        </Stack>
+        <SiteHeaderContent />
       </Box>
-      <Box h={HEADER_HEIGHT} />
     </>
   );
 }
