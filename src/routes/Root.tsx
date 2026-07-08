@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
@@ -28,9 +28,22 @@ import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { fetchEvents, fetchGroups } from '../utils/api';
+import { startParallax } from '../utils/parallax';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiGroup, EventWithGroup } from '../types/events';
+
+// 星空レイヤーのスクロール追随率。1 でスクロールと同速(視差なし)、0 で
+// 画面に固定。値が小さいほど遠景らしくゆっくり動く。
+const STARFIELD_PARALLAX_RATE = 0.5;
+// 星空レイヤーをヒーロー上端より上へはみ出させる量(px)。レイヤーが下へ
+// 追随したときに露出する領域を覆う。露出は最大でも
+// STARFIELD_PARALLAX_RATE * ヒーロー上端のページ内オフセット(≒ヘッダー高)
+// にしかならないため、これだけあれば十分足りる。
+const STARFIELD_BLEED = 120;
+// 星空タイル(root_top_bg.png)は幅:高さ = 1:2 なので、帯の高さは
+// bgSize で指定する幅の2倍になる。
+const STARFIELD_HEIGHT = { base: 200, md: 100 };
 
 type RootState = {
   isLoading: boolean;
@@ -56,7 +69,17 @@ function Root({startYear}: {startYear: number}) {
     errorMessage: ''
   });
 
+  const starfieldRef = useRef<HTMLDivElement>(null);
+
   document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
+
+  useEffect(() => {
+    const starfield = starfieldRef.current;
+    if (!starfield) {
+      return;
+    }
+    return startParallax(starfield, STARFIELD_PARALLAX_RATE);
+  }, []);
 
   useEffect(() => {
     if (searchParams.get('keyword') && searchParams.get('group')) {
@@ -172,12 +195,35 @@ function Root({startYear}: {startYear: number}) {
                          />
       <Box bg={'#fffafa'}
            p={0}
-           bgImg={root_top_bg}
-           bgPos={'top'}
-           bgRepeat={'repeat-x'}
-           bgSize={{base: '100px', md: '50px'}}
+           position={'relative'}
+           overflow={'hidden'}
            >
+        {/* 星空レイヤー。スクロールに追随して translateY で動かすため、親の
+            背景プロパティではなく専用の絶対配置レイヤーとして持つ。上へ
+            はみ出させた分をタイル上端と同じ色 (#faf0e6) で塗り、下へ追随
+            したときに継ぎ目が見えないようにする。タイル下端は親の背景色
+            (#fffafa) と同色なので下側の境界はそのまま馴染む。 */}
+        <Box aria-hidden={true}
+             ref={starfieldRef}
+             position={'absolute'}
+             top={`-${STARFIELD_BLEED}px`}
+             left={0}
+             right={0}
+             h={{
+               base: `${STARFIELD_BLEED + STARFIELD_HEIGHT.base}px`,
+               md: `${STARFIELD_BLEED + STARFIELD_HEIGHT.md}px`,
+             }}
+             bgColor={'#faf0e6'}
+             bgImg={root_top_bg}
+             bgPos={'bottom'}
+             bgRepeat={'repeat-x'}
+             bgSize={{base: '100px', md: '50px'}}
+             willChange={'transform'}
+             pointerEvents={'none'}
+             />
+        {/* position: relative で星空レイヤーより手前に重ねる */}
         <Box p={0}
+            position={'relative'}
             bgImg={root_bg}
             bgPos={'50% bottom'}
             bgRepeat={'no-repeat'}
