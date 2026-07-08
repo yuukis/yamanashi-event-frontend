@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
@@ -28,16 +28,10 @@ import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { fetchEvents, fetchGroups } from '../utils/api';
-import { startParallax, supportsScrollDrivenAnimation } from '../utils/parallax';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
-// 星空レイヤーのスクロール追随率。1 でスクロールと同速(視差なし)、0 で
-// 画面に固定。値が小さいほど遠景らしくゆっくり動く。
-// スクロール駆動アニメーション非対応ブラウザ向けの JS フォールバックで使う。
-// 変更する場合は style.css の .starfield-parallax(300px / 600px)も揃えること。
-const STARFIELD_PARALLAX_RATE = 0.5;
 // 星空レイヤーをヒーロー上端より上へはみ出させる量(px)。レイヤーが下へ
 // 追随したときに露出する領域を覆う。視差はヒーロー上端がビューポート上端を
 // 越えてから始まるため露出部分が画面に入ることは理論上ないが、端数や
@@ -71,28 +65,7 @@ function Root({startYear}: {startYear: number}) {
     errorMessage: ''
   });
 
-  const starfieldRef = useRef<HTMLDivElement>(null);
-  const heroRef = useRef<HTMLDivElement>(null);
-
   document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
-
-  useEffect(() => {
-    const starfield = starfieldRef.current;
-    const hero = heroRef.current;
-    if (!starfield || !hero) {
-      return;
-    }
-    // スクロール駆動アニメーション対応ブラウザでは style.css の
-    // .starfield-parallax がコンポジタ駆動で視差を適用するため、
-    // JS では何もしない(二重に動かさない)。
-    if (supportsScrollDrivenAnimation()) {
-      return;
-    }
-    // ヒーロー上端(≒固定ヘッダーの直下)がビューポート上端に達してから
-    // 視差を始める。これによりヘッダーの表示/非表示が切り替わる先頭付近の
-    // スクロールでは背景が動かず、星空がヒーローに張り付いたままになる。
-    return startParallax(starfield, STARFIELD_PARALLAX_RATE, hero);
-  }, []);
 
   useEffect(() => {
     if (searchParams.get('keyword') && searchParams.get('group')) {
@@ -206,19 +179,19 @@ function Root({startYear}: {startYear: number}) {
                          onClearKeyword={() => handleKeywordSelect(null)}
                          onClearGroup={() => handleGroupSelect(null)}
                          />
-      <Box ref={heroRef}
-           bg={'#fffafa'}
+      <Box bg={'#fffafa'}
            p={0}
            position={'relative'}
            overflow={'hidden'}
            >
         {/* 星空レイヤー。スクロールに追随して translateY で動かすため、親の
-            背景プロパティではなく専用の絶対配置レイヤーとして持つ。上へ
-            はみ出させた分をタイル上端と同じ色 (#faf0e6) で塗り、下へ追随
-            したときに継ぎ目が見えないようにする。タイル下端は親の背景色
-            (#fffafa) と同色なので下側の境界はそのまま馴染む。 */}
+            背景プロパティではなく専用の絶対配置レイヤーとして持つ。視差は
+            style.css の .starfield-parallax(スクロール駆動アニメーション)が
+            適用する。非対応ブラウザではアニメーションが無効になり、視差なしの
+            静的表示になる。上へはみ出させた分をタイル上端と同じ色 (#faf0e6) で
+            塗り、下へ追随したときに継ぎ目が見えないようにする。タイル下端は
+            親の背景色 (#fffafa) と同色なので下側の境界はそのまま馴染む。 */}
         <Box aria-hidden={true}
-             ref={starfieldRef}
              className={'starfield-parallax'}
              position={'absolute'}
              top={`-${STARFIELD_BLEED}px`}
@@ -233,7 +206,6 @@ function Root({startYear}: {startYear: number}) {
              bgPos={'bottom'}
              bgRepeat={'repeat-x'}
              bgSize={{base: '100px', md: '50px'}}
-             willChange={'transform'}
              pointerEvents={'none'}
              />
         {/* position: relative で星空レイヤーより手前に重ねる */}
