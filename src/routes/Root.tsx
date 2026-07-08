@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
@@ -45,16 +45,12 @@ type RootState = {
 };
 
 function Root({startYear}: {startYear: number}) {
-  const heroRef = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
-  const { scrollYProgress: heroScrollProgress } = useScroll({
-    target: heroRef,
-    offset: ['start end', 'end start'],
-  });
+  const { scrollY } = useScroll();
   const starsY = useTransform(
-    heroScrollProgress,
-    [0, 1],
-    shouldReduceMotion ? ['0%', '0%'] : ['-20%', '20%']
+    scrollY,
+    [0, 600],
+    shouldReduceMotion ? ['0%', '0%'] : ['-15%', '15%']
   );
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -185,8 +181,7 @@ function Root({startYear}: {startYear: number}) {
                          onClearKeyword={() => handleKeywordSelect(null)}
                          onClearGroup={() => handleGroupSelect(null)}
                          />
-      <Box ref={heroRef}
-           bg={'#fffafa'}
+      <Box bg={'#fffafa'}
            p={0}
            position={'relative'}
            overflow={'hidden'}
