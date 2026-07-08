@@ -18,7 +18,6 @@ describe('headerVisibility', () => {
 
   beforeEach(async () => {
     vi.resetModules();
-    vi.useFakeTimers();
     scrollY = 0;
     clock = 0;
     Object.defineProperty(window, 'scrollY', {
@@ -30,7 +29,6 @@ describe('headerVisibility', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -108,7 +106,7 @@ describe('headerVisibility', () => {
     unsub();
   });
 
-  it('hides near the top only after the scroll settles (the static header takes over)', () => {
+  it('hides near the top even when scrolling up (the static header takes over)', () => {
     setScrollY(200);
     const unsub = mod.subscribeHeaderVisibility(() => {});
 
@@ -118,58 +116,7 @@ describe('headerVisibility', () => {
 
     setScrollY(5);
     window.dispatchEvent(new Event('scroll'));
-    expect(mod.getHeaderVisible()).toBe(true);
-
-    vi.advanceTimersByTime(400);
     expect(mod.getHeaderVisible()).toBe(false);
-
-    unsub();
-  });
-
-  it('keeps the fixed header visible through rubber-band overscroll', () => {
-    setScrollY(200);
-    const unsub = mod.subscribeHeaderVisibility(() => {});
-
-    setScrollY(170);
-    window.dispatchEvent(new Event('scroll'));
-    expect(mod.getHeaderVisible()).toBe(true);
-
-    setScrollY(0);
-    window.dispatchEvent(new Event('scroll'));
-    vi.advanceTimersByTime(200);
-
-    // ラバーバンドで scrollY が負になる間はイベントごとに隠す予約を延長する
-    setScrollY(-10);
-    window.dispatchEvent(new Event('scroll'));
-    vi.advanceTimersByTime(399);
-    expect(mod.getHeaderVisible()).toBe(true);
-
-    vi.advanceTimersByTime(1);
-    expect(mod.getHeaderVisible()).toBe(false);
-
-    unsub();
-  });
-
-  it('cancels the pending near-top hide when scrolling away from the top', () => {
-    setScrollY(200);
-    const unsub = mod.subscribeHeaderVisibility(() => {});
-
-    setScrollY(170);
-    window.dispatchEvent(new Event('scroll'));
-
-    setScrollY(5);
-    window.dispatchEvent(new Event('scroll'));
-
-    setScrollY(100);
-    window.dispatchEvent(new Event('scroll'));
-    expect(mod.getHeaderVisible()).toBe(false);
-
-    setScrollY(70);
-    window.dispatchEvent(new Event('scroll'));
-    expect(mod.getHeaderVisible()).toBe(true);
-
-    vi.advanceTimersByTime(400);
-    expect(mod.getHeaderVisible()).toBe(true);
 
     unsub();
   });
