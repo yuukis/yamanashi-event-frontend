@@ -1,1 +1,45 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+/*
+ * トップページの星空レイヤーのパララックス。
+ *
+ * JS のスクロールイベント経由で transform を更新すると、コンポジタスレッド
+ * によるスクロール描画に対しメインスレッドの更新が1フレーム遅れてカクつく
+ * ため、対応ブラウザではスクロール駆動アニメーションでコンポジタに直接
+ * 処理させる。非対応ブラウザでは utils/parallax.ts の JS 実装に
+ * フォールバックする(Root.tsx で判定)。
+ *
+ * animation-range の開始位置はヒーロー上端のページ内オフセット
+ * (= 固定ヘッダーのスペーサ高。utils/headerVisibility.ts の HEADER_HEIGHT
+ * と同値)。600px のスクロール区間で 300px 動かす = 追随率 0.5 で、
+ * Root.tsx の STARFIELD_PARALLAX_RATE と揃えている。区間の終端までに
+ * 星空はビューポート外へ完全に出るため、それ以降は動かなくてよい。
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .starfield-parallax {
+      animation-name: starfield-parallax;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root block);
+      animation-range: calc(3rem + 7px) calc(3rem + 7px + 600px);
+    }
+
+    /* Chakra の md ブレークポイント(48em)以上ではヘッダーが高くなる */
+    @media screen and (min-width: 48em) {
+      .starfield-parallax {
+        animation-range: calc(4rem + 7px) calc(4rem + 7px + 600px);
+      }
+    }
+
+    @keyframes starfield-parallax {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(300px);
+      }
+    }
+  }
+}

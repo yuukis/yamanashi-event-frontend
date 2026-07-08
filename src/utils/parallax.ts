@@ -2,6 +2,16 @@
 // 要素を rate * スクロール量 だけ下へ追随させることで、見かけ上 (1 - rate) 倍の
 // 速度でスクロールする「遠景」の視差を作る。
 
+// スクロール駆動アニメーション(animation-timeline: scroll())の対応判定。
+// 対応ブラウザではコンポジタスレッドで視差を処理できてカクつかないため、
+// CSS 側(style.css)の実装を優先し、startParallax はフォールバックとして
+// 非対応ブラウザでのみ使う。
+export function supportsScrollDrivenAnimation(): boolean {
+  return typeof CSS !== 'undefined'
+    && typeof CSS.supports === 'function'
+    && CSS.supports('animation-timeline', 'scroll()');
+}
+
 export function getParallaxOffset(scrollY: number, rate: number, anchorTop = 0): number {
   // anchorTop(基準要素のページ内上端)に達するまでは 0 のままとし、基準要素の
   // 上端がビューポート上端を越えてから追随を始める。これにより、ページ先頭

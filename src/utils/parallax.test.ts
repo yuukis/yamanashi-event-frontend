@@ -1,5 +1,26 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getParallaxOffset, startParallax } from './parallax';
+import { getParallaxOffset, startParallax, supportsScrollDrivenAnimation } from './parallax';
+
+describe('supportsScrollDrivenAnimation', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('returns true when CSS.supports reports animation-timeline support', () => {
+    vi.stubGlobal('CSS', { supports: vi.fn().mockReturnValue(true) });
+
+    expect(supportsScrollDrivenAnimation()).toBe(true);
+    expect(CSS.supports).toHaveBeenCalledWith('animation-timeline', 'scroll()');
+  });
+
+  it('returns false when unsupported or CSS is unavailable', () => {
+    vi.stubGlobal('CSS', { supports: vi.fn().mockReturnValue(false) });
+    expect(supportsScrollDrivenAnimation()).toBe(false);
+
+    vi.stubGlobal('CSS', undefined);
+    expect(supportsScrollDrivenAnimation()).toBe(false);
+  });
+});
 
 describe('getParallaxOffset', () => {
   it('scales scrollY by the rate', () => {

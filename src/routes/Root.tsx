@@ -28,13 +28,15 @@ import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { fetchEvents, fetchGroups } from '../utils/api';
-import { startParallax } from '../utils/parallax';
+import { startParallax, supportsScrollDrivenAnimation } from '../utils/parallax';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
 // 星空レイヤーのスクロール追随率。1 でスクロールと同速(視差なし)、0 で
 // 画面に固定。値が小さいほど遠景らしくゆっくり動く。
+// スクロール駆動アニメーション非対応ブラウザ向けの JS フォールバックで使う。
+// 変更する場合は style.css の .starfield-parallax(300px / 600px)も揃えること。
 const STARFIELD_PARALLAX_RATE = 0.5;
 // 星空レイヤーをヒーロー上端より上へはみ出させる量(px)。レイヤーが下へ
 // 追随したときに露出する領域を覆う。視差はヒーロー上端がビューポート上端を
@@ -78,6 +80,12 @@ function Root({startYear}: {startYear: number}) {
     const starfield = starfieldRef.current;
     const hero = heroRef.current;
     if (!starfield || !hero) {
+      return;
+    }
+    // スクロール駆動アニメーション対応ブラウザでは style.css の
+    // .starfield-parallax がコンポジタ駆動で視差を適用するため、
+    // JS では何もしない(二重に動かさない)。
+    if (supportsScrollDrivenAnimation()) {
       return;
     }
     // ヒーロー上端(≒固定ヘッダーの直下)がビューポート上端に達してから
@@ -211,6 +219,7 @@ function Root({startYear}: {startYear: number}) {
             (#fffafa) と同色なので下側の境界はそのまま馴染む。 */}
         <Box aria-hidden={true}
              ref={starfieldRef}
+             className={'starfield-parallax'}
              position={'absolute'}
              top={`-${STARFIELD_BLEED}px`}
              left={0}
