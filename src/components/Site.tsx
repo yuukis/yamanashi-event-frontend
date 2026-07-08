@@ -111,10 +111,17 @@ export function SiteHeader() {
 
   return (
     <>
+      {/* 上端付近では最上部ヘッダーを固定ヘッダーより前面にする。固定ヘッダー
+          は上端到達後もラバーバンドが静止するまで表示が残るため、その間は
+          前面の最上部ヘッダーがページと一緒に引っ張られ、背面の固定ヘッダー
+          が上端の隙間を埋める。両者は上端でほぼ重なっているため、重なり順の
+          切り替え自体は知覚されない。 */}
       <Box ref={staticHeaderRef}
            w={'100%'}
            bg={'white'}
            h={HEADER_HEIGHT}
+           position={'relative'}
+           zIndex={isNearPageTop ? 'banner' : undefined}
            aria-hidden={isFixedHeaderVisible ? true : undefined}
            >
         <SiteHeaderContent />

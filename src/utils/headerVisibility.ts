@@ -23,12 +23,18 @@ function getStaticHeaderRange(): number {
 // 固定ヘッダーの位置ずれがこの値未満に収まる。
 const NEAR_TOP_RANGE = 8;
 
+// 上端到達後、固定ヘッダーを最上部ヘッダーへ引き継ぐまでの猶予(ms)。
+// 慣性スクロールのラバーバンドでページが引き下げられている間に固定ヘッダー
+// を消すと上端に隙間が見えてちらつくため、静止を待ってから入れ替える。
+const NEAR_TOP_HIDE_DELAY = 400;
+
 let isFixedHeaderVisible = false;
 let isHeaderAreaOccupied = true;
 let isNearTop = true;
 let lastScrollY = 0;
 let keepVisibleUntil = 0;
 let holdStateUntil = 0;
+let nearTopHideTimer: ReturnType<typeof setTimeout> | undefined;
 const listeners = new Set<Listener>();
 let isStarted = false;
 
@@ -47,6 +53,27 @@ function updateDerivedStates() {
   isNearTop = window.scrollY < NEAR_TOP_RANGE;
 }
 
+// 上端付近で静止したら固定ヘッダーを隠し、最上部ヘッダー(通常フロー)に
+// 役割を譲る。上端付近のスクロールイベントごとに予約し直すことで、
+// ラバーバンド中は表示を保つ。
+function scheduleNearTopHide() {
+  clearTimeout(nearTopHideTimer);
+  nearTopHideTimer = setTimeout(() => {
+    const previousSnapshot = snapshot();
+    nearTopHideTimer = undefined;
+    isFixedHeaderVisible = false;
+    updateDerivedStates();
+    notifyIfChanged(previousSnapshot);
+  }, NEAR_TOP_HIDE_DELAY);
+}
+
+function cancelNearTopHide() {
+  if (nearTopHideTimer !== undefined) {
+    clearTimeout(nearTopHideTimer);
+    nearTopHideTimer = undefined;
+  }
+}
+
 function handleScroll() {
   const previousSnapshot = snapshot();
   const now = performance.now();
@@ -56,14 +83,16 @@ function handleScroll() {
 
   if (now >= holdStateUntil) {
     if (currentScrollY < NEAR_TOP_RANGE) {
-      // 上端付近は最上部ヘッダー(通常フロー)に役割を譲る
-      isFixedHeaderVisible = false;
-    } else if (now < keepVisibleUntil) {
-      isFixedHeaderVisible = true;
-    } else if (scrollDifference > 6) {
-      isFixedHeaderVisible = false;
-    } else if (scrollDifference < -6) {
-      isFixedHeaderVisible = true;
+      scheduleNearTopHide();
+    } else {
+      cancelNearTopHide();
+      if (now < keepVisibleUntil) {
+        isFixedHeaderVisible = true;
+      } else if (scrollDifference > 6) {
+        isFixedHeaderVisible = false;
+      } else if (scrollDifference < -6) {
+        isFixedHeaderVisible = true;
+      }
     }
   }
 
@@ -97,6 +126,7 @@ function start() {
 
 function stop() {
   isStarted = false;
+  cancelNearTopHide();
   window.removeEventListener('scroll', handleScroll);
   window.removeEventListener('site-header-show', handleShow);
   window.removeEventListener('site-header-hold', handleHold);
