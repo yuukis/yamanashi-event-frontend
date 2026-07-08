@@ -35,6 +35,23 @@ describe('headerVisibility', () => {
   it('keeps the fixed header hidden by default (the static header covers the top)', () => {
     expect(mod.getHeaderVisible()).toBe(false);
     expect(mod.getHeaderAreaOccupied()).toBe(true);
+    expect(mod.getNearPageTop()).toBe(true);
+  });
+
+  it('tracks whether the viewport is near the page top', () => {
+    setScrollY(0);
+    const unsub = mod.subscribeHeaderVisibility(() => {});
+    expect(mod.getNearPageTop()).toBe(true);
+
+    setScrollY(20);
+    window.dispatchEvent(new Event('scroll'));
+    expect(mod.getNearPageTop()).toBe(false);
+
+    setScrollY(5);
+    window.dispatchEvent(new Event('scroll'));
+    expect(mod.getNearPageTop()).toBe(true);
+
+    unsub();
   });
 
   it('stays hidden when scrolling down', () => {

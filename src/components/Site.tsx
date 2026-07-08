@@ -33,7 +33,7 @@ import { keyframes } from '@emotion/react';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
 import { subscribeNow, getNow } from '../utils/nowTicker';
-import { subscribeHeaderVisibility, getHeaderVisible, HEADER_HEIGHT } from '../utils/headerVisibility';
+import { subscribeHeaderVisibility, getHeaderVisible, getNearPageTop, HEADER_HEIGHT } from '../utils/headerVisibility';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiEvent } from '../types/events';
 
@@ -84,9 +84,12 @@ function SiteHeaderContent() {
 // ヘッダーは2枚構成。最上部ヘッダーは通常フローに置き、ページと一緒に
 // スクロールして自然に消える。固定ヘッダーは上スクロール時にスライドイン
 // し、ページ上端付近では最上部ヘッダーに役割を譲って隠れる。両者は同一の
-// 見た目なので、上端(ずれ8px未満)での切り替えは知覚されない。
+// 見た目でページ上端付近では位置ずれが8px未満に収まるため、そこでの
+// 切り替えはアニメーションなしで行うことで入れ替えを悟らせない
+// (スライドさせると背面の最上部ヘッダーの上を下線が横切るのが見える)。
 export function SiteHeader() {
   const isFixedHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
+  const isNearPageTop = useSyncExternalStore(subscribeHeaderVisibility, getNearPageTop);
 
   return (
     <>
@@ -102,7 +105,7 @@ export function SiteHeader() {
            zIndex={'sticky'}
            transform={isFixedHeaderVisible ? 'translateY(0)' : 'translateY(-100%)'}
            visibility={isFixedHeaderVisible ? 'visible' : 'hidden'}
-           transition={'transform 180ms ease-out, visibility 180ms ease-out'}
+           transition={isNearPageTop ? 'none' : 'transform 180ms ease-out, visibility 180ms ease-out'}
            >
         <SiteHeaderContent />
       </Box>
