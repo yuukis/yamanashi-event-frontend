@@ -161,6 +161,23 @@ describe('headerVisibility', () => {
     unsub();
   });
 
+  it('scales the occupied range with the root font size', () => {
+    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList);
+    document.documentElement.style.fontSize = '20px';
+
+    // md のヘッダー高 = 4rem + 7px = 87px なので、80px はまだヘッダー内
+    setScrollY(80);
+    const unsub = mod.subscribeHeaderVisibility(() => {});
+    expect(mod.getHeaderAreaOccupied()).toBe(true);
+
+    setScrollY(100);
+    window.dispatchEvent(new Event('scroll'));
+    expect(mod.getHeaderAreaOccupied()).toBe(false);
+
+    document.documentElement.style.fontSize = '';
+    unsub();
+  });
+
   it('reports the header area occupied while the fixed header is visible', () => {
     setScrollY(300);
     const unsub = mod.subscribeHeaderVisibility(() => {});

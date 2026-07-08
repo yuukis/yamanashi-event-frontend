@@ -3,20 +3,26 @@ type Listener = () => void;
 // SiteHeader の実高さ(ロゴ行 + 下線3本分)。ActiveFilterBadge がヘッダー
 // 直下に位置合わせする際にも同じ値を使うため、両方から参照できるように
 // ここで定義する。
-export const HEADER_HEIGHT = { base: 'calc(3rem + 7px)', md: 'calc(4rem + 7px)' };
-
-// 最上部ヘッダー(通常フロー)がまだ画面内に残っているとみなすスクロール量
-// (px)。HEADER_HEIGHT(base: 3rem + 7px、md: 4rem + 7px)を丸めた値。
-const STATIC_HEADER_RANGE = { base: 56, md: 72 };
+const HEADER_ROW_REM = { base: 3, md: 4 };
+const HEADER_UNDERLINE_PX = 7;
+export const HEADER_HEIGHT = {
+  base: `calc(${HEADER_ROW_REM.base}rem + ${HEADER_UNDERLINE_PX}px)`,
+  md: `calc(${HEADER_ROW_REM.md}rem + ${HEADER_UNDERLINE_PX}px)`,
+};
 
 // Chakra の md ブレークポイント
 let mdMediaQuery: MediaQueryList | null = null;
 
+// 最上部ヘッダー(通常フロー)がまだ画面内に残っているとみなすスクロール量
+// (px)。ブラウザの既定フォントサイズ変更にも追従できるよう、rem を実際の
+// ルートフォントサイズで換算して求める(+1px は丸め余裕)。
 function getStaticHeaderRange(): number {
   if (!mdMediaQuery) {
     mdMediaQuery = window.matchMedia('(min-width: 48em)');
   }
-  return mdMediaQuery.matches ? STATIC_HEADER_RANGE.md : STATIC_HEADER_RANGE.base;
+  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const rows = mdMediaQuery.matches ? HEADER_ROW_REM.md : HEADER_ROW_REM.base;
+  return rows * rootFontSize + HEADER_UNDERLINE_PX + 1;
 }
 
 // 「ページ上端付近」とみなすスクロール量(px)。この範囲では最上部ヘッダーと
