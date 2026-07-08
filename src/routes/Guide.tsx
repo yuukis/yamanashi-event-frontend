@@ -1,4 +1,4 @@
-import { SiteHeader, SiteFooter } from '../components/Site';
+import { SiteHeader, SiteFooter, useFixedHeaderBoundary } from '../components/Site';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
 import {
@@ -25,6 +25,8 @@ import {
 } from "@chakra-ui/icons";
 
 function Guide() {
+  const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
+
   document.title = 'はじめての方へ - Yamanashi Developer Hub';
 
   const guideItems = [
@@ -99,7 +101,7 @@ function Guide() {
       <Container maxW={'980px'} w={'100%'} p={{base: '4', md: '8'}}>
         <Stack spacing={'8'}>
           <Box>
-            <Heading size={{base: 'sm', md: 'md'}} mb={'4'} color={'gray.600'}>
+            <Heading ref={headerBoundaryRef} size={{base: 'sm', md: 'md'}} mb={'4'} color={'gray.600'}>
               このサイトでできること
             </Heading>
             <SimpleGrid columns={{base: 1, md: 2}} spacing={'4'}>

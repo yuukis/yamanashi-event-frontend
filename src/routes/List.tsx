@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from "react-router-dom";
 import axios from 'axios';
-import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
+import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
@@ -78,6 +78,8 @@ function List({ startYear} : {startYear: number}) {
     : null;
   const events = filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup);
 
+  const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
+
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
 
   useEffect(() => {
@@ -141,7 +143,8 @@ function List({ startYear} : {startYear: number}) {
                  mb={'2'}
                  display={'flex'} alignItems={'flex-end'}
                  >
-            <Heading size={{base: 'sm', md: 'md'}}
+            <Heading ref={headerBoundaryRef}
+                     size={{base: 'sm', md: 'md'}}
                      mt={'4'}
                      color={'gray.600'}
                      >

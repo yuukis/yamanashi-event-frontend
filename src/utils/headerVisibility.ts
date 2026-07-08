@@ -29,8 +29,25 @@ let isNearTop = true;
 let lastScrollY = 0;
 let keepVisibleUntil = 0;
 let holdStateUntil = 0;
+let boundaryElement: HTMLElement | null = null;
 const listeners = new Set<Listener>();
 let isStarted = false;
+
+// 固定ヘッダーの表示境界となる要素を登録する。登録すると、その要素が
+// ビューポート上端に達するまでは上スクロールでも固定ヘッダーを表示しない
+// (ページ先頭のヒーローや案内が見えている間は最上部ヘッダーだけで足りる
+// ため)。未登録時は NEAR_TOP_RANGE で判定する。
+export function setFixedHeaderBoundary(element: HTMLElement | null) {
+  boundaryElement = element;
+}
+
+function getHideThreshold(): number {
+  if (!boundaryElement || !boundaryElement.isConnected) {
+    return NEAR_TOP_RANGE;
+  }
+  // イベントの読み込みなどで境界要素の位置は変わるため、毎回測り直す
+  return boundaryElement.getBoundingClientRect().top + window.scrollY;
+}
 
 function snapshot() {
   return `${isFixedHeaderVisible},${isHeaderAreaOccupied},${isNearTop}`;
@@ -55,8 +72,8 @@ function handleScroll() {
   lastScrollY = currentScrollY;
 
   if (now >= holdStateUntil) {
-    if (currentScrollY < NEAR_TOP_RANGE) {
-      // 上端付近は最上部ヘッダー(通常フロー)に役割を譲る
+    if (currentScrollY < getHideThreshold()) {
+      // 境界より上は最上部ヘッダー(通常フロー)に役割を譲る
       isFixedHeaderVisible = false;
     } else if (now < keepVisibleUntil) {
       isFixedHeaderVisible = true;

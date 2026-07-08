@@ -173,6 +173,56 @@ describe('headerVisibility', () => {
     unsub();
   });
 
+  it('stays hidden above the registered boundary element even when scrolling up', () => {
+    const boundary = document.createElement('h2');
+    // ページ内オフセット 500px の位置にある要素を模す
+    boundary.getBoundingClientRect = () =>
+      ({ top: 500 - scrollY } as DOMRect);
+    document.body.appendChild(boundary);
+    mod.setFixedHeaderBoundary(boundary);
+
+    setScrollY(400);
+    const unsub = mod.subscribeHeaderVisibility(() => {});
+
+    // 境界(500px)より上では上スクロールでも表示しない
+    setScrollY(300);
+    window.dispatchEvent(new Event('scroll'));
+    expect(mod.getHeaderVisible()).toBe(false);
+
+    // 境界より下では従来どおり上スクロールで表示する
+    setScrollY(700);
+    window.dispatchEvent(new Event('scroll'));
+    setScrollY(650);
+    window.dispatchEvent(new Event('scroll'));
+    expect(mod.getHeaderVisible()).toBe(true);
+
+    // 境界より上に戻ると隠れる
+    setScrollY(450);
+    window.dispatchEvent(new Event('scroll'));
+    expect(mod.getHeaderVisible()).toBe(false);
+
+    mod.setFixedHeaderBoundary(null);
+    document.body.removeChild(boundary);
+    unsub();
+  });
+
+  it('falls back to the near-top threshold when the boundary element is disconnected', () => {
+    const boundary = document.createElement('h2');
+    boundary.getBoundingClientRect = () =>
+      ({ top: 500 - scrollY } as DOMRect);
+    mod.setFixedHeaderBoundary(boundary); // document に未接続のまま登録
+
+    setScrollY(200);
+    const unsub = mod.subscribeHeaderVisibility(() => {});
+
+    setScrollY(170);
+    window.dispatchEvent(new Event('scroll'));
+    expect(mod.getHeaderVisible()).toBe(true);
+
+    mod.setFixedHeaderBoundary(null);
+    unsub();
+  });
+
   it('site-header-show forces visible and holds through the next scroll-down', () => {
     setScrollY(200);
     const unsub = mod.subscribeHeaderVisibility(() => {});

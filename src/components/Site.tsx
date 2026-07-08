@@ -33,7 +33,7 @@ import { keyframes } from '@emotion/react';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
 import { subscribeNow, getNow } from '../utils/nowTicker';
-import { subscribeHeaderVisibility, getHeaderVisible, getNearPageTop, HEADER_HEIGHT } from '../utils/headerVisibility';
+import { subscribeHeaderVisibility, getHeaderVisible, getNearPageTop, setFixedHeaderBoundary, HEADER_HEIGHT } from '../utils/headerVisibility';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiEvent } from '../types/events';
 
@@ -41,6 +41,19 @@ const todayBadgePulse = keyframes`
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(1.2); }
 `;
+
+// 固定ヘッダーの表示境界をマークする要素の ref を返す。各ページの本文先頭の
+// 見出しに付けると、それより上では固定ヘッダーが表示されなくなる。
+export function useFixedHeaderBoundary<T extends HTMLElement>() {
+  const boundaryRef = useRef<T>(null);
+
+  useEffect(() => {
+    setFixedHeaderBoundary(boundaryRef.current);
+    return () => setFixedHeaderBoundary(null);
+  }, []);
+
+  return boundaryRef;
+}
 
 function SiteHeaderContent() {
   return (

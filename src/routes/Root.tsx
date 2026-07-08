@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified } from '../components/Site';
+import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
@@ -63,6 +63,8 @@ function Root({startYear}: {startYear: number}) {
     lastModified: null,
     errorMessage: ''
   });
+
+  const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
 
   document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
 
@@ -278,7 +280,8 @@ function Root({startYear}: {startYear: number}) {
                           onSelect={handleGroupSelect}
                           isLoading={data.isLoading}
                           />
-          <Heading size={{base: 'sm', md: 'md'}}
+          <Heading ref={headerBoundaryRef}
+                   size={{base: 'sm', md: 'md'}}
                    ml={{base: '4', md: '0'}}
                    mt={'8'}
                    mb={'2'}
