@@ -39,7 +39,7 @@ import type { ApiGroup, EventWithGroup } from '../types/events';
 const STARFIELD_BLEED = 120;
 // 星空タイル(root_top_bg.png)は幅:高さ = 1:2 なので、帯の高さは
 // bgSize で指定する幅の2倍になる。
-const STARFIELD_HEIGHT = { base: 200, md: 100 };
+const STARFIELD_HEIGHT = 200;
 
 type RootState = {
   isLoading: boolean;
@@ -197,15 +197,12 @@ function Root({startYear}: {startYear: number}) {
              top={`-${STARFIELD_BLEED}px`}
              left={0}
              right={0}
-             h={{
-               base: `${STARFIELD_BLEED + STARFIELD_HEIGHT.base}px`,
-               md: `${STARFIELD_BLEED + STARFIELD_HEIGHT.md}px`,
-             }}
+             h={`${STARFIELD_BLEED + STARFIELD_HEIGHT}px`}
              bgColor={'#faf0e6'}
              bgImg={root_top_bg}
              bgPos={'bottom'}
              bgRepeat={'repeat-x'}
-             bgSize={{base: '100px', md: '50px'}}
+             bgSize={'100px'}
              pointerEvents={'none'}
              />
         {/* position: relative で星空レイヤーより手前に重ねる */}
