@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { Box, useDisclosure } from "@chakra-ui/react";
-import { BellFill, BellSlash } from '@chakra-icons/bootstrap';
+import { BellFill, BellSlash, Trash3 } from '@chakra-icons/bootstrap';
 import {
   Stack,
+  HStack,
   Spacer,
   Text,
   Button,
@@ -233,9 +234,20 @@ export function NotificationButton() {
       <PopoverContent>
         <PopoverArrow />
         <PopoverHeader>
-          <Text fontSize={'sm'}>
-            新着イベント
-          </Text>
+          <HStack spacing={'2'} pr={'8'}>
+            <Text fontSize={'sm'} flex={'1'}>
+              新着イベント
+            </Text>
+            {isLocalStorageOk && (
+              <IconButton aria-label='新着通知をクリア'
+                          icon={<Trash3 />}
+                          size={'xs'}
+                          variant={'outline'}
+                          isDisabled={newEvents.length === 0}
+                          onClick={handleClearNewEvents}
+                          />
+            )}
+          </HStack>
         </PopoverHeader>
         <PopoverCloseButton />
         <PopoverBody>
@@ -260,12 +272,6 @@ export function NotificationButton() {
                     </Button>
                   ))
                 )}
-                <Button size={'xs'} variant={'outline'} alignSelf={'flex-end'}
-                        isDisabled={newEvents.length === 0}
-                        onClick={handleClearNewEvents}
-                        >
-                  新着通知をクリア
-                </Button>
               </Stack>
             )}
             <Text fontSize={'xs'}>
