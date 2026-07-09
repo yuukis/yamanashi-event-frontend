@@ -254,6 +254,7 @@ export function EventBody(data: EventBodyProps) {
             付かないため、それとは独立してイベント単位で常に存在させる。 */}
         <Box id={getEventAnchorId(event.uid)}
              position={'absolute'}
+             top={'0'} left={'0'}
              w={'0'} h={'0'}
              overflow={'hidden'}
              scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
