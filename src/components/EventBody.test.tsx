@@ -1,10 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithChakra, mockMatchMedia } from '../test/test-utils';
 import { EventBody, EmptyEventBody, ErrorEventBody } from './EventBody';
 import { makeEvent } from '../test/fixtures';
+import { updateTrackingData } from '../utils/newEventTrackingStore';
+import type { NewEventTrackingData } from '../utils/newEventTracking';
 
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
+const EMPTY_TRACKING_DATA: NewEventTrackingData = { version: 1, records: {}, dismissedUids: [], acknowledgedDotUids: [] };
 
 vi.mock('../utils/nowTicker', () => ({
   subscribeNow: () => () => {},
@@ -12,6 +15,10 @@ vi.mock('../utils/nowTicker', () => ({
 }));
 
 describe('EventBody', () => {
+  beforeEach(() => {
+    updateTrackingData(() => EMPTY_TRACKING_DATA);
+  });
+
   it('renders the event title, address and place', () => {
     mockMatchMedia(true); // desktop layout renders the title as a link
     renderWithChakra(
@@ -68,6 +75,52 @@ describe('EventBody', () => {
 
     expect(screen.queryByText('開催中')).not.toBeInTheDocument();
     expect(screen.queryByText('本日開催')).not.toBeInTheDocument();
+  });
+
+  it('shows a "NEW" badge for a new, not-yet-started event', () => {
+    mockMatchMedia(true);
+    updateTrackingData(() => ({ ...EMPTY_TRACKING_DATA, records: { 'event-1': { firstSeenAt: FIXED_NOW.toISOString() } } }));
+    renderWithChakra(
+      <EventBody event={makeEvent({
+                   uid: 'event-1',
+                   started_at: '2026-01-15T10:00:00+09:00',
+                   ended_at: '2026-01-15T12:00:00+09:00',
+                   updated_at: '2026-01-09T00:00:00+09:00',
+                 })}
+                 />,
+    );
+
+    expect(screen.getByText('NEW')).toBeInTheDocument();
+  });
+
+  it('does not show a "NEW" badge for an event with no tracked first-seen record', () => {
+    mockMatchMedia(true);
+    renderWithChakra(
+      <EventBody event={makeEvent({
+                   uid: 'event-1',
+                   started_at: '2026-01-15T10:00:00+09:00',
+                   ended_at: '2026-01-15T12:00:00+09:00',
+                 })}
+                 />,
+    );
+
+    expect(screen.queryByText('NEW')).not.toBeInTheDocument();
+  });
+
+  it('prioritizes the "ongoing" badge over "NEW" when both would otherwise apply', () => {
+    mockMatchMedia(true);
+    updateTrackingData(() => ({ ...EMPTY_TRACKING_DATA, records: { 'event-1': { firstSeenAt: FIXED_NOW.toISOString() } } }));
+    renderWithChakra(
+      <EventBody event={makeEvent({
+                   uid: 'event-1',
+                   started_at: '2026-01-10T11:00:00+09:00',
+                   ended_at: '2026-01-10T13:00:00+09:00',
+                 })}
+                 />,
+    );
+
+    expect(screen.getByText('開催中')).toBeInTheDocument();
+    expect(screen.queryByText('NEW')).not.toBeInTheDocument();
   });
 
   it('always renders a per-event jump anchor, independent of the date-level anchorId prop', () => {
