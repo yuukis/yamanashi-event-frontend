@@ -571,7 +571,7 @@ function getCalendarDayBg(hasEvent: boolean) {
 export function GithubButton() {
 
   return (
-    <Popover>
+    <Popover placement='bottom-end'>
       <PopoverTrigger>
         <IconButton aria-label='Git repo' variant={'ghost'} icon={<Github />} />
       </PopoverTrigger>

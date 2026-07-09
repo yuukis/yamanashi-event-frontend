@@ -214,7 +214,7 @@ export function NotificationButton() {
   const isNotifyAvailableOnIOS = isIOS && (window.navigator as any).standalone;
 
   return (
-    <Popover isOpen={isOpen} onOpen={onOpen} onClose={onClose}>
+    <Popover isOpen={isOpen} onOpen={onOpen} onClose={onClose} placement='bottom-end'>
       <PopoverTrigger>
         <IconButton
           aria-label={hasDot ? '新着イベントの通知があります' : 'Notification'}
