@@ -249,9 +249,8 @@ export function EventBody(data: EventBodyProps) {
                 WebkitUserSelect: 'none',
                 _active: {bg: 'gray.100'},
               })}>
-        {/* 新着イベント通知一覧など、個別イベントを直接ジャンプ先にする
-            用途向けの常設マーカー。日付単位のanchorIdは同日2件目以降には
-            付かないため、それとは独立してイベント単位で常に存在させる。 */}
+        {/* 日付単位のanchorIdは同日2件目以降には付かないため、それとは
+            独立してイベント単位で常に存在するジャンプ先を用意する。 */}
         <Box id={getEventAnchorId(event.uid)}
              position={'absolute'}
              top={'0'} left={'0'}

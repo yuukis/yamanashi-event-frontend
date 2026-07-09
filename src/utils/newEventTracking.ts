@@ -40,12 +40,8 @@ export function isNotYetStarted(event: { started_at: string }, now: Date): boole
   return new Date(event.started_at).getTime() > now.getTime();
 }
 
-// candidateEventsのうちまだ開始していないもののuidだけを残す(それ以外の
-// uidのrecord/dismissed/acknowledgedDotは破棄する)ことでストアの肥大化を
-// 防ぐ。開始済みのイベントはselectNewEventUidsの条件1により二度と新着に
-// ならないため、candidateEventsに含まれ続けていても(open_statusが
-// closeに更新されない等)保持する意味がない。既存recordのfirstSeenAtは
-// 保持し、新規に観測したuidにはnowをセットする。
+// 開始済みのイベントはselectNewEventUidsの条件1により二度と新着に
+// ならないため、open_statusの更新を待たずここでプルーニングする。
 export function mergeTrackingData(
   previous: NewEventTrackingData,
   candidateEvents: NewEventCandidate[],
@@ -67,8 +63,6 @@ export function mergeTrackingData(
   };
 }
 
-// 新着の3条件(未開始/初観測から3日以内/updated_atが7日以内)をすべて
-// 満たし、かつクリアされていないuidの集合を返す。
 export function selectNewEventUids(
   data: NewEventTrackingData,
   events: NewEventCandidate[],

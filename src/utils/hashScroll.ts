@@ -1,6 +1,3 @@
-// 現在のページが '/' ならその場でhash遷移してスクロール、そうでなければ
-// '/' へ遷移してからスクロールする。ミニカレンダーの日付ジャンプと、
-// 新着イベント通知一覧のイベント単位ジャンプの両方で使う汎用ヘルパー。
 export function jumpToAnchor(anchorId: string): void {
   const encodedAnchorId = encodeURIComponent(anchorId);
 
