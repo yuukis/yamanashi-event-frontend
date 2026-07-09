@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
@@ -65,6 +65,7 @@ function Root({startYear}: {startYear: number}) {
   });
 
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
+  const starfieldRef = useRef<HTMLDivElement>(null);
 
   document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
 
@@ -143,6 +144,19 @@ function Root({startYear}: {startYear: number}) {
   const futureEvents = filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup);
   const pastEvents = filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup);
 
+  // iPadOS の Safari では、絞り込み操作等でページ全体の高さが変わると
+  // scroll() タイムラインの再計算に失敗し、視差が飛んだり元の位置に
+  // 戻ろうとしてちらつくことがある(WebKit 側の既知の不具合)。表示件数が
+  // 変わるたびにアニメーションを一旦外して再適用し、タイムラインを
+  // 再確立させることで回避する。
+  useLayoutEffect(() => {
+    const el = starfieldRef.current;
+    if (!el) return;
+    el.style.animationName = 'none';
+    void el.offsetHeight;
+    el.style.animationName = '';
+  }, [data.isLoading, futureEvents.length, pastEvents.length]);
+
   const renderEventBodies = (events: EventWithGroup[], anchoredDateKeys: Set<string>) => {
     return events.map((event, index) => {
       const eventDateKey = formatEventDateKey(new Date(event.started_at));
@@ -188,7 +202,8 @@ function Root({startYear}: {startYear: number}) {
         {/* 星空レイヤー。視差は style.css の .starfield-parallax が適用し、
             非対応ブラウザでは静的表示になる。塗り足しの #faf0e6 はタイル
             上端と、親背景の #fffafa はタイル下端と同色のため継ぎ目が出ない。 */}
-        <Box aria-hidden={true}
+        <Box ref={starfieldRef}
+             aria-hidden={true}
              className={'starfield-parallax'}
              position={'absolute'}
              top={`-${STARFIELD_BLEED}px`}
