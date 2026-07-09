@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useDisclosure } from "@chakra-ui/react";
+import { useState, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { Box, useDisclosure } from "@chakra-ui/react";
 import { BellFill, BellSlash } from '@chakra-icons/bootstrap';
 import {
   Stack,
@@ -17,6 +17,39 @@ import {
   PopoverFooter
 } from '@chakra-ui/react';
 import { isIOS } from 'react-device-detect';
+import { fetchEvents } from '../utils/api';
+import { isFutureEvent } from '../utils/eventGroups';
+import { sortByStartedAtAsc } from '../utils/eventSort';
+import { subscribeNow, getNow } from '../utils/nowTicker';
+import { getEventAnchorId } from '../utils/eventAnchors';
+import { jumpToAnchor } from '../utils/hashScroll';
+import {
+  acknowledgeNewEventDot,
+  dismissNewEvents,
+  hasUnacknowledgedNewEvent,
+  mergeTrackingData,
+  selectNewEventUids,
+} from '../utils/newEventTracking';
+import {
+  isLocalStorageAvailable,
+  subscribeTrackingData,
+  getTrackingDataSnapshot,
+  updateTrackingData,
+} from '../utils/newEventTrackingStore';
+import type { ApiEvent } from '../types/events';
+
+const DAY_OF_WEEK = ['日', '月', '火', '水', '木', '金', '土'];
+
+function formatNewEventStartLabel(startedAt: string): string {
+  const date = new Date(startedAt);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const dow = DAY_OF_WEEK[date.getDay()];
+  const hours = date.getHours();
+  const minutes = `${date.getMinutes()}`.padStart(2, '0');
+
+  return `${month}/${day}(${dow}) ${hours}:${minutes}〜`;
+}
 
 export function NotificationButton() {
 
@@ -24,7 +57,67 @@ export function NotificationButton() {
   const [isLoading, setIsLoading] = useState(false);
   const VAPID = import.meta.env.VITE_PUBLIC_VAPID_KEY as string;
   const API_URL = import.meta.env.VITE_SUBSCRIPTION_API_URL as string;
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen: openDisclosure, onClose } = useDisclosure();
+
+  const [isLocalStorageOk] = useState(() => isLocalStorageAvailable());
+  const trackingData = useSyncExternalStore(subscribeTrackingData, getTrackingDataSnapshot);
+  const now = useSyncExternalStore(subscribeNow, getNow);
+  const [events, setEvents] = useState<ApiEvent[]>([]);
+
+  const isUnmountedRef = useRef(false);
+
+  useEffect(() => {
+    isUnmountedRef.current = false;
+
+    fetchEvents()
+      .then((res) => {
+        if (!isUnmountedRef.current) {
+          setEvents(res.events);
+        }
+      })
+      .catch(() => {
+        // 新着一覧が空のまま表示されるだけなので、取得失敗時は何もしない
+      });
+
+    return () => {
+      isUnmountedRef.current = true;
+    };
+  }, []);
+
+  const candidateEvents = useMemo(() => events.filter(isFutureEvent), [events]);
+
+  useEffect(() => {
+    if (!isLocalStorageOk || candidateEvents.length === 0) {
+      return;
+    }
+
+    // 60秒ごとのnowティックでは書き込みが走らないよう、依存配列にnowを
+    // 含めない(candidateEvents/isLocalStorageOkが変わった時だけ実行)。
+    updateTrackingData((previous) => mergeTrackingData(previous, candidateEvents, now));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [candidateEvents, isLocalStorageOk]);
+
+  const newEvents = useMemo(() => {
+    const uids = selectNewEventUids(trackingData, candidateEvents, now);
+    return candidateEvents.filter((event) => uids.has(event.uid)).sort(sortByStartedAtAsc);
+  }, [trackingData, candidateEvents, now]);
+
+  const hasDot = isLocalStorageOk && hasUnacknowledgedNewEvent(trackingData, newEvents.map((event) => event.uid));
+
+  const onOpen = () => {
+    if (isLocalStorageOk && newEvents.length > 0) {
+      updateTrackingData((previous) => acknowledgeNewEventDot(previous, newEvents.map((event) => event.uid)));
+    }
+    openDisclosure();
+  };
+
+  const handleClearNewEvents = () => {
+    const uids = newEvents.map((event) => event.uid);
+    if (uids.length === 0) {
+      return;
+    }
+    updateTrackingData((previous) => acknowledgeNewEventDot(dismissNewEvents(previous, uids), uids));
+  };
 
   const sendSubscriptionToServer = (subscription: PushSubscription) => {
     return fetch(`${API_URL}/subscribe`, {
@@ -117,23 +210,64 @@ export function NotificationButton() {
   return (
     <Popover isOpen={isOpen} onOpen={onOpen} onClose={onClose}>
       <PopoverTrigger>
-        <IconButton
-          aria-label='Notification'
-          variant={'ghost'}
-          icon={isNotifyAvailable ? <BellFill /> : <BellSlash />}
-          onClick={onOpen}
-        />
+        <Box position={'relative'} display={'inline-flex'}>
+          <IconButton
+            aria-label={hasDot ? '新着イベントの通知があります' : 'Notification'}
+            variant={'ghost'}
+            icon={isNotifyAvailable ? <BellFill /> : <BellSlash />}
+            onClick={onOpen}
+          />
+          {hasDot && (
+            <Box position={'absolute'}
+                 top={'6px'}
+                 right={'6px'}
+                 w={'8px'} h={'8px'}
+                 borderRadius={'full'}
+                 bg={'purple.500'}
+                 border={'2px solid white'}
+                 pointerEvents={'none'}
+                 />
+          )}
+        </Box>
       </PopoverTrigger>
       <PopoverContent>
         <PopoverArrow />
         <PopoverHeader>
           <Text fontSize={'sm'}>
-            新着イベント通知
+            新着イベント
           </Text>
         </PopoverHeader>
         <PopoverCloseButton />
         <PopoverBody>
-          <Stack>
+          <Stack spacing={'3'}>
+            {isLocalStorageOk && (
+              <Stack spacing={'1'} maxH={'240px'} overflowY={'auto'}>
+                {newEvents.length === 0 ? (
+                  <Text fontSize={'xs'} color={'gray.500'}>新着イベントはありません</Text>
+                ) : (
+                  newEvents.map((event) => (
+                    <Button key={event.uid} variant={'ghost'} justifyContent={'flex-start'}
+                            size={'sm'} h={'auto'} py={'1'}
+                            onClick={() => {
+                              jumpToAnchor(getEventAnchorId(event.uid));
+                              onClose();
+                            }}
+                            >
+                      <Stack spacing={'0'} align={'flex-start'}>
+                        <Text fontSize={'xs'} color={'gray.500'}>{formatNewEventStartLabel(event.started_at)}</Text>
+                        <Text fontSize={'sm'} noOfLines={1}>{event.title}</Text>
+                      </Stack>
+                    </Button>
+                  ))
+                )}
+                <Button size={'xs'} variant={'outline'} alignSelf={'flex-end'}
+                        isDisabled={newEvents.length === 0}
+                        onClick={handleClearNewEvents}
+                        >
+                  新着通知をクリア
+                </Button>
+              </Stack>
+            )}
             <Text fontSize={'xs'}>
               新しくイベントが登録されたら通知します<br />
               （お使いの環境によっては、通知が正しく動作しない場合があります）
