@@ -1,3 +1,15 @@
+export function jumpToAnchor(anchorId: string): void {
+  const encodedAnchorId = encodeURIComponent(anchorId);
+
+  if (window.location.pathname === '/') {
+    window.location.hash = encodedAnchorId;
+    window.requestAnimationFrame(scrollToCurrentHash);
+    return;
+  }
+
+  window.open(`/#${encodedAnchorId}`, '_self');
+}
+
 export function scrollToCurrentHash() {
   const hash = window.location.hash;
 

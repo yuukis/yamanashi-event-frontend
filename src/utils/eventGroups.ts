@@ -36,8 +36,10 @@ export function isFutureEvent(event: ApiEvent) {
 }
 
 export type GroupEventDates = {
+  uid: string;
   started_at: string;
   ended_at: string;
+  updated_at: string;
 };
 
 export function countGroups(
@@ -56,7 +58,7 @@ export function countGroups(
       continue;
     }
     const entry = counts.get(event.group_key);
-    const eventDates = { started_at: event.started_at, ended_at: event.ended_at };
+    const eventDates = { uid: event.uid, started_at: event.started_at, ended_at: event.ended_at, updated_at: event.updated_at };
     if (entry) {
       entry.count += 1;
       entry.events.push(eventDates);

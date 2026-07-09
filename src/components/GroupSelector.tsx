@@ -4,10 +4,14 @@ import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import { People } from '@chakra-icons/bootstrap';
 import { formatEventDateKey } from '../utils/eventAnchors';
 import { subscribeNow, getNow } from '../utils/nowTicker';
+import { isEventNew, type NewEventTrackingData } from '../utils/newEventTracking';
+import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
 
 export type GroupSelectorEvent = {
+  uid: string;
   started_at: string;
   ended_at: string;
+  updated_at: string;
 };
 
 export type GroupSelectorItem = {
@@ -24,7 +28,7 @@ type GroupSelectorProps = {
   isLoading: boolean;
 };
 
-type GroupBadgeType = 'ongoing' | 'today';
+type GroupBadgeType = 'ongoing' | 'today' | 'new';
 
 const BLOCK_WIDTH = { base: '84px', md: '104px' };
 // 画像(IMAGE_SIZE) + gap + 2行分のコミュニティ名 + 上下padding を積み上げた高さ。
@@ -52,17 +56,32 @@ function shuffle<T>(items: T[]): T[] {
   return result;
 }
 
-// コミュニティが持つイベントの中に「開催中」「本日開催」に該当するものが
-// あるかどうかと、優先表示のための並び替えキー(該当イベントの開始日時の
-// うち最も早いもの)を求める。
-function getGroupBadge(events: GroupSelectorEvent[], now: Date): { type: GroupBadgeType | null; sortTime: number } {
+// コミュニティが持つイベントの中に「開催中」「本日開催」「新着あり」に
+// 該当するものがあるかどうかと、優先表示のための並び替えキー(該当
+// イベントの開始日時のうち最も早いもの)を求める。優先順位は
+// ongoing > today > new。
+function getGroupBadge(
+  events: GroupSelectorEvent[],
+  now: Date,
+  trackingData: NewEventTrackingData,
+): { type: GroupBadgeType | null; sortTime: number } {
   let type: GroupBadgeType | null = null;
   let sortTime = Infinity;
+  let hasNew = false;
+  let newSortTime = Infinity;
   const todayKey = formatEventDateKey(now);
 
   for (const event of events) {
     const start = new Date(event.started_at);
     const end = new Date(event.ended_at);
+
+    if (isEventNew(trackingData, event, now)) {
+      hasNew = true;
+      if (start.getTime() < newSortTime) {
+        newSortTime = start.getTime();
+      }
+    }
+
     const hasEnded = now.getTime() > end.getTime();
     if (hasEnded) {
       continue;
@@ -85,7 +104,13 @@ function getGroupBadge(events: GroupSelectorEvent[], now: Date): { type: GroupBa
     }
   }
 
-  return { type, sortTime };
+  if (type) {
+    return { type, sortTime };
+  }
+  if (hasNew) {
+    return { type: 'new', sortTime: newSortTime };
+  }
+  return { type: null, sortTime: Infinity };
 }
 
 type GroupBlockProps = {
@@ -121,16 +146,16 @@ function GroupBlock({ group, badge, isSelected, onSelect }: GroupBlockProps) {
                  top={'0'}
                  left={'50%'}
                  transform={'translate(-50%, -50%)'}
-                 bg={'#f9f1e8'}
-                 color={'impact.700'}
+                 bg={badge === 'new' ? '#f3e8fb' : '#f9f1e8'}
+                 color={badge === 'new' ? 'purple.700' : 'impact.700'}
                  border={'1px solid'}
-                 borderColor={'impact.500'}
+                 borderColor={badge === 'new' ? 'purple.500' : 'impact.500'}
                  fontSize={'xs'}
                  fontWeight={'bold'}
                  whiteSpace={'nowrap'}
                  zIndex={'1'}
                  >
-            {badge === 'ongoing' ? '開催中' : '本日開催'}
+            {badge === 'ongoing' ? '開催中' : badge === 'today' ? '本日開催' : '新着あり'}
           </Badge>
         )}
         <Box boxSize={IMAGE_SIZE}
@@ -173,6 +198,7 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
   const shuffledKeys = useMemo(() => shuffle(groups.map((group) => group.key)), [groupsKey]);
 
   const now = useSyncExternalStore(subscribeNow, getNow);
+  const trackingData = useSyncExternalStore(subscribeTrackingData, getTrackingDataSnapshot);
 
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -221,7 +247,7 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
   }
 
   const groupsByKey = new Map(groups.map((group) => [group.key, group]));
-  const badgeByKey = new Map(groups.map((group) => [group.key, getGroupBadge(group.events, now)]));
+  const badgeByKey = new Map(groups.map((group) => [group.key, getGroupBadge(group.events, now, trackingData)]));
 
   const badgedGroups = groups
     .filter((group) => badgeByKey.get(group.key)!.type !== null)

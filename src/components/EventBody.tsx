@@ -45,8 +45,10 @@ import {
   ChevronRight,
   ExclamationTriangleFill,
 } from '@chakra-icons/bootstrap';
-import { formatEventDateKey } from '../utils/eventAnchors';
+import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
 import { subscribeNow, getNow } from '../utils/nowTicker';
+import { isEventNew } from '../utils/newEventTracking';
+import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
 import type { EventWithGroup } from '../types/events';
 
 type EventBodyProps = {
@@ -76,6 +78,7 @@ export function EventBody(data: EventBodyProps) {
   const day_of_week = ['日', '月', '火', '水', '木', '金', '土'];
   const event = data.event;
   const now = useSyncExternalStore(subscribeNow, getNow);
+  const trackingData = useSyncExternalStore(subscribeTrackingData, getTrackingDataSnapshot);
   const now_year = now.getFullYear();
   const start_date = new Date(event.started_at);
   const end_date = new Date(event.ended_at);
@@ -87,6 +90,7 @@ export function EventBody(data: EventBodyProps) {
   const is_today = formatEventDateKey(start_date) === formatEventDateKey(now);
   const has_ended = now.getTime() > end_date.getTime();
   const is_ongoing = now.getTime() >= start_date.getTime() && !has_ended;
+  const is_new = isEventNew(trackingData, event, now);
 
   const title = event.title;
   const sub_title = event.catch;
@@ -245,6 +249,16 @@ export function EventBody(data: EventBodyProps) {
                 WebkitUserSelect: 'none',
                 _active: {bg: 'gray.100'},
               })}>
+        {/* 日付単位のanchorIdは同日2件目以降には付かないため、それとは
+            独立してイベント単位で常に存在するジャンプ先を用意する。 */}
+        <Box id={getEventAnchorId(event.uid)}
+             position={'absolute'}
+             top={'0'} left={'0'}
+             w={'0'} h={'0'}
+             overflow={'hidden'}
+             scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
+             aria-hidden
+             />
         <Flex w={'100%'}
               ml={{base: '2', md: '0'}}
               flexDirection={{base: 'column', md: 'row'}}
@@ -287,7 +301,7 @@ export function EventBody(data: EventBodyProps) {
                   >
               ({ start_dow }) { start_time }-
             </Text>
-            {(is_today || is_ongoing) && !has_ended && (
+            {(is_today || is_ongoing) && !has_ended ? (
               <Badge bg={'#f9f1e8'}
                      color={'impact.700'}
                      border={'1px solid'}
@@ -299,7 +313,19 @@ export function EventBody(data: EventBodyProps) {
                      >
                 {is_ongoing ? '開催中' : '本日開催'}
               </Badge>
-            )}
+            ) : is_new ? (
+              <Badge bg={'#f3e8fb'}
+                     color={'purple.700'}
+                     border={'1px solid'}
+                     borderColor={'purple.500'}
+                     fontSize={'xs'}
+                     fontWeight={'bold'}
+                     ml={{base: '2', md: '0'}}
+                     mt={{base: '0', md: '1'}}
+                     >
+                NEW
+              </Badge>
+            ) : null}
           </Stack>
           <Show above='md'>
             <Stack spacing={'2px'} direction={'row'} mr={'4'}>

@@ -72,8 +72,8 @@ describe('countGroups', () => {
   it('counts events per group and collects their dates', () => {
     const groups = [makeGroup({ key: 'g1', title: 'Group 1' })];
     const events = [
-      makeEvent({ uid: 'a', group_key: 'g1', group_name: 'Group 1', started_at: '2026-01-01T00:00:00+09:00', ended_at: '2026-01-01T01:00:00+09:00' }),
-      makeEvent({ uid: 'b', group_key: 'g1', group_name: 'Group 1', started_at: '2026-02-01T00:00:00+09:00', ended_at: '2026-02-01T01:00:00+09:00' }),
+      makeEvent({ uid: 'a', group_key: 'g1', group_name: 'Group 1', started_at: '2026-01-01T00:00:00+09:00', ended_at: '2026-01-01T01:00:00+09:00', updated_at: '2025-12-31T00:00:00+09:00' }),
+      makeEvent({ uid: 'b', group_key: 'g1', group_name: 'Group 1', started_at: '2026-02-01T00:00:00+09:00', ended_at: '2026-02-01T01:00:00+09:00', updated_at: '2026-01-31T00:00:00+09:00' }),
     ];
 
     const result = countGroups(events, groups);
@@ -85,8 +85,8 @@ describe('countGroups', () => {
         imageUrl: undefined,
         count: 2,
         events: [
-          { started_at: '2026-01-01T00:00:00+09:00', ended_at: '2026-01-01T01:00:00+09:00' },
-          { started_at: '2026-02-01T00:00:00+09:00', ended_at: '2026-02-01T01:00:00+09:00' },
+          { uid: 'a', started_at: '2026-01-01T00:00:00+09:00', ended_at: '2026-01-01T01:00:00+09:00', updated_at: '2025-12-31T00:00:00+09:00' },
+          { uid: 'b', started_at: '2026-02-01T00:00:00+09:00', ended_at: '2026-02-01T01:00:00+09:00', updated_at: '2026-01-31T00:00:00+09:00' },
         ],
       },
     ]);

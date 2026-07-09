@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { scrollToCurrentHash } from './hashScroll';
+import { jumpToAnchor, scrollToCurrentHash } from './hashScroll';
 
 describe('scrollToCurrentHash', () => {
   beforeEach(() => {
@@ -69,5 +69,51 @@ describe('scrollToCurrentHash', () => {
     expect(target.scrollIntoView).toHaveBeenCalled();
 
     document.body.removeChild(target);
+  });
+});
+
+describe('jumpToAnchor', () => {
+  beforeEach(() => {
+    window.history.pushState({}, '', '/');
+    window.location.hash = '';
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0);
+      return 0;
+    });
+  });
+
+  afterEach(() => {
+    window.history.pushState({}, '', '/');
+  });
+
+  it('sets the hash and scrolls when already on "/"', () => {
+    const target = document.createElement('div');
+    target.id = 'event-item-e1';
+    target.scrollIntoView = vi.fn();
+    document.body.appendChild(target);
+
+    jumpToAnchor('event-item-e1');
+
+    expect(window.location.hash).toBe('#event-item-e1');
+    expect(target.scrollIntoView).toHaveBeenCalled();
+
+    document.body.removeChild(target);
+  });
+
+  it('encodes the anchor id when setting the hash', () => {
+    jumpToAnchor('event-item-イベント');
+
+    expect(window.location.hash).toBe(`#${encodeURIComponent('event-item-イベント')}`);
+  });
+
+  it('navigates to "/" with the encoded anchor when not already on "/"', () => {
+    window.history.pushState({}, '', '/2026');
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    jumpToAnchor('event-item-e1');
+
+    expect(windowOpenSpy).toHaveBeenCalledWith('/#event-item-e1', '_self');
+
+    windowOpenSpy.mockRestore();
   });
 });

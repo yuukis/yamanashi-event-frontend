@@ -9,3 +9,7 @@ export function formatEventDateKey(date: Date): string {
 export function getEventDateAnchorId(dateKey: string): string {
   return `event-${dateKey.replace(/-/g, '')}`;
 }
+
+export function getEventAnchorId(uid: string): string {
+  return `event-item-${uid}`;
+}

@@ -2,8 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithChakra } from '../test/test-utils';
 import { GroupSelector, type GroupSelectorItem } from './GroupSelector';
+import { updateTrackingData } from '../utils/newEventTrackingStore';
+import type { NewEventTrackingData } from '../utils/newEventTracking';
 
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
+const EMPTY_TRACKING_DATA: NewEventTrackingData = { version: 1, records: {}, dismissedUids: [], acknowledgedDotUids: [] };
 
 vi.mock('../utils/nowTicker', () => ({
   subscribeNow: () => () => {},
@@ -22,6 +25,7 @@ function makeGroup(overrides: Partial<GroupSelectorItem> = {}): GroupSelectorIte
 describe('GroupSelector', () => {
   beforeEach(() => {
     vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    updateTrackingData(() => EMPTY_TRACKING_DATA);
   });
 
   it('renders nothing when there are no groups and it is not loading', () => {
@@ -89,7 +93,7 @@ describe('GroupSelector', () => {
       <GroupSelector groups={[makeGroup({
                        key: 'g1',
                        name: 'Group A',
-                       events: [{ started_at: '2026-01-10T11:00:00+09:00', ended_at: '2026-01-10T13:00:00+09:00' }],
+                       events: [{ uid: 'e1', started_at: '2026-01-10T11:00:00+09:00', ended_at: '2026-01-10T13:00:00+09:00', updated_at: '2026-01-01T00:00:00+09:00' }],
                      })]}
                      selected={null}
                      onSelect={() => {}}
@@ -105,7 +109,7 @@ describe('GroupSelector', () => {
       <GroupSelector groups={[makeGroup({
                        key: 'g1',
                        name: 'Group A',
-                       events: [{ started_at: '2026-01-10T18:00:00+09:00', ended_at: '2026-01-10T20:00:00+09:00' }],
+                       events: [{ uid: 'e1', started_at: '2026-01-10T18:00:00+09:00', ended_at: '2026-01-10T20:00:00+09:00', updated_at: '2026-01-01T00:00:00+09:00' }],
                      })]}
                      selected={null}
                      onSelect={() => {}}
@@ -121,7 +125,7 @@ describe('GroupSelector', () => {
       <GroupSelector groups={[makeGroup({
                        key: 'g1',
                        name: 'Group A',
-                       events: [{ started_at: '2026-01-01T10:00:00+09:00', ended_at: '2026-01-01T12:00:00+09:00' }],
+                       events: [{ uid: 'e1', started_at: '2026-01-01T10:00:00+09:00', ended_at: '2026-01-01T12:00:00+09:00', updated_at: '2026-01-01T00:00:00+09:00' }],
                      })]}
                      selected={null}
                      onSelect={() => {}}
@@ -131,5 +135,51 @@ describe('GroupSelector', () => {
 
     expect(screen.queryByText('開催中')).not.toBeInTheDocument();
     expect(screen.queryByText('本日開催')).not.toBeInTheDocument();
+  });
+
+  it('shows a "新着あり" badge for a group with a new not-yet-started event', () => {
+    updateTrackingData(() => ({
+      ...EMPTY_TRACKING_DATA,
+      records: { e1: { firstSeenAt: FIXED_NOW.toISOString() } },
+    }));
+
+    renderWithChakra(
+      <GroupSelector groups={[makeGroup({
+                       key: 'g1',
+                       name: 'Group A',
+                       events: [{ uid: 'e1', started_at: '2026-01-15T10:00:00+09:00', ended_at: '2026-01-15T12:00:00+09:00', updated_at: '2026-01-10T00:00:00+09:00' }],
+                     })]}
+                     selected={null}
+                     onSelect={() => {}}
+                     isLoading={false}
+                     />,
+    );
+
+    expect(screen.getByText('新着あり')).toBeInTheDocument();
+  });
+
+  it('prioritizes "ongoing" over "新着あり" when a group has both', () => {
+    updateTrackingData(() => ({
+      ...EMPTY_TRACKING_DATA,
+      records: { e2: { firstSeenAt: FIXED_NOW.toISOString() } },
+    }));
+
+    renderWithChakra(
+      <GroupSelector groups={[makeGroup({
+                       key: 'g1',
+                       name: 'Group A',
+                       events: [
+                         { uid: 'e1', started_at: '2026-01-10T11:00:00+09:00', ended_at: '2026-01-10T13:00:00+09:00', updated_at: '2026-01-01T00:00:00+09:00' },
+                         { uid: 'e2', started_at: '2026-01-15T10:00:00+09:00', ended_at: '2026-01-15T12:00:00+09:00', updated_at: '2026-01-10T00:00:00+09:00' },
+                       ],
+                     })]}
+                     selected={null}
+                     onSelect={() => {}}
+                     isLoading={false}
+                     />,
+    );
+
+    expect(screen.getByText('開催中')).toBeInTheDocument();
+    expect(screen.queryByText('新着あり')).not.toBeInTheDocument();
   });
 });
