@@ -70,7 +70,7 @@ function Root({startYear}: {startYear: number}) {
 
   useEffect(() => {
     if (searchParams.get('keyword') && searchParams.get('group')) {
-      setSearchParams({ group: searchParams.get('group')! });
+      setSearchParams({ group: searchParams.get('group')! }, { replace: true });
     }
   }, [searchParams, setSearchParams]);
 
@@ -122,7 +122,7 @@ function Root({startYear}: {startYear: number}) {
 
   const handleKeywordSelect = (keyword: string | null) => {
     window.dispatchEvent(new Event('site-header-hold'));
-    setSearchParams(keyword ? { keyword } : {});
+    setSearchParams(keyword ? { keyword } : {}, { replace: true });
   };
   const handleKeywordClick = (keyword: string) => {
     handleKeywordSelect(selectedKeyword === keyword ? null : keyword);
@@ -130,7 +130,7 @@ function Root({startYear}: {startYear: number}) {
 
   const handleGroupSelect = (group: string | null) => {
     window.dispatchEvent(new Event('site-header-hold'));
-    setSearchParams(group ? { group } : {});
+    setSearchParams(group ? { group } : {}, { replace: true });
   };
 
   const futureKeywordCounts = countKeywords(data.futureEvents);

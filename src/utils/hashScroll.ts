@@ -2,7 +2,10 @@ export function jumpToAnchor(anchorId: string): void {
   const encodedAnchorId = encodeURIComponent(anchorId);
 
   if (window.location.pathname === '/') {
-    window.location.hash = encodedAnchorId;
+    // location.hash への代入は履歴エントリを1つ積んでしまう。ページ内の
+    // ジャンプを何度行ってもヒストリーバックが1回で済むよう、履歴を
+    // 積まないreplaceStateでhashだけを更新する。
+    window.history.replaceState(null, '', `#${encodedAnchorId}`);
     window.requestAnimationFrame(scrollToCurrentHash);
     return;
   }
