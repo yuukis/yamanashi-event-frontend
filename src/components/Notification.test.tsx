@@ -64,6 +64,13 @@ describe('NotificationButton', () => {
     expect(await screen.findByText('新着イベントはありません')).toBeInTheDocument();
   });
 
+  it('shows the "Webプッシュ通知" title above the notify description', async () => {
+    renderWithChakra(<NotificationButton />);
+    openPopover();
+
+    expect(await screen.findByText('Webプッシュ通知')).toBeInTheDocument();
+  });
+
   it('lists a new event with its start date/time and title, and jumps to it on click', async () => {
     mockFetchEvents([makeFutureEvent({ uid: 'e1', title: '甲府もくもく会', started_at: '2026-01-15T19:00:00+09:00' })]);
     renderWithChakra(<NotificationButton />);

@@ -8,6 +8,7 @@ import {
   Text,
   Button,
   IconButton,
+  Divider,
   Popover,
   PopoverTrigger,
   PopoverContent,
@@ -255,7 +256,7 @@ export function NotificationButton() {
             {isLocalStorageOk && (
               <Stack spacing={'1'} maxH={'240px'} overflowY={'auto'}>
                 {newEvents.length === 0 ? (
-                  <Text fontSize={'xs'} color={'gray.500'}>新着イベントはありません</Text>
+                  <Text fontSize={'xs'} color={'gray.500'} textAlign={'center'} py={'6'}>新着イベントはありません</Text>
                 ) : (
                   newEvents.map((event) => (
                     <Button key={event.uid} variant={'ghost'} justifyContent={'flex-start'}
@@ -274,10 +275,14 @@ export function NotificationButton() {
                 )}
               </Stack>
             )}
-            <Text fontSize={'xs'}>
-              新しくイベントが登録されたら通知します<br />
-              （お使いの環境によっては、通知が正しく動作しない場合があります）
-            </Text>
+            {isLocalStorageOk && <Divider />}
+            <Stack spacing={'1'}>
+              <Text fontSize={'sm'} fontWeight={'bold'}>Webプッシュ通知</Text>
+              <Text fontSize={'xs'}>
+                新しくイベントが登録されたら通知します<br />
+                （お使いの環境によっては、通知が正しく動作しない場合があります）
+              </Text>
+            </Stack>
           </Stack>
         </PopoverBody>
         <PopoverFooter>
