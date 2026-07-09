@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import { Box, useDisclosure } from "@chakra-ui/react";
+import { useDisclosure } from "@chakra-ui/react";
 import { BellFill, BellSlash, Trash3 } from '@chakra-icons/bootstrap';
 import {
   Stack,
@@ -216,24 +216,23 @@ export function NotificationButton() {
   return (
     <Popover isOpen={isOpen} onOpen={onOpen} onClose={onClose}>
       <PopoverTrigger>
-        <Box position={'relative'} display={'inline-flex'}>
-          <IconButton
-            aria-label={hasDot ? '新着イベントの通知があります' : 'Notification'}
-            variant={'ghost'}
-            icon={isNotifyAvailable ? <BellFill /> : <BellSlash />}
-          />
-          {hasDot && (
-            <Box position={'absolute'}
-                 top={'6px'}
-                 right={'6px'}
-                 w={'8px'} h={'8px'}
-                 borderRadius={'full'}
-                 bg={'purple.500'}
-                 border={'2px solid white'}
-                 pointerEvents={'none'}
-                 />
-          )}
-        </Box>
+        <IconButton
+          aria-label={hasDot ? '新着イベントの通知があります' : 'Notification'}
+          variant={'ghost'}
+          icon={isNotifyAvailable ? <BellFill /> : <BellSlash />}
+          position={'relative'}
+          _after={hasDot ? {
+            content: '""',
+            position: 'absolute',
+            top: '6px',
+            right: '6px',
+            w: '8px',
+            h: '8px',
+            borderRadius: 'full',
+            bg: 'purple.500',
+            border: '2px solid white',
+          } : undefined}
+        />
       </PopoverTrigger>
       <PopoverContent>
         <PopoverArrow />
