@@ -45,7 +45,7 @@ import {
   ChevronRight,
   ExclamationTriangleFill,
 } from '@chakra-icons/bootstrap';
-import { formatEventDateKey } from '../utils/eventAnchors';
+import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import type { EventWithGroup } from '../types/events';
 
@@ -245,6 +245,16 @@ export function EventBody(data: EventBodyProps) {
                 WebkitUserSelect: 'none',
                 _active: {bg: 'gray.100'},
               })}>
+        {/* 新着イベント通知一覧など、個別イベントを直接ジャンプ先にする
+            用途向けの常設マーカー。日付単位のanchorIdは同日2件目以降には
+            付かないため、それとは独立してイベント単位で常に存在させる。 */}
+        <Box id={getEventAnchorId(event.uid)}
+             position={'absolute'}
+             w={'0'} h={'0'}
+             overflow={'hidden'}
+             scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
+             aria-hidden
+             />
         <Flex w={'100%'}
               ml={{base: '2', md: '0'}}
               flexDirection={{base: 'column', md: 'row'}}

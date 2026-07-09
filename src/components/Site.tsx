@@ -34,7 +34,7 @@ import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors'
 import { fetchEvents } from '../utils/api';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { subscribeHeaderVisibility, getHeaderVisible, getNearPageTop, setFixedHeaderBoundary, HEADER_HEIGHT } from '../utils/headerVisibility';
-import { scrollToCurrentHash } from '../utils/hashScroll';
+import { jumpToAnchor } from '../utils/hashScroll';
 import type { ApiEvent } from '../types/events';
 
 const todayBadgePulse = keyframes`
@@ -449,15 +449,7 @@ function MiniEventCalendar({
               return;
             }
 
-            const anchorId = getEventDateAnchorId(day.key);
-
-            if (window.location.pathname === '/') {
-              window.location.hash = anchorId;
-              window.requestAnimationFrame(scrollToCurrentHash);
-              return;
-            }
-
-            window.open(`/#${anchorId}`, '_self');
+            jumpToAnchor(getEventDateAnchorId(day.key));
           };
           const dayCell = (
             <Center key={day.key}

@@ -70,6 +70,15 @@ describe('EventBody', () => {
     expect(screen.queryByText('本日開催')).not.toBeInTheDocument();
   });
 
+  it('always renders a per-event jump anchor, independent of the date-level anchorId prop', () => {
+    mockMatchMedia(true);
+    const { container } = renderWithChakra(
+      <EventBody event={makeEvent({ uid: 'my-uid' })} />,
+    );
+
+    expect(container.querySelector('#event-item-my-uid')).not.toBeNull();
+  });
+
   it('renders the group name instead of the owner name when a group is present', () => {
     mockMatchMedia(true);
     renderWithChakra(
