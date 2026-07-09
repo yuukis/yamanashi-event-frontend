@@ -107,16 +107,11 @@ describe('jumpToAnchor', () => {
   });
 
   it('does not push a new history entry when already on "/"', () => {
-    const pushStateSpy = vi.spyOn(window.history, 'pushState');
-    const replaceStateSpy = vi.spyOn(window.history, 'replaceState');
+    const lengthBefore = window.history.length;
 
     jumpToAnchor('event-item-e1');
 
-    expect(pushStateSpy).not.toHaveBeenCalled();
-    expect(replaceStateSpy).toHaveBeenCalled();
-
-    pushStateSpy.mockRestore();
-    replaceStateSpy.mockRestore();
+    expect(window.history.length).toBe(lengthBefore);
   });
 
   it('preserves the existing history.state (e.g. React Router bookkeeping) instead of clobbering it', () => {
