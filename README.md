@@ -15,6 +15,7 @@ https://hub.yamanashi.dev
 - **Event listing** - Browse upcoming and past tech events in Yamanashi, grouped by year, with today's/ongoing events highlighted.
 - **Filter by keyword or community** - Narrow down events by keyword tag or by the community (group) hosting them.
 - **Event calendar** - View a monthly mini calendar of events from the header, with a shareable iCalendar URL to subscribe from external calendar apps.
+- **New event indicators** - Newly added events (not yet started, first seen within the last 3 days, and updated within the last 7 days) are tracked locally in the browser and surfaced with a "NEW"/"新着あり" badge on event cards and community blocks, and an unread dot on the header's notification bell. No permissions required.
 - **Push notifications** - Opt in to browser push notifications so you don't miss newly added events.
 - **Guide page** - A `/guide` page introducing the site and how to get started attending community events.
 
