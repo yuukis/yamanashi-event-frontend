@@ -110,7 +110,8 @@ export function NotificationButton() {
     if (isLocalStorageOk && candidateEvents.length > 0) {
       updateTrackingData((previous) => {
         const merged = mergeTrackingData(previous, candidateEvents, now);
-        return newEvents.length > 0 ? acknowledgeNewEventDot(merged, newEvents.map((event) => event.uid)) : merged;
+        const newUids = [...selectNewEventUids(merged, candidateEvents, now)];
+        return newUids.length > 0 ? acknowledgeNewEventDot(merged, newUids) : merged;
       });
     }
     openDisclosure();
@@ -220,7 +221,6 @@ export function NotificationButton() {
             aria-label={hasDot ? '新着イベントの通知があります' : 'Notification'}
             variant={'ghost'}
             icon={isNotifyAvailable ? <BellFill /> : <BellSlash />}
-            onClick={onOpen}
           />
           {hasDot && (
             <Box position={'absolute'}

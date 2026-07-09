@@ -146,7 +146,7 @@ describe('NotificationButton', () => {
     expect(screen.getByRole('button', { name: 'Notification' })).toBeInTheDocument();
   });
 
-  it('re-runs mergeTrackingData when the popover is opened, not only on the initial fetch', async () => {
+  it('re-runs mergeTrackingData exactly once when the popover is opened with a single click, not only on the initial fetch', async () => {
     mockFetchEvents([makeFutureEvent({ uid: 'e1', title: 'Event' })]);
     renderWithChakra(<NotificationButton />);
 
@@ -157,7 +157,9 @@ describe('NotificationButton', () => {
     openPopover();
     await screen.findByText('Event');
 
-    expect(vi.mocked(mergeTrackingData).mock.calls.length).toBeGreaterThan(callsAfterMount);
+    // PopoverTrigger自身がクリックでonOpenを呼ぶため、IconButton側にも
+    // onClickを付けると二重に走ってしまう回帰を防ぐ(ちょうど1回であること)。
+    expect(vi.mocked(mergeTrackingData).mock.calls.length).toBe(callsAfterMount + 1);
   });
 
   it('hides the new-events area when LocalStorage is unavailable, but keeps the description and notify button', async () => {
