@@ -5,9 +5,13 @@
  * コンポジタのスクロール描画に対して更新が1フレーム遅れてカクつくため、
  * スクロール駆動アニメーションを使う。非対応ブラウザでは視差なしの静的表示。
  * 1000px のスクロール区間で 800px 動かす = 追随率 0.8。
+ *
+ * iPadOS/iOS の WebKit はスクロールタイムラインの再計算が崩れる既知の
+ * 不具合があるため対象外とする。`-webkit-touch-callout` は iOS 系 WebKit
+ * でのみサポートされるため、この判定で除外できる。
  */
 @media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: scroll()) {
+  @supports (animation-timeline: scroll()) and (not (-webkit-touch-callout: none)) {
     .starfield-parallax {
       animation-name: starfield-parallax;
       animation-duration: auto;
