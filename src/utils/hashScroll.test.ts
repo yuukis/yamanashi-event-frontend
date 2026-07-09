@@ -106,6 +106,25 @@ describe('jumpToAnchor', () => {
     expect(window.location.hash).toBe(`#${encodeURIComponent('event-item-イベント')}`);
   });
 
+  it('does not push a new history entry when already on "/"', () => {
+    const lengthBefore = window.history.length;
+
+    jumpToAnchor('event-item-e1');
+
+    expect(window.history.length).toBe(lengthBefore);
+  });
+
+  it('preserves the existing history.state (e.g. React Router bookkeeping) instead of clobbering it', () => {
+    window.history.replaceState({ idx: 3, key: 'abc' }, '', '/');
+    const replaceStateSpy = vi.spyOn(window.history, 'replaceState');
+
+    jumpToAnchor('event-item-e1');
+
+    expect(replaceStateSpy).toHaveBeenCalledWith({ idx: 3, key: 'abc' }, '', '#event-item-e1');
+
+    replaceStateSpy.mockRestore();
+  });
+
   it('navigates to "/" with the encoded anchor when not already on "/"', () => {
     window.history.pushState({}, '', '/2026');
     const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
