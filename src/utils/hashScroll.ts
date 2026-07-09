@@ -4,8 +4,11 @@ export function jumpToAnchor(anchorId: string): void {
   if (window.location.pathname === '/') {
     // location.hash への代入は履歴エントリを1つ積んでしまう。ページ内の
     // ジャンプを何度行ってもヒストリーバックが1回で済むよう、履歴を
-    // 積まないreplaceStateでhashだけを更新する。
-    window.history.replaceState(null, '', `#${encodedAnchorId}`);
+    // 積まないreplaceStateでhashだけを更新する。第1引数にnullを渡すと
+    // React Routerがhistory.stateに書き込んでいるidx/key等の内部管理用
+    // 情報を消してしまい、以降のPOPナビゲーションのdelta計算が壊れうる
+    // ため、既存のstateはそのまま引き継ぐ。
+    window.history.replaceState(window.history.state, '', `#${encodedAnchorId}`);
     window.requestAnimationFrame(scrollToCurrentHash);
     return;
   }
