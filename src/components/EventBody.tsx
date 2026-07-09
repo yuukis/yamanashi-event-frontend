@@ -47,7 +47,7 @@ import {
 } from '@chakra-icons/bootstrap';
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
 import { subscribeNow, getNow } from '../utils/nowTicker';
-import { isEventNew, isNotYetStarted } from '../utils/newEventTracking';
+import { isEventNew } from '../utils/newEventTracking';
 import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
 import type { EventWithGroup } from '../types/events';
 
@@ -90,7 +90,7 @@ export function EventBody(data: EventBodyProps) {
   const is_today = formatEventDateKey(start_date) === formatEventDateKey(now);
   const has_ended = now.getTime() > end_date.getTime();
   const is_ongoing = now.getTime() >= start_date.getTime() && !has_ended;
-  const is_new = isNotYetStarted(event, now) && isEventNew(trackingData, event, now);
+  const is_new = isEventNew(trackingData, event, now);
 
   const title = event.title;
   const sub_title = event.catch;

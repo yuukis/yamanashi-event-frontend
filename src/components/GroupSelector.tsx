@@ -4,7 +4,7 @@ import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import { People } from '@chakra-icons/bootstrap';
 import { formatEventDateKey } from '../utils/eventAnchors';
 import { subscribeNow, getNow } from '../utils/nowTicker';
-import { isEventNew, isNotYetStarted, type NewEventTrackingData } from '../utils/newEventTracking';
+import { isEventNew, type NewEventTrackingData } from '../utils/newEventTracking';
 import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
 
 export type GroupSelectorEvent = {
@@ -75,7 +75,7 @@ function getGroupBadge(
     const start = new Date(event.started_at);
     const end = new Date(event.ended_at);
 
-    if (isNotYetStarted(event, now) && isEventNew(trackingData, event, now)) {
+    if (isEventNew(trackingData, event, now)) {
       hasNew = true;
       if (start.getTime() < newSortTime) {
         newSortTime = start.getTime();
