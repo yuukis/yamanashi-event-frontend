@@ -144,11 +144,9 @@ function Root({startYear}: {startYear: number}) {
   const futureEvents = filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup);
   const pastEvents = filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup);
 
-  // iPadOS の Safari では、絞り込み操作等でページ全体の高さが変わると
-  // scroll() タイムラインの再計算に失敗し、視差が飛んだり元の位置に
-  // 戻ろうとしてちらつくことがある(WebKit 側の既知の不具合)。表示件数が
-  // 変わるたびにアニメーションを一旦外して再適用し、タイムラインを
-  // 再確立させることで回避する。
+  // iPadOS Safari は絞り込み等でページの高さが変わると scroll() タイム
+  // ラインの再計算に失敗しちらつくことがある(WebKit の既知の不具合)ため、
+  // 表示件数が変わるたびにアニメーションを再適用してタイムラインを再確立する。
   useLayoutEffect(() => {
     const el = starfieldRef.current;
     if (!el) return;
