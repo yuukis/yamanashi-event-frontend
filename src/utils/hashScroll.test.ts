@@ -120,9 +120,6 @@ describe('jumpToAnchor', () => {
   });
 
   it('preserves the existing history.state (e.g. React Router bookkeeping) instead of clobbering it', () => {
-    // React Routerはhistory.stateに idx/key 等の内部管理情報を持たせている。
-    // replaceStateにnullを渡すとこれが消えてしまうため、既存のstateを
-    // そのまま引き継ぐことを検証する。
     window.history.replaceState({ idx: 3, key: 'abc' }, '', '/');
     const replaceStateSpy = vi.spyOn(window.history, 'replaceState');
 
