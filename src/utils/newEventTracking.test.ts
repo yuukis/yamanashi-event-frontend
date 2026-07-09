@@ -67,6 +67,24 @@ describe('mergeTrackingData', () => {
     expect(result.dismissedUids).toEqual(['e1']);
     expect(result.acknowledgedDotUids).toEqual(['e1']);
   });
+
+  it('prunes an event that has already started even if it is still present in candidateEvents', () => {
+    // open_statusがcloseに更新されていない等で、開始済みのイベントが
+    // candidateEventsに残り続けるケースを想定。
+    const previous: NewEventTrackingData = {
+      version: 1,
+      records: { started: { firstSeenAt: '2026-01-01T00:00:00+09:00' } },
+      dismissedUids: ['started'],
+      acknowledgedDotUids: ['started'],
+    };
+    const startedEvent = makeCandidate({ uid: 'started', started_at: '2026-01-09T00:00:00+09:00' });
+
+    const result = mergeTrackingData(previous, [startedEvent], NOW);
+
+    expect(result.records).toEqual({});
+    expect(result.dismissedUids).toEqual([]);
+    expect(result.acknowledgedDotUids).toEqual([]);
+  });
 });
 
 describe('selectNewEventUids', () => {
