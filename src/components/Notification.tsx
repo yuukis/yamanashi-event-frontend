@@ -107,8 +107,11 @@ export function NotificationButton() {
   const hasDot = isLocalStorageOk && hasUnacknowledgedNewEvent(trackingData, newEvents.map((event) => event.uid));
 
   const onOpen = () => {
-    if (isLocalStorageOk && newEvents.length > 0) {
-      updateTrackingData((previous) => acknowledgeNewEventDot(previous, newEvents.map((event) => event.uid)));
+    if (isLocalStorageOk && candidateEvents.length > 0) {
+      updateTrackingData((previous) => {
+        const merged = mergeTrackingData(previous, candidateEvents, now);
+        return newEvents.length > 0 ? acknowledgeNewEventDot(merged, newEvents.map((event) => event.uid)) : merged;
+      });
     }
     openDisclosure();
   };

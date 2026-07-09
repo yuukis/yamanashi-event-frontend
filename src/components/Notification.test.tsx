@@ -4,7 +4,7 @@ import { renderWithChakra } from '../test/test-utils';
 import { NotificationButton } from './Notification';
 import { makeEvent } from '../test/fixtures';
 import { updateTrackingData } from '../utils/newEventTrackingStore';
-import type { NewEventTrackingData } from '../utils/newEventTracking';
+import { mergeTrackingData, type NewEventTrackingData } from '../utils/newEventTracking';
 import { fetchEvents } from '../utils/api';
 import { jumpToAnchor } from '../utils/hashScroll';
 import type { EventWithGroup } from '../types/events';
@@ -24,6 +24,11 @@ vi.mock('../utils/api', () => ({
 vi.mock('../utils/hashScroll', () => ({
   jumpToAnchor: vi.fn(),
 }));
+
+vi.mock('../utils/newEventTracking', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../utils/newEventTracking')>();
+  return { ...actual, mergeTrackingData: vi.fn(actual.mergeTrackingData) };
+});
 
 function makeFutureEvent(overrides: Partial<EventWithGroup> = {}) {
   return makeEvent({
@@ -139,6 +144,20 @@ describe('NotificationButton', () => {
     await screen.findByText('Dot Event');
     expect(screen.queryByRole('button', { name: '新着イベントの通知があります' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Notification' })).toBeInTheDocument();
+  });
+
+  it('re-runs mergeTrackingData when the popover is opened, not only on the initial fetch', async () => {
+    mockFetchEvents([makeFutureEvent({ uid: 'e1', title: 'Event' })]);
+    renderWithChakra(<NotificationButton />);
+
+    await screen.findByRole('button', { name: '新着イベントの通知があります' });
+    const callsAfterMount = vi.mocked(mergeTrackingData).mock.calls.length;
+    expect(callsAfterMount).toBeGreaterThan(0);
+
+    openPopover();
+    await screen.findByText('Event');
+
+    expect(vi.mocked(mergeTrackingData).mock.calls.length).toBeGreaterThan(callsAfterMount);
   });
 
   it('hides the new-events area when LocalStorage is unavailable, but keeps the description and notify button', async () => {

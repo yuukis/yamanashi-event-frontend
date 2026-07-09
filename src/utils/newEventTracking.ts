@@ -16,15 +16,24 @@ export const EMPTY_TRACKING_DATA: NewEventTrackingData = {
   acknowledgedDotUids: [],
 };
 
+function isValidRecord(value: unknown): value is TrackedEventRecord {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const firstSeenAt = (value as Record<string, unknown>).firstSeenAt;
+  return typeof firstSeenAt === 'string' && !Number.isNaN(new Date(firstSeenAt).getTime());
+}
+
 export function isValidTrackingData(value: unknown): value is NewEventTrackingData {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
   const candidate = value as Record<string, unknown>;
   return candidate.version === 1
-    && typeof candidate.records === 'object' && candidate.records !== null
-    && Array.isArray(candidate.dismissedUids)
-    && Array.isArray(candidate.acknowledgedDotUids);
+    && typeof candidate.records === 'object' && candidate.records !== null && !Array.isArray(candidate.records)
+    && Object.values(candidate.records).every(isValidRecord)
+    && Array.isArray(candidate.dismissedUids) && candidate.dismissedUids.every((uid) => typeof uid === 'string')
+    && Array.isArray(candidate.acknowledgedDotUids) && candidate.acknowledgedDotUids.every((uid) => typeof uid === 'string');
 }
 
 export type NewEventCandidate = {

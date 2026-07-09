@@ -217,4 +217,36 @@ describe('isValidTrackingData', () => {
   it('rejects an object missing the expected array fields', () => {
     expect(isValidTrackingData({ version: 1, records: {} })).toBe(false);
   });
+
+  it('accepts a well-formed object with a populated record', () => {
+    const data: NewEventTrackingData = {
+      version: 1,
+      records: { e1: { firstSeenAt: '2026-01-01T00:00:00+09:00' } },
+      dismissedUids: ['e1'],
+      acknowledgedDotUids: ['e1'],
+    };
+
+    expect(isValidTrackingData(data)).toBe(true);
+  });
+
+  it('rejects records that is an array instead of a plain object', () => {
+    expect(isValidTrackingData({ ...EMPTY_TRACKING_DATA, records: [] })).toBe(false);
+  });
+
+  it('rejects a record missing firstSeenAt', () => {
+    expect(isValidTrackingData({ ...EMPTY_TRACKING_DATA, records: { e1: {} } })).toBe(false);
+  });
+
+  it('rejects a record whose firstSeenAt is not a string', () => {
+    expect(isValidTrackingData({ ...EMPTY_TRACKING_DATA, records: { e1: { firstSeenAt: 12345 } } })).toBe(false);
+  });
+
+  it('rejects a record whose firstSeenAt does not parse as a date', () => {
+    expect(isValidTrackingData({ ...EMPTY_TRACKING_DATA, records: { e1: { firstSeenAt: 'not-a-date' } } })).toBe(false);
+  });
+
+  it('rejects dismissedUids/acknowledgedDotUids containing non-string elements', () => {
+    expect(isValidTrackingData({ ...EMPTY_TRACKING_DATA, dismissedUids: [123] })).toBe(false);
+    expect(isValidTrackingData({ ...EMPTY_TRACKING_DATA, acknowledgedDotUids: [null] })).toBe(false);
+  });
 });
