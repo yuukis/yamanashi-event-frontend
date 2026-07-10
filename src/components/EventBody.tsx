@@ -1,4 +1,4 @@
-import { useState, useEffect, useSyncExternalStore } from 'react';
+import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import {
   Box,
   Stack,
@@ -46,6 +46,7 @@ import {
   ExclamationTriangleFill,
 } from '@chakra-icons/bootstrap';
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
+import { EVENT_CARD_HIGHLIGHT_EVENT } from '../utils/hashScroll';
 import { ShareIconRow, ShareButton } from './ShareButtons';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
@@ -127,6 +128,30 @@ export function EventBody(data: EventBodyProps) {
   const event_map_url = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(address_array[0] || '');
 
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isHighlighted, setIsHighlighted] = useState(false);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) {
+      return;
+    }
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const handleHighlight = () => {
+      setIsHighlighted(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setIsHighlighted(false), 2000);
+    };
+
+    card.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, handleHighlight);
+    return () => {
+      card.removeEventListener(EVENT_CARD_HIGHLIGHT_EVENT, handleHighlight);
+      clearTimeout(timer);
+    };
+  }, []);
 
   const [isLongPress, setIsLongPress] = useState(false);
   const [pressTimer, setPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
@@ -239,8 +264,12 @@ export function EventBody(data: EventBodyProps) {
 
   return (
     <>
-      <HStack p={'2'} position={'relative'}
+      <HStack ref={cardRef}
+              p={'2'} position={'relative'}
               id={data.anchorId}
+              data-event-card
+              data-event-date={formatEventDateKey(start_date).replace(/-/g, '')}
+              className={isHighlighted ? 'event-card-highlight' : undefined}
               scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
               {...(!isDesktopScreenSize && {
                 onTouchStart: handleTouchStart,

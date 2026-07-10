@@ -13,6 +13,11 @@ export function jumpToAnchor(anchorId: string): void {
   window.open(`/#${encodedAnchorId}`, '_self');
 }
 
+export const EVENT_CARD_HIGHLIGHT_EVENT = 'event-card-highlight';
+
+const EVENT_ANCHOR_PREFIX = 'event-';
+const DATE_ANCHOR_PREFIX = 'date-';
+
 export function scrollToCurrentHash() {
   const hash = window.location.hash;
 
@@ -20,7 +25,8 @@ export function scrollToCurrentHash() {
     return;
   }
 
-  const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+  const id = decodeURIComponent(hash.slice(1));
+  const target = document.getElementById(id);
 
   if (target) {
     window.dispatchEvent(new Event('site-header-show'));
@@ -31,5 +37,19 @@ export function scrollToCurrentHash() {
     window.setTimeout(() => {
       window.dispatchEvent(new Event('site-header-show'));
     }, 120);
+
+    if (id.startsWith(EVENT_ANCHOR_PREFIX)) {
+      const card = target.closest<HTMLElement>('[data-event-card]') ?? target;
+      highlightCard(card);
+    } else if (id.startsWith(DATE_ANCHOR_PREFIX)) {
+      const dateKey = id.slice(DATE_ANCHOR_PREFIX.length);
+      if (/^\d{8}$/.test(dateKey)) {
+        document.querySelectorAll<HTMLElement>(`[data-event-date="${dateKey}"]`).forEach(highlightCard);
+      }
+    }
   }
+}
+
+function highlightCard(card: HTMLElement): void {
+  card.dispatchEvent(new CustomEvent(EVENT_CARD_HIGHLIGHT_EVENT));
 }

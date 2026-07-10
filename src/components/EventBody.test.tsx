@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { renderWithChakra, mockMatchMedia } from '../test/test-utils';
 import { EventBody, EmptyEventBody, ErrorEventBody } from './EventBody';
 import { makeEvent } from '../test/fixtures';
@@ -7,6 +7,7 @@ import { updateTrackingData } from '../utils/newEventTrackingStore';
 import type { NewEventTrackingData } from '../utils/newEventTracking';
 import { buildEventShareUrl, buildXShareUrl } from '../utils/share';
 import { getEventAnchorId } from '../utils/eventAnchors';
+import { EVENT_CARD_HIGHLIGHT_EVENT } from '../utils/hashScroll';
 
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
 const EMPTY_TRACKING_DATA: NewEventTrackingData = { version: 1, records: {}, dismissedUids: [], acknowledgedDotUids: [] };
@@ -132,6 +133,36 @@ describe('EventBody', () => {
     );
 
     expect(container.querySelector(`#${getEventAnchorId('my-uid')}`)).not.toBeNull();
+  });
+
+  describe('shared-event highlight', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('highlights the card when the shared-event custom event fires on it, and clears the highlight after a delay', () => {
+      mockMatchMedia(true);
+      const { container } = renderWithChakra(
+        <EventBody event={makeEvent({ uid: 'my-uid' })} />,
+      );
+
+      const card = container.querySelector('[data-event-card]') as HTMLElement;
+      expect(card.className).not.toMatch(/event-card-highlight/);
+
+      act(() => {
+        card.dispatchEvent(new CustomEvent(EVENT_CARD_HIGHLIGHT_EVENT));
+      });
+      expect(card.className).toMatch(/event-card-highlight/);
+
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(card.className).not.toMatch(/event-card-highlight/);
+    });
   });
 
   it('renders the group name instead of the owner name when a group is present', () => {

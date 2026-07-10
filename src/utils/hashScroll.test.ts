@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { jumpToAnchor, scrollToCurrentHash } from './hashScroll';
+import { jumpToAnchor, scrollToCurrentHash, EVENT_CARD_HIGHLIGHT_EVENT } from './hashScroll';
 
 describe('scrollToCurrentHash', () => {
   beforeEach(() => {
@@ -67,6 +67,81 @@ describe('scrollToCurrentHash', () => {
     scrollToCurrentHash();
 
     expect(target.scrollIntoView).toHaveBeenCalled();
+
+    document.body.removeChild(target);
+  });
+
+  it('dispatches a highlight event on the closest [data-event-card] ancestor when jumping to an event anchor', () => {
+    const card = document.createElement('div');
+    card.setAttribute('data-event-card', '');
+    const target = document.createElement('div');
+    target.id = 'event-abc123';
+    target.scrollIntoView = vi.fn();
+    card.appendChild(target);
+    document.body.appendChild(card);
+    window.location.hash = '#event-abc123';
+
+    const highlightListener = vi.fn();
+    card.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, highlightListener);
+
+    scrollToCurrentHash();
+
+    expect(highlightListener).toHaveBeenCalledTimes(1);
+
+    document.body.removeChild(card);
+  });
+
+  it('dispatches a highlight event on every card sharing the same date when jumping to a date anchor', () => {
+    const firstCard = document.createElement('div');
+    firstCard.setAttribute('data-event-card', '');
+    firstCard.setAttribute('data-event-date', '20260105');
+    firstCard.id = 'date-20260105';
+    firstCard.scrollIntoView = vi.fn();
+    document.body.appendChild(firstCard);
+
+    const secondCard = document.createElement('div');
+    secondCard.setAttribute('data-event-card', '');
+    secondCard.setAttribute('data-event-date', '20260105');
+    document.body.appendChild(secondCard);
+
+    const otherDateCard = document.createElement('div');
+    otherDateCard.setAttribute('data-event-card', '');
+    otherDateCard.setAttribute('data-event-date', '20260106');
+    document.body.appendChild(otherDateCard);
+
+    window.location.hash = '#date-20260105';
+
+    const firstListener = vi.fn();
+    const secondListener = vi.fn();
+    const otherDateListener = vi.fn();
+    firstCard.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, firstListener);
+    secondCard.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, secondListener);
+    otherDateCard.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, otherDateListener);
+
+    scrollToCurrentHash();
+
+    expect(firstListener).toHaveBeenCalledTimes(1);
+    expect(secondListener).toHaveBeenCalledTimes(1);
+    expect(otherDateListener).not.toHaveBeenCalled();
+
+    document.body.removeChild(firstCard);
+    document.body.removeChild(secondCard);
+    document.body.removeChild(otherDateCard);
+  });
+
+  it('does not throw and does not highlight when the date anchor is not a well-formed YYYYMMDD value', () => {
+    const target = document.createElement('div');
+    target.id = 'date-"]';
+    target.scrollIntoView = vi.fn();
+    document.body.appendChild(target);
+    window.location.hash = `#${encodeURIComponent('date-"]')}`;
+
+    const highlightListener = vi.fn();
+    target.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, highlightListener);
+
+    expect(() => scrollToCurrentHash()).not.toThrow();
+    expect(target.scrollIntoView).toHaveBeenCalled();
+    expect(highlightListener).not.toHaveBeenCalled();
 
     document.body.removeChild(target);
   });

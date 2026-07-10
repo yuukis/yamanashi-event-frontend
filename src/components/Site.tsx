@@ -372,6 +372,7 @@ export function ICalendarButton() {
               eventsByDate={eventsByDate}
               isLoading={isLoading}
               errorMessage={errorMessage}
+              onJump={closePopover}
             />
             <Stack borderTop={'1px solid'}
                    borderColor={'gray.100'}
@@ -416,12 +417,14 @@ function MiniEventCalendar({
   eventsByDate,
   isLoading,
   errorMessage,
+  onJump,
 }: {
   calendarDays: CalendarDay[];
   todayKey: string;
   eventsByDate: Map<string, ApiEvent[]>;
   isLoading: boolean;
   errorMessage: string;
+  onJump: () => void;
 }) {
   const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -450,6 +453,10 @@ function MiniEventCalendar({
             }
 
             jumpToAnchor(getEventDateAnchorId(day.key));
+
+            if (isMobile) {
+              onJump();
+            }
           };
           const dayCell = (
             <Center key={day.key}
