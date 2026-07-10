@@ -5,7 +5,7 @@ import { EventBody, EmptyEventBody, ErrorEventBody } from './EventBody';
 import { makeEvent } from '../test/fixtures';
 import { updateTrackingData } from '../utils/newEventTrackingStore';
 import type { NewEventTrackingData } from '../utils/newEventTracking';
-import { buildEventShareUrl, buildXShareUrl, buildLineShareUrl, buildShareClipboardText } from '../utils/share';
+import { buildEventShareUrl, buildXShareUrl, buildShareClipboardText } from '../utils/share';
 
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
 const EMPTY_TRACKING_DATA: NewEventTrackingData = { version: 1, records: {}, dismissedUids: [], acknowledgedDotUids: [] };
@@ -274,24 +274,35 @@ describe('EventBody', () => {
     writeTextSpy.mockRestore();
   });
 
-  it('opens the LINE share intent from the mobile long-press menu and closes it', async () => {
+  it('invokes the native Web Share API from a single 共有 button on the mobile long-press menu and closes it', async () => {
     mockMatchMedia(false);
-    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const shareSpy = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'share', { value: shareSpy, configurable: true });
     const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1', hash_tag: 'kofu' });
     renderWithChakra(<EventBody event={event} />);
 
     fireEvent.click(screen.getByLabelText('More options'));
-    fireEvent.click(screen.getByRole('button', { name: 'LINEでシェア' }));
+    fireEvent.click(screen.getByRole('button', { name: '共有' }));
 
-    const expected_url = buildLineShareUrl({
+    await waitFor(() => expect(shareSpy).toHaveBeenCalledWith({
       title: event.title,
+      text: '#kofu',
       url: buildEventShareUrl(event.uid),
-      hashTag: event.hash_tag,
-    });
-    expect(windowOpenSpy).toHaveBeenCalledWith(expected_url);
+    }));
     await waitFor(() => expect(screen.queryByRole('button', { name: 'キャンセル' })).not.toBeInTheDocument());
 
-    windowOpenSpy.mockRestore();
+    Reflect.deleteProperty(navigator, 'share');
+  });
+
+  it('shows no share button on the mobile long-press menu when the Web Share API is unsupported', () => {
+    mockMatchMedia(false);
+    expect(navigator.share).toBeUndefined();
+    const event = makeEvent({ uid: 'event-1' });
+    renderWithChakra(<EventBody event={event} />);
+
+    fireEvent.click(screen.getByLabelText('More options'));
+
+    expect(screen.queryByRole('button', { name: '共有' })).not.toBeInTheDocument();
   });
 });
 

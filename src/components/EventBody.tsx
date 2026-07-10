@@ -46,7 +46,7 @@ import {
   ExclamationTriangleFill,
 } from '@chakra-icons/bootstrap';
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
-import { ShareIconRow, ShareMenuButtons } from './ShareButtons';
+import { ShareIconRow, ShareButton } from './ShareButtons';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
 import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
@@ -571,7 +571,7 @@ export function EventBody(data: EventBodyProps) {
                   アーカイブ元を開く
                 </Button>
               )}
-              <ShareMenuButtons event={event} onAfterAction={onClose} />
+              <ShareButton event={event} onAfterAction={onClose} />
               <Button w="full"
                       colorScheme="red"
                       onClick={onClose}

@@ -1,6 +1,7 @@
 import { HStack, IconButton, Button, useToast } from '@chakra-ui/react';
 import type { IconType } from 'react-icons';
 import { FaXTwitter, FaLine, FaFacebook, FaLink } from 'react-icons/fa6';
+import { FiShare2 } from 'react-icons/fi';
 import {
   buildEventShareUrl,
   buildXShareUrl,
@@ -63,38 +64,43 @@ export function ShareIconRow({ event }: { event: EventWithGroup }) {
   );
 }
 
-type ShareMenuButtonsProps = {
+type ShareButtonProps = {
   event: EventWithGroup;
   onAfterAction?: () => void;
 };
 
-export function ShareMenuButtons({ event, onAfterAction }: ShareMenuButtonsProps) {
-  const ctx = toShareContext(event);
+export function ShareButton({ event, onAfterAction }: ShareButtonProps) {
   const toast = useToast();
 
-  const handleCopy = () => copyEventLink(ctx, toast, onAfterAction);
+  if (typeof navigator.share !== 'function') {
+    return null;
+  }
+
+  const ctx = toShareContext(event);
+
+  const handleShare = async () => {
+    try {
+      await navigator.share({
+        title: ctx.title,
+        text: ctx.hashTag ? `#${ctx.hashTag}` : undefined,
+        url: ctx.url,
+      });
+    } catch (err) {
+      if ((err as Error)?.name !== 'AbortError') {
+        toast({ title: '共有に失敗しました', status: 'error', duration: 2000, isClosable: true });
+      }
+    } finally {
+      onAfterAction?.();
+    }
+  };
 
   return (
-    <>
-      {SHARE_TARGETS.map(({ id, label, icon: Icon, buildUrl }) => (
-        <Button key={id}
-                w="full"
-                leftIcon={<Icon />}
-                onClick={() => {
-                  window.open(buildUrl(ctx));
-                  onAfterAction?.();
-                }}
-                >
-          { label }
-        </Button>
-      ))}
-      <Button w="full"
-              leftIcon={<FaLink />}
-              onClick={handleCopy}
-              >
-        { COPY_LABEL }
-      </Button>
-    </>
+    <Button w="full"
+            leftIcon={<FiShare2 />}
+            onClick={handleShare}
+            >
+      共有
+    </Button>
   );
 }
 
