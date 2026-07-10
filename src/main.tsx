@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import Root from './routes/Root.jsx'
 import List from './routes/List.jsx'
+import Events from './routes/Events.jsx'
 import Guide from './routes/Guide.jsx'
 import AppTheme from './theme.tsx'
 import { ChakraProvider } from '@chakra-ui/react'
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
   {
     path: "/guide",
     element: <Guide />,
+  },
+  {
+    path: "/events",
+    element: <Events />,
   },
   {
     path: "/events/:year",

@@ -23,7 +23,7 @@ import {
   Button
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
-import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
+import { CalendarIcon, ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -257,22 +257,37 @@ function Root({startYear}: {startYear: number}) {
                 </Link>
                 、コミュニティが提供するイベントカレンダー、過去イベントアーカイブから取得しています。
               </Text>
-              <Box pt={'2'} textAlign={{base: 'center', md: 'left'}}>
+              <Stack pt={'2'}
+                     direction={{base: 'column', sm: 'row'}}
+                     spacing={'3'}
+                     >
                 <Button size={{base: 'sm', md: 'md'}}
-                        variant={'outline'}
-                        colorScheme={'primary'}
+                        colorScheme={'secondary'}
+                        bg={'secondary.700'}
+                        color={'white'}
+                        _hover={{ bg: 'secondary.800' }}
+                        _active={{ bg: 'secondary.900' }}
                         leftIcon={<InfoOutlineIcon />}
                         onClick={() => { window.open('/guide', '_self') }}
                         >
                   はじめての方へ
                 </Button>
-              </Box>
+                <Button size={{base: 'sm', md: 'md'}}
+                        variant={'outline'}
+                        colorScheme={'primary'}
+                        leftIcon={<CalendarIcon />}
+                        onClick={() => { window.open('/events', '_self') }}
+                        >
+                  イベントアーカイブを見る
+                </Button>
+              </Stack>
             </Stack>          
           </Container>
         </Box>
       </Box>
       <Container maxW={'980px'} w={'100%'}
                  p={{base: '0', md: '4'}}
+                 pt={{base: '6', md: '6'}}
                  >
         <Stack>
           <GroupSelector groups={groupSelectorItems}
