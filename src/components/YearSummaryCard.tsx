@@ -10,6 +10,9 @@ const BAR_GAP = '1px';
 const ROW_GAP = {base: '2', md: '4', lg: '6'};
 const ROW_PX = {base: '3', md: '5', lg: '6'};
 const ROW_PY = {base: '3', md: '3', lg: '4'};
+const YEAR_PX = {base: '2', md: '3', lg: '4'};
+const YEAR_PY = '1';
+const AVATAR_GAP = {base: '1', md: '2', lg: '3'};
 const SKELETON_BAR_HEIGHTS = [35, 55, 40, 70, 50, 85, 60, 45, 65, 30, 50, 40];
 const SKELETON_AVATAR_COUNT = 5;
 
@@ -36,8 +39,8 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
              transition={'box-shadow 120ms ease-out, border-color 120ms ease-out'}
              >
       <Box flexShrink={0}
-           px={{base: '2', md: '3', lg: '4'}}
-           py={'1'}
+           px={YEAR_PX}
+           py={YEAR_PY}
            borderRadius={'md'}
            _hover={{ bg: 'gray.100' }}
            transition={'background-color 120ms ease-out'}
@@ -54,7 +57,7 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
       <Flex flex={'1'}
             minW={'0'}
             align={'center'}
-            gap={{base: '1', md: '2', lg: '3'}}
+            gap={AVATAR_GAP}
             wrap={'wrap'}
             >
         {summary.groups.length > 0 ? (
@@ -116,15 +119,16 @@ export function YearSummaryCardSkeleton() {
           px={ROW_PX}
           py={ROW_PY}
           >
-      <Skeleton flexShrink={0}
-                h={{base: '7', md: '8', lg: '9'}}
-                w={{base: '10', md: '12', lg: '14'}}
-                borderRadius={'sm'}
-                />
+      <Box flexShrink={0} px={YEAR_PX} py={YEAR_PY}>
+        <Skeleton h={{base: '7', md: '8', lg: '9'}}
+                  w={{base: '10', md: '12', lg: '14'}}
+                  borderRadius={'sm'}
+                  />
+      </Box>
 
       <Box alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
 
-      <Flex flex={'1'} minW={'0'} align={'center'} gap={{base: '1', md: '2', lg: '3'}} overflow={'hidden'}>
+      <Flex flex={'1'} minW={'0'} align={'center'} gap={AVATAR_GAP} wrap={'wrap'}>
         {Array.from({length: SKELETON_AVATAR_COUNT}).map((_, i) => (
           <SkeletonCircle key={i} size={AVATAR_SIZE} flexShrink={0} />
         ))}
