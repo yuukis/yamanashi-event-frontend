@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
   buildEventShareUrl,
   buildXShareUrl,
-  buildLineShareUrl,
-  buildFacebookShareUrl,
   buildShareClipboardText,
 } from './share';
 
@@ -26,34 +24,6 @@ describe('buildXShareUrl', () => {
     const url = buildXShareUrl({ title: 'Sample Event', url: 'https://example.com/#event-item-1', hashTag: null });
 
     expect(url).toBe('https://twitter.com/intent/tweet?text=Sample+Event&url=https%3A%2F%2Fexample.com%2F%23event-item-1');
-  });
-});
-
-describe('buildLineShareUrl', () => {
-  it('appends the hashTag to the text when present', () => {
-    const url = buildLineShareUrl({ title: 'Sample Event', url: 'https://example.com/#event-item-1', hashTag: 'kofu' });
-
-    expect(url).toBe('https://social-plugins.line.me/lineit/share?url=https%3A%2F%2Fexample.com%2F%23event-item-1&text=Sample+Event+%23kofu');
-  });
-
-  it('uses the title alone when there is no hashTag', () => {
-    const url = buildLineShareUrl({ title: 'Sample Event', url: 'https://example.com/#event-item-1', hashTag: null });
-
-    expect(url).toBe('https://social-plugins.line.me/lineit/share?url=https%3A%2F%2Fexample.com%2F%23event-item-1&text=Sample+Event');
-  });
-});
-
-describe('buildFacebookShareUrl', () => {
-  it('appends the hashTag to the quote when present', () => {
-    const url = buildFacebookShareUrl({ title: 'Sample Event', url: 'https://example.com/#event-item-1', hashTag: 'kofu' });
-
-    expect(url).toBe('https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fexample.com%2F%23event-item-1&quote=Sample+Event+%23kofu');
-  });
-
-  it('uses the title alone when there is no hashTag', () => {
-    const url = buildFacebookShareUrl({ title: 'Sample Event', url: 'https://example.com/#event-item-1', hashTag: null });
-
-    expect(url).toBe('https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fexample.com%2F%23event-item-1&quote=Sample+Event');
   });
 });
 

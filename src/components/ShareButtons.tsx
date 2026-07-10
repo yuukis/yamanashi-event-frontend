@@ -1,12 +1,10 @@
 import { HStack, IconButton, Button, useToast } from '@chakra-ui/react';
 import type { IconType } from 'react-icons';
-import { FaXTwitter, FaLine, FaFacebook, FaLink } from 'react-icons/fa6';
+import { FaXTwitter, FaLink } from 'react-icons/fa6';
 import { FiShare2 } from 'react-icons/fi';
 import {
   buildEventShareUrl,
   buildXShareUrl,
-  buildLineShareUrl,
-  buildFacebookShareUrl,
   buildShareClipboardText,
   type ShareContext,
 } from '../utils/share';
@@ -21,8 +19,6 @@ type ShareTarget = {
 
 const SHARE_TARGETS: ShareTarget[] = [
   { id: 'x', label: 'X(Twitter)でシェア', icon: FaXTwitter, buildUrl: buildXShareUrl },
-  { id: 'line', label: 'LINEでシェア', icon: FaLine, buildUrl: buildLineShareUrl },
-  { id: 'facebook', label: 'Facebookでシェア', icon: FaFacebook, buildUrl: buildFacebookShareUrl },
 ];
 
 const COPY_LABEL = 'リンクをコピー';
