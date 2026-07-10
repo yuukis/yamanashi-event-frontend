@@ -275,6 +275,19 @@ describe('EventBody', () => {
     writeTextSpy.mockRestore();
   });
 
+  it('shows an error toast instead of throwing when the Clipboard API is unavailable', async () => {
+    mockMatchMedia(true);
+    const originalClipboard = navigator.clipboard;
+    Reflect.deleteProperty(navigator, 'clipboard');
+    const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1' });
+    renderWithChakra(<EventBody event={event} />);
+
+    expect(() => fireEvent.click(screen.getByRole('button', { name: 'リンクをコピー' }))).not.toThrow();
+    await screen.findByText('コピーに失敗しました');
+
+    Object.defineProperty(navigator, 'clipboard', { value: originalClipboard, configurable: true });
+  });
+
   it('invokes the native Web Share API from a single 共有 button on the mobile long-press menu and closes it', async () => {
     mockMatchMedia(false);
     const shareSpy = vi.fn().mockResolvedValue(undefined);

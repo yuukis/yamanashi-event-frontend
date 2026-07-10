@@ -101,6 +101,12 @@ export function ShareButton({ event, onAfterAction }: ShareButtonProps) {
 }
 
 function copyEventLink(ctx: ShareContext, toast: ReturnType<typeof useToast>, onAfterAction?: () => void): void {
+  if (!navigator.clipboard?.writeText) {
+    toast({ title: 'コピーに失敗しました', status: 'error', duration: 2000, isClosable: true });
+    onAfterAction?.();
+    return;
+  }
+
   navigator.clipboard.writeText(buildShareClipboardText(ctx))
     .then(() => {
       toast({ title: 'リンクをコピーしました', status: 'success', duration: 2000, isClosable: true });
