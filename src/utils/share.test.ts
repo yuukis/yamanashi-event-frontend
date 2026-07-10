@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import {
   buildEventShareUrl,
   buildXShareUrl,
@@ -7,8 +7,18 @@ import {
 import { getEventAnchorId } from './eventAnchors';
 
 describe('buildEventShareUrl', () => {
-  it('builds an absolute URL pointing at the event anchor', () => {
+  afterEach(() => {
+    window.history.pushState({}, '', '/');
+  });
+
+  it('builds an absolute URL pointing at the event anchor on the top page', () => {
     expect(buildEventShareUrl('abc123')).toBe(`${window.location.origin}/#${getEventAnchorId('abc123')}`);
+  });
+
+  it('keeps the current year-list path so the anchor stays within that page', () => {
+    window.history.pushState({}, '', '/2026');
+
+    expect(buildEventShareUrl('abc123')).toBe(`${window.location.origin}/2026#${getEventAnchorId('abc123')}`);
   });
 });
 
