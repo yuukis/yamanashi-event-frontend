@@ -300,10 +300,29 @@ describe('EventBody', () => {
 
     await waitFor(() => expect(shareSpy).toHaveBeenCalledWith({
       title: event.title,
-      text: '#kofu',
+      text: '甲府もくもく会 #1 #kofu',
       url: buildEventShareUrl(event.uid),
     }));
     await waitFor(() => expect(screen.queryByRole('button', { name: 'キャンセル' })).not.toBeInTheDocument());
+
+    Reflect.deleteProperty(navigator, 'share');
+  });
+
+  it('includes the title alone in the native share text when the event has no hashtag', async () => {
+    mockMatchMedia(false);
+    const shareSpy = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'share', { value: shareSpy, configurable: true });
+    const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1', hash_tag: null });
+    renderWithChakra(<EventBody event={event} />);
+
+    fireEvent.click(screen.getByLabelText('More options'));
+    fireEvent.click(screen.getByRole('button', { name: '共有' }));
+
+    await waitFor(() => expect(shareSpy).toHaveBeenCalledWith({
+      title: event.title,
+      text: event.title,
+      url: buildEventShareUrl(event.uid),
+    }));
 
     Reflect.deleteProperty(navigator, 'share');
   });
