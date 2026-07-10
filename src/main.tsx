@@ -22,7 +22,7 @@ const router = createBrowserRouter([
     element: <Guide />,
   },
   {
-    path: "/:year",
+    path: "/events/:year",
     element: <List startYear={START_YEAR}/>,
   },
 ]);

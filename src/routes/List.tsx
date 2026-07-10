@@ -165,14 +165,14 @@ function List({ startYear} : {startYear: number}) {
                     <Button size={'xs'}
                             variant={'ghost'}
                             colorScheme={'impact'}
-                            onClick={() => {window.open('/' + prev_year, '_self')}}
+                            onClick={() => {window.open('/events/' + prev_year, '_self')}}
                     >← { prev_year }年</Button>
                 )
             }
             <Button size={'xs'}
                     variant={'ghost'}
                     colorScheme={'impact'}
-                    onClick={() => {window.open('/' + next_year, '_self')}}
+                    onClick={() => {window.open('/events/' + next_year, '_self')}}
                     >{ next_year }年 →</Button>
           </Stack>
           {!data.isLoading && !data.errorMessage && (
