@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithChakra, mockMatchMedia } from '../test/test-utils';
 import { EventBody, EmptyEventBody, ErrorEventBody } from './EventBody';
 import { makeEvent } from '../test/fixtures';
 import { updateTrackingData } from '../utils/newEventTrackingStore';
 import type { NewEventTrackingData } from '../utils/newEventTracking';
+import { buildEventShareUrl, buildXShareUrl, buildShareClipboardText } from '../utils/share';
+import { getEventAnchorId } from '../utils/eventAnchors';
 
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
 const EMPTY_TRACKING_DATA: NewEventTrackingData = { version: 1, records: {}, dismissedUids: [], acknowledgedDotUids: [] };
@@ -129,7 +131,7 @@ describe('EventBody', () => {
       <EventBody event={makeEvent({ uid: 'my-uid' })} />,
     );
 
-    expect(container.querySelector('#event-item-my-uid')).not.toBeNull();
+    expect(container.querySelector(`#${getEventAnchorId('my-uid')}`)).not.toBeNull();
   });
 
   it('renders the group name instead of the owner name when a group is present', () => {
@@ -234,6 +236,87 @@ describe('EventBody', () => {
     expect(windowOpenSpy).toHaveBeenCalledWith(`https://x.com/search?q=${expected_query}&f=live`);
 
     windowOpenSpy.mockRestore();
+  });
+
+  it('opens the X(Twitter) share intent for the event card URL on desktop', () => {
+    mockMatchMedia(true);
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1', hash_tag: 'kofu' });
+    renderWithChakra(<EventBody event={event} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'X(Twitter)でシェア' }));
+
+    const expected_url = buildXShareUrl({
+      title: event.title,
+      url: buildEventShareUrl(event.uid),
+      hashTag: event.hash_tag,
+    });
+    expect(windowOpenSpy).toHaveBeenCalledWith(expected_url);
+
+    windowOpenSpy.mockRestore();
+  });
+
+  it('copies the share text to the clipboard and shows a confirmation toast on desktop', async () => {
+    mockMatchMedia(true);
+    const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+    const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1', hash_tag: 'kofu' });
+    renderWithChakra(<EventBody event={event} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'リンクをコピー' }));
+
+    const expected_text = buildShareClipboardText({
+      title: event.title,
+      url: buildEventShareUrl(event.uid),
+      hashTag: event.hash_tag,
+    });
+    expect(writeTextSpy).toHaveBeenCalledWith(expected_text);
+    await screen.findByText('リンクをコピーしました');
+
+    writeTextSpy.mockRestore();
+  });
+
+  it('shows an error toast instead of throwing when the Clipboard API is unavailable', async () => {
+    mockMatchMedia(true);
+    const originalClipboard = navigator.clipboard;
+    Reflect.deleteProperty(navigator, 'clipboard');
+    const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1' });
+    renderWithChakra(<EventBody event={event} />);
+
+    expect(() => fireEvent.click(screen.getByRole('button', { name: 'リンクをコピー' }))).not.toThrow();
+    await screen.findByText('コピーに失敗しました');
+
+    Object.defineProperty(navigator, 'clipboard', { value: originalClipboard, configurable: true });
+  });
+
+  it('invokes the native Web Share API from a single 共有 button on the mobile long-press menu and closes it', async () => {
+    mockMatchMedia(false);
+    const shareSpy = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'share', { value: shareSpy, configurable: true });
+    const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1', hash_tag: 'kofu' });
+    renderWithChakra(<EventBody event={event} />);
+
+    fireEvent.click(screen.getByLabelText('More options'));
+    fireEvent.click(screen.getByRole('button', { name: '共有' }));
+
+    await waitFor(() => expect(shareSpy).toHaveBeenCalledWith({
+      title: event.title,
+      text: '#kofu',
+      url: buildEventShareUrl(event.uid),
+    }));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'キャンセル' })).not.toBeInTheDocument());
+
+    Reflect.deleteProperty(navigator, 'share');
+  });
+
+  it('shows no share button on the mobile long-press menu when the Web Share API is unsupported', () => {
+    mockMatchMedia(false);
+    expect(navigator.share).toBeUndefined();
+    const event = makeEvent({ uid: 'event-1' });
+    renderWithChakra(<EventBody event={event} />);
+
+    fireEvent.click(screen.getByLabelText('More options'));
+
+    expect(screen.queryByRole('button', { name: '共有' })).not.toBeInTheDocument();
   });
 });
 

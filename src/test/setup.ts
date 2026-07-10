@@ -28,3 +28,10 @@ if (!window.matchMedia) {
     dispatchEvent: () => false,
   }) as unknown as MediaQueryList;
 }
+
+if (!navigator.clipboard) {
+  Object.defineProperty(navigator, 'clipboard', {
+    value: { writeText: () => Promise.resolve() },
+    configurable: true,
+  });
+}

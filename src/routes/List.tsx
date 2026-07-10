@@ -22,6 +22,7 @@ import { AnimatePresence } from 'framer-motion';
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
+import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiEvent, ApiGroup, EventWithGroup } from '../types/events';
 
 type ListState = {
@@ -119,6 +120,14 @@ function List({ startYear} : {startYear: number}) {
     getData();
   }, []);
 
+  useEffect(() => {
+    if (data.isLoading || data.errorMessage) {
+      return;
+    }
+
+    window.requestAnimationFrame(scrollToCurrentHash);
+  }, [data.errorMessage, data.isLoading, data.events]);
+
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <SiteHeader />
@@ -156,14 +165,14 @@ function List({ startYear} : {startYear: number}) {
                     <Button size={'xs'}
                             variant={'ghost'}
                             colorScheme={'impact'}
-                            onClick={() => {window.open('/' + prev_year, '_self')}}
+                            onClick={() => {window.open('/events/' + prev_year, '_self')}}
                     >← { prev_year }年</Button>
                 )
             }
             <Button size={'xs'}
                     variant={'ghost'}
                     colorScheme={'impact'}
-                    onClick={() => {window.open('/' + next_year, '_self')}}
+                    onClick={() => {window.open('/events/' + next_year, '_self')}}
                     >{ next_year }年 →</Button>
           </Stack>
           {!data.isLoading && !data.errorMessage && (

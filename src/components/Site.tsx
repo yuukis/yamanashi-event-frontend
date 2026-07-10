@@ -645,7 +645,7 @@ export function SelectYearButtons({startYear} : { startYear: number }) {
     <>
       {years.map((year) => (
         <Button key={year} size={'sm'} m={'1'}
-                onClick={() => { window.open(`/${year}`, '_self'); }}
+                onClick={() => { window.open(`/events/${year}`, '_self'); }}
                 >{`${year}年`}</Button>
       ))}
     </>

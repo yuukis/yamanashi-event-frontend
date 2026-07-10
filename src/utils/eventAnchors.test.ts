@@ -12,13 +12,31 @@ describe('formatEventDateKey', () => {
 });
 
 describe('getEventDateAnchorId', () => {
-  it('strips dashes and prefixes with "event-"', () => {
-    expect(getEventDateAnchorId('2026-01-05')).toBe('event-20260105');
+  it('strips dashes and prefixes with "date-"', () => {
+    expect(getEventDateAnchorId('2026-01-05')).toBe('date-20260105');
   });
 });
 
 describe('getEventAnchorId', () => {
-  it('prefixes the uid with "event-item-"', () => {
-    expect(getEventAnchorId('abc123')).toBe('event-item-abc123');
+  it('prefixes a short, id-safe hash of the uid with "event-"', () => {
+    expect(getEventAnchorId('abc123')).toMatch(/^event-[0-9a-z]+$/);
+  });
+
+  it('is deterministic for the same uid', () => {
+    expect(getEventAnchorId('event_395466@connpass.com')).toBe(getEventAnchorId('event_395466@connpass.com'));
+  });
+
+  it('produces different ids for different uids', () => {
+    expect(getEventAnchorId('event-a')).not.toBe(getEventAnchorId('event-b'));
+  });
+
+  it('stays short even for long, special-character uids', () => {
+    const id = getEventAnchorId('scratch-day-yamanashi-2026-05-17-001@yamanashi-event-archive');
+
+    expect(id.length).toBeLessThan(20);
+  });
+
+  it('never collides with a date anchor id, since the prefixes differ', () => {
+    expect(getEventAnchorId('20260105').startsWith('date-')).toBe(false);
   });
 });

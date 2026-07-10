@@ -7,9 +7,18 @@ export function formatEventDateKey(date: Date): string {
 }
 
 export function getEventDateAnchorId(dateKey: string): string {
-  return `event-${dateKey.replace(/-/g, '')}`;
+  return `date-${dateKey.replace(/-/g, '')}`;
+}
+
+function hashUid(uid: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < uid.length; i++) {
+    hash ^= uid.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(36);
 }
 
 export function getEventAnchorId(uid: string): string {
-  return `event-item-${uid}`;
+  return `event-${hashUid(uid)}`;
 }

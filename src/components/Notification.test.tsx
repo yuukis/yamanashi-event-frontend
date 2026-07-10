@@ -7,6 +7,7 @@ import { updateTrackingData } from '../utils/newEventTrackingStore';
 import { mergeTrackingData, type NewEventTrackingData } from '../utils/newEventTracking';
 import { fetchEvents } from '../utils/api';
 import { jumpToAnchor } from '../utils/hashScroll';
+import { getEventAnchorId } from '../utils/eventAnchors';
 import type { EventWithGroup } from '../types/events';
 
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
@@ -86,7 +87,7 @@ describe('NotificationButton', () => {
 
     fireEvent.click(screen.getByText('甲府もくもく会'));
 
-    expect(jumpToAnchor).toHaveBeenCalledWith('event-item-e1');
+    expect(jumpToAnchor).toHaveBeenCalledWith(getEventAnchorId('e1'));
   });
 
   it('sorts new events by start time ascending', async () => {
