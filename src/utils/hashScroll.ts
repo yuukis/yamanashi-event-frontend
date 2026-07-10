@@ -13,9 +13,6 @@ export function jumpToAnchor(anchorId: string): void {
   window.open(`/#${encodedAnchorId}`, '_self');
 }
 
-// イベントカード側(EventBody)がReactのstateとしてハイライト表示を
-// 制御できるよう、DOMを直接書き換えるのではなくカスタムイベントで通知する。
-// (classList/styleを直接触ると、Chakraの再レンダリングですぐ上書きされて消える)
 export const EVENT_CARD_HIGHLIGHT_EVENT = 'event-card-highlight';
 
 const EVENT_ANCHOR_PREFIX = 'event-';
@@ -45,8 +42,6 @@ export function scrollToCurrentHash() {
       const card = target.closest<HTMLElement>('[data-event-card]') ?? target;
       highlightCard(card);
     } else if (id.startsWith(DATE_ANCHOR_PREFIX)) {
-      // その日のイベントは複数あり得るため、対象の1件だけでなく
-      // 同じ日付のカードすべてをハイライトする。
       const dateKey = id.slice(DATE_ANCHOR_PREFIX.length);
       document.querySelectorAll<HTMLElement>(`[data-event-date="${dateKey}"]`).forEach(highlightCard);
     }

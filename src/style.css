@@ -32,10 +32,6 @@
   }
 }
 
-/*
- * 共有URL(#event-<hash>)で開いた/ジャンプした先のイベントカードを
- * わかりやすくするための一時的な背景ハイライト。
- */
 .event-card-highlight {
   animation: event-card-highlight 2s ease-out;
 }

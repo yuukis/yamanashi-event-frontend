@@ -454,8 +454,6 @@ function MiniEventCalendar({
 
             jumpToAnchor(getEventDateAnchorId(day.key));
 
-            // デスクトップはミニカレンダーを開いたままの方が見比べやすいが、
-            // モバイルは画面が狭くジャンプ先のハイライトが隠れてしまうため閉じる。
             if (isMobile) {
               onJump();
             }
