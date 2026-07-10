@@ -83,7 +83,7 @@ function Guide() {
               </Button>
               <Button variant={'outline'}
                       colorScheme={'primary'}
-                      onClick={() => { window.open(`/${new Date().getFullYear()}`, '_self') }}
+                      onClick={() => { window.open(`/events/${new Date().getFullYear()}`, '_self') }}
                       leftIcon={<CalendarIcon />}
                       >
                 年別一覧を見る
