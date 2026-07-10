@@ -3,13 +3,12 @@ import { SiteHeader, SiteFooter, useFixedHeaderBoundary } from '../components/Si
 import { YearSummaryCard } from '../components/YearSummaryCard';
 import { ErrorEventBody } from '../components/EventBody';
 import '../style.css';
-import { Container, Box, Stack, Heading, Text, Grid, Skeleton } from '@chakra-ui/react';
+import { Container, Box, Stack, Heading, Text, Skeleton } from '@chakra-ui/react';
 import { fetchEventsSummary } from '../utils/api';
-import { sortYearsDescending, buildHeatmapGrid, getMaxHeatmapCount } from '../utils/eventsSummary';
+import { sortYearsAscending, buildHeatmapGrid, getMaxHeatmapCount } from '../utils/eventsSummary';
 import type { ApiEventsSummary, ApiHeatmapBucket } from '../types/events';
 
-const SKELETON_CARD_COUNT = 8;
-const GRID_TEMPLATE_COLUMNS = 'repeat(auto-fill, minmax(220px, 1fr))';
+const SKELETON_ROW_COUNT = 8;
 
 type EventsState = {
   isLoading: boolean;
@@ -48,7 +47,7 @@ function Events() {
     };
   }, []);
 
-  const years = data.summary ? sortYearsDescending(data.summary.years) : [];
+  const years = data.summary ? sortYearsAscending(data.summary.years) : [];
   const heatmap = data.summary?.heatmap ?? [];
   // カード内バーチャートの高さは全期間で共通のスケールにするため、
   // 表示年に関わらず全体の最大値を基準にする。
@@ -83,14 +82,13 @@ function Events() {
               <ErrorEventBody message={data.errorMessage} />
             </Box>
           ) : (
-            <Grid templateColumns={GRID_TEMPLATE_COLUMNS}
-                  gap={'3'}
-                  ml={{base: '4', md: '0'}}
-                  mr={{base: '4', md: '0'}}
-                  >
+            <Stack spacing={'3'}
+                   ml={{base: '4', md: '0'}}
+                   mr={{base: '4', md: '0'}}
+                   >
               {data.isLoading
-                ? Array.from({length: SKELETON_CARD_COUNT}).map((_, i) => (
-                    <Skeleton key={i} h={'160px'} borderRadius={'md'} />
+                ? Array.from({length: SKELETON_ROW_COUNT}).map((_, i) => (
+                    <Skeleton key={i} h={'76px'} borderRadius={'md'} />
                   ))
                 : years.map((year) => (
                     <YearSummaryCard key={year.year}
@@ -100,7 +98,7 @@ function Events() {
                                       />
                   ))
               }
-            </Grid>
+            </Stack>
           )}
         </Stack>
         <SiteFooter />
