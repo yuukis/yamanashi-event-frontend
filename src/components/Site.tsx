@@ -650,6 +650,14 @@ export function SelectYearButtons({startYear} : { startYear: number }) {
 
   return (
     <>
+      <Button size={'sm'} m={'1'}
+              variant={'outline'}
+              colorScheme={'primary'}
+              rightIcon={<ChevronRightIcon />}
+              onClick={() => { window.open('/events', '_self'); }}
+              >
+        イベントアーカイブを見る
+      </Button>
       {years.map((year) => (
         <Button key={year} size={'sm'} m={'1'}
                 onClick={() => { window.open(`/events/${year}`, '_self'); }}
