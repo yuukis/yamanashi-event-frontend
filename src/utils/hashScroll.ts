@@ -13,6 +13,11 @@ export function jumpToAnchor(anchorId: string): void {
   window.open(`/#${encodedAnchorId}`, '_self');
 }
 
+// イベントカード側(EventBody)がReactのstateとしてハイライト表示を
+// 制御できるよう、DOMを直接書き換えるのではなくカスタムイベントで通知する。
+// (classList/styleを直接触ると、Chakraの再レンダリングですぐ上書きされて消える)
+export const EVENT_CARD_HIGHLIGHT_EVENT = 'event-card-highlight';
+
 export function scrollToCurrentHash() {
   const hash = window.location.hash;
 
@@ -20,7 +25,8 @@ export function scrollToCurrentHash() {
     return;
   }
 
-  const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+  const id = decodeURIComponent(hash.slice(1));
+  const target = document.getElementById(id);
 
   if (target) {
     window.dispatchEvent(new Event('site-header-show'));
@@ -31,5 +37,10 @@ export function scrollToCurrentHash() {
     window.setTimeout(() => {
       window.dispatchEvent(new Event('site-header-show'));
     }, 120);
+
+    if (id.startsWith('event-')) {
+      const card = target.closest<HTMLElement>('[data-event-card]') ?? target;
+      card.dispatchEvent(new CustomEvent(EVENT_CARD_HIGHLIGHT_EVENT));
+    }
   }
 }

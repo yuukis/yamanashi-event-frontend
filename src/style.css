@@ -31,3 +31,27 @@
     }
   }
 }
+
+/*
+ * 共有URL(#event-<hash>)で開いた/ジャンプした先のイベントカードを
+ * わかりやすくするための一時的な背景ハイライト。
+ */
+.event-card-highlight {
+  animation: event-card-highlight 2s ease-out;
+}
+
+@keyframes event-card-highlight {
+  from {
+    background-color: rgba(255, 110, 97, 0.25);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-card-highlight {
+    animation: none;
+    background-color: rgba(255, 110, 97, 0.25);
+  }
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { jumpToAnchor, scrollToCurrentHash } from './hashScroll';
+import { jumpToAnchor, scrollToCurrentHash, EVENT_CARD_HIGHLIGHT_EVENT } from './hashScroll';
 
 describe('scrollToCurrentHash', () => {
   beforeEach(() => {
@@ -69,6 +69,44 @@ describe('scrollToCurrentHash', () => {
     expect(target.scrollIntoView).toHaveBeenCalled();
 
     document.body.removeChild(target);
+  });
+
+  it('dispatches a highlight event on the closest [data-event-card] ancestor when jumping to an event anchor', () => {
+    const card = document.createElement('div');
+    card.setAttribute('data-event-card', '');
+    const target = document.createElement('div');
+    target.id = 'event-abc123';
+    target.scrollIntoView = vi.fn();
+    card.appendChild(target);
+    document.body.appendChild(card);
+    window.location.hash = '#event-abc123';
+
+    const highlightListener = vi.fn();
+    card.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, highlightListener);
+
+    scrollToCurrentHash();
+
+    expect(highlightListener).toHaveBeenCalledTimes(1);
+
+    document.body.removeChild(card);
+  });
+
+  it('does not dispatch a highlight event when jumping to a date anchor', () => {
+    const card = document.createElement('div');
+    card.setAttribute('data-event-card', '');
+    card.id = 'date-20260105';
+    card.scrollIntoView = vi.fn();
+    document.body.appendChild(card);
+    window.location.hash = '#date-20260105';
+
+    const highlightListener = vi.fn();
+    card.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, highlightListener);
+
+    scrollToCurrentHash();
+
+    expect(highlightListener).not.toHaveBeenCalled();
+
+    document.body.removeChild(card);
   });
 });
 
