@@ -31,3 +31,30 @@ export type EventWithGroup = ApiEvent & {
   archive_source?: string | null;
   archive_url?: string | null;
 };
+
+export type ApiGroupActivity = {
+  key: string;
+  name?: string | null;
+  image_url?: string | null;
+  url?: string | null;
+  event_count: number;
+};
+
+export type ApiYearSummary = {
+  year: number;
+  event_count: number;
+  groups: ApiGroupActivity[];
+};
+
+export type ApiHeatmapBucket = {
+  period: string;
+  count: number;
+};
+
+export type ApiEventsSummary = {
+  from_year: number;
+  to_year: number;
+  granularity: string;
+  years: ApiYearSummary[];
+  heatmap: ApiHeatmapBucket[];
+};
