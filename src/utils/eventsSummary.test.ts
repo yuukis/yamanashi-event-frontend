@@ -1,14 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
   sortYearsDescending,
-  getMaxEventCount,
-  getSequentialLevel,
   buildHeatmapGrid,
   getMaxHeatmapCount,
-  formatHeatmapPeriodLabel,
+  formatMonthCountTooltip,
   splitVisibleGroups,
   getGroupVisualWeight,
-  HEATMAP_LEVEL_COUNT,
 } from './eventsSummary';
 import type { ApiYearSummary } from '../types/events';
 
@@ -24,47 +21,6 @@ describe('sortYearsDescending', () => {
 
     expect(result.map((y) => y.year)).toEqual([2026, 2018, 2010]);
     expect(years.map((y) => y.year)).toEqual([2010, 2026, 2018]);
-  });
-});
-
-describe('getMaxEventCount', () => {
-  it('returns the largest event_count across years', () => {
-    const years = [makeYear({ event_count: 3 }), makeYear({ event_count: 50 }), makeYear({ event_count: 12 })];
-
-    expect(getMaxEventCount(years)).toBe(50);
-  });
-
-  it('returns 0 for an empty list', () => {
-    expect(getMaxEventCount([])).toBe(0);
-  });
-});
-
-describe('getSequentialLevel', () => {
-  it('returns 0 when value is zero', () => {
-    expect(getSequentialLevel(0, 10)).toBe(0);
-  });
-
-  it('returns 0 when max is zero', () => {
-    expect(getSequentialLevel(5, 0)).toBe(0);
-  });
-
-  it('returns at least 1 for any positive value', () => {
-    expect(getSequentialLevel(1, 100)).toBe(1);
-  });
-
-  it('returns the top level for the max value', () => {
-    expect(getSequentialLevel(50, 50)).toBe(HEATMAP_LEVEL_COUNT);
-  });
-
-  it('never exceeds the top level even if value exceeds max', () => {
-    expect(getSequentialLevel(999, 50)).toBe(HEATMAP_LEVEL_COUNT);
-  });
-
-  it('quantizes proportionally between the extremes', () => {
-    expect(getSequentialLevel(25, 100, 4)).toBe(1);
-    expect(getSequentialLevel(50, 100, 4)).toBe(2);
-    expect(getSequentialLevel(75, 100, 4)).toBe(3);
-    expect(getSequentialLevel(100, 100, 4)).toBe(4);
   });
 });
 
@@ -102,13 +58,13 @@ describe('getMaxHeatmapCount', () => {
   });
 });
 
-describe('formatHeatmapPeriodLabel', () => {
-  it('formats a YYYY-MM period as a Japanese year/month label', () => {
-    expect(formatHeatmapPeriodLabel('2026-03')).toBe('2026年3月');
+describe('formatMonthCountTooltip', () => {
+  it('formats a period and count as a Japanese month/count label', () => {
+    expect(formatMonthCountTooltip('2026-03', 5)).toBe('3月: 5件');
   });
 
   it('does not zero-pad the month', () => {
-    expect(formatHeatmapPeriodLabel('2026-09')).toBe('2026年9月');
+    expect(formatMonthCountTooltip('2026-09', 0)).toBe('9月: 0件');
   });
 });
 

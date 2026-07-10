@@ -1,29 +1,9 @@
 import type { ApiHeatmapBucket, ApiYearSummary } from '../types/events';
 
-// count=0 は「活動なし」を示す専用の色(グレー)とし、非0の件数は
-// primary(青)の4段階(薄い→濃い)で相対的な多さを表す。数値そのものは
-// 静的なラベルとして出さず、hover の Tooltip でのみ開示する方針。
-export const HEATMAP_LEVEL_COLORS = ['gray.100', 'primary.200', 'primary.400', 'primary.600', 'primary.800'];
-export const HEATMAP_LEVEL_COUNT = HEATMAP_LEVEL_COLORS.length - 1;
-
-export const MAX_VISIBLE_GROUPS_PER_YEAR = 8;
+export const MAX_VISIBLE_GROUPS_PER_YEAR = 6;
 
 export function sortYearsDescending(years: ApiYearSummary[]): ApiYearSummary[] {
   return [...years].sort((a, b) => b.year - a.year);
-}
-
-export function getMaxEventCount(years: ApiYearSummary[]): number {
-  return years.reduce((max, year) => Math.max(max, year.event_count), 0);
-}
-
-// value を 0(件数ゼロ) 〜 levels(最大値付近) の整数段階に量子化する。
-// 件数が1件でもあれば必ずレベル1以上になり、「活動なし」と区別できる。
-export function getSequentialLevel(value: number, max: number, levels: number = HEATMAP_LEVEL_COUNT): number {
-  if (value <= 0 || max <= 0) {
-    return 0;
-  }
-  const ratio = value / max;
-  return Math.min(levels, Math.max(1, Math.ceil(ratio * levels)));
 }
 
 export type HeatmapYearRow = {
@@ -51,13 +31,15 @@ export function buildHeatmapGrid(heatmap: ApiHeatmapBucket[]): HeatmapYearRow[] 
     .sort((a, b) => a.year - b.year);
 }
 
+// カード内バーチャートの高さの基準値。全期間(2010〜現在)で共通のスケールに
+// することで、どのカードでも棒の高さの意味がぶれないようにする。
 export function getMaxHeatmapCount(heatmap: ApiHeatmapBucket[]): number {
   return heatmap.reduce((max, bucket) => Math.max(max, bucket.count), 0);
 }
 
-export function formatHeatmapPeriodLabel(period: string): string {
-  const [year, month] = period.split('-');
-  return `${year}年${parseInt(month, 10)}月`;
+export function formatMonthCountTooltip(period: string, count: number): string {
+  const month = parseInt(period.slice(5, 7), 10);
+  return `${month}月: ${count}件`;
 }
 
 export function splitVisibleGroups<T>(
