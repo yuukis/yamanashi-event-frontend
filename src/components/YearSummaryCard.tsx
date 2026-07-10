@@ -1,7 +1,7 @@
 import { LinkBox, LinkOverlay, Box, Flex, Tooltip, Image, Center, Text, Skeleton, SkeletonCircle } from '@chakra-ui/react';
 import { People } from '@chakra-icons/bootstrap';
 import type { ApiHeatmapBucket, ApiYearSummary } from '../types/events';
-import { formatMonthCountTooltip } from '../utils/eventsSummary';
+import { formatMonthCountTooltip, getBarHeightPercent } from '../utils/eventsSummary';
 
 const AVATAR_SIZE = { base: '24px', md: '30px', lg: '36px' };
 const CHART_HEIGHT = { base: '32px', md: '32px', lg: '40px' };
@@ -69,6 +69,9 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
                       bg={'gray.100'}
                       overflow={'hidden'}
                       flexShrink={0}
+                      tabIndex={0}
+                      aria-label={group.name ?? group.key}
+                      data-avatar={group.key}
                       >
                 {group.image_url ? (
                   <Image src={group.image_url} boxSize={'100%'} fit={'cover'} alt={group.name ?? group.key} />
@@ -87,9 +90,7 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
 
       <Flex flexShrink={0} h={CHART_HEIGHT} align={'flex-end'} gap={BAR_GAP}>
         {months.map((bucket) => {
-          const heightPct = maxMonthCount > 0
-            ? Math.max((bucket.count / maxMonthCount) * 100, bucket.count > 0 ? 8 : 0)
-            : 0;
+          const heightPct = getBarHeightPercent(bucket.count, maxMonthCount);
           return (
             <Tooltip key={bucket.period} label={formatMonthCountTooltip(bucket.period, bucket.count)} hasArrow fontSize={'xs'} openDelay={150}>
               <Box position={'relative'}
@@ -99,6 +100,9 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
                    borderRadius={'1px 1px 0 0'}
                    bg={bucket.count > 0 ? 'primary.300' : 'gray.100'}
                    _hover={{ bg: bucket.count > 0 ? 'primary.500' : 'gray.300' }}
+                   tabIndex={0}
+                   aria-label={formatMonthCountTooltip(bucket.period, bucket.count)}
+                   data-month-bar={bucket.period}
                    />
             </Tooltip>
           );
