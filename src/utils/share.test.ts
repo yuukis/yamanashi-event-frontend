@@ -16,9 +16,9 @@ describe('buildEventShareUrl', () => {
   });
 
   it('keeps the current year-list path so the anchor stays within that page', () => {
-    window.history.pushState({}, '', '/2026');
+    window.history.pushState({}, '', '/events/2026');
 
-    expect(buildEventShareUrl('abc123')).toBe(`${window.location.origin}/2026#${getEventAnchorId('abc123')}`);
+    expect(buildEventShareUrl('abc123')).toBe(`${window.location.origin}/events/2026#${getEventAnchorId('abc123')}`);
   });
 });
 
