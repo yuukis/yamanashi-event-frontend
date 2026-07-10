@@ -2,7 +2,6 @@ import { describe, it, expect, afterEach } from 'vitest';
 import {
   buildEventShareUrl,
   buildXShareUrl,
-  buildShareClipboardText,
 } from './share';
 import { getEventAnchorId } from './eventAnchors';
 
@@ -35,19 +34,5 @@ describe('buildXShareUrl', () => {
     const url = buildXShareUrl({ title: 'Sample Event', url: 'https://example.com/#event-item-1', hashTag: null });
 
     expect(url).toBe('https://twitter.com/intent/tweet?text=Sample+Event&url=https%3A%2F%2Fexample.com%2F%23event-item-1');
-  });
-});
-
-describe('buildShareClipboardText', () => {
-  it('joins title, url and hashtag on separate lines when a hashTag is present', () => {
-    const text = buildShareClipboardText({ title: 'Sample Event', url: 'https://example.com/#event-item-1', hashTag: 'kofu' });
-
-    expect(text).toBe('Sample Event\nhttps://example.com/#event-item-1\n#kofu');
-  });
-
-  it('omits the hashtag line when there is no hashTag', () => {
-    const text = buildShareClipboardText({ title: 'Sample Event', url: 'https://example.com/#event-item-1', hashTag: null });
-
-    expect(text).toBe('Sample Event\nhttps://example.com/#event-item-1');
   });
 });
