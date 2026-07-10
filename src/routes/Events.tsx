@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { SiteHeader, SiteFooter, useFixedHeaderBoundary } from '../components/Site';
+import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
 import { YearSummaryCard, YearSummaryCardSkeleton } from '../components/YearSummaryCard';
 import { ErrorEventBody } from '../components/EventBody';
 import '../style.css';
@@ -17,6 +17,7 @@ const SLOW_LOADING_HINT_DELAY_MS = 5000;
 type EventsState = {
   isLoading: boolean;
   summary: ApiEventsSummary | null;
+  lastModified: string | null;
   errorMessage: string;
 };
 
@@ -24,6 +25,7 @@ function Events() {
   const [data, setData] = useState<EventsState>({
     isLoading: true,
     summary: null,
+    lastModified: null,
     errorMessage: '',
   });
   const [isSlowLoading, setIsSlowLoading] = useState(false);
@@ -43,14 +45,14 @@ function Events() {
     }, SLOW_LOADING_HINT_DELAY_MS);
 
     fetchEventsSummary()
-      .then((summary) => {
+      .then(({ summary, lastModified }) => {
         if (!cancelled) {
-          setData({ isLoading: false, summary, errorMessage: '' });
+          setData({ isLoading: false, summary, lastModified, errorMessage: '' });
         }
       })
       .catch((err: any) => {
         if (!cancelled) {
-          setData({ isLoading: false, summary: null, errorMessage: err.message });
+          setData({ isLoading: false, summary: null, lastModified: null, errorMessage: err.message });
         }
       })
       .finally(() => {
@@ -126,6 +128,9 @@ function Events() {
                     ))
                 }
               </Stack>
+              {data.lastModified &&
+                <FooterLastModified lastModified={data.lastModified} />
+              }
             </Stack>
           )}
         </Stack>

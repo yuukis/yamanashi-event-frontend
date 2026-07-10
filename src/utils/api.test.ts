@@ -72,13 +72,28 @@ describe('fetchGroups', () => {
 });
 
 describe('fetchEventsSummary', () => {
-  it('requests the summary endpoint and returns the parsed data', async () => {
+  it('requests the summary endpoint and returns the parsed data with last-modified', async () => {
     const summary = { from_year: 2010, to_year: 2026, granularity: 'month', years: [], heatmap: [] };
-    vi.mocked(axios.get).mockResolvedValue({ data: summary });
+    vi.mocked(axios.get).mockResolvedValue({
+      data: summary,
+      headers: { 'last-modified': 'Wed, 01 Jan 2026 00:00:00 GMT' },
+    });
 
     const result = await fetchEventsSummary();
 
     expect(axios.get).toHaveBeenCalledWith(EVENTS_SUMMARY_API_URL);
-    expect(result).toEqual(summary);
+    expect(result).toEqual({
+      summary,
+      lastModified: 'Wed, 01 Jan 2026 00:00:00 GMT',
+    });
+  });
+
+  it('returns null last-modified when the header is absent', async () => {
+    const summary = { from_year: 2010, to_year: 2026, granularity: 'month', years: [], heatmap: [] };
+    vi.mocked(axios.get).mockResolvedValue({ data: summary, headers: {} });
+
+    const result = await fetchEventsSummary();
+
+    expect(result.lastModified).toBeNull();
   });
 });

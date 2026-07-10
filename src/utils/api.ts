@@ -29,7 +29,10 @@ export async function fetchGroups(): Promise<ApiGroup[]> {
   return res.data as ApiGroup[];
 }
 
-export async function fetchEventsSummary(): Promise<ApiEventsSummary> {
+export async function fetchEventsSummary(): Promise<{ summary: ApiEventsSummary; lastModified: string | null }> {
   const res = await axios.get(EVENTS_SUMMARY_API_URL);
-  return res.data as ApiEventsSummary;
+  return {
+    summary: res.data as ApiEventsSummary,
+    lastModified: res.headers['last-modified'] ?? null,
+  };
 }
