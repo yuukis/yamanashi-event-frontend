@@ -5,7 +5,6 @@ import { FiShare2 } from 'react-icons/fi';
 import {
   buildEventShareUrl,
   buildXShareUrl,
-  buildShareClipboardText,
   type ShareContext,
 } from '../utils/share';
 import type { EventWithGroup } from '../types/events';
@@ -54,7 +53,7 @@ export function ShareIconRow({ event }: { event: EventWithGroup }) {
                   variant={'ghost'}
                   color={'gray.400'}
                   _hover={{ color: 'gray.600' }}
-                  onClick={() => copyEventLink(ctx, toast)}
+                  onClick={() => copyEventLink(ctx.url, toast)}
                   />
     </HStack>
   );
@@ -100,14 +99,14 @@ export function ShareButton({ event, onAfterAction }: ShareButtonProps) {
   );
 }
 
-function copyEventLink(ctx: ShareContext, toast: ReturnType<typeof useToast>, onAfterAction?: () => void): void {
+function copyEventLink(url: string, toast: ReturnType<typeof useToast>, onAfterAction?: () => void): void {
   if (!navigator.clipboard?.writeText) {
     toast({ title: 'コピーに失敗しました', status: 'error', duration: 2000, isClosable: true });
     onAfterAction?.();
     return;
   }
 
-  navigator.clipboard.writeText(buildShareClipboardText(ctx))
+  navigator.clipboard.writeText(url)
     .then(() => {
       toast({ title: 'リンクをコピーしました', status: 'success', duration: 2000, isClosable: true });
     })

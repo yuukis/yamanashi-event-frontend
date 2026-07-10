@@ -17,11 +17,3 @@ export function buildXShareUrl(ctx: ShareContext): string {
   }
   return `https://twitter.com/intent/tweet?${params.toString()}`;
 }
-
-export function buildShareClipboardText(ctx: ShareContext): string {
-  const lines = [ctx.title, ctx.url];
-  if (ctx.hashTag) {
-    lines.push(`#${ctx.hashTag}`);
-  }
-  return lines.join('\n');
-}

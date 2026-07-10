@@ -5,7 +5,7 @@ import { EventBody, EmptyEventBody, ErrorEventBody } from './EventBody';
 import { makeEvent } from '../test/fixtures';
 import { updateTrackingData } from '../utils/newEventTrackingStore';
 import type { NewEventTrackingData } from '../utils/newEventTracking';
-import { buildEventShareUrl, buildXShareUrl, buildShareClipboardText } from '../utils/share';
+import { buildEventShareUrl, buildXShareUrl } from '../utils/share';
 import { getEventAnchorId } from '../utils/eventAnchors';
 
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
@@ -256,7 +256,7 @@ describe('EventBody', () => {
     windowOpenSpy.mockRestore();
   });
 
-  it('copies the share text to the clipboard and shows a confirmation toast on desktop', async () => {
+  it('copies only the event card URL to the clipboard and shows a confirmation toast on desktop', async () => {
     mockMatchMedia(true);
     const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
     const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1', hash_tag: 'kofu' });
@@ -264,12 +264,7 @@ describe('EventBody', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'リンクをコピー' }));
 
-    const expected_text = buildShareClipboardText({
-      title: event.title,
-      url: buildEventShareUrl(event.uid),
-      hashTag: event.hash_tag,
-    });
-    expect(writeTextSpy).toHaveBeenCalledWith(expected_text);
+    expect(writeTextSpy).toHaveBeenCalledWith(buildEventShareUrl(event.uid));
     await screen.findByText('リンクをコピーしました');
 
     writeTextSpy.mockRestore();
