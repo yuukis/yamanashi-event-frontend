@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { SiteHeader, SiteFooter, useFixedHeaderBoundary } from '../components/Site';
-import { ActivityHeatmap } from '../components/ActivityHeatmap';
 import { YearSummaryCard } from '../components/YearSummaryCard';
 import { ErrorEventBody } from '../components/EventBody';
 import '../style.css';
-import { Container, Box, Stack, Heading, Text, SimpleGrid, Skeleton } from '@chakra-ui/react';
+import { Container, Box, Stack, Heading, Text, Grid, Skeleton } from '@chakra-ui/react';
 import { fetchEventsSummary } from '../utils/api';
-import { sortYearsDescending, getMaxEventCount } from '../utils/eventsSummary';
-import type { ApiEventsSummary } from '../types/events';
+import { sortYearsDescending, buildHeatmapGrid, getMaxHeatmapCount } from '../utils/eventsSummary';
+import type { ApiEventsSummary, ApiHeatmapBucket } from '../types/events';
 
 const SKELETON_CARD_COUNT = 8;
+const GRID_TEMPLATE_COLUMNS = 'repeat(auto-fill, minmax(220px, 1fr))';
 
 type EventsState = {
   isLoading: boolean;
@@ -49,7 +49,12 @@ function Events() {
   }, []);
 
   const years = data.summary ? sortYearsDescending(data.summary.years) : [];
-  const maxEventCount = data.summary ? getMaxEventCount(data.summary.years) : 0;
+  const heatmap = data.summary?.heatmap ?? [];
+  // カード内バーチャートの高さは全期間で共通のスケールにするため、
+  // 表示年に関わらず全体の最大値を基準にする。
+  const maxMonthCount = getMaxHeatmapCount(heatmap);
+  const monthsByYear = new Map(buildHeatmapGrid(heatmap).map((row) => [row.year, row.months]));
+  const emptyMonths: ApiHeatmapBucket[] = [];
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
@@ -69,51 +74,34 @@ function Events() {
               イベントアーカイブ
             </Heading>
             <Text fontSize={{base: 'sm', md: 'md'}} ml={{base: '4', md: '0'}} mr={{base: '4', md: '0'}} color={'gray.600'}>
-              2010年から現在まで、山梨県内で開催されたIT勉強会の記録を振り返れます。
+              2010年から現在まで、山梨県内で開催されたIT勉強会の記録を振り返れます。各カードの棒グラフは月ごとの開催件数で、全年で共通のスケールです。
             </Text>
           </Box>
 
-          <Box bg={'white'}
-               borderRadius={'md'}
-               border={{base: 'none', md: '1px solid'}}
-               borderColor={'gray.200'}
-               p={{base: '4', md: '6'}}
-               >
-            <Heading size={'sm'} mb={'4'} color={'gray.600'}>
-              活動ヒートマップ
-            </Heading>
-            {data.errorMessage ? (
+          {data.errorMessage ? (
+            <Box ml={{base: '4', md: '0'}} mr={{base: '4', md: '0'}}>
               <ErrorEventBody message={data.errorMessage} />
-            ) : (
-              <ActivityHeatmap heatmap={data.summary?.heatmap ?? []} isLoading={data.isLoading} />
-            )}
-          </Box>
-
-          <Box>
-            <Heading size={'sm'} mb={'4'} ml={{base: '4', md: '0'}} color={'gray.600'}>
-              年から探す
-            </Heading>
-            {data.errorMessage ? (
-              <Box ml={{base: '4', md: '0'}} mr={{base: '4', md: '0'}}>
-                <ErrorEventBody message={data.errorMessage} />
-              </Box>
-            ) : (
-              <SimpleGrid columns={{base: 2, sm: 3, md: 4}}
-                          spacing={'3'}
-                          ml={{base: '4', md: '0'}}
-                          mr={{base: '4', md: '0'}}
-                          >
-                {data.isLoading
-                  ? Array.from({length: SKELETON_CARD_COUNT}).map((_, i) => (
-                      <Skeleton key={i} h={'96px'} borderRadius={'md'} />
-                    ))
-                  : years.map((year) => (
-                      <YearSummaryCard key={year.year} summary={year} maxEventCount={maxEventCount} />
-                    ))
-                }
-              </SimpleGrid>
-            )}
-          </Box>
+            </Box>
+          ) : (
+            <Grid templateColumns={GRID_TEMPLATE_COLUMNS}
+                  gap={'3'}
+                  ml={{base: '4', md: '0'}}
+                  mr={{base: '4', md: '0'}}
+                  >
+              {data.isLoading
+                ? Array.from({length: SKELETON_CARD_COUNT}).map((_, i) => (
+                    <Skeleton key={i} h={'160px'} borderRadius={'md'} />
+                  ))
+                : years.map((year) => (
+                    <YearSummaryCard key={year.year}
+                                      summary={year}
+                                      months={monthsByYear.get(year.year) ?? emptyMonths}
+                                      maxMonthCount={maxMonthCount}
+                                      />
+                  ))
+              }
+            </Grid>
+          )}
         </Stack>
         <SiteFooter />
       </Container>
