@@ -9,8 +9,6 @@ export type HeatmapYearRow = {
   months: ApiHeatmapBucket[];
 };
 
-// heatmap は "YYYY-MM" のフラットなバケット列で届く。年ごとの行にまとめ、
-// 行内は月の昇順に揃える(API は既に昇順で返すが、ここで保証する)。
 export function buildHeatmapGrid(heatmap: ApiHeatmapBucket[]): HeatmapYearRow[] {
   const monthsByYear = new Map<number, ApiHeatmapBucket[]>();
 
@@ -29,8 +27,6 @@ export function buildHeatmapGrid(heatmap: ApiHeatmapBucket[]): HeatmapYearRow[] 
     .sort((a, b) => a.year - b.year);
 }
 
-// カード内バーチャートの高さの基準値。全期間(2010〜現在)で共通のスケールに
-// することで、どのカードでも棒の高さの意味がぶれないようにする。
 export function getMaxHeatmapCount(heatmap: ApiHeatmapBucket[]): number {
   return heatmap.reduce((max, bucket) => Math.max(max, bucket.count), 0);
 }

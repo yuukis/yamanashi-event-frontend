@@ -10,8 +10,6 @@ const BAR_GAP = '1px';
 const ROW_GAP = {base: '2', md: '4', lg: '6'};
 const ROW_PX = {base: '3', md: '5', lg: '6'};
 const ROW_PY = {base: '3', md: '3', lg: '4'};
-// 実データが届く前の見た目の目安として、それらしい高さのばらつきを
-// 持たせた固定のダミー系列(12ヶ月分)。データの意味は持たない。
 const SKELETON_BAR_HEIGHTS = [35, 55, 40, 70, 50, 85, 60, 45, 65, 30, 50, 40];
 const SKELETON_AVATAR_COUNT = 5;
 
@@ -107,9 +105,6 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
   );
 }
 
-// YearSummaryCard と同じ寸法・配置のプレースホルダー。データ取得中に
-// レイアウトのがたつきを出さず、何が読み込まれつつあるかが伝わるように
-// 実際のカードの形(年・アイコン列・棒グラフ)をなぞる。
 export function YearSummaryCardSkeleton() {
   return (
     <Flex alignItems={'center'}

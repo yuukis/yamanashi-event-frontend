@@ -9,9 +9,6 @@ import { sortYearsAscending, buildHeatmapGrid, getMaxHeatmapCount } from '../uti
 import type { ApiEventsSummary, ApiHeatmapBucket } from '../types/events';
 
 const SKELETON_ROW_COUNT = 8;
-// 通常は数百ms〜1,2秒で終わるが、/events/summary はキャッシュが
-// 切れていると集計元データの取得からやり直すため、この時間を超えたら
-// 「まだ動いている」と伝える案内を出す。
 const SLOW_LOADING_HINT_DELAY_MS = 5000;
 
 type EventsState = {
@@ -67,8 +64,6 @@ function Events() {
 
   const years = data.summary ? sortYearsAscending(data.summary.years) : [];
   const heatmap = data.summary?.heatmap ?? [];
-  // カード内バーチャートの高さは全期間で共通のスケールにするため、
-  // 表示年に関わらず全体の最大値を基準にする。
   const maxMonthCount = getMaxHeatmapCount(heatmap);
   const monthsByYear = new Map(buildHeatmapGrid(heatmap).map((row) => [row.year, row.months]));
   const emptyMonths: ApiHeatmapBucket[] = [];
