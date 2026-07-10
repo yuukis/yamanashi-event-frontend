@@ -263,6 +263,10 @@ function Root({startYear}: {startYear: number}) {
                      >
                 <Button size={{base: 'sm', md: 'md'}}
                         colorScheme={'secondary'}
+                        bg={'secondary.700'}
+                        color={'white'}
+                        _hover={{ bg: 'secondary.800' }}
+                        _active={{ bg: 'secondary.900' }}
                         leftIcon={<InfoOutlineIcon />}
                         onClick={() => { window.open('/guide', '_self') }}
                         >
@@ -283,6 +287,7 @@ function Root({startYear}: {startYear: number}) {
       </Box>
       <Container maxW={'980px'} w={'100%'}
                  p={{base: '0', md: '4'}}
+                 pt={{base: '6', md: '6'}}
                  >
         <Stack>
           <GroupSelector groups={groupSelectorItems}
