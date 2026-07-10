@@ -78,7 +78,7 @@ export function ShareButton({ event, onAfterAction }: ShareButtonProps) {
     try {
       await navigator.share({
         title: ctx.title,
-        text: ctx.hashTag ? `#${ctx.hashTag}` : undefined,
+        text: ctx.hashTag ? `${ctx.title} #${ctx.hashTag}` : ctx.title,
         url: ctx.url,
       });
     } catch (err) {
