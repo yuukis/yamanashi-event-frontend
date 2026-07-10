@@ -39,7 +39,7 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
              >
       <Box flexShrink={0}>
         <LinkOverlay href={`/events/${summary.year}`}>
-          <Text fontSize={{base: 'xl', md: '2xl', lg: '3xl'}} fontWeight={'bold'} lineHeight={1} color={'gray.700'} whiteSpace={'nowrap'}>
+          <Text fontSize={{base: '2xl', md: '3xl', lg: '4xl'}} fontWeight={'100'} lineHeight={1} color={'gray.700'} whiteSpace={'nowrap'}>
             {summary.year}
           </Text>
         </LinkOverlay>
@@ -116,8 +116,8 @@ export function YearSummaryCardSkeleton() {
           py={ROW_PY}
           >
       <Skeleton flexShrink={0}
-                h={{base: '6', md: '7', lg: '8'}}
-                w={{base: '9', md: '10', lg: '12'}}
+                h={{base: '7', md: '8', lg: '9'}}
+                w={{base: '10', md: '12', lg: '14'}}
                 borderRadius={'sm'}
                 />
 
