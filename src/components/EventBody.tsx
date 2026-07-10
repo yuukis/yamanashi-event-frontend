@@ -268,6 +268,7 @@ export function EventBody(data: EventBodyProps) {
               p={'2'} position={'relative'}
               id={data.anchorId}
               data-event-card
+              data-event-date={formatEventDateKey(start_date).replace(/-/g, '')}
               className={isHighlighted ? 'event-card-highlight' : undefined}
               scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
               {...(!isDesktopScreenSize && {

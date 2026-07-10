@@ -91,22 +91,42 @@ describe('scrollToCurrentHash', () => {
     document.body.removeChild(card);
   });
 
-  it('does not dispatch a highlight event when jumping to a date anchor', () => {
-    const card = document.createElement('div');
-    card.setAttribute('data-event-card', '');
-    card.id = 'date-20260105';
-    card.scrollIntoView = vi.fn();
-    document.body.appendChild(card);
+  it('dispatches a highlight event on every card sharing the same date when jumping to a date anchor', () => {
+    const firstCard = document.createElement('div');
+    firstCard.setAttribute('data-event-card', '');
+    firstCard.setAttribute('data-event-date', '20260105');
+    firstCard.id = 'date-20260105';
+    firstCard.scrollIntoView = vi.fn();
+    document.body.appendChild(firstCard);
+
+    const secondCard = document.createElement('div');
+    secondCard.setAttribute('data-event-card', '');
+    secondCard.setAttribute('data-event-date', '20260105');
+    document.body.appendChild(secondCard);
+
+    const otherDateCard = document.createElement('div');
+    otherDateCard.setAttribute('data-event-card', '');
+    otherDateCard.setAttribute('data-event-date', '20260106');
+    document.body.appendChild(otherDateCard);
+
     window.location.hash = '#date-20260105';
 
-    const highlightListener = vi.fn();
-    card.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, highlightListener);
+    const firstListener = vi.fn();
+    const secondListener = vi.fn();
+    const otherDateListener = vi.fn();
+    firstCard.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, firstListener);
+    secondCard.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, secondListener);
+    otherDateCard.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, otherDateListener);
 
     scrollToCurrentHash();
 
-    expect(highlightListener).not.toHaveBeenCalled();
+    expect(firstListener).toHaveBeenCalledTimes(1);
+    expect(secondListener).toHaveBeenCalledTimes(1);
+    expect(otherDateListener).not.toHaveBeenCalled();
 
-    document.body.removeChild(card);
+    document.body.removeChild(firstCard);
+    document.body.removeChild(secondCard);
+    document.body.removeChild(otherDateCard);
   });
 });
 
