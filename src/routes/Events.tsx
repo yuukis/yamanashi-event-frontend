@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 import { SiteHeader, SiteFooter, useFixedHeaderBoundary } from '../components/Site';
-import { YearSummaryCard } from '../components/YearSummaryCard';
+import { YearSummaryCard, YearSummaryCardSkeleton } from '../components/YearSummaryCard';
 import { ErrorEventBody } from '../components/EventBody';
 import '../style.css';
-import { Container, Box, Stack, Heading, Text, Skeleton } from '@chakra-ui/react';
+import { Container, Box, Stack, Heading, Text } from '@chakra-ui/react';
 import { fetchEventsSummary } from '../utils/api';
 import { sortYearsAscending, buildHeatmapGrid, getMaxHeatmapCount } from '../utils/eventsSummary';
 import type { ApiEventsSummary, ApiHeatmapBucket } from '../types/events';
 
 const SKELETON_ROW_COUNT = 8;
+// 通常は数百ms〜1,2秒で終わるが、/events/summary はキャッシュが
+// 切れていると集計元データの取得からやり直すため、この時間を超えたら
+// 「まだ動いている」と伝える案内を出す。
+const SLOW_LOADING_HINT_DELAY_MS = 5000;
 
 type EventsState = {
   isLoading: boolean;
@@ -22,6 +26,7 @@ function Events() {
     summary: null,
     errorMessage: '',
   });
+  const [isSlowLoading, setIsSlowLoading] = useState(false);
 
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
 
@@ -29,6 +34,13 @@ function Events() {
 
   useEffect(() => {
     let cancelled = false;
+    setIsSlowLoading(false);
+
+    const slowLoadingTimer = window.setTimeout(() => {
+      if (!cancelled) {
+        setIsSlowLoading(true);
+      }
+    }, SLOW_LOADING_HINT_DELAY_MS);
 
     fetchEventsSummary()
       .then((summary) => {
@@ -40,10 +52,14 @@ function Events() {
         if (!cancelled) {
           setData({ isLoading: false, summary: null, errorMessage: err.message });
         }
+      })
+      .finally(() => {
+        window.clearTimeout(slowLoadingTimer);
       });
 
     return () => {
       cancelled = true;
+      window.clearTimeout(slowLoadingTimer);
     };
   }, []);
 
@@ -82,22 +98,34 @@ function Events() {
               <ErrorEventBody message={data.errorMessage} />
             </Box>
           ) : (
-            <Stack spacing={'3'}
-                   ml={{base: '4', md: '0'}}
-                   mr={{base: '4', md: '0'}}
-                   >
-              {data.isLoading
-                ? Array.from({length: SKELETON_ROW_COUNT}).map((_, i) => (
-                    <Skeleton key={i} h={'76px'} borderRadius={'md'} />
-                  ))
-                : years.map((year) => (
-                    <YearSummaryCard key={year.year}
-                                      summary={year}
-                                      months={monthsByYear.get(year.year) ?? emptyMonths}
-                                      maxMonthCount={maxMonthCount}
-                                      />
-                  ))
-              }
+            <Stack spacing={'3'}>
+              {data.isLoading && isSlowLoading && (
+                <Text fontSize={'xs'}
+                      color={'gray.500'}
+                      textAlign={'center'}
+                      ml={{base: '4', md: '0'}}
+                      mr={{base: '4', md: '0'}}
+                      >
+                  読み込みに時間がかかっています。もうしばらくお待ちください。
+                </Text>
+              )}
+              <Stack spacing={'3'}
+                     ml={{base: '4', md: '0'}}
+                     mr={{base: '4', md: '0'}}
+                     >
+                {data.isLoading
+                  ? Array.from({length: SKELETON_ROW_COUNT}).map((_, i) => (
+                      <YearSummaryCardSkeleton key={i} />
+                    ))
+                  : years.map((year) => (
+                      <YearSummaryCard key={year.year}
+                                        summary={year}
+                                        months={monthsByYear.get(year.year) ?? emptyMonths}
+                                        maxMonthCount={maxMonthCount}
+                                        />
+                    ))
+                }
+              </Stack>
             </Stack>
           )}
         </Stack>
