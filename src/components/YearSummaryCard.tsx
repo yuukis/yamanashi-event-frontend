@@ -9,8 +9,6 @@ import {
 
 const AVATAR_SIZE = { base: '24px', md: '30px' };
 const OVERFLOW_BADGE_SIZE = { base: '20px', md: '26px' };
-const AVATARS_COLUMN_WIDTH = { base: '176px', md: '244px' };
-const YEAR_COLUMN_WIDTH = { base: '40px', md: '52px' };
 const CHART_HEIGHT = '32px';
 const BAR_WIDTH = '4px';
 const BAR_GAP = '1px';
@@ -40,19 +38,18 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
              _hover={{ borderColor: 'gray.300', shadow: 'sm' }}
              transition={'box-shadow 120ms ease-out, border-color 120ms ease-out'}
              >
-      <Box flexShrink={0} w={YEAR_COLUMN_WIDTH} textAlign={'center'}>
+      <Box flexShrink={0}>
         <LinkOverlay href={`/events/${summary.year}`}>
-          <Text fontSize={{base: 'lg', md: 'xl'}} fontWeight={'bold'} lineHeight={1} color={'gray.700'}>
+          <Text fontSize={{base: 'lg', md: 'xl'}} fontWeight={'bold'} lineHeight={1} color={'gray.700'} whiteSpace={'nowrap'}>
             {summary.year}
           </Text>
         </LinkOverlay>
-        <Text fontSize={'2xs'} color={'gray.500'} mt={'0.5'}>年</Text>
       </Box>
 
       <Box alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
 
-      <Flex flexShrink={0}
-            w={AVATARS_COLUMN_WIDTH}
+      <Flex flex={'1'}
+            minW={'0'}
             align={'center'}
             gap={{base: '1', md: '2'}}
             wrap={'nowrap'}
@@ -64,7 +61,8 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
               const { opacity } = getGroupVisualWeight(index, visible.length);
               return (
                 <Tooltip key={group.key} label={group.name ?? group.key} hasArrow fontSize={'xs'}>
-                  <Center boxSize={AVATAR_SIZE}
+                  <Center position={'relative'}
+                          boxSize={AVATAR_SIZE}
                           borderRadius={'full'}
                           bg={'gray.100'}
                           overflow={'hidden'}
@@ -82,7 +80,8 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
             })}
             {overflow.length > 0 && (
               <Tooltip label={overflowNames} hasArrow fontSize={'xs'}>
-                <Center boxSize={OVERFLOW_BADGE_SIZE}
+                <Center position={'relative'}
+                        boxSize={OVERFLOW_BADGE_SIZE}
                         borderRadius={'full'}
                         bg={'gray.100'}
                         color={'gray.500'}
@@ -102,14 +101,15 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
 
       <Box alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
 
-      <Flex flexShrink={0} ml={'auto'} h={CHART_HEIGHT} align={'flex-end'} gap={BAR_GAP}>
+      <Flex flexShrink={0} h={CHART_HEIGHT} align={'flex-end'} gap={BAR_GAP}>
         {months.map((bucket) => {
           const heightPct = maxMonthCount > 0
             ? Math.max((bucket.count / maxMonthCount) * 100, bucket.count > 0 ? 8 : 0)
             : 0;
           return (
             <Tooltip key={bucket.period} label={formatMonthCountTooltip(bucket.period, bucket.count)} hasArrow fontSize={'xs'} openDelay={150}>
-              <Box w={BAR_WIDTH}
+              <Box position={'relative'}
+                   w={BAR_WIDTH}
                    h={`${heightPct}%`}
                    minH={'1px'}
                    borderRadius={'1px 1px 0 0'}
