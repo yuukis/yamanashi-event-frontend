@@ -6,6 +6,7 @@ import { makeEvent } from '../test/fixtures';
 import { updateTrackingData } from '../utils/newEventTrackingStore';
 import type { NewEventTrackingData } from '../utils/newEventTracking';
 import { buildEventShareUrl, buildXShareUrl, buildShareClipboardText } from '../utils/share';
+import { getEventAnchorId } from '../utils/eventAnchors';
 
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
 const EMPTY_TRACKING_DATA: NewEventTrackingData = { version: 1, records: {}, dismissedUids: [], acknowledgedDotUids: [] };
@@ -130,7 +131,7 @@ describe('EventBody', () => {
       <EventBody event={makeEvent({ uid: 'my-uid' })} />,
     );
 
-    expect(container.querySelector('#event-item-my-uid')).not.toBeNull();
+    expect(container.querySelector(`#${getEventAnchorId('my-uid')}`)).not.toBeNull();
   });
 
   it('renders the group name instead of the owner name when a group is present', () => {

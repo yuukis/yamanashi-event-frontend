@@ -4,10 +4,11 @@ import {
   buildXShareUrl,
   buildShareClipboardText,
 } from './share';
+import { getEventAnchorId } from './eventAnchors';
 
 describe('buildEventShareUrl', () => {
   it('builds an absolute URL pointing at the event anchor', () => {
-    expect(buildEventShareUrl('abc123')).toBe(`${window.location.origin}/#event-item-abc123`);
+    expect(buildEventShareUrl('abc123')).toBe(`${window.location.origin}/#${getEventAnchorId('abc123')}`);
   });
 });
 

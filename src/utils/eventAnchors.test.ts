@@ -18,7 +18,21 @@ describe('getEventDateAnchorId', () => {
 });
 
 describe('getEventAnchorId', () => {
-  it('prefixes the uid with "event-item-"', () => {
-    expect(getEventAnchorId('abc123')).toBe('event-item-abc123');
+  it('prefixes a short, id-safe hash of the uid with "event-item-"', () => {
+    expect(getEventAnchorId('abc123')).toMatch(/^event-item-[0-9a-z]+$/);
+  });
+
+  it('is deterministic for the same uid', () => {
+    expect(getEventAnchorId('event_395466@connpass.com')).toBe(getEventAnchorId('event_395466@connpass.com'));
+  });
+
+  it('produces different ids for different uids', () => {
+    expect(getEventAnchorId('event-a')).not.toBe(getEventAnchorId('event-b'));
+  });
+
+  it('stays short even for long, special-character uids', () => {
+    const id = getEventAnchorId('scratch-day-yamanashi-2026-05-17-001@yamanashi-event-archive');
+
+    expect(id.length).toBeLessThan(20);
   });
 });
