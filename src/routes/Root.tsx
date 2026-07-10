@@ -23,7 +23,7 @@ import {
   Button
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
-import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
+import { CalendarIcon, ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -257,7 +257,11 @@ function Root({startYear}: {startYear: number}) {
                 </Link>
                 、コミュニティが提供するイベントカレンダー、過去イベントアーカイブから取得しています。
               </Text>
-              <Box pt={'2'} textAlign={{base: 'center', md: 'left'}}>
+              <Stack pt={'2'}
+                     direction={{base: 'column', sm: 'row'}}
+                     spacing={'3'}
+                     alignItems={{base: 'center', md: 'flex-start'}}
+                     >
                 <Button size={{base: 'sm', md: 'md'}}
                         variant={'outline'}
                         colorScheme={'primary'}
@@ -266,7 +270,15 @@ function Root({startYear}: {startYear: number}) {
                         >
                   はじめての方へ
                 </Button>
-              </Box>
+                <Button size={{base: 'sm', md: 'md'}}
+                        variant={'outline'}
+                        colorScheme={'primary'}
+                        leftIcon={<CalendarIcon />}
+                        onClick={() => { window.open('/events', '_self') }}
+                        >
+                  イベントアーカイブを見る
+                </Button>
+              </Stack>
             </Stack>          
           </Container>
         </Box>
