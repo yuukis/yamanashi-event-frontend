@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  sortYearsDescending,
+  sortYearsAscending,
   buildHeatmapGrid,
   getMaxHeatmapCount,
   formatMonthCountTooltip,
@@ -13,13 +13,13 @@ function makeYear(overrides: Partial<ApiYearSummary> = {}): ApiYearSummary {
   return { year: 2020, event_count: 0, groups: [], ...overrides };
 }
 
-describe('sortYearsDescending', () => {
-  it('orders years from newest to oldest without mutating the input', () => {
+describe('sortYearsAscending', () => {
+  it('orders years from oldest to newest without mutating the input', () => {
     const years = [makeYear({ year: 2010 }), makeYear({ year: 2026 }), makeYear({ year: 2018 })];
 
-    const result = sortYearsDescending(years);
+    const result = sortYearsAscending(years);
 
-    expect(result.map((y) => y.year)).toEqual([2026, 2018, 2010]);
+    expect(result.map((y) => y.year)).toEqual([2010, 2018, 2026]);
     expect(years.map((y) => y.year)).toEqual([2010, 2026, 2018]);
   });
 });
@@ -82,18 +82,17 @@ describe('splitVisibleGroups', () => {
 
 describe('getGroupVisualWeight', () => {
   it('gives full weight to a single visible group', () => {
-    expect(getGroupVisualWeight(0, 1)).toEqual({ opacity: 1, scale: 1 });
+    expect(getGroupVisualWeight(0, 1)).toEqual({ opacity: 1 });
   });
 
   it('gives the first rank full weight and the last rank the minimum weight', () => {
-    expect(getGroupVisualWeight(0, 4)).toEqual({ opacity: 1, scale: 1 });
-    expect(getGroupVisualWeight(3, 4)).toEqual({ opacity: 0.55, scale: 0.65 });
+    expect(getGroupVisualWeight(0, 4)).toEqual({ opacity: 1 });
+    expect(getGroupVisualWeight(3, 4)).toEqual({ opacity: 0.55 });
   });
 
   it('interpolates weight for middle ranks', () => {
     const result = getGroupVisualWeight(1, 4);
 
     expect(result.opacity).toBeCloseTo(0.85, 5);
-    expect(result.scale).toBeCloseTo(0.8833333, 5);
   });
 });

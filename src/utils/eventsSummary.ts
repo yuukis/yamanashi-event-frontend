@@ -2,8 +2,8 @@ import type { ApiHeatmapBucket, ApiYearSummary } from '../types/events';
 
 export const MAX_VISIBLE_GROUPS_PER_YEAR = 6;
 
-export function sortYearsDescending(years: ApiYearSummary[]): ApiYearSummary[] {
-  return [...years].sort((a, b) => b.year - a.year);
+export function sortYearsAscending(years: ApiYearSummary[]): ApiYearSummary[] {
+  return [...years].sort((a, b) => a.year - b.year);
 }
 
 export type HeatmapYearRow = {
@@ -50,15 +50,15 @@ export function splitVisibleGroups<T>(
 }
 
 // コミュニティのアバターを、件数そのものではなく「並び順(rank)」に基づいて
-// 目立たせる度合い(不透明度・サイズ)を求める。API が既に件数降順で返す
-// ため、これだけで「上位ほど目立つ」という表現が成立する。
-export function getGroupVisualWeight(rank: number, visibleCount: number): { opacity: number; scale: number } {
+// 目立たせる度合い(不透明度)を求める。アイコンのサイズは統一するため、
+// 差はこの不透明度のみで表現する。API が既に件数降順で返すため、これだけで
+// 「上位ほど目立つ」という表現が成立する。
+export function getGroupVisualWeight(rank: number, visibleCount: number): { opacity: number } {
   if (visibleCount <= 1) {
-    return { opacity: 1, scale: 1 };
+    return { opacity: 1 };
   }
   const t = rank / (visibleCount - 1);
   return {
     opacity: 1 - t * 0.45,
-    scale: 1 - t * 0.35,
   };
 }
