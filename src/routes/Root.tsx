@@ -260,11 +260,9 @@ function Root({startYear}: {startYear: number}) {
               <Stack pt={'2'}
                      direction={{base: 'column', sm: 'row'}}
                      spacing={'3'}
-                     alignItems={{base: 'center', md: 'flex-start'}}
                      >
                 <Button size={{base: 'sm', md: 'md'}}
-                        variant={'outline'}
-                        colorScheme={'primary'}
+                        colorScheme={'secondary'}
                         leftIcon={<InfoOutlineIcon />}
                         onClick={() => { window.open('/guide', '_self') }}
                         >
