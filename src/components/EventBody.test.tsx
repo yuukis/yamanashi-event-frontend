@@ -256,6 +256,33 @@ describe('EventBody', () => {
     windowOpenSpy.mockRestore();
   });
 
+  it('invokes the native Web Share API from the desktop icon row when supported', async () => {
+    mockMatchMedia(true);
+    const shareSpy = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'share', { value: shareSpy, configurable: true });
+    const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1', hash_tag: 'kofu' });
+    renderWithChakra(<EventBody event={event} />);
+
+    fireEvent.click(screen.getByRole('button', { name: '共有' }));
+
+    await waitFor(() => expect(shareSpy).toHaveBeenCalledWith({
+      title: event.title,
+      text: '甲府もくもく会 #1 #kofu',
+      url: buildEventShareUrl(event.uid),
+    }));
+
+    Reflect.deleteProperty(navigator, 'share');
+  });
+
+  it('shows no native share icon on desktop when the Web Share API is unsupported', () => {
+    mockMatchMedia(true);
+    expect(navigator.share).toBeUndefined();
+    const event = makeEvent({ uid: 'event-1' });
+    renderWithChakra(<EventBody event={event} />);
+
+    expect(screen.queryByRole('button', { name: '共有' })).not.toBeInTheDocument();
+  });
+
   it('copies only the event card URL to the clipboard and shows a confirmation toast on desktop', async () => {
     mockMatchMedia(true);
     const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();

@@ -21,6 +21,10 @@ const SHARE_TARGETS: ShareTarget[] = [
 ];
 
 const COPY_LABEL = 'リンクをコピー';
+const NATIVE_SHARE_LABEL = '共有';
+function isNativeShareSupported(): boolean {
+  return typeof navigator.share === 'function';
+}
 
 function toShareContext(event: EventWithGroup): ShareContext {
   return {
@@ -47,6 +51,16 @@ export function ShareIconRow({ event }: { event: EventWithGroup }) {
                     onClick={() => window.open(buildUrl(ctx))}
                     />
       ))}
+      {isNativeShareSupported() && (
+        <IconButton aria-label={NATIVE_SHARE_LABEL}
+                    icon={<FiShare2 />}
+                    size={'xs'}
+                    variant={'ghost'}
+                    color={'gray.400'}
+                    _hover={{ color: 'gray.600' }}
+                    onClick={() => shareViaNativeShare(ctx, toast)}
+                    />
+      )}
       <IconButton aria-label={COPY_LABEL}
                   icon={<FaLink />}
                   size={'xs'}
@@ -67,36 +81,36 @@ type ShareButtonProps = {
 export function ShareButton({ event, onAfterAction }: ShareButtonProps) {
   const toast = useToast();
 
-  if (typeof navigator.share !== 'function') {
+  if (!isNativeShareSupported()) {
     return null;
   }
 
   const ctx = toShareContext(event);
 
-  const handleShare = async () => {
-    try {
-      await navigator.share({
-        title: ctx.title,
-        text: ctx.hashTag ? `${ctx.title} #${ctx.hashTag}` : ctx.title,
-        url: ctx.url,
-      });
-    } catch (err) {
-      if ((err as Error)?.name !== 'AbortError') {
-        toast({ title: '共有に失敗しました', status: 'error', duration: 2000, isClosable: true });
-      }
-    } finally {
-      onAfterAction?.();
-    }
-  };
-
   return (
     <Button w="full"
             leftIcon={<FiShare2 />}
-            onClick={handleShare}
+            onClick={() => shareViaNativeShare(ctx, toast, onAfterAction)}
             >
-      共有
+      { NATIVE_SHARE_LABEL }
     </Button>
   );
+}
+
+async function shareViaNativeShare(ctx: ShareContext, toast: ReturnType<typeof useToast>, onAfterAction?: () => void): Promise<void> {
+  try {
+    await navigator.share({
+      title: ctx.title,
+      text: ctx.hashTag ? `${ctx.title} #${ctx.hashTag}` : ctx.title,
+      url: ctx.url,
+    });
+  } catch (err) {
+    if ((err as Error)?.name !== 'AbortError') {
+      toast({ title: '共有に失敗しました', status: 'error', duration: 2000, isClosable: true });
+    }
+  } finally {
+    onAfterAction?.();
+  }
 }
 
 function copyEventLink(url: string, toast: ReturnType<typeof useToast>, onAfterAction?: () => void): void {
