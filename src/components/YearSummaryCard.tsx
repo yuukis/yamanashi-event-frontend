@@ -1,23 +1,24 @@
-import { LinkBox, LinkOverlay, Box, Heading, Wrap, WrapItem, Tooltip, Image, Center, Text } from '@chakra-ui/react';
+import { LinkBox, LinkOverlay, Box, Flex, Heading, Wrap, WrapItem, Tooltip, Image, Center, Text } from '@chakra-ui/react';
 import { People } from '@chakra-icons/bootstrap';
-import type { ApiYearSummary } from '../types/events';
+import type { ApiHeatmapBucket, ApiYearSummary } from '../types/events';
 import {
-  getSequentialLevel,
   getGroupVisualWeight,
   splitVisibleGroups,
-  HEATMAP_LEVEL_COLORS,
+  formatMonthCountTooltip,
 } from '../utils/eventsSummary';
 
-const AVATAR_BASE_SIZE = 40;
-const OVERFLOW_BADGE_SIZE = '28px';
+const AVATAR_BASE_SIZE = 30;
+const OVERFLOW_BADGE_SIZE = '26px';
+const CHART_HEIGHT = '56px';
+const MONTH_TICK_LABELS = ['1', '', '', '4', '', '', '7', '', '', '10', '', ''];
 
 type YearSummaryCardProps = {
   summary: ApiYearSummary;
-  maxEventCount: number;
+  months: ApiHeatmapBucket[];
+  maxMonthCount: number;
 };
 
-export function YearSummaryCard({ summary, maxEventCount }: YearSummaryCardProps) {
-  const level = getSequentialLevel(summary.event_count, maxEventCount);
+export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryCardProps) {
   const { visible, overflow } = splitVisibleGroups(summary.groups);
   const overflowNames = overflow.map((group) => group.name ?? group.key).join('、');
 
@@ -27,19 +28,19 @@ export function YearSummaryCard({ summary, maxEventCount }: YearSummaryCardProps
              border={'1px solid'}
              borderColor={'gray.200'}
              bg={'white'}
-             overflow={'hidden'}
+             p={'4'}
              _hover={{ borderColor: 'gray.300', shadow: 'sm' }}
              transition={'box-shadow 120ms ease-out, border-color 120ms ease-out'}
              >
-      <Box h={'4px'} bg={HEATMAP_LEVEL_COLORS[level]} />
-      <Box p={'4'}>
-        <Heading size={'md'} mb={'3'} fontWeight={'semibold'} color={'gray.700'}>
-          <LinkOverlay href={`/events/${summary.year}`}>
-            {summary.year}年
-          </LinkOverlay>
-        </Heading>
+      <Heading size={'md'} mb={'3'} fontWeight={'semibold'} color={'gray.700'}>
+        <LinkOverlay href={`/events/${summary.year}`}>
+          {summary.year}年
+        </LinkOverlay>
+      </Heading>
+
+      <Wrap spacing={'1'} mb={'4'} minH={'30px'}>
         {visible.length > 0 ? (
-          <Wrap spacing={'1'}>
+          <>
             {visible.map((group, index) => {
               const { opacity, scale } = getGroupVisualWeight(index, visible.length);
               const size = `${Math.round(AVATAR_BASE_SIZE * scale)}px`;
@@ -79,11 +80,38 @@ export function YearSummaryCard({ summary, maxEventCount }: YearSummaryCardProps
                 </Tooltip>
               </WrapItem>
             )}
-          </Wrap>
+          </>
         ) : (
           <Text fontSize={'xs'} color={'gray.400'}>活動記録なし</Text>
         )}
-      </Box>
+      </Wrap>
+
+      <Flex h={CHART_HEIGHT} align={'flex-end'} gap={'1'} borderBottom={'1px solid'} borderColor={'gray.100'} pb={'1'}>
+        {months.map((bucket) => {
+          const heightPct = maxMonthCount > 0
+            ? Math.max((bucket.count / maxMonthCount) * 100, bucket.count > 0 ? 4 : 0)
+            : 0;
+          return (
+            <Tooltip key={bucket.period} label={formatMonthCountTooltip(bucket.period, bucket.count)} hasArrow fontSize={'xs'} openDelay={150}>
+              <Box flex={'1'}
+                   maxW={'14px'}
+                   h={`${heightPct}%`}
+                   minH={'2px'}
+                   borderRadius={'2px 2px 0 0'}
+                   bg={bucket.count > 0 ? 'primary.400' : 'gray.100'}
+                   _hover={{ bg: bucket.count > 0 ? 'primary.600' : 'gray.300' }}
+                   />
+            </Tooltip>
+          );
+        })}
+      </Flex>
+      <Flex gap={'1'} mt={'1'}>
+        {MONTH_TICK_LABELS.map((label, index) => (
+          <Text key={index} flex={'1'} textAlign={'center'} fontSize={'2xs'} color={'gray.400'}>
+            {label}
+          </Text>
+        ))}
+      </Flex>
     </LinkBox>
   );
 }
