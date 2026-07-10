@@ -35,3 +35,12 @@ export function formatMonthCountTooltip(period: string, count: number): string {
   const month = parseInt(period.slice(5, 7), 10);
   return `${month}月: ${count}件`;
 }
+
+const MIN_NONZERO_BAR_HEIGHT_PERCENT = 8;
+
+export function getBarHeightPercent(count: number, max: number): number {
+  if (max <= 0) {
+    return 0;
+  }
+  return Math.max((count / max) * 100, count > 0 ? MIN_NONZERO_BAR_HEIGHT_PERCENT : 0);
+}

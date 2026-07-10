@@ -4,6 +4,7 @@ import {
   buildHeatmapGrid,
   getMaxHeatmapCount,
   formatMonthCountTooltip,
+  getBarHeightPercent,
 } from './eventsSummary';
 import type { ApiYearSummary } from '../types/events';
 
@@ -63,5 +64,27 @@ describe('formatMonthCountTooltip', () => {
 
   it('does not zero-pad the month', () => {
     expect(formatMonthCountTooltip('2026-09', 0)).toBe('9月: 0件');
+  });
+});
+
+describe('getBarHeightPercent', () => {
+  it('returns 0 when max is 0, even if count is positive', () => {
+    expect(getBarHeightPercent(5, 0)).toBe(0);
+  });
+
+  it('returns 0 for a zero count within a positive max', () => {
+    expect(getBarHeightPercent(0, 10)).toBe(0);
+  });
+
+  it('returns 100 when count equals max', () => {
+    expect(getBarHeightPercent(10, 10)).toBe(100);
+  });
+
+  it('scales proportionally between the extremes', () => {
+    expect(getBarHeightPercent(5, 10)).toBe(50);
+  });
+
+  it('floors a small positive count at the minimum visible height', () => {
+    expect(getBarHeightPercent(1, 100)).toBe(8);
   });
 });
