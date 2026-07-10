@@ -3,9 +3,9 @@ import { People } from '@chakra-icons/bootstrap';
 import type { ApiHeatmapBucket, ApiYearSummary } from '../types/events';
 import { formatMonthCountTooltip } from '../utils/eventsSummary';
 
-const AVATAR_SIZE = { base: '24px', md: '30px' };
-const CHART_HEIGHT = '32px';
-const BAR_WIDTH = '4px';
+const AVATAR_SIZE = { base: '24px', md: '30px', lg: '36px' };
+const CHART_HEIGHT = { base: '32px', md: '32px', lg: '40px' };
+const BAR_WIDTH = { base: '4px', md: '4px', lg: '5px' };
 const BAR_GAP = '1px';
 
 type YearSummaryCardProps = {
@@ -20,19 +20,19 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
              display={'flex'}
              flexWrap={'nowrap'}
              alignItems={'center'}
-             gap={{base: '2', md: '4'}}
+             gap={{base: '2', md: '4', lg: '6'}}
              borderRadius={'md'}
              border={'1px solid'}
              borderColor={'gray.200'}
              bg={'white'}
-             px={{base: '3', md: '5'}}
-             py={'3'}
+             px={{base: '3', md: '5', lg: '6'}}
+             py={{base: '3', md: '3', lg: '4'}}
              _hover={{ borderColor: 'gray.300', shadow: 'sm' }}
              transition={'box-shadow 120ms ease-out, border-color 120ms ease-out'}
              >
       <Box flexShrink={0}>
         <LinkOverlay href={`/events/${summary.year}`}>
-          <Text fontSize={{base: 'xl', md: '2xl'}} fontWeight={'bold'} lineHeight={1} color={'gray.700'} whiteSpace={'nowrap'}>
+          <Text fontSize={{base: 'xl', md: '2xl', lg: '3xl'}} fontWeight={'bold'} lineHeight={1} color={'gray.700'} whiteSpace={'nowrap'}>
             {summary.year}
           </Text>
         </LinkOverlay>
@@ -43,7 +43,7 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
       <Flex flex={'1'}
             minW={'0'}
             align={'center'}
-            gap={{base: '1', md: '2'}}
+            gap={{base: '1', md: '2', lg: '3'}}
             wrap={'wrap'}
             >
         {summary.groups.length > 0 ? (
