@@ -1,4 +1,4 @@
-import { LinkBox, LinkOverlay, Box, Flex, Heading, Tooltip, Image, Center, Text } from '@chakra-ui/react';
+import { LinkBox, LinkOverlay, Box, Flex, Tooltip, Image, Center, Text } from '@chakra-ui/react';
 import { People } from '@chakra-icons/bootstrap';
 import type { ApiHeatmapBucket, ApiYearSummary } from '../types/events';
 import {
@@ -7,11 +7,13 @@ import {
   formatMonthCountTooltip,
 } from '../utils/eventsSummary';
 
-const AVATAR_SIZE = '30px';
-const OVERFLOW_BADGE_SIZE = '26px';
-const AVATARS_COLUMN_WIDTH = '244px';
-const YEAR_COLUMN_WIDTH = '56px';
-const CHART_HEIGHT = '48px';
+const AVATAR_SIZE = { base: '24px', md: '30px' };
+const OVERFLOW_BADGE_SIZE = { base: '20px', md: '26px' };
+const AVATARS_COLUMN_WIDTH = { base: '176px', md: '244px' };
+const YEAR_COLUMN_WIDTH = { base: '40px', md: '52px' };
+const CHART_HEIGHT = '32px';
+const BAR_WIDTH = '4px';
+const BAR_GAP = '1px';
 
 type YearSummaryCardProps = {
   summary: ApiYearSummary;
@@ -26,33 +28,33 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
   return (
     <LinkBox as={'article'}
              display={'flex'}
-             flexWrap={{base: 'wrap', md: 'nowrap'}}
+             flexWrap={'nowrap'}
              alignItems={'center'}
-             gap={'4'}
+             gap={{base: '2', md: '4'}}
              borderRadius={'md'}
              border={'1px solid'}
              borderColor={'gray.200'}
              bg={'white'}
-             px={'5'}
+             px={{base: '3', md: '5'}}
              py={'3'}
              _hover={{ borderColor: 'gray.300', shadow: 'sm' }}
              transition={'box-shadow 120ms ease-out, border-color 120ms ease-out'}
              >
-      <Box flexShrink={0} w={{base: 'auto', md: YEAR_COLUMN_WIDTH}} order={{base: 1, md: 0}}>
-        <Heading size={'sm'} fontWeight={'semibold'} color={'gray.700'} whiteSpace={'nowrap'}>
-          <LinkOverlay href={`/events/${summary.year}`}>
-            {summary.year}年
-          </LinkOverlay>
-        </Heading>
+      <Box flexShrink={0} w={YEAR_COLUMN_WIDTH} textAlign={'center'}>
+        <LinkOverlay href={`/events/${summary.year}`}>
+          <Text fontSize={{base: 'lg', md: 'xl'}} fontWeight={'bold'} lineHeight={1} color={'gray.700'}>
+            {summary.year}
+          </Text>
+        </LinkOverlay>
+        <Text fontSize={'2xs'} color={'gray.500'} mt={'0.5'}>年</Text>
       </Box>
 
-      <Box display={{base: 'none', md: 'block'}} alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
+      <Box alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
 
-      <Flex order={{base: 2, md: 0}}
-            flexShrink={0}
-            w={{base: '100%', md: AVATARS_COLUMN_WIDTH}}
+      <Flex flexShrink={0}
+            w={AVATARS_COLUMN_WIDTH}
             align={'center'}
-            gap={'2'}
+            gap={{base: '1', md: '2'}}
             wrap={'nowrap'}
             overflow={'hidden'}
             >
@@ -98,22 +100,21 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
         )}
       </Flex>
 
-      <Box display={{base: 'none', md: 'block'}} alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
+      <Box alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
 
-      <Flex order={{base: 3, md: 0}} flex={'1 1 100%'} minW={'0'} h={CHART_HEIGHT} align={'flex-end'} gap={'1'}>
+      <Flex flexShrink={0} ml={'auto'} h={CHART_HEIGHT} align={'flex-end'} gap={BAR_GAP}>
         {months.map((bucket) => {
           const heightPct = maxMonthCount > 0
-            ? Math.max((bucket.count / maxMonthCount) * 100, bucket.count > 0 ? 4 : 0)
+            ? Math.max((bucket.count / maxMonthCount) * 100, bucket.count > 0 ? 8 : 0)
             : 0;
           return (
             <Tooltip key={bucket.period} label={formatMonthCountTooltip(bucket.period, bucket.count)} hasArrow fontSize={'xs'} openDelay={150}>
-              <Box flex={'1'}
-                   maxW={'22px'}
+              <Box w={BAR_WIDTH}
                    h={`${heightPct}%`}
-                   minH={'2px'}
-                   borderRadius={'2px 2px 0 0'}
-                   bg={bucket.count > 0 ? 'primary.400' : 'gray.100'}
-                   _hover={{ bg: bucket.count > 0 ? 'primary.600' : 'gray.300' }}
+                   minH={'1px'}
+                   borderRadius={'1px 1px 0 0'}
+                   bg={bucket.count > 0 ? 'primary.300' : 'gray.100'}
+                   _hover={{ bg: bucket.count > 0 ? 'primary.500' : 'gray.300' }}
                    />
             </Tooltip>
           );
