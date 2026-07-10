@@ -7,7 +7,7 @@ export function formatEventDateKey(date: Date): string {
 }
 
 export function getEventDateAnchorId(dateKey: string): string {
-  return `event-${dateKey.replace(/-/g, '')}`;
+  return `date-${dateKey.replace(/-/g, '')}`;
 }
 
 // uidはconnpassのメールアドレス風IDやアーカイブ元の長いslugなど
@@ -23,5 +23,5 @@ function hashUid(uid: string): string {
 }
 
 export function getEventAnchorId(uid: string): string {
-  return `event-item-${hashUid(uid)}`;
+  return `event-${hashUid(uid)}`;
 }
