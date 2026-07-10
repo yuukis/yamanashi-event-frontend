@@ -43,7 +43,9 @@ export function scrollToCurrentHash() {
       highlightCard(card);
     } else if (id.startsWith(DATE_ANCHOR_PREFIX)) {
       const dateKey = id.slice(DATE_ANCHOR_PREFIX.length);
-      document.querySelectorAll<HTMLElement>(`[data-event-date="${dateKey}"]`).forEach(highlightCard);
+      if (/^\d{8}$/.test(dateKey)) {
+        document.querySelectorAll<HTMLElement>(`[data-event-date="${dateKey}"]`).forEach(highlightCard);
+      }
     }
   }
 }

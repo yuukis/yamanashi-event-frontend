@@ -128,6 +128,23 @@ describe('scrollToCurrentHash', () => {
     document.body.removeChild(secondCard);
     document.body.removeChild(otherDateCard);
   });
+
+  it('does not throw and does not highlight when the date anchor is not a well-formed YYYYMMDD value', () => {
+    const target = document.createElement('div');
+    target.id = 'date-"]';
+    target.scrollIntoView = vi.fn();
+    document.body.appendChild(target);
+    window.location.hash = `#${encodeURIComponent('date-"]')}`;
+
+    const highlightListener = vi.fn();
+    target.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, highlightListener);
+
+    expect(() => scrollToCurrentHash()).not.toThrow();
+    expect(target.scrollIntoView).toHaveBeenCalled();
+    expect(highlightListener).not.toHaveBeenCalled();
+
+    document.body.removeChild(target);
+  });
 });
 
 describe('jumpToAnchor', () => {
