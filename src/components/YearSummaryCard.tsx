@@ -1,14 +1,9 @@
 import { LinkBox, LinkOverlay, Box, Flex, Tooltip, Image, Center, Text } from '@chakra-ui/react';
 import { People } from '@chakra-icons/bootstrap';
 import type { ApiHeatmapBucket, ApiYearSummary } from '../types/events';
-import {
-  getGroupVisualWeight,
-  splitVisibleGroups,
-  formatMonthCountTooltip,
-} from '../utils/eventsSummary';
+import { formatMonthCountTooltip } from '../utils/eventsSummary';
 
 const AVATAR_SIZE = { base: '24px', md: '30px' };
-const OVERFLOW_BADGE_SIZE = { base: '20px', md: '26px' };
 const CHART_HEIGHT = '32px';
 const BAR_WIDTH = '4px';
 const BAR_GAP = '1px';
@@ -20,9 +15,6 @@ type YearSummaryCardProps = {
 };
 
 export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryCardProps) {
-  const { visible, overflow } = splitVisibleGroups(summary.groups);
-  const overflowNames = overflow.map((group) => group.name ?? group.key).join('、');
-
   return (
     <LinkBox as={'article'}
              display={'flex'}
@@ -40,7 +32,7 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
              >
       <Box flexShrink={0}>
         <LinkOverlay href={`/events/${summary.year}`}>
-          <Text fontSize={{base: 'lg', md: 'xl'}} fontWeight={'bold'} lineHeight={1} color={'gray.700'} whiteSpace={'nowrap'}>
+          <Text fontSize={{base: 'xl', md: '2xl'}} fontWeight={'bold'} lineHeight={1} color={'gray.700'} whiteSpace={'nowrap'}>
             {summary.year}
           </Text>
         </LinkOverlay>
@@ -52,48 +44,26 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
             minW={'0'}
             align={'center'}
             gap={{base: '1', md: '2'}}
-            wrap={'nowrap'}
-            overflow={'hidden'}
+            wrap={'wrap'}
             >
-        {visible.length > 0 ? (
-          <>
-            {visible.map((group, index) => {
-              const { opacity } = getGroupVisualWeight(index, visible.length);
-              return (
-                <Tooltip key={group.key} label={group.name ?? group.key} hasArrow fontSize={'xs'}>
-                  <Center position={'relative'}
-                          boxSize={AVATAR_SIZE}
-                          borderRadius={'full'}
-                          bg={'gray.100'}
-                          overflow={'hidden'}
-                          opacity={opacity}
-                          flexShrink={0}
-                          >
-                    {group.image_url ? (
-                      <Image src={group.image_url} boxSize={'100%'} fit={'cover'} alt={group.name ?? group.key} />
-                    ) : (
-                      <People color={'gray.400'} />
-                    )}
-                  </Center>
-                </Tooltip>
-              );
-            })}
-            {overflow.length > 0 && (
-              <Tooltip label={overflowNames} hasArrow fontSize={'xs'}>
-                <Center position={'relative'}
-                        boxSize={OVERFLOW_BADGE_SIZE}
-                        borderRadius={'full'}
-                        bg={'gray.100'}
-                        color={'gray.500'}
-                        fontSize={'2xs'}
-                        fontWeight={'bold'}
-                        flexShrink={0}
-                        >
-                  {`+${overflow.length}`}
-                </Center>
-              </Tooltip>
-            )}
-          </>
+        {summary.groups.length > 0 ? (
+          summary.groups.map((group) => (
+            <Tooltip key={group.key} label={group.name ?? group.key} hasArrow fontSize={'xs'}>
+              <Center position={'relative'}
+                      boxSize={AVATAR_SIZE}
+                      borderRadius={'full'}
+                      bg={'gray.100'}
+                      overflow={'hidden'}
+                      flexShrink={0}
+                      >
+                {group.image_url ? (
+                  <Image src={group.image_url} boxSize={'100%'} fit={'cover'} alt={group.name ?? group.key} />
+                ) : (
+                  <People color={'gray.400'} />
+                )}
+              </Center>
+            </Tooltip>
+          ))
         ) : (
           <Text fontSize={'xs'} color={'gray.400'} whiteSpace={'nowrap'}>活動記録なし</Text>
         )}

@@ -4,8 +4,6 @@ import {
   buildHeatmapGrid,
   getMaxHeatmapCount,
   formatMonthCountTooltip,
-  splitVisibleGroups,
-  getGroupVisualWeight,
 } from './eventsSummary';
 import type { ApiYearSummary } from '../types/events';
 
@@ -65,34 +63,5 @@ describe('formatMonthCountTooltip', () => {
 
   it('does not zero-pad the month', () => {
     expect(formatMonthCountTooltip('2026-09', 0)).toBe('9月: 0件');
-  });
-});
-
-describe('splitVisibleGroups', () => {
-  it('splits at the given max, keeping order', () => {
-    const groups = [1, 2, 3, 4, 5];
-
-    expect(splitVisibleGroups(groups, 3)).toEqual({ visible: [1, 2, 3], overflow: [4, 5] });
-  });
-
-  it('returns an empty overflow when under the max', () => {
-    expect(splitVisibleGroups([1, 2], 8)).toEqual({ visible: [1, 2], overflow: [] });
-  });
-});
-
-describe('getGroupVisualWeight', () => {
-  it('gives full weight to a single visible group', () => {
-    expect(getGroupVisualWeight(0, 1)).toEqual({ opacity: 1 });
-  });
-
-  it('gives the first rank full weight and the last rank the minimum weight', () => {
-    expect(getGroupVisualWeight(0, 4)).toEqual({ opacity: 1 });
-    expect(getGroupVisualWeight(3, 4)).toEqual({ opacity: 0.55 });
-  });
-
-  it('interpolates weight for middle ranks', () => {
-    const result = getGroupVisualWeight(1, 4);
-
-    expect(result.opacity).toBeCloseTo(0.85, 5);
   });
 });
