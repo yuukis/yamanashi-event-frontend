@@ -29,9 +29,6 @@ if (!window.matchMedia) {
   }) as unknown as MediaQueryList;
 }
 
-// jsdom does not implement the Clipboard API; the share buttons' copy-to-
-// clipboard action needs navigator.clipboard.writeText to exist so tests can
-// spy on it.
 if (!navigator.clipboard) {
   Object.defineProperty(navigator, 'clipboard', {
     value: { writeText: () => Promise.resolve() },

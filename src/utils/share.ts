@@ -7,8 +7,6 @@ export type ShareContext = {
 };
 
 export function buildEventShareUrl(uid: string): string {
-  // 年別一覧(/events/:year)にしか載っていないイベントもあるため、
-  // トップページ固定ではなく現在のパスにアンカーを付ける。
   return `${window.location.origin}${window.location.pathname}#${encodeURIComponent(getEventAnchorId(uid))}`;
 }
 
