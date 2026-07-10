@@ -37,8 +37,14 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
              _hover={{ borderColor: 'gray.300', shadow: 'sm' }}
              transition={'box-shadow 120ms ease-out, border-color 120ms ease-out'}
              >
-      <Box flexShrink={0}>
-        <LinkOverlay href={`/events/${summary.year}`}>
+      <Box flexShrink={0}
+           px={{base: '2', md: '3', lg: '4'}}
+           py={'1'}
+           borderRadius={'md'}
+           _hover={{ bg: 'gray.100' }}
+           transition={'background-color 120ms ease-out'}
+           >
+        <LinkOverlay href={`/events/${summary.year}`} textDecoration={'none'}>
           <Text fontSize={{base: '2xl', md: '3xl', lg: '4xl'}} fontWeight={'100'} lineHeight={1} color={'gray.700'} whiteSpace={'nowrap'}>
             {summary.year}
           </Text>
