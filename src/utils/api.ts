@@ -51,6 +51,12 @@ export async function fetchEvents(): Promise<{ events: ApiEvent[]; lastModified:
   return inFlightEventsRequest;
 }
 
+export async function fetchEventDescription(uid: string): Promise<string> {
+  const res = await axios.get(EVENTS_API_URL, { params: { fields: 'description', uid } });
+  const event = Array.isArray(res.data) ? res.data[0] : res.data;
+  return (event?.description ?? '') as string;
+}
+
 export async function fetchGroups(): Promise<ApiGroup[]> {
   const res = await axios.get(GROUPS_API_URL, { params: { fields: GROUPS_FIELDS } });
   return res.data as ApiGroup[];

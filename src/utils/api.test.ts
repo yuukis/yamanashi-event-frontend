@@ -1,6 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
-import { fetchEvents, fetchGroups, fetchEventsSummary, EVENTS_API_URL, GROUPS_API_URL, EVENTS_SUMMARY_API_URL, EVENTS_FIELDS, GROUPS_FIELDS } from './api';
+import {
+  fetchEvents,
+  fetchEventDescription,
+  fetchGroups,
+  fetchEventsSummary,
+  EVENTS_API_URL,
+  GROUPS_API_URL,
+  EVENTS_SUMMARY_API_URL,
+  EVENTS_FIELDS,
+  GROUPS_FIELDS,
+} from './api';
 
 vi.mock('axios');
 
@@ -9,7 +19,7 @@ describe('fetchEvents', () => {
     vi.mocked(axios.get).mockReset();
   });
 
-  it('requests the events endpoint and returns events with last-modified', async () => {
+  it('requests the events endpoint with lightweight fields and returns events with last-modified', async () => {
     vi.mocked(axios.get).mockResolvedValue({
       data: [{ uid: 'a' }],
       headers: { 'last-modified': 'Wed, 01 Jan 2026 00:00:00 GMT' },
@@ -22,6 +32,10 @@ describe('fetchEvents', () => {
       events: [{ uid: 'a' }],
       lastModified: 'Wed, 01 Jan 2026 00:00:00 GMT',
     });
+  });
+
+  it('does not request description in the event list field set', () => {
+    expect(EVENTS_FIELDS.split(',')).not.toContain('description');
   });
 
   it('returns null last-modified when the header is absent', async () => {
@@ -57,6 +71,32 @@ describe('fetchEvents', () => {
     await fetchEvents();
 
     expect(axios.get).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('fetchEventDescription', () => {
+  beforeEach(() => {
+    vi.mocked(axios.get).mockReset();
+  });
+
+  it('requests only the target event description by uid', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      data: [{ description: 'イベント説明文' }],
+      headers: {},
+    });
+
+    const description = await fetchEventDescription('event-1');
+
+    expect(axios.get).toHaveBeenCalledWith(EVENTS_API_URL, {
+      params: { fields: 'description', uid: 'event-1' },
+    });
+    expect(description).toBe('イベント説明文');
+  });
+
+  it('returns an empty string when the target event has no description', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    await expect(fetchEventDescription('event-1')).resolves.toBe('');
   });
 });
 
