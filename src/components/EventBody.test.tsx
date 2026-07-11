@@ -239,7 +239,12 @@ describe('EventBody', () => {
 
   it('streams the event description summary with Chrome Summarizer API', async () => {
     mockMatchMedia(true);
-    vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
+    let resolveDescription: (description: string) => void;
+    vi.mocked(fetchEventDescription).mockReturnValue(
+      new Promise((resolve) => {
+        resolveDescription = resolve;
+      }),
+    );
     async function* streamSummary() {
       yield '初心者向けの';
       yield 'React勉強会です。';
@@ -262,6 +267,9 @@ describe('EventBody', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'どんなイベント？' }));
+
+    expect(await screen.findByText('確認中...')).toBeInTheDocument();
+    resolveDescription!('Reactの基礎をハンズオンで学ぶイベントです。');
 
     expect(await screen.findByText('初心者向けのReact勉強会です。')).toBeInTheDocument();
     expect(fetchEventDescription).toHaveBeenCalledWith('event-1');

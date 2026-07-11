@@ -34,8 +34,8 @@ import {
   Hide
 } from '@chakra-ui/react';
 import { FaXTwitter } from "react-icons/fa6";
-import { FiArchive, FiExternalLink, FiFileText, FiMap, FiMoreVertical } from "react-icons/fi";
-import { ChevronDownIcon } from '@chakra-ui/icons';
+import { FiArchive, FiExternalLink, FiMap, FiMoreVertical } from "react-icons/fi";
+import { ChevronDownIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import {
   Hash,
   GeoAlt,
@@ -164,6 +164,7 @@ export function EventBody(data: EventBodyProps) {
   const [summaryStatus, setSummaryStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [summaryText, setSummaryText] = useState('');
   const [summaryError, setSummaryError] = useState('');
+  const isSummaryExpanded = summaryStatus !== 'idle';
   
   const handleMenuButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -426,22 +427,24 @@ export function EventBody(data: EventBodyProps) {
                   >{ sub_title }</Text>
             {data.enableSummarizer && (
               <Stack mt={'2'} pr={{md: '140px'}} spacing={'2'} alignItems={'flex-start'}>
-                <Hide above='md'>
-                  <Button size={'sm'}
-                          variant={'outline'}
-                          colorScheme={'primary'}
-                          leftIcon={<FiFileText />}
-                          isLoading={summaryStatus === 'loading'}
-                          loadingText={'確認中'}
-                          onClick={handleSummaryButtonClick}
-                          onTouchStart={stopCardNavigation}
-                          onTouchMove={stopCardNavigation}
-                          onTouchEnd={stopCardNavigation}
-                          >
-                    どんなイベント？
-                  </Button>
-                </Hide>
-                {summaryText && (
+                <Button size={'sm'}
+                        variant={'ghost'}
+                        color={'gray.600'}
+                        fontWeight={'normal'}
+                        leftIcon={isSummaryExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+                        px={'1'}
+                        h={'auto'}
+                        minH={'1.5rem'}
+                        _hover={{ bg: 'blackAlpha.50', color: 'gray.700' }}
+                        _active={{ bg: 'blackAlpha.100' }}
+                        onClick={handleSummaryButtonClick}
+                        onTouchStart={stopCardNavigation}
+                        onTouchMove={stopCardNavigation}
+                        onTouchEnd={stopCardNavigation}
+                        >
+                  どんなイベント？
+                </Button>
+                {isSummaryExpanded && (
                   <Box bg={'white'}
                        border={'1px solid'}
                        borderColor={'gray.200'}
@@ -450,13 +453,14 @@ export function EventBody(data: EventBodyProps) {
                        w={'100%'}
                        aria-live={'polite'}
                        >
-                    <Text fontSize={'sm'} whiteSpace={'pre-wrap'}>{summaryText}</Text>
+                    {summaryText ? (
+                      <Text fontSize={'sm'} whiteSpace={'pre-wrap'}>{summaryText}</Text>
+                    ) : summaryStatus === 'error' ? (
+                      <Text fontSize={'sm'} color={'impact.600'}>{summaryError}</Text>
+                    ) : (
+                      <Text fontSize={'sm'} color={'gray.500'}>確認中...</Text>
+                    )}
                   </Box>
-                )}
-                {summaryStatus === 'error' && (
-                  <Text fontSize={'sm'} color={'impact.600'}>
-                    {summaryError}
-                  </Text>
                 )}
               </Stack>
             )}
@@ -564,24 +568,6 @@ export function EventBody(data: EventBodyProps) {
                     top={{base: '4', md: '2'}}
                     right={{base: '4', md: '4'}}
                     />
-            )}
-            {data.enableSummarizer && (
-              <Show above='md'>
-                <Button size={'sm'}
-                        variant={'outline'}
-                        colorScheme={'gray'}
-                        leftIcon={<FiFileText />}
-                        isLoading={summaryStatus === 'loading'}
-                        loadingText={'確認中'}
-                        position={'absolute'}
-                        bottom={'12'}
-                        right={'4'}
-                        px={'3'}
-                        onClick={handleSummaryButtonClick}
-                        >
-                  どんなイベント？
-                </Button>
-              </Show>
             )}
             <Show above='md'>
               <ButtonGroup isAttached
