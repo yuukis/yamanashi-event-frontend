@@ -426,19 +426,21 @@ export function EventBody(data: EventBodyProps) {
                   >{ sub_title }</Text>
             {data.enableSummarizer && (
               <Stack mt={'2'} pr={{md: '140px'}} spacing={'2'} alignItems={'flex-start'}>
-                <Button size={'sm'}
-                        variant={'outline'}
-                        colorScheme={'primary'}
-                        leftIcon={<FiFileText />}
-                        isLoading={summaryStatus === 'loading'}
-                        loadingText={'要約中'}
-                        onClick={handleSummaryButtonClick}
-                        onTouchStart={stopCardNavigation}
-                        onTouchMove={stopCardNavigation}
-                        onTouchEnd={stopCardNavigation}
-                        >
-                  AI要約
-                </Button>
+                <Hide above='md'>
+                  <Button size={'sm'}
+                          variant={'outline'}
+                          colorScheme={'primary'}
+                          leftIcon={<FiFileText />}
+                          isLoading={summaryStatus === 'loading'}
+                          loadingText={'確認中'}
+                          onClick={handleSummaryButtonClick}
+                          onTouchStart={stopCardNavigation}
+                          onTouchMove={stopCardNavigation}
+                          onTouchEnd={stopCardNavigation}
+                          >
+                    どんなイベント？
+                  </Button>
+                </Hide>
                 {summaryText && (
                   <Box bg={'white'}
                        border={'1px solid'}
@@ -562,6 +564,24 @@ export function EventBody(data: EventBodyProps) {
                     top={{base: '4', md: '2'}}
                     right={{base: '4', md: '4'}}
                     />
+            )}
+            {data.enableSummarizer && (
+              <Show above='md'>
+                <Button size={'sm'}
+                        variant={'ghost'}
+                        colorScheme={'primary'}
+                        leftIcon={<FiFileText />}
+                        isLoading={summaryStatus === 'loading'}
+                        loadingText={'確認中'}
+                        position={'absolute'}
+                        bottom={'12'}
+                        right={'4'}
+                        px={'3'}
+                        onClick={handleSummaryButtonClick}
+                        >
+                  どんなイベント？
+                </Button>
+              </Show>
             )}
             <Show above='md'>
               <ButtonGroup isAttached

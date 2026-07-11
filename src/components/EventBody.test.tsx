@@ -234,7 +234,7 @@ describe('EventBody', () => {
       <EventBody event={makeEvent({ description: 'イベント説明文' })} />,
     );
 
-    expect(screen.queryByRole('button', { name: 'AI要約' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'どんなイベント？' })).not.toBeInTheDocument();
   });
 
   it('streams the event description summary with Chrome Summarizer API', async () => {
@@ -261,7 +261,7 @@ describe('EventBody', () => {
                  />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'AI要約' }));
+    fireEvent.click(screen.getByRole('button', { name: 'どんなイベント？' }));
 
     expect(await screen.findByText('初心者向けのReact勉強会です。')).toBeInTheDocument();
     expect(fetchEventDescription).toHaveBeenCalledWith('event-1');
@@ -284,7 +284,7 @@ describe('EventBody', () => {
                  />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'AI要約' }));
+    fireEvent.click(screen.getByRole('button', { name: 'どんなイベント？' }));
 
     expect(await screen.findByText('このブラウザでは要約機能を利用できません')).toBeInTheDocument();
   });
