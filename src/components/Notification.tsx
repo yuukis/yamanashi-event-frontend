@@ -256,21 +256,22 @@ export function NotificationButton() {
         <PopoverBody>
           <Stack spacing={'3'}>
             {isLocalStorageOk && (
-              <Stack spacing={'1'} maxH={'240px'} overflowY={'auto'}>
+              <Stack spacing={'1'} maxH={'240px'} overflowY={'auto'} overflowX={'hidden'}>
                 {newEvents.length === 0 ? (
                   <Text fontSize={'xs'} color={'gray.500'} textAlign={'center'} py={'6'}>新着イベントはありません</Text>
                 ) : (
                   newEvents.map((event) => (
                     <Button key={event.uid} variant={'ghost'} justifyContent={'flex-start'}
-                            size={'sm'} h={'auto'} py={'1'}
+                            size={'sm'} h={'auto'} py={'1'} w={'full'}
+                            whiteSpace={'normal'}
                             onClick={() => {
                               jumpToAnchor(getEventAnchorId(event.uid));
                               onClose();
                             }}
                             >
-                      <Stack spacing={'0'} align={'flex-start'}>
+                      <Stack spacing={'0'} align={'flex-start'} w={'full'} minW={0}>
                         <Text fontSize={'xs'} color={'gray.500'}>{formatNewEventStartLabel(event.started_at)}</Text>
-                        <Text fontSize={'sm'} noOfLines={1}>{event.title}</Text>
+                        <Text fontSize={'sm'} textAlign={'left'} wordBreak={'break-word'}>{event.title}</Text>
                       </Stack>
                     </Button>
                   ))
