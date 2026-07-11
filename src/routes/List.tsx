@@ -23,6 +23,7 @@ import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { scrollToCurrentHash } from '../utils/hashScroll';
+import { EVENTS_FIELDS, GROUPS_FIELDS } from '../utils/api';
 import type { ApiEvent, ApiGroup, EventWithGroup } from '../types/events';
 
 type ListState = {
@@ -88,8 +89,8 @@ function List({ startYear} : {startYear: number}) {
       let res = null;
       let group_res = null;
       try {
-        res = await axios.get(`https://api.event.yamanashi.dev/events/in/${year}`);
-        group_res = await axios.get('https://api.event.yamanashi.dev/groups');
+        res = await axios.get(`https://api.event.yamanashi.dev/events/in/${year}`, { params: { fields: EVENTS_FIELDS } });
+        group_res = await axios.get('https://api.event.yamanashi.dev/groups', { params: { fields: GROUPS_FIELDS } });
       }
       catch (err: any) {
         const data = {

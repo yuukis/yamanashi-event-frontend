@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
-import { fetchEvents, fetchGroups, fetchEventsSummary, EVENTS_API_URL, GROUPS_API_URL, EVENTS_SUMMARY_API_URL } from './api';
+import { fetchEvents, fetchGroups, fetchEventsSummary, EVENTS_API_URL, GROUPS_API_URL, EVENTS_SUMMARY_API_URL, EVENTS_FIELDS, GROUPS_FIELDS } from './api';
 
 vi.mock('axios');
 
@@ -17,7 +17,7 @@ describe('fetchEvents', () => {
 
     const result = await fetchEvents();
 
-    expect(axios.get).toHaveBeenCalledWith(EVENTS_API_URL);
+    expect(axios.get).toHaveBeenCalledWith(EVENTS_API_URL, { params: { fields: EVENTS_FIELDS } });
     expect(result).toEqual({
       events: [{ uid: 'a' }],
       lastModified: 'Wed, 01 Jan 2026 00:00:00 GMT',
@@ -66,7 +66,7 @@ describe('fetchGroups', () => {
 
     const result = await fetchGroups();
 
-    expect(axios.get).toHaveBeenCalledWith(GROUPS_API_URL);
+    expect(axios.get).toHaveBeenCalledWith(GROUPS_API_URL, { params: { fields: GROUPS_FIELDS } });
     expect(result).toEqual([{ key: 'g1' }]);
   });
 });
