@@ -208,7 +208,7 @@ export function EventBody(data: EventBodyProps) {
   };
 
   useEffect(() => {
-    if (!data.enableSummarizer) {
+    if (!data.enableSummarizer || !isDesktopScreenSize) {
       setCanUseSummarizer(false);
       return;
     }
@@ -223,7 +223,7 @@ export function EventBody(data: EventBodyProps) {
     return () => {
       isMounted = false;
     };
-  }, [data.enableSummarizer]);
+  }, [data.enableSummarizer, isDesktopScreenSize]);
 
   const handleSummaryButtonClick = async (e: React.MouseEvent) => {
     stopCardNavigation(e);
@@ -495,7 +495,7 @@ export function EventBody(data: EventBodyProps) {
                 アーカイブ
               </Badge>
             )}
-            {data.enableSummarizer && canUseSummarizer && (
+            {data.enableSummarizer && isDesktopScreenSize && canUseSummarizer && (
               <Stack mt={'2'} pr={{md: '140px'}} spacing={'2'} alignItems={'flex-start'}>
                 <Button size={'sm'}
                         variant={'ghost'}

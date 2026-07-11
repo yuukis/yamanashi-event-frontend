@@ -237,6 +237,29 @@ describe('EventBody', () => {
     expect(screen.queryByRole('button', { name: 'どんなイベント？（AI要約）' })).not.toBeInTheDocument();
   });
 
+  it('does not show the summary button on mobile even when summarizer UI is enabled', async () => {
+    mockMatchMedia(false);
+    const availability = vi.fn().mockResolvedValue('available');
+    Object.defineProperty(window, 'Summarizer', {
+      value: { availability, create: vi.fn() },
+      configurable: true,
+    });
+
+    renderWithChakra(
+      <EventBody event={makeEvent({ description: 'イベント説明文' })}
+                 enableSummarizer
+                 />,
+    );
+
+    await waitFor(() => {
+      expect(availability).not.toHaveBeenCalled();
+    });
+    expect(screen.queryByRole('button', { name: 'どんなイベント？（AI要約）' })).not.toBeInTheDocument();
+    expect(fetchEventDescription).not.toHaveBeenCalled();
+
+    Reflect.deleteProperty(window, 'Summarizer');
+  });
+
   it('streams the event description summary with Chrome Summarizer API', async () => {
     mockMatchMedia(true);
     let resolveDescription: (description: string) => void;
