@@ -119,9 +119,10 @@ export async function streamEventDescriptionSummary(
     throw new SummarizerUnavailableError();
   }
 
+  const shouldMonitorDownload = availability !== 'available' && onDownloadProgress;
   const summarizer = await summarizerFactory.create({
     ...SUMMARIZER_OPTIONS,
-    ...(onDownloadProgress && {
+    ...(shouldMonitorDownload && {
       monitor(monitor) {
         monitor.addEventListener('downloadprogress', (event) => {
           const progressEvent = event as ProgressEvent;

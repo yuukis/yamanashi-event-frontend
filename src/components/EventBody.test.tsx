@@ -256,7 +256,7 @@ describe('EventBody', () => {
     const downloadMonitor = new EventTarget();
     const summarizeStreaming = vi.fn().mockReturnValue(streamSummary());
     const destroy = vi.fn();
-    const availability = vi.fn().mockResolvedValue('available');
+    const availability = vi.fn().mockResolvedValue('downloadable');
     const create = vi.fn().mockImplementation((options) => {
       options.monitor?.(downloadMonitor);
       const progressEvent = new Event('downloadprogress') as ProgressEvent;
@@ -292,6 +292,49 @@ describe('EventBody', () => {
       context: 'イベント名: React入門',
     });
     expect(destroy).toHaveBeenCalled();
+
+    Reflect.deleteProperty(window, 'Summarizer');
+  });
+
+  it('does not show model preparation progress when the Summarizer model is already available', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
+    let resolveStream: () => void;
+    async function* streamSummary() {
+      await new Promise<void>((resolve) => {
+        resolveStream = resolve;
+      });
+      yield '- 初心者向けのReact勉強会です。';
+    }
+    const summarizeStreaming = vi.fn().mockReturnValue(streamSummary());
+    const destroy = vi.fn();
+    const create = vi.fn().mockResolvedValue({ summarizeStreaming, destroy });
+    Object.defineProperty(window, 'Summarizer', {
+      value: {
+        availability: vi.fn().mockResolvedValue('available'),
+        create,
+      },
+      configurable: true,
+    });
+
+    renderWithChakra(
+      <EventBody event={makeEvent({ title: 'React入門' })}
+                 enableSummarizer
+                 />,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
+
+    expect(await screen.findByText('確認中...')).toBeInTheDocument();
+    expect(screen.queryByText(/^AIモデルを準備中/)).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(create).toHaveBeenCalledWith(expect.not.objectContaining({
+        monitor: expect.any(Function),
+      }));
+    });
+    resolveStream!();
+
+    expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
 
     Reflect.deleteProperty(window, 'Summarizer');
   });
