@@ -285,15 +285,19 @@ export function NotificationButton() {
                             >
                       <Stack spacing={'0'} align={'flex-start'} w={'full'} minW={0}>
                         <Text fontSize={'xs'} color={'gray.500'}>{formatNewEventStartLabel(event.started_at)}</Text>
-                        <HStack spacing={'1'} align={'flex-start'} w={'full'}>
+                        <Box position={'relative'} w={'full'}>
                           {unacknowledgedUids.has(event.uid) && (
-                            <Box mt={'1.5'} flexShrink={0} w={'6px'} h={'6px'} borderRadius={'full'}
+                            // ドットの有無でタイトルの開始位置がずれないよう、
+                            // テキストの流れに含めずボタン自身の左パディング内に
+                            // 絶対配置で重ねる。
+                            <Box position={'absolute'} left={'-9px'} top={'7px'}
+                                 w={'6px'} h={'6px'} borderRadius={'full'}
                                  bg={'purple.500'} aria-hidden
                                  data-testid={`new-event-dot-${event.uid}`}
                                  />
                           )}
                           <Text fontSize={'sm'} textAlign={'left'} wordBreak={'break-word'}>{event.title}</Text>
-                        </HStack>
+                        </Box>
                       </Stack>
                     </Button>
                   ))
