@@ -193,6 +193,7 @@ export function EventBody(data: EventBodyProps) {
   const [summaryStatus, setSummaryStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [summaryText, setSummaryText] = useState('');
   const [summaryError, setSummaryError] = useState('');
+  const [summaryDownloadProgress, setSummaryDownloadProgress] = useState<number | null>(null);
   
   const handleMenuButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -240,6 +241,7 @@ export function EventBody(data: EventBodyProps) {
     setSummaryStatus('loading');
     setSummaryText('');
     setSummaryError('');
+    setSummaryDownloadProgress(null);
 
     try {
       const description = (await fetchEventDescription(event.uid)).trim();
@@ -251,13 +253,17 @@ export function EventBody(data: EventBodyProps) {
 
       await streamEventDescriptionSummary(description, title, (chunk) => {
         setSummaryText((current) => current + chunk);
+      }, (progress) => {
+        setSummaryDownloadProgress(Math.round(progress * 100));
       });
       setSummaryStatus('done');
+      setSummaryDownloadProgress(null);
     } catch (error) {
       setSummaryError(error instanceof SummarizerUnavailableError
         ? error.message
         : '要約の生成に失敗しました');
       setSummaryStatus('error');
+      setSummaryDownloadProgress(null);
     }
   };
 
@@ -514,7 +520,11 @@ export function EventBody(data: EventBodyProps) {
                     ) : (
                       <HStack spacing={'2'} color={'gray.500'}>
                         <Spinner size={'xs'} speed={'0.8s'} thickness={'2px'} />
-                        <Text fontSize={'sm'}>確認中...</Text>
+                        <Text fontSize={'sm'}>
+                          {summaryDownloadProgress == null
+                            ? '確認中...'
+                            : `AIモデルを準備中... ${summaryDownloadProgress}%`}
+                        </Text>
                       </HStack>
                     )}
                   </Box>

@@ -245,14 +245,25 @@ describe('EventBody', () => {
         resolveDescription = resolve;
       }),
     );
+    let resolveStream: () => void;
     async function* streamSummary() {
+      await new Promise<void>((resolve) => {
+        resolveStream = resolve;
+      });
       yield '- 初心者向けのReact勉強会です。';
       yield '\n- ハンズオンで基礎を学べます。';
     }
+    const downloadMonitor = new EventTarget();
     const summarizeStreaming = vi.fn().mockReturnValue(streamSummary());
     const destroy = vi.fn();
     const availability = vi.fn().mockResolvedValue('available');
-    const create = vi.fn().mockResolvedValue({ summarizeStreaming, destroy });
+    const create = vi.fn().mockImplementation((options) => {
+      options.monitor?.(downloadMonitor);
+      const progressEvent = new Event('downloadprogress') as ProgressEvent;
+      Object.defineProperty(progressEvent, 'loaded', { value: 0.42 });
+      downloadMonitor.dispatchEvent(progressEvent);
+      return Promise.resolve({ summarizeStreaming, destroy });
+    });
     Object.defineProperty(window, 'Summarizer', {
       value: { availability, create },
       configurable: true,
@@ -270,6 +281,8 @@ describe('EventBody', () => {
 
     expect(await screen.findByText('確認中...')).toBeInTheDocument();
     resolveDescription!('Reactの基礎をハンズオンで学ぶイベントです。');
+    expect(await screen.findByText('AIモデルを準備中... 42%')).toBeInTheDocument();
+    resolveStream!();
 
     expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
     expect(screen.getByText('ハンズオンで基礎を学べます。').tagName).toBe('LI');

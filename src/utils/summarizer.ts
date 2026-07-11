@@ -8,6 +8,7 @@ type SummarizerOptions = {
   expectedInputLanguages?: string[];
   expectedContextLanguages?: string[];
   outputLanguage?: string;
+  monitor?: (monitor: EventTarget) => void;
 };
 
 type SummarizerSession = {
@@ -106,6 +107,7 @@ export async function streamEventDescriptionSummary(
   description: string,
   title: string,
   onChunk: (chunk: string) => void,
+  onDownloadProgress?: (progress: number) => void,
 ): Promise<void> {
   const summarizerFactory = getSummarizerFactory();
   if (!summarizerFactory) {
@@ -117,7 +119,17 @@ export async function streamEventDescriptionSummary(
     throw new SummarizerUnavailableError();
   }
 
-  const summarizer = await summarizerFactory.create(SUMMARIZER_OPTIONS);
+  const summarizer = await summarizerFactory.create({
+    ...SUMMARIZER_OPTIONS,
+    ...(onDownloadProgress && {
+      monitor(monitor) {
+        monitor.addEventListener('downloadprogress', (event) => {
+          const progressEvent = event as ProgressEvent;
+          onDownloadProgress(progressEvent.loaded);
+        });
+      },
+    }),
+  });
   try {
     const stream = summarizer.summarizeStreaming(description, {
       context: `イベント名: ${title}`,
