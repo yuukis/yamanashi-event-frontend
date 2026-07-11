@@ -8,6 +8,7 @@ import type { NewEventTrackingData } from '../utils/newEventTracking';
 import { buildEventShareUrl, buildXShareUrl } from '../utils/share';
 import { getEventAnchorId } from '../utils/eventAnchors';
 import { EVENT_CARD_HIGHLIGHT_EVENT } from '../utils/hashScroll';
+import { fetchEventDescription } from '../utils/api';
 
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
 const EMPTY_TRACKING_DATA: NewEventTrackingData = { version: 1, records: {}, dismissedUids: [], acknowledgedDotUids: [] };
@@ -17,9 +18,14 @@ vi.mock('../utils/nowTicker', () => ({
   getNow: () => FIXED_NOW,
 }));
 
+vi.mock('../utils/api', () => ({
+  fetchEventDescription: vi.fn(),
+}));
+
 describe('EventBody', () => {
   beforeEach(() => {
     updateTrackingData(() => EMPTY_TRACKING_DATA);
+    vi.mocked(fetchEventDescription).mockReset();
   });
 
   it('renders the event title, address and place', () => {
@@ -220,6 +226,223 @@ describe('EventBody', () => {
 
     expect(screen.queryByRole('button', { name: 'React' })).not.toBeInTheDocument();
     expect(screen.getByText('React')).toBeInTheDocument();
+  });
+
+  it('does not show the summary button unless summarizer UI is enabled', () => {
+    mockMatchMedia(true);
+    renderWithChakra(
+      <EventBody event={makeEvent({ description: 'イベント説明文' })} />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'どんなイベント？（AI要約）' })).not.toBeInTheDocument();
+  });
+
+  it('does not show the summary button on mobile even when summarizer UI is enabled', async () => {
+    mockMatchMedia(false);
+    const availability = vi.fn().mockResolvedValue('available');
+    Object.defineProperty(window, 'Summarizer', {
+      value: { availability, create: vi.fn() },
+      configurable: true,
+    });
+
+    renderWithChakra(
+      <EventBody event={makeEvent({ description: 'イベント説明文' })}
+                 enableSummarizer
+                 />,
+    );
+
+    await waitFor(() => {
+      expect(availability).not.toHaveBeenCalled();
+    });
+    expect(screen.queryByRole('button', { name: 'どんなイベント？（AI要約）' })).not.toBeInTheDocument();
+    expect(fetchEventDescription).not.toHaveBeenCalled();
+
+    Reflect.deleteProperty(window, 'Summarizer');
+  });
+
+  it('streams the event description summary with Chrome Summarizer API', async () => {
+    mockMatchMedia(true);
+    let resolveDescription: (description: string) => void;
+    vi.mocked(fetchEventDescription).mockReturnValue(
+      new Promise((resolve) => {
+        resolveDescription = resolve;
+      }),
+    );
+    let resolveStream: () => void;
+    async function* streamSummary() {
+      await new Promise<void>((resolve) => {
+        resolveStream = resolve;
+      });
+      yield '- 初心者向けのReact勉強会です。';
+      yield '\n- ハンズオンで基礎を学べます。';
+    }
+    const downloadMonitor = new EventTarget();
+    const summarizeStreaming = vi.fn().mockReturnValue(streamSummary());
+    const destroy = vi.fn();
+    const availability = vi.fn().mockResolvedValue('downloadable');
+    const create = vi.fn().mockImplementation((options) => {
+      options.monitor?.(downloadMonitor);
+      const progressEvent = new Event('downloadprogress') as ProgressEvent;
+      Object.defineProperty(progressEvent, 'loaded', { value: 0.42 });
+      downloadMonitor.dispatchEvent(progressEvent);
+      return Promise.resolve({ summarizeStreaming, destroy });
+    });
+    Object.defineProperty(window, 'Summarizer', {
+      value: { availability, create },
+      configurable: true,
+    });
+
+    renderWithChakra(
+      <EventBody event={makeEvent({
+                   title: 'React入門',
+                 })}
+                 enableSummarizer
+                 />,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
+
+    expect(await screen.findByText('確認中...')).toBeInTheDocument();
+    resolveDescription!('Reactの基礎をハンズオンで学ぶイベントです。');
+    expect(await screen.findByText('AIモデルを準備中... 42%')).toBeInTheDocument();
+    resolveStream!();
+
+    expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
+    expect(screen.getByText('ハンズオンで基礎を学べます。').tagName).toBe('LI');
+    expect(fetchEventDescription).toHaveBeenCalledWith('event-1');
+    expect(availability).toHaveBeenCalled();
+    expect(summarizeStreaming).toHaveBeenCalledWith('Reactの基礎をハンズオンで学ぶイベントです。', {
+      context: 'イベント名: React入門',
+    });
+    expect(destroy).toHaveBeenCalled();
+
+    Reflect.deleteProperty(window, 'Summarizer');
+  });
+
+  it('does not show model preparation progress when the Summarizer model is already available', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
+    let resolveStream: () => void;
+    async function* streamSummary() {
+      await new Promise<void>((resolve) => {
+        resolveStream = resolve;
+      });
+      yield '- 初心者向けのReact勉強会です。';
+    }
+    const summarizeStreaming = vi.fn().mockReturnValue(streamSummary());
+    const destroy = vi.fn();
+    const create = vi.fn().mockResolvedValue({ summarizeStreaming, destroy });
+    Object.defineProperty(window, 'Summarizer', {
+      value: {
+        availability: vi.fn().mockResolvedValue('available'),
+        create,
+      },
+      configurable: true,
+    });
+
+    renderWithChakra(
+      <EventBody event={makeEvent({ title: 'React入門' })}
+                 enableSummarizer
+                 />,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
+
+    expect(await screen.findByText('確認中...')).toBeInTheDocument();
+    expect(screen.queryByText(/^AIモデルを準備中/)).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(create).toHaveBeenCalledWith(expect.not.objectContaining({
+        monitor: expect.any(Function),
+      }));
+    });
+    resolveStream!();
+
+    expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
+
+    Reflect.deleteProperty(window, 'Summarizer');
+  });
+
+  it('fetches the description from the year-scoped source when summaryDescriptionYear is provided', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
+    async function* streamSummary() {
+      yield '- 初心者向けのReact勉強会です。';
+    }
+    Object.defineProperty(window, 'Summarizer', {
+      value: {
+        availability: vi.fn().mockResolvedValue('available'),
+        create: vi.fn().mockResolvedValue({
+          summarizeStreaming: vi.fn().mockReturnValue(streamSummary()),
+          destroy: vi.fn(),
+        }),
+      },
+      configurable: true,
+    });
+
+    renderWithChakra(
+      <EventBody event={makeEvent({ title: 'React入門' })}
+                 enableSummarizer
+                 summaryDescriptionYear={2026}
+                 />,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
+
+    expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
+    expect(fetchEventDescription).toHaveBeenCalledWith('event-1', { year: 2026 });
+
+    Reflect.deleteProperty(window, 'Summarizer');
+  });
+
+  it('toggles the generated summary open and closed without fetching it again', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
+    async function* streamSummary() {
+      yield '- 初心者向けのReact勉強会です。';
+    }
+    Object.defineProperty(window, 'Summarizer', {
+      value: {
+        availability: vi.fn().mockResolvedValue('available'),
+        create: vi.fn().mockResolvedValue({
+          summarizeStreaming: vi.fn().mockReturnValue(streamSummary()),
+          destroy: vi.fn(),
+        }),
+      },
+      configurable: true,
+    });
+
+    renderWithChakra(
+      <EventBody event={makeEvent({ title: 'React入門' })}
+                 enableSummarizer
+                 />,
+    );
+
+    const summaryButton = await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' });
+    fireEvent.click(summaryButton);
+    expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
+
+    fireEvent.click(summaryButton);
+    expect(screen.queryByText('初心者向けのReact勉強会です。')).not.toBeInTheDocument();
+
+    fireEvent.click(summaryButton);
+    expect(screen.getByText('初心者向けのReact勉強会です。').tagName).toBe('LI');
+    expect(fetchEventDescription).toHaveBeenCalledTimes(1);
+
+    Reflect.deleteProperty(window, 'Summarizer');
+  });
+
+  it('does not show the summary button when Chrome Summarizer API is missing', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('イベント説明文');
+    Reflect.deleteProperty(window, 'Summarizer');
+    renderWithChakra(
+      <EventBody event={makeEvent()}
+                 enableSummarizer
+                 />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'どんなイベント？（AI要約）' })).not.toBeInTheDocument();
+    expect(fetchEventDescription).not.toHaveBeenCalled();
   });
 
   it('opens an X(Twitter) search scoped to the event day with since_time/until_time and f=live', () => {

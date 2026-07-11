@@ -2,6 +2,7 @@ export type ApiEvent = {
   uid: string;
   title: string;
   catch?: string | null;
+  description?: string | null;
   hash_tag?: string | null;
   event_url: string;
   started_at: string;

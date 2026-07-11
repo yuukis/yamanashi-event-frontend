@@ -203,6 +203,8 @@ function List({ startYear} : {startYear: number}) {
                         <EventBody event={event}
                                    selectedKeyword={selectedKeyword}
                                    onKeywordClick={handleKeywordClick}
+                                   enableSummarizer
+                                   summaryDescriptionYear={year}
                                    />
                       </AnimatedEventItem>
                     ))}
