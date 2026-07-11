@@ -282,6 +282,43 @@ describe('EventBody', () => {
     Reflect.deleteProperty(window, 'Summarizer');
   });
 
+  it('toggles the generated summary open and closed without fetching it again', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
+    async function* streamSummary() {
+      yield '初心者向けのReact勉強会です。';
+    }
+    Object.defineProperty(window, 'Summarizer', {
+      value: {
+        availability: vi.fn().mockResolvedValue('available'),
+        create: vi.fn().mockResolvedValue({
+          summarizeStreaming: vi.fn().mockReturnValue(streamSummary()),
+          destroy: vi.fn(),
+        }),
+      },
+      configurable: true,
+    });
+
+    renderWithChakra(
+      <EventBody event={makeEvent({ title: 'React入門' })}
+                 enableSummarizer
+                 />,
+    );
+
+    const summaryButton = screen.getByRole('button', { name: 'どんなイベント？' });
+    fireEvent.click(summaryButton);
+    expect(await screen.findByText('初心者向けのReact勉強会です。')).toBeInTheDocument();
+
+    fireEvent.click(summaryButton);
+    expect(screen.queryByText('初心者向けのReact勉強会です。')).not.toBeInTheDocument();
+
+    fireEvent.click(summaryButton);
+    expect(screen.getByText('初心者向けのReact勉強会です。')).toBeInTheDocument();
+    expect(fetchEventDescription).toHaveBeenCalledTimes(1);
+
+    Reflect.deleteProperty(window, 'Summarizer');
+  });
+
   it('shows an unavailable message when Chrome Summarizer API is missing', async () => {
     mockMatchMedia(true);
     vi.mocked(fetchEventDescription).mockResolvedValue('イベント説明文');

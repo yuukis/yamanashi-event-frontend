@@ -161,10 +161,10 @@ export function EventBody(data: EventBodyProps) {
   const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null);
   const [moved, setMoved] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [summaryStatus, setSummaryStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [summaryText, setSummaryText] = useState('');
   const [summaryError, setSummaryError] = useState('');
-  const isSummaryExpanded = summaryStatus !== 'idle';
   
   const handleMenuButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -180,6 +180,14 @@ export function EventBody(data: EventBodyProps) {
   const handleSummaryButtonClick = async (e: React.MouseEvent) => {
     stopCardNavigation(e);
     if (summaryStatus === 'loading') {
+      return;
+    }
+    if (isSummaryExpanded) {
+      setIsSummaryExpanded(false);
+      return;
+    }
+    setIsSummaryExpanded(true);
+    if (summaryStatus === 'done' && summaryText) {
       return;
     }
 
