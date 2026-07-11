@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useSyncExternalStore } from "reac
 import { useDisclosure } from "@chakra-ui/react";
 import { BellFill, BellSlash, Trash3 } from '@chakra-icons/bootstrap';
 import {
+  Box,
   Stack,
   HStack,
   Spacer,
@@ -28,9 +29,9 @@ import { jumpToAnchor } from '../utils/hashScroll';
 import {
   acknowledgeNewEventDot,
   dismissNewEvents,
-  hasUnacknowledgedNewEvent,
   mergeTrackingData,
   selectNewEventUids,
+  selectUnacknowledgedNewEventUids,
 } from '../utils/newEventTracking';
 import {
   isLocalStorageAvailable,
@@ -59,7 +60,7 @@ export function NotificationButton() {
   const [isLoading, setIsLoading] = useState(false);
   const VAPID = import.meta.env.VITE_PUBLIC_VAPID_KEY as string;
   const API_URL = import.meta.env.VITE_SUBSCRIPTION_API_URL as string;
-  const { isOpen, onOpen: openDisclosure, onClose } = useDisclosure();
+  const { isOpen, onOpen: openDisclosure, onClose: closeDisclosure } = useDisclosure();
 
   const [isLocalStorageOk] = useState(() => isLocalStorageAvailable());
   const trackingData = useSyncExternalStore(subscribeTrackingData, getTrackingDataSnapshot);
@@ -104,17 +105,29 @@ export function NotificationButton() {
     return candidateEvents.filter((event) => uids.has(event.uid)).sort(sortByStartedAtAsc);
   }, [trackingData, candidateEvents, now]);
 
-  const hasDot = isLocalStorageOk && hasUnacknowledgedNewEvent(trackingData, newEvents.map((event) => event.uid));
+  const unacknowledgedUids = useMemo(
+    () => selectUnacknowledgedNewEventUids(trackingData, newEvents.map((event) => event.uid)),
+    [trackingData, newEvents],
+  );
+  const hasDot = isLocalStorageOk && unacknowledgedUids.size > 0;
 
   const onOpen = () => {
     if (isLocalStorageOk && candidateEvents.length > 0) {
-      updateTrackingData((previous) => {
-        const merged = mergeTrackingData(previous, candidateEvents, now);
-        const newUids = [...selectNewEventUids(merged, candidateEvents, now)];
-        return newUids.length > 0 ? acknowledgeNewEventDot(merged, newUids) : merged;
-      });
+      updateTrackingData((previous) => mergeTrackingData(previous, candidateEvents, now));
     }
     openDisclosure();
+  };
+
+  // 開いた瞬間ではなく閉じたタイミングでacknowledgeし、ベル・項目の
+  // ドットを消す(開いている間は見ている本人にドットを見せ続ける)。
+  const onClose = () => {
+    if (isLocalStorageOk && candidateEvents.length > 0) {
+      updateTrackingData((previous) => {
+        const newUids = [...selectNewEventUids(previous, candidateEvents, now)];
+        return newUids.length > 0 ? acknowledgeNewEventDot(previous, newUids) : previous;
+      });
+    }
+    closeDisclosure();
   };
 
   const handleClearNewEvents = () => {
@@ -271,7 +284,18 @@ export function NotificationButton() {
                             >
                       <Stack spacing={'0'} align={'flex-start'} w={'full'} minW={0}>
                         <Text fontSize={'xs'} color={'gray.500'}>{formatNewEventStartLabel(event.started_at)}</Text>
-                        <Text fontSize={'sm'} textAlign={'left'} wordBreak={'break-word'}>{event.title}</Text>
+                        <Box position={'relative'} w={'full'}>
+                          {unacknowledgedUids.has(event.uid) && (
+                            // テキストの流れに含めずボタンの左パディング内に絶対
+                            // 配置することで、有無によるタイトルの位置ずれを防ぐ。
+                            <Box position={'absolute'} left={'-9px'} top={'7px'}
+                                 w={'6px'} h={'6px'} borderRadius={'full'}
+                                 bg={'purple.500'} aria-hidden
+                                 data-testid={`new-event-dot-${event.uid}`}
+                                 />
+                          )}
+                          <Text fontSize={'sm'} textAlign={'left'} wordBreak={'break-word'}>{event.title}</Text>
+                        </Box>
                       </Stack>
                     </Button>
                   ))

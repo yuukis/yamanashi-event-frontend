@@ -134,17 +134,26 @@ describe('NotificationButton', () => {
     expect(screen.getByText('新着イベントはありません')).toBeInTheDocument();
   });
 
-  it('shows a dot on the bell icon when there is an unacknowledged new event, and clears it once opened', async () => {
+  it('keeps the bell dot and per-item dot visible while open, and clears both once the popover is closed', async () => {
     mockFetchEvents([makeFutureEvent({ uid: 'e1', title: 'Dot Event' })]);
     renderWithChakra(<NotificationButton />);
 
     await screen.findByRole('button', { name: '新着イベントの通知があります' });
 
     fireEvent.click(screen.getByRole('button', { name: '新着イベントの通知があります' }));
-
     await screen.findByText('Dot Event');
+
+    expect(screen.getByRole('button', { name: '新着イベントの通知があります' })).toBeInTheDocument();
+    expect(screen.getByTestId('new-event-dot-e1')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
     expect(screen.queryByRole('button', { name: '新着イベントの通知があります' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Notification' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Notification' }));
+    await screen.findByText('Dot Event');
+    expect(screen.queryByTestId('new-event-dot-e1')).not.toBeInTheDocument();
   });
 
   it('re-runs mergeTrackingData exactly once when the popover is opened with a single click, not only on the initial fetch', async () => {
