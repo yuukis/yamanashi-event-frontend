@@ -117,12 +117,16 @@ export function acknowledgeNewEventDot(data: NewEventTrackingData, currentNewUid
   return { ...data, acknowledgedDotUids: [...new Set([...data.acknowledgedDotUids, ...currentNewUids])] };
 }
 
-export function hasUnacknowledgedNewEvent(data: NewEventTrackingData, currentNewUids: Iterable<string>): boolean {
+export function selectUnacknowledgedNewEventUids(
+  data: NewEventTrackingData,
+  currentNewUids: Iterable<string>,
+): Set<string> {
   const acknowledged = new Set(data.acknowledgedDotUids);
+  const result = new Set<string>();
   for (const uid of currentNewUids) {
     if (!acknowledged.has(uid)) {
-      return true;
+      result.add(uid);
     }
   }
-  return false;
+  return result;
 }

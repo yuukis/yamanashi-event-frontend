@@ -3,12 +3,12 @@ import {
   EMPTY_TRACKING_DATA,
   acknowledgeNewEventDot,
   dismissNewEvents,
-  hasUnacknowledgedNewEvent,
   isEventNew,
   isNotYetStarted,
   isValidTrackingData,
   mergeTrackingData,
   selectNewEventUids,
+  selectUnacknowledgedNewEventUids,
   type NewEventTrackingData,
 } from './newEventTracking';
 
@@ -185,21 +185,21 @@ describe('dismissNewEvents', () => {
   });
 });
 
-describe('acknowledgeNewEventDot / hasUnacknowledgedNewEvent', () => {
+describe('acknowledgeNewEventDot / selectUnacknowledgedNewEventUids', () => {
   it('reports unacknowledged uids as having a pending dot', () => {
-    expect(hasUnacknowledgedNewEvent(EMPTY_TRACKING_DATA, ['e1'])).toBe(true);
+    expect(selectUnacknowledgedNewEventUids(EMPTY_TRACKING_DATA, ['e1'])).toEqual(new Set(['e1']));
   });
 
   it('clears the dot once the uids have been acknowledged', () => {
     const data = acknowledgeNewEventDot(EMPTY_TRACKING_DATA, ['e1']);
 
-    expect(hasUnacknowledgedNewEvent(data, ['e1'])).toBe(false);
+    expect(selectUnacknowledgedNewEventUids(data, ['e1'])).toEqual(new Set());
   });
 
   it('shows the dot again for a uid that was never acknowledged, even if others were', () => {
     const data = acknowledgeNewEventDot(EMPTY_TRACKING_DATA, ['e1']);
 
-    expect(hasUnacknowledgedNewEvent(data, ['e1', 'e2'])).toBe(true);
+    expect(selectUnacknowledgedNewEventUids(data, ['e1', 'e2'])).toEqual(new Set(['e2']));
   });
 });
 
