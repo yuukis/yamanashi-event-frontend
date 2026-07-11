@@ -37,7 +37,7 @@ export class SummarizerUnavailableError extends Error {
 
 const SUMMARIZER_OPTIONS: SummarizerOptions = {
   type: 'key-points',
-  format: 'plain-text',
+  format: 'markdown',
   length: 'short',
   sharedContext: '山梨県内または近隣のIT勉強会・技術イベント情報を、参加検討中の人に向けて日本語で要約してください。',
   expectedInputLanguages: ['ja', 'en'],
