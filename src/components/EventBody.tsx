@@ -568,8 +568,8 @@ export function EventBody(data: EventBodyProps) {
             {data.enableSummarizer && (
               <Show above='md'>
                 <Button size={'sm'}
-                        variant={'ghost'}
-                        colorScheme={'primary'}
+                        variant={'outline'}
+                        colorScheme={'gray'}
                         leftIcon={<FiFileText />}
                         isLoading={summaryStatus === 'loading'}
                         loadingText={'確認中'}
