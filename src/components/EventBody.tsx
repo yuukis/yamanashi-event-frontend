@@ -195,6 +195,7 @@ export function EventBody(data: EventBodyProps) {
   const [summaryText, setSummaryText] = useState('');
   const [summaryError, setSummaryError] = useState('');
   const [summaryDownloadProgress, setSummaryDownloadProgress] = useState<number | null>(null);
+  const isSummaryMountedRef = useRef(true);
   
   const handleMenuButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -224,6 +225,13 @@ export function EventBody(data: EventBodyProps) {
       isMounted = false;
     };
   }, [data.enableSummarizer, isDesktopScreenSize]);
+
+  useEffect(() => {
+    isSummaryMountedRef.current = true;
+    return () => {
+      isSummaryMountedRef.current = false;
+    };
+  }, []);
 
   const handleSummaryButtonClick = async (e: React.MouseEvent) => {
     stopCardNavigation(e);
@@ -255,13 +263,25 @@ export function EventBody(data: EventBodyProps) {
       }
 
       await streamEventDescriptionSummary(description, title, (chunk) => {
+        if (!isSummaryMountedRef.current) {
+          return;
+        }
         setSummaryText((current) => current + chunk);
       }, (progress) => {
+        if (!isSummaryMountedRef.current) {
+          return;
+        }
         setSummaryDownloadProgress(Math.round(progress * 100));
       });
+      if (!isSummaryMountedRef.current) {
+        return;
+      }
       setSummaryStatus('done');
       setSummaryDownloadProgress(null);
     } catch (error) {
+      if (!isSummaryMountedRef.current) {
+        return;
+      }
       setSummaryError(error instanceof SummarizerUnavailableError
         ? error.message
         : '要約の生成に失敗しました');
