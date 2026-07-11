@@ -51,8 +51,9 @@ export async function fetchEvents(): Promise<{ events: ApiEvent[]; lastModified:
   return inFlightEventsRequest;
 }
 
-export async function fetchEventDescription(uid: string): Promise<string> {
-  const res = await axios.get(EVENTS_API_URL, { params: { fields: 'description', uid } });
+export async function fetchEventDescription(uid: string, options?: { year?: number }): Promise<string> {
+  const url = options?.year ? `${EVENTS_API_URL}/in/${options.year}` : EVENTS_API_URL;
+  const res = await axios.get(url, { params: { fields: 'description', uid } });
   const event = Array.isArray(res.data) ? res.data[0] : res.data;
   return (event?.description ?? '') as string;
 }

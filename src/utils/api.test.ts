@@ -93,6 +93,20 @@ describe('fetchEventDescription', () => {
     expect(description).toBe('イベント説明文');
   });
 
+  it('requests the year-scoped events endpoint when year is specified', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      data: [{ description: '年別ページのイベント説明文' }],
+      headers: {},
+    });
+
+    const description = await fetchEventDescription('event-1', { year: 2026 });
+
+    expect(axios.get).toHaveBeenCalledWith(`${EVENTS_API_URL}/in/2026`, {
+      params: { fields: 'description', uid: 'event-1' },
+    });
+    expect(description).toBe('年別ページのイベント説明文');
+  });
+
   it('returns an empty string when the target event has no description', async () => {
     vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
 

@@ -339,6 +339,38 @@ describe('EventBody', () => {
     Reflect.deleteProperty(window, 'Summarizer');
   });
 
+  it('fetches the description from the year-scoped source when summaryDescriptionYear is provided', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
+    async function* streamSummary() {
+      yield '- 初心者向けのReact勉強会です。';
+    }
+    Object.defineProperty(window, 'Summarizer', {
+      value: {
+        availability: vi.fn().mockResolvedValue('available'),
+        create: vi.fn().mockResolvedValue({
+          summarizeStreaming: vi.fn().mockReturnValue(streamSummary()),
+          destroy: vi.fn(),
+        }),
+      },
+      configurable: true,
+    });
+
+    renderWithChakra(
+      <EventBody event={makeEvent({ title: 'React入門' })}
+                 enableSummarizer
+                 summaryDescriptionYear={2026}
+                 />,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
+
+    expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
+    expect(fetchEventDescription).toHaveBeenCalledWith('event-1', { year: 2026 });
+
+    Reflect.deleteProperty(window, 'Summarizer');
+  });
+
   it('toggles the generated summary open and closed without fetching it again', async () => {
     mockMatchMedia(true);
     vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');

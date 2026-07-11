@@ -64,6 +64,7 @@ type EventBodyProps = {
   selectedKeyword?: string | null;
   onKeywordClick?: (keyword: string) => void;
   enableSummarizer?: boolean;
+  summaryDescriptionYear?: number;
 };
 
 function buildJstDayScopedSearchPrefix(start_date: Date): string {
@@ -244,7 +245,9 @@ export function EventBody(data: EventBodyProps) {
     setSummaryDownloadProgress(null);
 
     try {
-      const description = (await fetchEventDescription(event.uid)).trim();
+      const description = (data.summaryDescriptionYear == null
+        ? await fetchEventDescription(event.uid)
+        : await fetchEventDescription(event.uid, { year: data.summaryDescriptionYear })).trim();
       if (!description) {
         setSummaryError('要約できる説明文がありません');
         setSummaryStatus('error');
@@ -485,6 +488,13 @@ export function EventBody(data: EventBodyProps) {
                     md: '140px'
                   }}
                   >{ sub_title }</Text>
+            {archive_source && (
+              <Badge colorScheme="secondary" variant="subtle"
+                     display={'block'} w={'fit-content'}
+                     >
+                アーカイブ
+              </Badge>
+            )}
             {data.enableSummarizer && canUseSummarizer && (
               <Stack mt={'2'} pr={{md: '140px'}} spacing={'2'} alignItems={'flex-start'}>
                 <Button size={'sm'}
@@ -530,13 +540,6 @@ export function EventBody(data: EventBodyProps) {
                   </Box>
                 )}
               </Stack>
-            )}
-            {archive_source && (
-              <Badge colorScheme="secondary" variant="subtle"
-                     display={'block'} w={'fit-content'}
-                     >
-                アーカイブ
-              </Badge>
             )}
             <HStack mt={'2'} pr={{md: '140px'}}>
               <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
