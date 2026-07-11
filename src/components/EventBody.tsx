@@ -96,8 +96,8 @@ function renderSummaryText(summaryText: string) {
   if (bulletItems.length === lines.length && bulletItems.length > 0) {
     return (
       <UnorderedList spacing={'1'} pl={'4'} m={'0'} fontSize={'sm'}>
-        {bulletItems.map((item) => (
-          <ListItem key={item}>{item}</ListItem>
+        {bulletItems.map((item, index) => (
+          <ListItem key={`${index}-${item}`}>{item}</ListItem>
         ))}
       </UnorderedList>
     );
