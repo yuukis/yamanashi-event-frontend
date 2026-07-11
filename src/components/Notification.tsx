@@ -118,9 +118,8 @@ export function NotificationButton() {
     openDisclosure();
   };
 
-  // ふきだしを閉じたタイミングでその時点の新着イベントをまとめて
-  // acknowledgeする(開いた瞬間ではなく、実際に見終えたであろう
-  // 閉じたタイミングでベル・項目それぞれのドットを消す)。
+  // 開いた瞬間ではなく閉じたタイミングでacknowledgeし、ベル・項目の
+  // ドットを消す(開いている間は見ている本人にドットを見せ続ける)。
   const onClose = () => {
     if (isLocalStorageOk && candidateEvents.length > 0) {
       updateTrackingData((previous) => {
@@ -287,9 +286,8 @@ export function NotificationButton() {
                         <Text fontSize={'xs'} color={'gray.500'}>{formatNewEventStartLabel(event.started_at)}</Text>
                         <Box position={'relative'} w={'full'}>
                           {unacknowledgedUids.has(event.uid) && (
-                            // ドットの有無でタイトルの開始位置がずれないよう、
-                            // テキストの流れに含めずボタン自身の左パディング内に
-                            // 絶対配置で重ねる。
+                            // テキストの流れに含めずボタンの左パディング内に絶対
+                            // 配置することで、有無によるタイトルの位置ずれを防ぐ。
                             <Box position={'absolute'} left={'-9px'} top={'7px'}
                                  w={'6px'} h={'6px'} borderRadius={'full'}
                                  bg={'purple.500'} aria-hidden

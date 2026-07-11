@@ -143,7 +143,6 @@ describe('NotificationButton', () => {
     fireEvent.click(screen.getByRole('button', { name: '新着イベントの通知があります' }));
     await screen.findByText('Dot Event');
 
-    // Opening alone must not acknowledge yet: both dots stay visible while open.
     expect(screen.getByRole('button', { name: '新着イベントの通知があります' })).toBeInTheDocument();
     expect(screen.getByTestId('new-event-dot-e1')).toBeInTheDocument();
 
