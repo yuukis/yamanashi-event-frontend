@@ -34,7 +34,7 @@ import {
   Hide
 } from '@chakra-ui/react';
 import { FaXTwitter } from "react-icons/fa6";
-import { FiArchive, FiExternalLink, FiMap, FiMoreVertical } from "react-icons/fi";
+import { FiArchive, FiExternalLink, FiFileText, FiMap, FiMoreVertical } from "react-icons/fi";
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Hash,
@@ -51,6 +51,8 @@ import { ShareIconRow, ShareButton } from './ShareButtons';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
 import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
+import { SummarizerUnavailableError, streamEventDescriptionSummary } from '../utils/summarizer';
+import { fetchEventDescription } from '../utils/api';
 import type { EventWithGroup } from '../types/events';
 
 type EventBodyProps = {
@@ -58,6 +60,7 @@ type EventBodyProps = {
   anchorId?: string;
   selectedKeyword?: string | null;
   onKeywordClick?: (keyword: string) => void;
+  enableSummarizer?: boolean;
 };
 
 function buildJstDayScopedSearchPrefix(start_date: Date): string {
@@ -158,6 +161,9 @@ export function EventBody(data: EventBodyProps) {
   const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null);
   const [moved, setMoved] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [summaryStatus, setSummaryStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [summaryText, setSummaryText] = useState('');
+  const [summaryError, setSummaryError] = useState('');
   
   const handleMenuButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -165,6 +171,39 @@ export function EventBody(data: EventBodyProps) {
   };
   const handleMenuButtonTouch = (e: React.TouchEvent) => {
     e.stopPropagation();
+  };
+  const stopCardNavigation = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+  };
+
+  const handleSummaryButtonClick = async (e: React.MouseEvent) => {
+    stopCardNavigation(e);
+    if (summaryStatus === 'loading') {
+      return;
+    }
+
+    setSummaryStatus('loading');
+    setSummaryText('');
+    setSummaryError('');
+
+    try {
+      const description = (await fetchEventDescription(event.uid)).trim();
+      if (!description) {
+        setSummaryError('要約できる説明文がありません');
+        setSummaryStatus('error');
+        return;
+      }
+
+      await streamEventDescriptionSummary(description, title, (chunk) => {
+        setSummaryText((current) => current + chunk);
+      });
+      setSummaryStatus('done');
+    } catch (error) {
+      setSummaryError(error instanceof SummarizerUnavailableError
+        ? error.message
+        : '要約の生成に失敗しました');
+      setSummaryStatus('error');
+    }
   };
 
   const [isScrolling, setIsScrolling] = useState(false);
@@ -385,6 +424,40 @@ export function EventBody(data: EventBodyProps) {
                     md: '140px'
                   }}
                   >{ sub_title }</Text>
+            {data.enableSummarizer && (
+              <Stack mt={'2'} pr={{md: '140px'}} spacing={'2'} alignItems={'flex-start'}>
+                <Button size={'sm'}
+                        variant={'outline'}
+                        colorScheme={'primary'}
+                        leftIcon={<FiFileText />}
+                        isLoading={summaryStatus === 'loading'}
+                        loadingText={'要約中'}
+                        onClick={handleSummaryButtonClick}
+                        onTouchStart={stopCardNavigation}
+                        onTouchMove={stopCardNavigation}
+                        onTouchEnd={stopCardNavigation}
+                        >
+                  AI要約
+                </Button>
+                {summaryText && (
+                  <Box bg={'white'}
+                       border={'1px solid'}
+                       borderColor={'gray.200'}
+                       borderRadius={'md'}
+                       p={'3'}
+                       w={'100%'}
+                       aria-live={'polite'}
+                       >
+                    <Text fontSize={'sm'} whiteSpace={'pre-wrap'}>{summaryText}</Text>
+                  </Box>
+                )}
+                {summaryStatus === 'error' && (
+                  <Text fontSize={'sm'} color={'impact.600'}>
+                    {summaryError}
+                  </Text>
+                )}
+              </Stack>
+            )}
             {archive_source && (
               <Badge colorScheme="secondary" variant="subtle"
                      display={'block'} w={'fit-content'}

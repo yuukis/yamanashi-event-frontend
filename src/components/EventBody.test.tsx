@@ -8,6 +8,7 @@ import type { NewEventTrackingData } from '../utils/newEventTracking';
 import { buildEventShareUrl, buildXShareUrl } from '../utils/share';
 import { getEventAnchorId } from '../utils/eventAnchors';
 import { EVENT_CARD_HIGHLIGHT_EVENT } from '../utils/hashScroll';
+import { fetchEventDescription } from '../utils/api';
 
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
 const EMPTY_TRACKING_DATA: NewEventTrackingData = { version: 1, records: {}, dismissedUids: [], acknowledgedDotUids: [] };
@@ -17,9 +18,14 @@ vi.mock('../utils/nowTicker', () => ({
   getNow: () => FIXED_NOW,
 }));
 
+vi.mock('../utils/api', () => ({
+  fetchEventDescription: vi.fn(),
+}));
+
 describe('EventBody', () => {
   beforeEach(() => {
     updateTrackingData(() => EMPTY_TRACKING_DATA);
+    vi.mocked(fetchEventDescription).mockReset();
   });
 
   it('renders the event title, address and place', () => {
@@ -220,6 +226,67 @@ describe('EventBody', () => {
 
     expect(screen.queryByRole('button', { name: 'React' })).not.toBeInTheDocument();
     expect(screen.getByText('React')).toBeInTheDocument();
+  });
+
+  it('does not show the summary button unless summarizer UI is enabled', () => {
+    mockMatchMedia(true);
+    renderWithChakra(
+      <EventBody event={makeEvent({ description: 'イベント説明文' })} />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'AI要約' })).not.toBeInTheDocument();
+  });
+
+  it('streams the event description summary with Chrome Summarizer API', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
+    async function* streamSummary() {
+      yield '初心者向けの';
+      yield 'React勉強会です。';
+    }
+    const summarizeStreaming = vi.fn().mockReturnValue(streamSummary());
+    const destroy = vi.fn();
+    const availability = vi.fn().mockResolvedValue('available');
+    const create = vi.fn().mockResolvedValue({ summarizeStreaming, destroy });
+    Object.defineProperty(window, 'Summarizer', {
+      value: { availability, create },
+      configurable: true,
+    });
+
+    renderWithChakra(
+      <EventBody event={makeEvent({
+                   title: 'React入門',
+                 })}
+                 enableSummarizer
+                 />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'AI要約' }));
+
+    expect(await screen.findByText('初心者向けのReact勉強会です。')).toBeInTheDocument();
+    expect(fetchEventDescription).toHaveBeenCalledWith('event-1');
+    expect(availability).toHaveBeenCalled();
+    expect(summarizeStreaming).toHaveBeenCalledWith('Reactの基礎をハンズオンで学ぶイベントです。', {
+      context: 'イベント名: React入門',
+    });
+    expect(destroy).toHaveBeenCalled();
+
+    Reflect.deleteProperty(window, 'Summarizer');
+  });
+
+  it('shows an unavailable message when Chrome Summarizer API is missing', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('イベント説明文');
+    Reflect.deleteProperty(window, 'Summarizer');
+    renderWithChakra(
+      <EventBody event={makeEvent()}
+                 enableSummarizer
+                 />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'AI要約' }));
+
+    expect(await screen.findByText('このブラウザでは要約機能を利用できません')).toBeInTheDocument();
   });
 
   it('opens an X(Twitter) search scoped to the event day with since_time/until_time and f=live', () => {

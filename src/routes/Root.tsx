@@ -165,6 +165,7 @@ function Root({startYear}: {startYear: number}) {
                         anchorId={anchorId}
                         selectedKeyword={selectedKeyword}
                         onKeywordClick={handleKeywordClick}
+                        enableSummarizer
                         />
             </AnimatedEventItem>;
     });
