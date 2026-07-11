@@ -3,7 +3,6 @@ import type { ApiGroup, EventWithGroup } from '../types/events';
 export function makeEvent(overrides: Partial<EventWithGroup> = {}): EventWithGroup {
   return {
     uid: 'event-1',
-    event_id: 1,
     title: 'Sample Event',
     event_url: 'https://example.com/event/1',
     started_at: '2026-01-10T10:00:00+09:00',

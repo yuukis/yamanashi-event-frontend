@@ -1,6 +1,5 @@
 export type ApiEvent = {
   uid: string;
-  event_id: number | null;
   title: string;
   catch?: string | null;
   hash_tag?: string | null;

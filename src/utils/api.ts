@@ -7,7 +7,6 @@ export const EVENTS_SUMMARY_API_URL = 'https://api.event.yamanashi.dev/events/su
 
 export const EVENTS_FIELDS = [
   'uid',
-  'event_id',
   'title',
   'catch',
   'hash_tag',
