@@ -28,6 +28,9 @@ import {
   WrapItem,
   Skeleton,
   SkeletonCircle,
+  Spinner,
+  UnorderedList,
+  ListItem,
   useMediaQuery,
   useDisclosure,
   Show,
@@ -76,6 +79,30 @@ function buildJstDayScopedSearchPrefix(start_date: Date): string {
   const since_time = Math.floor(new Date(start_date_str + "T00:00:00+09:00").getTime() / 1000);
   const until_time = Math.floor(new Date(start_date_str + "T23:59:59+09:00").getTime() / 1000);
   return "since_time:" + since_time + " until_time:" + until_time + " ";
+}
+
+function renderSummaryText(summaryText: string) {
+  const lines = summaryText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const bulletItems = lines
+    .map((line) => line.match(/^[-*]\s+(.+)$/) ?? line.match(/^\d+\.\s+(.+)$/))
+    .filter((match): match is RegExpMatchArray => Boolean(match))
+    .map((match) => match[1]);
+
+  if (bulletItems.length === lines.length && bulletItems.length > 0) {
+    return (
+      <UnorderedList spacing={'1'} pl={'4'} m={'0'} fontSize={'sm'}>
+        {bulletItems.map((item) => (
+          <ListItem key={item}>{item}</ListItem>
+        ))}
+      </UnorderedList>
+    );
+  }
+
+  return <Text fontSize={'sm'} whiteSpace={'pre-wrap'}>{summaryText}</Text>;
 }
 
 export function EventBody(data: EventBodyProps) {
@@ -462,11 +489,14 @@ export function EventBody(data: EventBodyProps) {
                        aria-live={'polite'}
                        >
                     {summaryText ? (
-                      <Text fontSize={'sm'} whiteSpace={'pre-wrap'}>{summaryText}</Text>
+                      renderSummaryText(summaryText)
                     ) : summaryStatus === 'error' ? (
                       <Text fontSize={'sm'} color={'impact.600'}>{summaryError}</Text>
                     ) : (
-                      <Text fontSize={'sm'} color={'gray.500'}>確認中...</Text>
+                      <HStack spacing={'2'} color={'gray.500'}>
+                        <Spinner size={'xs'} speed={'0.8s'} thickness={'2px'} />
+                        <Text fontSize={'sm'}>確認中...</Text>
+                      </HStack>
                     )}
                   </Box>
                 )}

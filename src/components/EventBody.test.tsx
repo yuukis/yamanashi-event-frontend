@@ -246,8 +246,8 @@ describe('EventBody', () => {
       }),
     );
     async function* streamSummary() {
-      yield '初心者向けの';
-      yield 'React勉強会です。';
+      yield '- 初心者向けのReact勉強会です。';
+      yield '\n- ハンズオンで基礎を学べます。';
     }
     const summarizeStreaming = vi.fn().mockReturnValue(streamSummary());
     const destroy = vi.fn();
@@ -271,7 +271,8 @@ describe('EventBody', () => {
     expect(await screen.findByText('確認中...')).toBeInTheDocument();
     resolveDescription!('Reactの基礎をハンズオンで学ぶイベントです。');
 
-    expect(await screen.findByText('初心者向けのReact勉強会です。')).toBeInTheDocument();
+    expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
+    expect(screen.getByText('ハンズオンで基礎を学べます。').tagName).toBe('LI');
     expect(fetchEventDescription).toHaveBeenCalledWith('event-1');
     expect(availability).toHaveBeenCalled();
     expect(summarizeStreaming).toHaveBeenCalledWith('Reactの基礎をハンズオンで学ぶイベントです。', {
@@ -286,7 +287,7 @@ describe('EventBody', () => {
     mockMatchMedia(true);
     vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
     async function* streamSummary() {
-      yield '初心者向けのReact勉強会です。';
+      yield '- 初心者向けのReact勉強会です。';
     }
     Object.defineProperty(window, 'Summarizer', {
       value: {
@@ -307,13 +308,13 @@ describe('EventBody', () => {
 
     const summaryButton = screen.getByRole('button', { name: 'どんなイベント？' });
     fireEvent.click(summaryButton);
-    expect(await screen.findByText('初心者向けのReact勉強会です。')).toBeInTheDocument();
+    expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
 
     fireEvent.click(summaryButton);
     expect(screen.queryByText('初心者向けのReact勉強会です。')).not.toBeInTheDocument();
 
     fireEvent.click(summaryButton);
-    expect(screen.getByText('初心者向けのReact勉強会です。')).toBeInTheDocument();
+    expect(screen.getByText('初心者向けのReact勉強会です。').tagName).toBe('LI');
     expect(fetchEventDescription).toHaveBeenCalledTimes(1);
 
     Reflect.deleteProperty(window, 'Summarizer');
