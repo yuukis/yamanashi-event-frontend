@@ -234,7 +234,7 @@ describe('EventBody', () => {
       <EventBody event={makeEvent({ description: 'イベント説明文' })} />,
     );
 
-    expect(screen.queryByRole('button', { name: 'どんなイベント？' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'どんなイベント？（AI要約）' })).not.toBeInTheDocument();
   });
 
   it('streams the event description summary with Chrome Summarizer API', async () => {
@@ -266,7 +266,7 @@ describe('EventBody', () => {
                  />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'どんなイベント？' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
 
     expect(await screen.findByText('確認中...')).toBeInTheDocument();
     resolveDescription!('Reactの基礎をハンズオンで学ぶイベントです。');
@@ -306,7 +306,7 @@ describe('EventBody', () => {
                  />,
     );
 
-    const summaryButton = screen.getByRole('button', { name: 'どんなイベント？' });
+    const summaryButton = await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' });
     fireEvent.click(summaryButton);
     expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
 
@@ -320,7 +320,7 @@ describe('EventBody', () => {
     Reflect.deleteProperty(window, 'Summarizer');
   });
 
-  it('shows an unavailable message when Chrome Summarizer API is missing', async () => {
+  it('does not show the summary button when Chrome Summarizer API is missing', async () => {
     mockMatchMedia(true);
     vi.mocked(fetchEventDescription).mockResolvedValue('イベント説明文');
     Reflect.deleteProperty(window, 'Summarizer');
@@ -330,9 +330,8 @@ describe('EventBody', () => {
                  />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'どんなイベント？' }));
-
-    expect(await screen.findByText('このブラウザでは要約機能を利用できません')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'どんなイベント？（AI要約）' })).not.toBeInTheDocument();
+    expect(fetchEventDescription).not.toHaveBeenCalled();
   });
 
   it('opens an X(Twitter) search scoped to the event day with since_time/until_time and f=live', () => {

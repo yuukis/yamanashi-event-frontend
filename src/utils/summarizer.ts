@@ -48,6 +48,35 @@ function getSummarizerFactory(): SummarizerFactory | undefined {
   return window.Summarizer;
 }
 
+let availabilityFactory: SummarizerFactory | undefined;
+let availabilityRequest: Promise<SummarizerAvailability> | null = null;
+
+async function getSummarizerAvailability(): Promise<SummarizerAvailability> {
+  const summarizerFactory = getSummarizerFactory();
+  if (!summarizerFactory) {
+    return 'unavailable';
+  }
+
+  if (availabilityFactory !== summarizerFactory) {
+    availabilityFactory = summarizerFactory;
+    availabilityRequest = null;
+  }
+
+  if (!availabilityRequest) {
+    availabilityRequest = summarizerFactory.availability(SUMMARIZER_OPTIONS);
+  }
+
+  return availabilityRequest;
+}
+
+export async function isEventDescriptionSummarizerAvailable(): Promise<boolean> {
+  try {
+    return await getSummarizerAvailability() !== 'unavailable';
+  } catch {
+    return false;
+  }
+}
+
 async function readSummaryStream(
   stream: ReadableStream<string> | AsyncIterable<string>,
   onChunk: (chunk: string) => void,
@@ -83,7 +112,7 @@ export async function streamEventDescriptionSummary(
     throw new SummarizerUnavailableError();
   }
 
-  const availability = await summarizerFactory.availability(SUMMARIZER_OPTIONS);
+  const availability = await getSummarizerAvailability();
   if (availability === 'unavailable') {
     throw new SummarizerUnavailableError();
   }

@@ -54,7 +54,7 @@ import { ShareIconRow, ShareButton } from './ShareButtons';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
 import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
-import { SummarizerUnavailableError, streamEventDescriptionSummary } from '../utils/summarizer';
+import { SummarizerUnavailableError, isEventDescriptionSummarizerAvailable, streamEventDescriptionSummary } from '../utils/summarizer';
 import { fetchEventDescription } from '../utils/api';
 import type { EventWithGroup } from '../types/events';
 
@@ -188,6 +188,7 @@ export function EventBody(data: EventBodyProps) {
   const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null);
   const [moved, setMoved] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [canUseSummarizer, setCanUseSummarizer] = useState(false);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [summaryStatus, setSummaryStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [summaryText, setSummaryText] = useState('');
@@ -203,6 +204,24 @@ export function EventBody(data: EventBodyProps) {
   const stopCardNavigation = (e: React.SyntheticEvent) => {
     e.stopPropagation();
   };
+
+  useEffect(() => {
+    if (!data.enableSummarizer) {
+      setCanUseSummarizer(false);
+      return;
+    }
+
+    let isMounted = true;
+    isEventDescriptionSummarizerAvailable().then((isAvailable) => {
+      if (isMounted) {
+        setCanUseSummarizer(isAvailable);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [data.enableSummarizer]);
 
   const handleSummaryButtonClick = async (e: React.MouseEvent) => {
     stopCardNavigation(e);
@@ -460,7 +479,7 @@ export function EventBody(data: EventBodyProps) {
                     md: '140px'
                   }}
                   >{ sub_title }</Text>
-            {data.enableSummarizer && (
+            {data.enableSummarizer && canUseSummarizer && (
               <Stack mt={'2'} pr={{md: '140px'}} spacing={'2'} alignItems={'flex-start'}>
                 <Button size={'sm'}
                         variant={'ghost'}
@@ -477,7 +496,7 @@ export function EventBody(data: EventBodyProps) {
                         onTouchMove={stopCardNavigation}
                         onTouchEnd={stopCardNavigation}
                         >
-                  どんなイベント？
+                  どんなイベント？（AI要約）
                 </Button>
                 {isSummaryExpanded && (
                   <Box bg={'white'}
