@@ -351,7 +351,9 @@ export function EventDescriptionSummary({
         if (!isSummaryMountedRef.current) {
           return;
         }
-        setSummaryDownloadProgress(Math.round(progress * 100));
+        setSummaryDownloadProgress(progress >= 1
+          ? null
+          : Math.min(99, Math.floor(progress * 100)));
       });
       if (!isSummaryMountedRef.current) {
         return;

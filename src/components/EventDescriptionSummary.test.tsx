@@ -188,6 +188,46 @@ describe('EventDescriptionSummary', () => {
     expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
   });
 
+  it('returns to checking display when model download progress reaches 100 percent', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
+    let resolveStream: () => void;
+    async function* streamSummary() {
+      await new Promise<void>((resolve) => {
+        resolveStream = resolve;
+      });
+      yield '- 初心者向けのReact勉強会です。';
+    }
+    const downloadMonitor = new EventTarget();
+    const create = vi.fn().mockImplementation((options) => {
+      options.monitor?.(downloadMonitor);
+      const progressEvent = new Event('downloadprogress') as ProgressEvent;
+      Object.defineProperty(progressEvent, 'loaded', { value: 1 });
+      downloadMonitor.dispatchEvent(progressEvent);
+      return Promise.resolve({
+        summarizeStreaming: vi.fn().mockReturnValue(streamSummary()),
+        destroy: vi.fn(),
+      });
+    });
+    Object.defineProperty(window, 'Summarizer', {
+      value: {
+        availability: vi.fn().mockResolvedValue('downloadable'),
+        create,
+      },
+      configurable: true,
+    });
+
+    renderSummary();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
+
+    expect(await screen.findByText(/^確認中/)).toBeInTheDocument();
+    expect(screen.queryByText(/^AIモデルをダウンロード中... 100%/)).not.toBeInTheDocument();
+    resolveStream!();
+
+    expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
+  });
+
   it('fetches the description from the year-scoped source when descriptionYear is provided', async () => {
     mockMatchMedia(true);
     vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
