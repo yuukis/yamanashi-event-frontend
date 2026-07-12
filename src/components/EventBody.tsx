@@ -283,18 +283,13 @@ function renderSummaryTerminalPanel(content: ReactNode, eventUrl: string) {
               borderColor={'whiteAlpha.100'}
               px={'3'}
               py={'2'}
-              spacing={'2'}
+              spacing={'0'}
               >
-        <HStack spacing={'1.5'}>
-          <Box w={'2'} h={'2'} borderRadius={'full'} bg={'red.300'} />
-          <Box w={'2'} h={'2'} borderRadius={'full'} bg={'yellow.300'} />
-          <Box w={'2'} h={'2'} borderRadius={'full'} bg={'green.300'} />
-        </HStack>
         <Text color={'gray.400'}
               fontSize={'xs'}
               fontFamily={'mono'}
               >
-          {getBrowserAiTitle()}
+          [ {getBrowserAiTitle()} ]
         </Text>
       </HStack>
       <Box px={'3'}

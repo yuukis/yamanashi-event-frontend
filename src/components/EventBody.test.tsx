@@ -356,7 +356,7 @@ describe('EventBody', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
 
-    expect(await screen.findByText('Chrome AI')).toBeInTheDocument();
+    expect(await screen.findByText('[ Chrome AI ]')).toBeInTheDocument();
     expect(screen.getByText('summarize https://example.com/event/1')).toBeInTheDocument();
     expect((await screen.findByRole('heading', { name: '内容' })).tagName).toBe('H3');
     expect(screen.getByText('初心者が基礎を確認できます。').tagName).toBe('P');
