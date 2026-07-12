@@ -83,7 +83,26 @@ function buildJstDayScopedSearchPrefix(start_date: Date): string {
   return "since_time:" + since_time + " until_time:" + until_time + " ";
 }
 
-function renderInlineMarkdown(text: string): ReactNode[] {
+function renderTerminalCursor() {
+  return (
+    <Text as={'span'}
+          key={'terminal-cursor'}
+          color={'green.300'}
+          data-testid={'summary-terminal-cursor'}
+          sx={{
+            '@keyframes terminalCursorBlink': {
+              '0%, 45%': { opacity: 1 },
+              '46%, 100%': { opacity: 0 },
+            },
+            animation: 'terminalCursorBlink 1s steps(1, end) infinite',
+          }}
+          >
+      {' '}▌
+    </Text>
+  );
+}
+
+function renderInlineMarkdown(text: string, showCursor = false): ReactNode[] {
   const nodes: ReactNode[] = [];
   const pattern = /(\*\*([^*]+)\*\*|`([^`]+)`|\[([^\]]+)\]\((https?:\/\/[^)\s]+)\))/g;
   let lastIndex = 0;
@@ -135,26 +154,40 @@ function renderInlineMarkdown(text: string): ReactNode[] {
   if (lastIndex < text.length) {
     nodes.push(text.slice(lastIndex));
   }
+  if (showCursor) {
+    nodes.push(renderTerminalCursor());
+  }
 
   return nodes;
 }
 
-function renderMarkdownList(items: string[], ordered: boolean, key: string) {
+type MarkdownListItem = {
+  text: string;
+  showCursor: boolean;
+};
+
+function renderMarkdownList(items: MarkdownListItem[], ordered: boolean, key: string) {
   const List = ordered ? OrderedList : UnorderedList;
 
   return (
     <List key={key} spacing={'1'} pl={'4'} m={'0'} fontSize={'sm'}>
       {items.map((item, index) => (
-        <ListItem key={`${index}-${item}`}>{renderInlineMarkdown(item)}</ListItem>
+        <ListItem key={`${index}-${item.text}`}>
+          {renderInlineMarkdown(item.text, item.showCursor)}
+        </ListItem>
       ))}
     </List>
   );
 }
 
-function renderSummaryText(summaryText: string) {
+function renderSummaryText(summaryText: string, showCursor = false) {
   const blocks: ReactNode[] = [];
-  const pendingListItems: string[] = [];
+  const pendingListItems: MarkdownListItem[] = [];
   let pendingListOrdered = false;
+  const lines = summaryText.split(/\r?\n/);
+  const lastContentLineIndex = lines.reduce<number | null>((lastIndex, rawLine, index) => (
+    rawLine.trim() ? index : lastIndex
+  ), null);
 
   const flushList = () => {
     if (pendingListItems.length === 0) {
@@ -165,7 +198,7 @@ function renderSummaryText(summaryText: string) {
     pendingListItems.length = 0;
   };
 
-  summaryText.split(/\r?\n/).forEach((rawLine, index) => {
+  lines.forEach((rawLine, index) => {
     const line = rawLine.trim();
     if (!line) {
       flushList();
@@ -180,7 +213,10 @@ function renderSummaryText(summaryText: string) {
         flushList();
       }
       pendingListOrdered = isOrdered;
-      pendingListItems.push((unorderedMatch ?? orderedMatch)![1]);
+      pendingListItems.push({
+        text: (unorderedMatch ?? orderedMatch)![1],
+        showCursor: showCursor && index === lastContentLineIndex,
+      });
       return;
     }
 
@@ -195,7 +231,7 @@ function renderSummaryText(summaryText: string) {
                  mt={blocks.length === 0 ? '0' : '2'}
                  color={'green.200'}
                  >
-          {renderInlineMarkdown(headingMatch[2])}
+          {renderInlineMarkdown(headingMatch[2], showCursor && index === lastContentLineIndex)}
         </Heading>,
       );
       return;
@@ -210,7 +246,9 @@ function renderSummaryText(summaryText: string) {
              pl={'2'}
              color={'gray.300'}
              >
-          <Text fontSize={'sm'}>{renderInlineMarkdown(quoteMatch[1])}</Text>
+          <Text fontSize={'sm'}>
+            {renderInlineMarkdown(quoteMatch[1], showCursor && index === lastContentLineIndex)}
+          </Text>
         </Box>,
       );
       return;
@@ -218,7 +256,7 @@ function renderSummaryText(summaryText: string) {
 
     blocks.push(
       <Text key={`paragraph-${index}`} fontSize={'sm'} whiteSpace={'pre-wrap'}>
-        {renderInlineMarkdown(line)}
+        {renderInlineMarkdown(line, showCursor && index === lastContentLineIndex)}
       </Text>,
     );
   });
@@ -232,18 +270,7 @@ function renderTerminalLoadingText(label: string) {
   return (
     <Text fontSize={'sm'} fontFamily={'mono'} color={'gray.300'}>
       {label}
-      <Text as={'span'}
-            color={'green.300'}
-            sx={{
-              '@keyframes terminalCursorBlink': {
-                '0%, 45%': { opacity: 1 },
-                '46%, 100%': { opacity: 0 },
-              },
-              animation: 'terminalCursorBlink 1s steps(1, end) infinite',
-            }}
-            >
-        {' '}▌
-      </Text>
+      {renderTerminalCursor()}
     </Text>
   );
 }
@@ -723,7 +750,7 @@ export function EventBody(data: EventBodyProps) {
                 </Button>
                 {isSummaryExpanded && (
                   renderSummaryTerminalPanel(summaryText ? (
-                      renderSummaryText(summaryText)
+                      renderSummaryText(summaryText, summaryStatus === 'loading')
                     ) : summaryStatus === 'error' ? (
                       <Text fontSize={'sm'} color={'red.200'}>{summaryError}</Text>
                     ) : (

@@ -269,11 +269,15 @@ describe('EventBody', () => {
       }),
     );
     let resolveStream: () => void;
+    let resolveSecondChunk: () => void;
     async function* streamSummary() {
       await new Promise<void>((resolve) => {
         resolveStream = resolve;
       });
       yield '- 初心者向けのReact勉強会です。';
+      await new Promise<void>((resolve) => {
+        resolveSecondChunk = resolve;
+      });
       yield '\n- ハンズオンで基礎を学べます。';
     }
     const downloadMonitor = new EventTarget();
@@ -308,7 +312,13 @@ describe('EventBody', () => {
     resolveStream!();
 
     expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
-    expect(screen.getByText('ハンズオンで基礎を学べます。').tagName).toBe('LI');
+    expect(screen.getByTestId('summary-terminal-cursor')).toBeInTheDocument();
+    resolveSecondChunk!();
+
+    expect((await screen.findByText('ハンズオンで基礎を学べます。')).tagName).toBe('LI');
+    await waitFor(() => {
+      expect(screen.queryByTestId('summary-terminal-cursor')).not.toBeInTheDocument();
+    });
     expect(fetchEventDescription).toHaveBeenCalledWith('event-1');
     expect(availability).toHaveBeenCalled();
     expect(summarizeStreaming).toHaveBeenCalledWith('Reactの基礎をハンズオンで学ぶイベントです。', {
