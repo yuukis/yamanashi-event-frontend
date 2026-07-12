@@ -101,7 +101,7 @@ describe('fetchEventDescription', () => {
 
     const description = await fetchEventDescription('event-1', { year: 2026 });
 
-    expect(axios.get).toHaveBeenCalledWith(`${EVENTS_API_URL}/in/2026`, {
+    expect(axios.get).toHaveBeenCalledWith(`${EVENTS_API_URL}/year/2026`, {
       params: { fields: 'description', uid: 'event-1' },
     });
     expect(description).toBe('年別ページのイベント説明文');
