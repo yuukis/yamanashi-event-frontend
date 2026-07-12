@@ -210,11 +210,11 @@ function renderSummaryText(summaryText: string, showCursor = false) {
   return <Stack spacing={'2'}>{blocks}</Stack>;
 }
 
-function renderTerminalLoadingText(label: string) {
+function renderTerminalStatusText(label: string, color = 'gray.300', showCursor = true) {
   return (
-    <Text fontSize={'sm'} fontFamily={'mono'} color={'gray.300'}>
+    <Text fontSize={'sm'} fontFamily={'mono'} color={color} whiteSpace={'pre-wrap'}>
       {label}
-      {renderTerminalCursor()}
+      {showCursor && renderTerminalCursor()}
     </Text>
   );
 }
@@ -393,11 +393,11 @@ export function EventDescriptionSummary({
         renderSummaryTerminalPanel(summaryText ? (
             renderSummaryText(summaryText, summaryStatus === 'loading')
           ) : summaryStatus === 'error' ? (
-            <Text fontSize={'sm'} color={'red.200'}>{summaryError}</Text>
+            renderTerminalStatusText(`error: ${summaryError}`, 'red.200', false)
           ) : (
-            renderTerminalLoadingText(summaryDownloadProgress == null
-              ? '確認中'
-              : `AIモデルを準備中... ${summaryDownloadProgress}%`)
+            renderTerminalStatusText(summaryDownloadProgress == null
+              ? '確認中...'
+              : `AIモデルをダウンロード中... ${summaryDownloadProgress}%`)
           ), eventUrl)
       )}
     </Stack>

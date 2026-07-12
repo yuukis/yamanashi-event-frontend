@@ -94,7 +94,7 @@ describe('EventDescriptionSummary', () => {
 
     expect(await screen.findByText(/^確認中/)).toBeInTheDocument();
     resolveDescription!('Reactの基礎をハンズオンで学ぶイベントです。');
-    expect(await screen.findByText(/^AIモデルを準備中... 42%/)).toBeInTheDocument();
+    expect(await screen.findByText(/^AIモデルをダウンロード中... 42%/)).toBeInTheDocument();
     resolveStream!();
 
     expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
@@ -177,7 +177,7 @@ describe('EventDescriptionSummary', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
 
     expect(await screen.findByText(/^確認中/)).toBeInTheDocument();
-    expect(screen.queryByText(/^AIモデルを準備中/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^AIモデルをダウンロード中/)).not.toBeInTheDocument();
     await waitFor(() => {
       expect(create).toHaveBeenCalledWith(expect.not.objectContaining({
         monitor: expect.any(Function),
@@ -253,5 +253,23 @@ describe('EventDescriptionSummary', () => {
 
     expect(screen.queryByRole('button', { name: 'どんなイベント？（AI要約）' })).not.toBeInTheDocument();
     expect(fetchEventDescription).not.toHaveBeenCalled();
+  });
+
+  it('renders summary errors as terminal output', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('');
+    Object.defineProperty(window, 'Summarizer', {
+      value: {
+        availability: vi.fn().mockResolvedValue('available'),
+        create: vi.fn(),
+      },
+      configurable: true,
+    });
+
+    renderSummary();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
+
+    expect(await screen.findByText('error: 要約できる説明文がありません')).toBeInTheDocument();
   });
 });
