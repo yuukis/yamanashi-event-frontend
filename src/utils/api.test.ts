@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
 import {
   fetchEvents,
+  fetchEventsByYear,
   fetchEventDescription,
   fetchGroups,
   fetchEventsSummary,
@@ -74,6 +75,35 @@ describe('fetchEvents', () => {
   });
 });
 
+describe('fetchEventsByYear', () => {
+  beforeEach(() => {
+    vi.mocked(axios.get).mockReset();
+  });
+
+  it('requests the year-scoped events endpoint and returns events with last-modified', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      data: [{ uid: 'a' }],
+      headers: { 'last-modified': 'Wed, 01 Jan 2026 00:00:00 GMT' },
+    });
+
+    const result = await fetchEventsByYear(2026);
+
+    expect(axios.get).toHaveBeenCalledWith(`${EVENTS_API_URL}/year/2026`, { params: { fields: EVENTS_FIELDS } });
+    expect(result).toEqual({
+      events: [{ uid: 'a' }],
+      lastModified: 'Wed, 01 Jan 2026 00:00:00 GMT',
+    });
+  });
+
+  it('returns null last-modified when the header is absent', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    const result = await fetchEventsByYear(2026);
+
+    expect(result.lastModified).toBeNull();
+  });
+});
+
 describe('fetchEventDescription', () => {
   beforeEach(() => {
     vi.mocked(axios.get).mockReset();
@@ -101,7 +131,7 @@ describe('fetchEventDescription', () => {
 
     const description = await fetchEventDescription('event-1', { year: 2026 });
 
-    expect(axios.get).toHaveBeenCalledWith(`${EVENTS_API_URL}/in/2026`, {
+    expect(axios.get).toHaveBeenCalledWith(`${EVENTS_API_URL}/year/2026`, {
       params: { fields: 'description', uid: 'event-1' },
     });
     expect(description).toBe('年別ページのイベント説明文');
