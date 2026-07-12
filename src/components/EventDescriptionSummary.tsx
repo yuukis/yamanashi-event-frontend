@@ -38,12 +38,16 @@ function renderTerminalCursor() {
           key={'terminal-cursor'}
           color={'green.300'}
           data-testid={'summary-terminal-cursor'}
+          aria-hidden={'true'}
           sx={{
             '@keyframes terminalCursorBlink': {
               '0%, 45%': { opacity: 1 },
               '46%, 100%': { opacity: 0 },
             },
             animation: 'terminalCursorBlink 1s steps(1, end) infinite',
+            '@media (prefers-reduced-motion: reduce)': {
+              animation: 'none',
+            },
           }}
           >
       {' '}▌
@@ -116,7 +120,7 @@ function renderMarkdownList(items: MarkdownListItem[], ordered: boolean, key: st
   return (
     <List key={key} spacing={'1'} pl={'4'} m={'0'} fontSize={'sm'}>
       {items.map((item, index) => (
-        <ListItem key={`${index}-${item.text}`}>
+        <ListItem key={index}>
           {renderInlineMarkdown(item.text, item.showCursor)}
         </ListItem>
       ))}
