@@ -322,10 +322,6 @@ describe('EventBody', () => {
   it('renders summary markdown beyond bullet lists', async () => {
     mockMatchMedia(true);
     vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
-    Object.defineProperty(navigator, 'userAgentData', {
-      value: { brands: [{ brand: 'Google Chrome' }, { brand: 'Chromium' }] },
-      configurable: true,
-    });
     async function* streamSummary() {
       yield [
         '## 内容',
@@ -356,8 +352,8 @@ describe('EventBody', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
 
-    expect(await screen.findByText('[ Chrome AI ]')).toBeInTheDocument();
-    expect(screen.getByText('summarize https://example.com/event/1')).toBeInTheDocument();
+    expect(await screen.findByText('[ Built-in AI ]')).toBeInTheDocument();
+    expect(screen.getByText('$ summarize https://example.com/event/1')).toBeInTheDocument();
     expect((await screen.findByRole('heading', { name: '内容' })).tagName).toBe('H3');
     expect(screen.getByText('初心者が基礎を確認できます。').tagName).toBe('P');
     expect(screen.getByText('ハンズオン').tagName).toBe('STRONG');
@@ -365,7 +361,6 @@ describe('EventBody', () => {
     expect(screen.getByText('持ち物を確認してください。')).toBeInTheDocument();
 
     Reflect.deleteProperty(window, 'Summarizer');
-    Reflect.deleteProperty(navigator, 'userAgentData');
   });
 
   it('does not show model preparation progress when the Summarizer model is already available', async () => {

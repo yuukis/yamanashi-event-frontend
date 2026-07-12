@@ -248,25 +248,6 @@ function renderTerminalLoadingText(label: string) {
   );
 }
 
-function getBrowserAiTitle() {
-  const userAgentData = (navigator as Navigator & {
-    userAgentData?: { brands?: { brand: string }[] };
-  }).userAgentData;
-  const brands = userAgentData?.brands?.map((brand) => brand.brand).join(' ') ?? '';
-  const userAgent = navigator.userAgent;
-  const browserSource = `${brands} ${userAgent}`;
-
-  if (/Microsoft Edge|Edge|Edg\//i.test(browserSource)) {
-    return 'Edge AI';
-  }
-
-  if (/Google Chrome|Chrome|Chromium/i.test(browserSource)) {
-    return 'Chrome AI';
-  }
-
-  return 'Browser AI';
-}
-
 function renderSummaryTerminalPanel(content: ReactNode, eventUrl: string) {
   return (
     <Box bg={'#101820'}
@@ -289,7 +270,7 @@ function renderSummaryTerminalPanel(content: ReactNode, eventUrl: string) {
               fontSize={'xs'}
               fontFamily={'mono'}
               >
-          [ {getBrowserAiTitle()} ]
+          [ Built-in AI ]
         </Text>
       </HStack>
       <Box px={'3'}
@@ -299,14 +280,13 @@ function renderSummaryTerminalPanel(content: ReactNode, eventUrl: string) {
            fontSize={'sm'}
            lineHeight={'1.7'}
            >
-        <HStack spacing={'2'} color={'green.300'} mb={'2'}>
-          <Text as={'span'}>$</Text>
-          <Text as={'span'}
-                overflowWrap={'anywhere'}
-                >
-            summarize {eventUrl}
-          </Text>
-        </HStack>
+        <Text color={'green.300'}
+              mb={'2'}
+              whiteSpace={'pre-wrap'}
+              wordBreak={'break-all'}
+              >
+          {`$ summarize ${eventUrl}`}
+        </Text>
         {content}
       </Box>
     </Box>
