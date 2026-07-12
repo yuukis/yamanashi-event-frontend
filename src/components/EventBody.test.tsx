@@ -302,9 +302,9 @@ describe('EventBody', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
 
-    expect(await screen.findByText('確認中...')).toBeInTheDocument();
+    expect(await screen.findByText(/^確認中/)).toBeInTheDocument();
     resolveDescription!('Reactの基礎をハンズオンで学ぶイベントです。');
-    expect(await screen.findByText('AIモデルを準備中... 42%')).toBeInTheDocument();
+    expect(await screen.findByText(/^AIモデルを準備中... 42%/)).toBeInTheDocument();
     resolveStream!();
 
     expect((await screen.findByText('初心者向けのReact勉強会です。')).tagName).toBe('LI');
@@ -353,7 +353,7 @@ describe('EventBody', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
 
     expect(await screen.findByText('ai-summary')).toBeInTheDocument();
-    expect(screen.getByText('summarize event')).toBeInTheDocument();
+    expect(screen.getByText('summarize https://example.com/event/1')).toBeInTheDocument();
     expect((await screen.findByRole('heading', { name: '内容' })).tagName).toBe('H3');
     expect(screen.getByText('初心者が基礎を確認できます。').tagName).toBe('P');
     expect(screen.getByText('ハンズオン').tagName).toBe('STRONG');
@@ -392,7 +392,7 @@ describe('EventBody', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
 
-    expect(await screen.findByText('確認中...')).toBeInTheDocument();
+    expect(await screen.findByText(/^確認中/)).toBeInTheDocument();
     expect(screen.queryByText(/^AIモデルを準備中/)).not.toBeInTheDocument();
     await waitFor(() => {
       expect(create).toHaveBeenCalledWith(expect.not.objectContaining({

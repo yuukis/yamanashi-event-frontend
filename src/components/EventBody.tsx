@@ -29,7 +29,6 @@ import {
   WrapItem,
   Skeleton,
   SkeletonCircle,
-  Spinner,
   UnorderedList,
   OrderedList,
   ListItem,
@@ -229,7 +228,27 @@ function renderSummaryText(summaryText: string) {
   return <Stack spacing={'2'}>{blocks}</Stack>;
 }
 
-function renderSummaryTerminalPanel(content: ReactNode) {
+function renderTerminalLoadingText(label: string) {
+  return (
+    <Text fontSize={'sm'} fontFamily={'mono'} color={'gray.300'}>
+      {label}
+      <Text as={'span'}
+            color={'green.300'}
+            sx={{
+              '@keyframes terminalCursorBlink': {
+                '0%, 45%': { opacity: 1 },
+                '46%, 100%': { opacity: 0 },
+              },
+              animation: 'terminalCursorBlink 1s steps(1, end) infinite',
+            }}
+            >
+        {' '}▌
+      </Text>
+    </Text>
+  );
+}
+
+function renderSummaryTerminalPanel(content: ReactNode, eventUrl: string) {
   return (
     <Box bg={'#101820'}
          border={'1px solid'}
@@ -268,7 +287,11 @@ function renderSummaryTerminalPanel(content: ReactNode) {
            >
         <HStack spacing={'2'} color={'green.300'} mb={'2'}>
           <Text as={'span'}>$</Text>
-          <Text as={'span'}>summarize event</Text>
+          <Text as={'span'}
+                overflowWrap={'anywhere'}
+                >
+            summarize {eventUrl}
+          </Text>
         </HStack>
         {content}
       </Box>
@@ -710,15 +733,10 @@ export function EventBody(data: EventBodyProps) {
                     ) : summaryStatus === 'error' ? (
                       <Text fontSize={'sm'} color={'red.200'}>{summaryError}</Text>
                     ) : (
-                      <HStack spacing={'2'} color={'gray.300'}>
-                        <Spinner size={'xs'} speed={'0.8s'} thickness={'2px'} />
-                        <Text fontSize={'sm'} fontFamily={'mono'}>
-                          {summaryDownloadProgress == null
-                            ? '確認中...'
-                            : `AIモデルを準備中... ${summaryDownloadProgress}%`}
-                        </Text>
-                      </HStack>
-                    ))
+                      renderTerminalLoadingText(summaryDownloadProgress == null
+                        ? '確認中'
+                        : `AIモデルを準備中... ${summaryDownloadProgress}%`)
+                    ), event_url)
                 )}
               </Stack>
             )}
