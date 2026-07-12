@@ -39,7 +39,11 @@ const SUMMARIZER_OPTIONS: SummarizerOptions = {
   type: 'key-points',
   format: 'markdown',
   length: 'short',
-  sharedContext: '山梨県内または近隣のIT勉強会・技術イベント情報を、参加検討中の人に向けて日本語で要約してください。',
+  sharedContext: [
+    '山梨県内または近隣のIT勉強会・技術イベント情報を、参加検討中の人に向けて日本語で要約してください。',
+    'イベント名、コミュニティ名、主催者名、開催日時は、本文の理解に不可欠な場合を除いて要約に含めないでください。',
+    'イベントの内容、対象者、参加すると得られることが伝わるようにしてください。',
+  ].join(' '),
   expectedInputLanguages: ['ja', 'en'],
   expectedContextLanguages: ['ja'],
   outputLanguage: 'ja',
@@ -133,7 +137,7 @@ export async function streamEventDescriptionSummary(
   });
   try {
     const stream = summarizer.summarizeStreaming(description, {
-      context: `イベント名: ${title}`,
+      context: `要約対象は技術イベントの説明文です。イベント名は「${title}」ですが、要約文には原則として含めないでください。`,
     });
     await readSummaryStream(stream, onChunk);
   } finally {

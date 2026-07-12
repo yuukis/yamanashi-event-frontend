@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
+import type { ReactNode } from 'react';
 import {
   Box,
   Stack,
@@ -30,6 +31,7 @@ import {
   SkeletonCircle,
   Spinner,
   UnorderedList,
+  OrderedList,
   ListItem,
   useMediaQuery,
   useDisclosure,
@@ -82,28 +84,144 @@ function buildJstDayScopedSearchPrefix(start_date: Date): string {
   return "since_time:" + since_time + " until_time:" + until_time + " ";
 }
 
-function renderSummaryText(summaryText: string) {
-  const lines = summaryText
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
+function renderInlineMarkdown(text: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  const pattern = /(\*\*([^*]+)\*\*|`([^`]+)`|\[([^\]]+)\]\((https?:\/\/[^)\s]+)\))/g;
+  let lastIndex = 0;
 
-  const bulletItems = lines
-    .map((line) => line.match(/^[-*]\s+(.+)$/) ?? line.match(/^\d+\.\s+(.+)$/))
-    .filter((match): match is RegExpMatchArray => Boolean(match))
-    .map((match) => match[1]);
+  for (const match of text.matchAll(pattern)) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index));
+    }
 
-  if (bulletItems.length === lines.length && bulletItems.length > 0) {
-    return (
-      <UnorderedList spacing={'1'} pl={'4'} m={'0'} fontSize={'sm'}>
-        {bulletItems.map((item, index) => (
-          <ListItem key={`${index}-${item}`}>{item}</ListItem>
-        ))}
-      </UnorderedList>
-    );
+    if (match[2]) {
+      nodes.push(
+        <Text as={'strong'} key={`${match.index}-strong`} fontWeight={'semibold'}>
+          {match[2]}
+        </Text>,
+      );
+    } else if (match[3]) {
+      nodes.push(
+        <Text as={'code'}
+              key={`${match.index}-code`}
+              px={'1'}
+              bg={'gray.100'}
+              borderRadius={'sm'}
+              fontSize={'0.9em'}
+              >
+          {match[3]}
+        </Text>,
+      );
+    } else if (match[4] && match[5]) {
+      nodes.push(
+        <Link key={`${match.index}-link`}
+              href={match[5]}
+              isExternal
+              color={'primary.700'}
+              textDecoration={'underline'}
+              >
+          {match[4]}
+        </Link>,
+      );
+    }
+
+    lastIndex = match.index + match[0].length;
   }
 
-  return <Text fontSize={'sm'} whiteSpace={'pre-wrap'}>{summaryText}</Text>;
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+
+  return nodes;
+}
+
+function renderMarkdownList(items: string[], ordered: boolean, key: string) {
+  const List = ordered ? OrderedList : UnorderedList;
+
+  return (
+    <List key={key} spacing={'1'} pl={'4'} m={'0'} fontSize={'sm'}>
+      {items.map((item, index) => (
+        <ListItem key={`${index}-${item}`}>{renderInlineMarkdown(item)}</ListItem>
+      ))}
+    </List>
+  );
+}
+
+function renderSummaryText(summaryText: string) {
+  const blocks: ReactNode[] = [];
+  const pendingListItems: string[] = [];
+  let pendingListOrdered = false;
+
+  const flushList = () => {
+    if (pendingListItems.length === 0) {
+      return;
+    }
+
+    blocks.push(renderMarkdownList([...pendingListItems], pendingListOrdered, `list-${blocks.length}`));
+    pendingListItems.length = 0;
+  };
+
+  summaryText.split(/\r?\n/).forEach((rawLine, index) => {
+    const line = rawLine.trim();
+    if (!line) {
+      flushList();
+      return;
+    }
+
+    const unorderedMatch = line.match(/^[-*]\s+(.+)$/);
+    const orderedMatch = line.match(/^\d+\.\s+(.+)$/);
+    if (unorderedMatch || orderedMatch) {
+      const isOrdered = Boolean(orderedMatch);
+      if (pendingListItems.length > 0 && pendingListOrdered !== isOrdered) {
+        flushList();
+      }
+      pendingListOrdered = isOrdered;
+      pendingListItems.push((unorderedMatch ?? orderedMatch)![1]);
+      return;
+    }
+
+    flushList();
+
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
+    if (headingMatch) {
+      blocks.push(
+        <Heading key={`heading-${index}`}
+                 as={'h3'}
+                 size={'xs'}
+                 mt={blocks.length === 0 ? '0' : '2'}
+                 color={'gray.700'}
+                 >
+          {renderInlineMarkdown(headingMatch[2])}
+        </Heading>,
+      );
+      return;
+    }
+
+    const quoteMatch = line.match(/^>\s+(.+)$/);
+    if (quoteMatch) {
+      blocks.push(
+        <Box key={`quote-${index}`}
+             borderLeft={'3px solid'}
+             borderColor={'gray.300'}
+             pl={'2'}
+             color={'gray.600'}
+             >
+          <Text fontSize={'sm'}>{renderInlineMarkdown(quoteMatch[1])}</Text>
+        </Box>,
+      );
+      return;
+    }
+
+    blocks.push(
+      <Text key={`paragraph-${index}`} fontSize={'sm'} whiteSpace={'pre-wrap'}>
+        {renderInlineMarkdown(line)}
+      </Text>,
+    );
+  });
+
+  flushList();
+
+  return <Stack spacing={'2'}>{blocks}</Stack>;
 }
 
 export function EventBody(data: EventBodyProps) {
