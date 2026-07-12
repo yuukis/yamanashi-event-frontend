@@ -110,7 +110,7 @@ function renderInlineMarkdown(text: string): ReactNode[] {
         <Text as={'code'}
               key={`${matchIndex}-code`}
               px={'1'}
-              bg={'gray.100'}
+              bg={'whiteAlpha.200'}
               borderRadius={'sm'}
               fontSize={'0.9em'}
               >
@@ -122,7 +122,7 @@ function renderInlineMarkdown(text: string): ReactNode[] {
         <Link key={`${matchIndex}-link`}
               href={match[5]}
               isExternal
-              color={'primary.700'}
+              color={'green.200'}
               textDecoration={'underline'}
               >
           {match[4]}
@@ -194,7 +194,7 @@ function renderSummaryText(summaryText: string) {
                  as={'h3'}
                  size={'xs'}
                  mt={blocks.length === 0 ? '0' : '2'}
-                 color={'gray.700'}
+                 color={'green.200'}
                  >
           {renderInlineMarkdown(headingMatch[2])}
         </Heading>,
@@ -207,9 +207,9 @@ function renderSummaryText(summaryText: string) {
       blocks.push(
         <Box key={`quote-${index}`}
              borderLeft={'3px solid'}
-             borderColor={'gray.300'}
+             borderColor={'green.500'}
              pl={'2'}
-             color={'gray.600'}
+             color={'gray.300'}
              >
           <Text fontSize={'sm'}>{renderInlineMarkdown(quoteMatch[1])}</Text>
         </Box>,
@@ -227,6 +227,53 @@ function renderSummaryText(summaryText: string) {
   flushList();
 
   return <Stack spacing={'2'}>{blocks}</Stack>;
+}
+
+function renderSummaryTerminalPanel(content: ReactNode) {
+  return (
+    <Box bg={'#101820'}
+         border={'1px solid'}
+         borderColor={'whiteAlpha.200'}
+         borderRadius={'md'}
+         boxShadow={'inset 0 1px 0 rgba(255,255,255,0.06)'}
+         overflow={'hidden'}
+         w={'100%'}
+         aria-live={'polite'}
+         >
+      <HStack bg={'whiteAlpha.100'}
+              borderBottom={'1px solid'}
+              borderColor={'whiteAlpha.100'}
+              px={'3'}
+              py={'2'}
+              spacing={'2'}
+              >
+        <HStack spacing={'1.5'}>
+          <Box w={'2'} h={'2'} borderRadius={'full'} bg={'red.300'} />
+          <Box w={'2'} h={'2'} borderRadius={'full'} bg={'yellow.300'} />
+          <Box w={'2'} h={'2'} borderRadius={'full'} bg={'green.300'} />
+        </HStack>
+        <Text color={'gray.400'}
+              fontSize={'xs'}
+              fontFamily={'mono'}
+              >
+          ai-summary
+        </Text>
+      </HStack>
+      <Box px={'3'}
+           py={'3'}
+           color={'gray.100'}
+           fontFamily={'mono'}
+           fontSize={'sm'}
+           lineHeight={'1.7'}
+           >
+        <HStack spacing={'2'} color={'green.300'} mb={'2'}>
+          <Text as={'span'}>$</Text>
+          <Text as={'span'}>summarize event</Text>
+        </HStack>
+        {content}
+      </Box>
+    </Box>
+  );
 }
 
 export function EventBody(data: EventBodyProps) {
@@ -658,29 +705,20 @@ export function EventBody(data: EventBodyProps) {
                   どんなイベント？（AI要約）
                 </Button>
                 {isSummaryExpanded && (
-                  <Box bg={'white'}
-                       border={'1px solid'}
-                       borderColor={'gray.200'}
-                       borderRadius={'md'}
-                       p={'3'}
-                       w={'100%'}
-                       aria-live={'polite'}
-                       >
-                    {summaryText ? (
+                  renderSummaryTerminalPanel(summaryText ? (
                       renderSummaryText(summaryText)
                     ) : summaryStatus === 'error' ? (
-                      <Text fontSize={'sm'} color={'impact.600'}>{summaryError}</Text>
+                      <Text fontSize={'sm'} color={'red.200'}>{summaryError}</Text>
                     ) : (
-                      <HStack spacing={'2'} color={'gray.500'}>
+                      <HStack spacing={'2'} color={'gray.300'}>
                         <Spinner size={'xs'} speed={'0.8s'} thickness={'2px'} />
-                        <Text fontSize={'sm'}>
+                        <Text fontSize={'sm'} fontFamily={'mono'}>
                           {summaryDownloadProgress == null
                             ? '確認中...'
                             : `AIモデルを準備中... ${summaryDownloadProgress}%`}
                         </Text>
                       </HStack>
-                    )}
-                  </Box>
+                    ))
                 )}
               </Stack>
             )}
