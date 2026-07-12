@@ -89,7 +89,7 @@ function List({ startYear} : {startYear: number}) {
       let res = null;
       let group_res = null;
       try {
-        res = await axios.get(`https://api.event.yamanashi.dev/events/in/${year}`, { params: { fields: EVENTS_FIELDS } });
+        res = await axios.get(`https://api.event.yamanashi.dev/events/year/${year}`, { params: { fields: EVENTS_FIELDS } });
         group_res = await axios.get('https://api.event.yamanashi.dev/groups', { params: { fields: GROUPS_FIELDS } });
       }
       catch (err: any) {
