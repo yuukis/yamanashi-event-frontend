@@ -318,8 +318,9 @@ export function ICalendarButton() {
                 >
           <Box position={'relative'} display={'inline-flex'}>
             <Calendar3 mr={{base: '0', md: '2'}} color={isTodayHighlighted ? 'impact.700' : undefined} />
-            {isTodayHighlighted && (
-              <Box position={'absolute'}
+            {hasOngoingEvent && (
+              <Box data-testid={'header-ongoing-dot'}
+                   position={'absolute'}
                    top={'-1px'}
                    right={{base: '-1px', md: '5px'}}
                    w={'8px'}
