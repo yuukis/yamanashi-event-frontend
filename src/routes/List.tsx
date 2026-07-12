@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from "react-router-dom";
-import axios from 'axios';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
@@ -23,8 +22,8 @@ import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { scrollToCurrentHash } from '../utils/hashScroll';
-import { EVENTS_FIELDS, GROUPS_FIELDS } from '../utils/api';
-import type { ApiEvent, ApiGroup, EventWithGroup } from '../types/events';
+import { fetchEventsByYear, fetchGroups } from '../utils/api';
+import type { ApiGroup, EventWithGroup } from '../types/events';
 
 type ListState = {
   isLoading: boolean;
@@ -86,11 +85,11 @@ function List({ startYear} : {startYear: number}) {
 
   useEffect(() => {
     const getData = async () => {
-      let res = null;
-      let group_res = null;
+      let eventsResponse = null;
+      let groups = null;
       try {
-        res = await axios.get(`https://api.event.yamanashi.dev/events/year/${year}`, { params: { fields: EVENTS_FIELDS } });
-        group_res = await axios.get('https://api.event.yamanashi.dev/groups', { params: { fields: GROUPS_FIELDS } });
+        eventsResponse = await fetchEventsByYear(year);
+        groups = await fetchGroups();
       }
       catch (err: any) {
         const data = {
@@ -104,16 +103,15 @@ function List({ startYear} : {startYear: number}) {
         return;
       }
 
-      const groups = group_res.data as ApiGroup[];
       const events = enrichEventsWithGroups(
-        res.data as ApiEvent[],
+        eventsResponse.events,
         groups,
       );
       const data = {
         isLoading: false,
         events: events.filter(isVisibleEvent).sort(sortByStartedAtAsc),
         groups,
-        lastModified: res.headers['last-modified'],
+        lastModified: eventsResponse.lastModified,
         errorMessage: ''
       }
       setData(data);

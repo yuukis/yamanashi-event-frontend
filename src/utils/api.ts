@@ -51,6 +51,14 @@ export async function fetchEvents(): Promise<{ events: ApiEvent[]; lastModified:
   return inFlightEventsRequest;
 }
 
+export async function fetchEventsByYear(year: number): Promise<{ events: ApiEvent[]; lastModified: string | null }> {
+  const res = await axios.get(`${EVENTS_API_URL}/year/${year}`, { params: { fields: EVENTS_FIELDS } });
+  return {
+    events: res.data as ApiEvent[],
+    lastModified: res.headers['last-modified'] ?? null,
+  };
+}
+
 export async function fetchEventDescription(uid: string, options?: { year?: number }): Promise<string> {
   const url = options?.year ? `${EVENTS_API_URL}/year/${options.year}` : EVENTS_API_URL;
   const res = await axios.get(url, { params: { fields: 'description', uid } });
