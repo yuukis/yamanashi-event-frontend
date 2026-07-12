@@ -248,6 +248,25 @@ function renderTerminalLoadingText(label: string) {
   );
 }
 
+function getBrowserAiTitle() {
+  const userAgentData = (navigator as Navigator & {
+    userAgentData?: { brands?: { brand: string }[] };
+  }).userAgentData;
+  const brands = userAgentData?.brands?.map((brand) => brand.brand).join(' ') ?? '';
+  const userAgent = navigator.userAgent;
+  const browserSource = `${brands} ${userAgent}`;
+
+  if (/Microsoft Edge|Edge|Edg\//i.test(browserSource)) {
+    return 'Edge AI';
+  }
+
+  if (/Google Chrome|Chrome|Chromium/i.test(browserSource)) {
+    return 'Chrome AI';
+  }
+
+  return 'Browser AI';
+}
+
 function renderSummaryTerminalPanel(content: ReactNode, eventUrl: string) {
   return (
     <Box bg={'#101820'}
@@ -275,7 +294,7 @@ function renderSummaryTerminalPanel(content: ReactNode, eventUrl: string) {
               fontSize={'xs'}
               fontFamily={'mono'}
               >
-          ai-summary
+          {getBrowserAiTitle()}
         </Text>
       </HStack>
       <Box px={'3'}
