@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
-import type { ReactNode } from 'react';
 import {
   Box,
   Stack,
@@ -29,10 +28,6 @@ import {
   WrapItem,
   Skeleton,
   SkeletonCircle,
-  Spinner,
-  UnorderedList,
-  OrderedList,
-  ListItem,
   useMediaQuery,
   useDisclosure,
   Show,
@@ -40,7 +35,7 @@ import {
 } from '@chakra-ui/react';
 import { FaXTwitter } from "react-icons/fa6";
 import { FiArchive, FiExternalLink, FiMap, FiMoreVertical } from "react-icons/fi";
-import { ChevronDownIcon, ChevronRightIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Hash,
   GeoAlt,
@@ -56,8 +51,7 @@ import { ShareIconRow, ShareButton } from './ShareButtons';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
 import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
-import { SummarizerUnavailableError, isEventDescriptionSummarizerAvailable, streamEventDescriptionSummary } from '../utils/summarizer';
-import { fetchEventDescription } from '../utils/api';
+import { EventDescriptionSummary } from './EventDescriptionSummary';
 import type { EventWithGroup } from '../types/events';
 
 type EventBodyProps = {
@@ -82,151 +76,6 @@ function buildJstDayScopedSearchPrefix(start_date: Date): string {
   const since_time = Math.floor(new Date(start_date_str + "T00:00:00+09:00").getTime() / 1000);
   const until_time = Math.floor(new Date(start_date_str + "T23:59:59+09:00").getTime() / 1000);
   return "since_time:" + since_time + " until_time:" + until_time + " ";
-}
-
-function renderInlineMarkdown(text: string): ReactNode[] {
-  const nodes: ReactNode[] = [];
-  const pattern = /(\*\*([^*]+)\*\*|`([^`]+)`|\[([^\]]+)\]\((https?:\/\/[^)\s]+)\))/g;
-  let lastIndex = 0;
-
-  for (const match of text.matchAll(pattern)) {
-    const matchIndex = match.index;
-    if (matchIndex == null) {
-      continue;
-    }
-
-    if (matchIndex > lastIndex) {
-      nodes.push(text.slice(lastIndex, matchIndex));
-    }
-
-    if (match[2]) {
-      nodes.push(
-        <Text as={'strong'} key={`${matchIndex}-strong`} fontWeight={'semibold'}>
-          {match[2]}
-        </Text>,
-      );
-    } else if (match[3]) {
-      nodes.push(
-        <Text as={'code'}
-              key={`${matchIndex}-code`}
-              px={'1'}
-              bg={'gray.100'}
-              borderRadius={'sm'}
-              fontSize={'0.9em'}
-              >
-          {match[3]}
-        </Text>,
-      );
-    } else if (match[4] && match[5]) {
-      nodes.push(
-        <Link key={`${matchIndex}-link`}
-              href={match[5]}
-              isExternal
-              color={'primary.700'}
-              textDecoration={'underline'}
-              >
-          {match[4]}
-        </Link>,
-      );
-    }
-
-    lastIndex = matchIndex + match[0].length;
-  }
-
-  if (lastIndex < text.length) {
-    nodes.push(text.slice(lastIndex));
-  }
-
-  return nodes;
-}
-
-function renderMarkdownList(items: string[], ordered: boolean, key: string) {
-  const List = ordered ? OrderedList : UnorderedList;
-
-  return (
-    <List key={key} spacing={'1'} pl={'4'} m={'0'} fontSize={'sm'}>
-      {items.map((item, index) => (
-        <ListItem key={`${index}-${item}`}>{renderInlineMarkdown(item)}</ListItem>
-      ))}
-    </List>
-  );
-}
-
-function renderSummaryText(summaryText: string) {
-  const blocks: ReactNode[] = [];
-  const pendingListItems: string[] = [];
-  let pendingListOrdered = false;
-
-  const flushList = () => {
-    if (pendingListItems.length === 0) {
-      return;
-    }
-
-    blocks.push(renderMarkdownList([...pendingListItems], pendingListOrdered, `list-${blocks.length}`));
-    pendingListItems.length = 0;
-  };
-
-  summaryText.split(/\r?\n/).forEach((rawLine, index) => {
-    const line = rawLine.trim();
-    if (!line) {
-      flushList();
-      return;
-    }
-
-    const unorderedMatch = line.match(/^[-*]\s+(.+)$/);
-    const orderedMatch = line.match(/^\d+\.\s+(.+)$/);
-    if (unorderedMatch || orderedMatch) {
-      const isOrdered = Boolean(orderedMatch);
-      if (pendingListItems.length > 0 && pendingListOrdered !== isOrdered) {
-        flushList();
-      }
-      pendingListOrdered = isOrdered;
-      pendingListItems.push((unorderedMatch ?? orderedMatch)![1]);
-      return;
-    }
-
-    flushList();
-
-    const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
-    if (headingMatch) {
-      blocks.push(
-        <Heading key={`heading-${index}`}
-                 as={'h3'}
-                 size={'xs'}
-                 mt={blocks.length === 0 ? '0' : '2'}
-                 color={'gray.700'}
-                 >
-          {renderInlineMarkdown(headingMatch[2])}
-        </Heading>,
-      );
-      return;
-    }
-
-    const quoteMatch = line.match(/^>\s+(.+)$/);
-    if (quoteMatch) {
-      blocks.push(
-        <Box key={`quote-${index}`}
-             borderLeft={'3px solid'}
-             borderColor={'gray.300'}
-             pl={'2'}
-             color={'gray.600'}
-             >
-          <Text fontSize={'sm'}>{renderInlineMarkdown(quoteMatch[1])}</Text>
-        </Box>,
-      );
-      return;
-    }
-
-    blocks.push(
-      <Text key={`paragraph-${index}`} fontSize={'sm'} whiteSpace={'pre-wrap'}>
-        {renderInlineMarkdown(line)}
-      </Text>,
-    );
-  });
-
-  flushList();
-
-  return <Stack spacing={'2'}>{blocks}</Stack>;
 }
 
 export function EventBody(data: EventBodyProps) {
@@ -312,13 +161,6 @@ export function EventBody(data: EventBodyProps) {
   const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null);
   const [moved, setMoved] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [canUseSummarizer, setCanUseSummarizer] = useState(false);
-  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
-  const [summaryStatus, setSummaryStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
-  const [summaryText, setSummaryText] = useState('');
-  const [summaryError, setSummaryError] = useState('');
-  const [summaryDownloadProgress, setSummaryDownloadProgress] = useState<number | null>(null);
-  const isSummaryMountedRef = useRef(true);
   
   const handleMenuButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -326,91 +168,6 @@ export function EventBody(data: EventBodyProps) {
   };
   const handleMenuButtonTouch = (e: React.TouchEvent) => {
     e.stopPropagation();
-  };
-  const stopCardNavigation = (e: React.SyntheticEvent) => {
-    e.stopPropagation();
-  };
-
-  useEffect(() => {
-    if (!data.enableSummarizer || !isDesktopScreenSize) {
-      setCanUseSummarizer(false);
-      return;
-    }
-
-    let isMounted = true;
-    isEventDescriptionSummarizerAvailable().then((isAvailable) => {
-      if (isMounted) {
-        setCanUseSummarizer(isAvailable);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [data.enableSummarizer, isDesktopScreenSize]);
-
-  useEffect(() => {
-    isSummaryMountedRef.current = true;
-    return () => {
-      isSummaryMountedRef.current = false;
-    };
-  }, []);
-
-  const handleSummaryButtonClick = async (e: React.MouseEvent) => {
-    stopCardNavigation(e);
-    if (summaryStatus === 'loading') {
-      return;
-    }
-    if (isSummaryExpanded) {
-      setIsSummaryExpanded(false);
-      return;
-    }
-    setIsSummaryExpanded(true);
-    if (summaryStatus === 'done' && summaryText) {
-      return;
-    }
-
-    setSummaryStatus('loading');
-    setSummaryText('');
-    setSummaryError('');
-    setSummaryDownloadProgress(null);
-
-    try {
-      const description = (data.summaryDescriptionYear == null
-        ? await fetchEventDescription(event.uid)
-        : await fetchEventDescription(event.uid, { year: data.summaryDescriptionYear })).trim();
-      if (!description) {
-        setSummaryError('要約できる説明文がありません');
-        setSummaryStatus('error');
-        return;
-      }
-
-      await streamEventDescriptionSummary(description, title, (chunk) => {
-        if (!isSummaryMountedRef.current) {
-          return;
-        }
-        setSummaryText((current) => current + chunk);
-      }, (progress) => {
-        if (!isSummaryMountedRef.current) {
-          return;
-        }
-        setSummaryDownloadProgress(Math.round(progress * 100));
-      });
-      if (!isSummaryMountedRef.current) {
-        return;
-      }
-      setSummaryStatus('done');
-      setSummaryDownloadProgress(null);
-    } catch (error) {
-      if (!isSummaryMountedRef.current) {
-        return;
-      }
-      setSummaryError(error instanceof SummarizerUnavailableError
-        ? error.message
-        : '要約の生成に失敗しました');
-      setSummaryStatus('error');
-      setSummaryDownloadProgress(null);
-    }
   };
 
   const [isScrolling, setIsScrolling] = useState(false);
@@ -638,52 +395,12 @@ export function EventBody(data: EventBodyProps) {
                 アーカイブ
               </Badge>
             )}
-            {data.enableSummarizer && isDesktopScreenSize && canUseSummarizer && (
-              <Stack mt={'2'} pr={{md: '140px'}} spacing={'2'} alignItems={'flex-start'}>
-                <Button size={'sm'}
-                        variant={'ghost'}
-                        color={'gray.600'}
-                        fontWeight={'normal'}
-                        leftIcon={isSummaryExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
-                        px={'1'}
-                        h={'auto'}
-                        minH={'1.5rem'}
-                        _hover={{ bg: 'blackAlpha.50', color: 'gray.700' }}
-                        _active={{ bg: 'blackAlpha.100' }}
-                        onClick={handleSummaryButtonClick}
-                        onTouchStart={stopCardNavigation}
-                        onTouchMove={stopCardNavigation}
-                        onTouchEnd={stopCardNavigation}
-                        >
-                  どんなイベント？（AI要約）
-                </Button>
-                {isSummaryExpanded && (
-                  <Box bg={'white'}
-                       border={'1px solid'}
-                       borderColor={'gray.200'}
-                       borderRadius={'md'}
-                       p={'3'}
-                       w={'100%'}
-                       aria-live={'polite'}
-                       >
-                    {summaryText ? (
-                      renderSummaryText(summaryText)
-                    ) : summaryStatus === 'error' ? (
-                      <Text fontSize={'sm'} color={'impact.600'}>{summaryError}</Text>
-                    ) : (
-                      <HStack spacing={'2'} color={'gray.500'}>
-                        <Spinner size={'xs'} speed={'0.8s'} thickness={'2px'} />
-                        <Text fontSize={'sm'}>
-                          {summaryDownloadProgress == null
-                            ? '確認中...'
-                            : `AIモデルを準備中... ${summaryDownloadProgress}%`}
-                        </Text>
-                      </HStack>
-                    )}
-                  </Box>
-                )}
-              </Stack>
-            )}
+            <EventDescriptionSummary eventUid={event.uid}
+                                     eventTitle={title}
+                                     eventUrl={event_url}
+                                     enabled={data.enableSummarizer}
+                                     descriptionYear={data.summaryDescriptionYear}
+                                     />
             <HStack mt={'2'} pr={{md: '140px'}}>
               <Stack p={{base: '2', md: '2'}} spacing={{base: '0', md: '0.5rem'}}>
                 {keywords.length > 0 && (
