@@ -90,20 +90,25 @@ function renderInlineMarkdown(text: string): ReactNode[] {
   let lastIndex = 0;
 
   for (const match of text.matchAll(pattern)) {
-    if (match.index > lastIndex) {
-      nodes.push(text.slice(lastIndex, match.index));
+    const matchIndex = match.index;
+    if (matchIndex == null) {
+      continue;
+    }
+
+    if (matchIndex > lastIndex) {
+      nodes.push(text.slice(lastIndex, matchIndex));
     }
 
     if (match[2]) {
       nodes.push(
-        <Text as={'strong'} key={`${match.index}-strong`} fontWeight={'semibold'}>
+        <Text as={'strong'} key={`${matchIndex}-strong`} fontWeight={'semibold'}>
           {match[2]}
         </Text>,
       );
     } else if (match[3]) {
       nodes.push(
         <Text as={'code'}
-              key={`${match.index}-code`}
+              key={`${matchIndex}-code`}
               px={'1'}
               bg={'gray.100'}
               borderRadius={'sm'}
@@ -114,7 +119,7 @@ function renderInlineMarkdown(text: string): ReactNode[] {
       );
     } else if (match[4] && match[5]) {
       nodes.push(
-        <Link key={`${match.index}-link`}
+        <Link key={`${matchIndex}-link`}
               href={match[5]}
               isExternal
               color={'primary.700'}
@@ -125,7 +130,7 @@ function renderInlineMarkdown(text: string): ReactNode[] {
       );
     }
 
-    lastIndex = match.index + match[0].length;
+    lastIndex = matchIndex + match[0].length;
   }
 
   if (lastIndex < text.length) {
