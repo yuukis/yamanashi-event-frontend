@@ -312,9 +312,51 @@ describe('EventBody', () => {
     expect(fetchEventDescription).toHaveBeenCalledWith('event-1');
     expect(availability).toHaveBeenCalled();
     expect(summarizeStreaming).toHaveBeenCalledWith('Reactの基礎をハンズオンで学ぶイベントです。', {
-      context: 'イベント名: React入門',
+      context: '要約対象は技術イベントの説明文です。イベント名は「React入門」ですが、要約文には原則として含めないでください。',
     });
     expect(destroy).toHaveBeenCalled();
+
+    Reflect.deleteProperty(window, 'Summarizer');
+  });
+
+  it('renders summary markdown beyond bullet lists', async () => {
+    mockMatchMedia(true);
+    vi.mocked(fetchEventDescription).mockResolvedValue('Reactの基礎をハンズオンで学ぶイベントです。');
+    async function* streamSummary() {
+      yield [
+        '## 内容',
+        '初心者が基礎を確認できます。',
+        '',
+        '1. **ハンズオン**で学べます。',
+        '2. 詳細は[公式ページ](https://example.com)を確認できます。',
+        '',
+        '> 持ち物を確認してください。',
+      ].join('\n');
+    }
+    Object.defineProperty(window, 'Summarizer', {
+      value: {
+        availability: vi.fn().mockResolvedValue('available'),
+        create: vi.fn().mockResolvedValue({
+          summarizeStreaming: vi.fn().mockReturnValue(streamSummary()),
+          destroy: vi.fn(),
+        }),
+      },
+      configurable: true,
+    });
+
+    renderWithChakra(
+      <EventBody event={makeEvent({ title: 'React入門' })}
+                 enableSummarizer
+                 />,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'どんなイベント？（AI要約）' }));
+
+    expect((await screen.findByRole('heading', { name: '内容' })).tagName).toBe('H3');
+    expect(screen.getByText('初心者が基礎を確認できます。').tagName).toBe('P');
+    expect(screen.getByText('ハンズオン').tagName).toBe('STRONG');
+    expect(screen.getByRole('link', { name: '公式ページ' })).toHaveAttribute('href', 'https://example.com');
+    expect(screen.getByText('持ち物を確認してください。')).toBeInTheDocument();
 
     Reflect.deleteProperty(window, 'Summarizer');
   });
