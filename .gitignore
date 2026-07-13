@@ -14,6 +14,9 @@ logs
 node_modules
 bower_components
 
+# ビルド時に scripts/generate-sitemap.mjs が生成する(npm run dev/build の pre フックで自動生成)
+/public/sitemap.xml
+
 *.sublime*
 
 psd
