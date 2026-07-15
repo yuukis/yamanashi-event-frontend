@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useReportWidgetHeight, WIDGET_RESIZE_MESSAGE_TYPE, postWidgetHeight } from './widgetResize';
+import { useReportWidgetHeight, useWidgetIframeAutoHeight, WIDGET_RESIZE_MESSAGE_TYPE, postWidgetHeight } from './widgetResize';
 
 class FakeResizeObserver {
   callback: ResizeObserverCallback;
@@ -61,6 +61,65 @@ describe('useReportWidgetHeight', () => {
       );
     } finally {
       document.body.removeChild(div);
+    }
+  });
+});
+
+describe('useWidgetIframeAutoHeight', () => {
+  it('sets the iframe height when a resize message from that iframe arrives', () => {
+    const iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    const ref = { current: iframe };
+
+    try {
+      renderHook(() => useWidgetIframeAutoHeight(ref));
+
+      window.dispatchEvent(new MessageEvent('message', {
+        data: { type: WIDGET_RESIZE_MESSAGE_TYPE, height: 321 },
+        source: iframe.contentWindow,
+      }));
+
+      expect(iframe.style.height).toBe('321px');
+    } finally {
+      document.body.removeChild(iframe);
+    }
+  });
+
+  it('ignores a resize message whose source is not the tracked iframe', () => {
+    const iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    const ref = { current: iframe };
+
+    try {
+      renderHook(() => useWidgetIframeAutoHeight(ref));
+
+      window.dispatchEvent(new MessageEvent('message', {
+        data: { type: WIDGET_RESIZE_MESSAGE_TYPE, height: 999 },
+        source: window,
+      }));
+
+      expect(iframe.style.height).toBe('');
+    } finally {
+      document.body.removeChild(iframe);
+    }
+  });
+
+  it('ignores a message with a different type', () => {
+    const iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    const ref = { current: iframe };
+
+    try {
+      renderHook(() => useWidgetIframeAutoHeight(ref));
+
+      window.dispatchEvent(new MessageEvent('message', {
+        data: { type: 'something-else', height: 999 },
+        source: iframe.contentWindow,
+      }));
+
+      expect(iframe.style.height).toBe('');
+    } finally {
+      document.body.removeChild(iframe);
     }
   });
 });

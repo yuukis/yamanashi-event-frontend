@@ -29,3 +29,21 @@ export function useReportWidgetHeight(ref: RefObject<HTMLElement>) {
     return () => observer.disconnect();
   }, [ref]);
 }
+
+export function useWidgetIframeAutoHeight(iframeRef: RefObject<HTMLIFrameElement>) {
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const iframe = iframeRef.current;
+      if (!iframe || event.source !== iframe.contentWindow) {
+        return;
+      }
+      if (!event.data || event.data.type !== WIDGET_RESIZE_MESSAGE_TYPE) {
+        return;
+      }
+      iframe.style.height = `${event.data.height}px`;
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [iframeRef]);
+}
