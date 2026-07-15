@@ -3,6 +3,7 @@ import axios from 'axios';
 import {
   fetchEvents,
   fetchEventsByYear,
+  fetchGroupEvents,
   fetchEventDescription,
   fetchGroups,
   fetchEventsSummary,
@@ -73,6 +74,40 @@ describe('fetchEvents', () => {
 
     expect(axios.get).toHaveBeenCalledTimes(2);
   });
+
+  it('requests a caller-provided field set instead of the default', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    await fetchEvents('uid,title');
+
+    expect(axios.get).toHaveBeenCalledWith(EVENTS_API_URL, { params: { fields: 'uid,title' } });
+  });
+
+  it('dedupes concurrent calls only when they request the same field set', async () => {
+    let resolveDefault: (value: unknown) => void;
+    let resolveCustom: (value: unknown) => void;
+    vi.mocked(axios.get).mockImplementation((_url, config) => {
+      const fields = (config as { params: { fields: string } }).params.fields;
+      return new Promise((resolve) => {
+        if (fields === EVENTS_FIELDS) {
+          resolveDefault = resolve;
+        } else {
+          resolveCustom = resolve;
+        }
+      }) as ReturnType<typeof axios.get>;
+    });
+
+    const defaultRequest = fetchEvents();
+    const customRequest = fetchEvents('uid,title');
+
+    expect(axios.get).toHaveBeenCalledTimes(2);
+
+    resolveDefault!({ data: [{ uid: 'a' }], headers: {} });
+    resolveCustom!({ data: [{ uid: 'b' }], headers: {} });
+
+    await expect(defaultRequest).resolves.toEqual({ events: [{ uid: 'a' }], lastModified: null });
+    await expect(customRequest).resolves.toEqual({ events: [{ uid: 'b' }], lastModified: null });
+  });
 });
 
 describe('fetchEventsByYear', () => {
@@ -99,6 +134,51 @@ describe('fetchEventsByYear', () => {
     vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
 
     const result = await fetchEventsByYear(2026);
+
+    expect(result.lastModified).toBeNull();
+  });
+});
+
+describe('fetchGroupEvents', () => {
+  beforeEach(() => {
+    vi.mocked(axios.get).mockReset();
+  });
+
+  it('requests the group-scoped events endpoint and returns events with last-modified', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      data: [{ uid: 'a' }],
+      headers: { 'last-modified': 'Wed, 01 Jan 2026 00:00:00 GMT' },
+    });
+
+    const result = await fetchGroupEvents('techmujin');
+
+    expect(axios.get).toHaveBeenCalledWith(`${GROUPS_API_URL}/techmujin/events`, { params: { fields: EVENTS_FIELDS } });
+    expect(result).toEqual({
+      events: [{ uid: 'a' }],
+      lastModified: 'Wed, 01 Jan 2026 00:00:00 GMT',
+    });
+  });
+
+  it('requests a caller-provided field set instead of the default', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    await fetchGroupEvents('techmujin', 'uid,title');
+
+    expect(axios.get).toHaveBeenCalledWith(`${GROUPS_API_URL}/techmujin/events`, { params: { fields: 'uid,title' } });
+  });
+
+  it('encodes the group key when building the URL', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    await fetchGroupEvents('a/b c');
+
+    expect(axios.get).toHaveBeenCalledWith(`${GROUPS_API_URL}/a%2Fb%20c/events`, { params: { fields: EVENTS_FIELDS } });
+  });
+
+  it('returns null last-modified when the header is absent', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    const result = await fetchGroupEvents('techmujin');
 
     expect(result.lastModified).toBeNull();
   });

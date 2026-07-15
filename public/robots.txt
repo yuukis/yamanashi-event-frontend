@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /widget/
 
 Sitemap: https://hub.yamanashi.dev/sitemap.xml
