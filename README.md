@@ -18,7 +18,7 @@ https://hub.yamanashi.dev
 - **New event indicators** - Newly added events are marked with a "NEW"/"新着あり" badge and an unread dot on the notification bell.
 - **Push notifications** - Opt in to browser push notifications so you don't miss newly added events.
 - **Guide page** - A `/guide` page introducing the site and how to get started attending community events.
-- **Embeddable widgets (ブログパーツ)** - Chrome-free pages listing upcoming and past events, meant to be embedded on external blogs via `<iframe>`. See [WIDGETS.md](WIDGETS.md) for embed tags and options.
+- **Embeddable widgets (ブログパーツ)** - Chrome-free pages listing upcoming and past events, meant to be embedded on external blogs via `<iframe>`. See [docs/WIDGETS.md](docs/WIDGETS.md) for embed tags and options.
 
 Event data is sourced from [connpass](https://connpass.com) and community-provided event calendars/archives.
 
