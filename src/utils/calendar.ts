@@ -35,8 +35,15 @@ export function buildEventsByDate<T extends { started_at: string }>(
   events.forEach((event) => {
     const key = formatEventDateKey(new Date(event.started_at));
 
-    if (visibleDateKeys.has(key)) {
-      eventMap.set(key, [...(eventMap.get(key) ?? []), event]);
+    if (!visibleDateKeys.has(key)) {
+      return;
+    }
+
+    const dayEvents = eventMap.get(key);
+    if (dayEvents) {
+      dayEvents.push(event);
+    } else {
+      eventMap.set(key, [event]);
     }
   });
 
