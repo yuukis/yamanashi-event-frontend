@@ -21,6 +21,7 @@ import { buildCalendarDays, buildEventsByDate, useTodayDate } from '../utils/cal
 import { formatEventDateKey } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
 import { useReportWidgetHeight } from '../utils/widgetResize';
+import { extractErrorMessage } from '../utils/widgetEvents';
 import { WIDGET_EVENT_ITEM_FIELDS } from '../utils/widgetFields';
 import type { ApiEvent } from '../types/events';
 
@@ -90,7 +91,7 @@ function WidgetCalendar() {
         if (cancelled) {
           return;
         }
-        setErrorMessage(err.message);
+        setErrorMessage(extractErrorMessage(err));
       })
       .finally(() => {
         if (!cancelled) {
