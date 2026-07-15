@@ -7,20 +7,37 @@ import {
   WidgetEventEmpty,
   WidgetEventError,
 } from '../components/WidgetEventItem';
-import { fetchEvents, fetchGroups } from '../utils/api';
-import { enrichEventsWithGroups, isFutureEvent, isPastEvent } from '../utils/eventGroups';
+import { fetchEvents } from '../utils/api';
+import { isFutureEvent, isPastEvent } from '../utils/eventGroups';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { mergeTrackingData } from '../utils/newEventTracking';
 import { isLocalStorageAvailable, updateTrackingData } from '../utils/newEventTrackingStore';
 import { parseWidgetLimit } from '../utils/widgetLimit';
 import { useReportWidgetHeight } from '../utils/widgetResize';
-import type { EventWithGroup } from '../types/events';
+import type { ApiEvent } from '../types/events';
+
+// WidgetEventItem が実際に描画するフィールドのみ要求する(グループの
+// 画像/アーカイブ情報や description、keywords 等は不要なため /groups への
+// 問い合わせ自体も行わない)。
+const WIDGET_EVENTS_FIELDS = [
+  'uid',
+  'title',
+  'event_url',
+  'started_at',
+  'ended_at',
+  'updated_at',
+  'open_status',
+  'owner_name',
+  'place',
+  'address',
+  'group_name',
+].join(',');
 
 type WidgetEventsState = {
   isLoading: boolean;
-  pastEvents: EventWithGroup[];
-  futureEvents: EventWithGroup[];
+  pastEvents: ApiEvent[];
+  futureEvents: ApiEvent[];
   errorMessage: string;
 };
 
@@ -43,11 +60,11 @@ function WidgetEvents() {
     let cancelled = false;
     (async () => {
       try {
-        const [eventsResponse, groups] = await Promise.all([fetchEvents(), fetchGroups()]);
+        const eventsResponse = await fetchEvents(WIDGET_EVENTS_FIELDS);
         if (cancelled) {
           return;
         }
-        const events = enrichEventsWithGroups(eventsResponse.events, groups);
+        const events = eventsResponse.events;
         setData({
           isLoading: false,
           pastEvents: events.filter(isPastEvent).sort(sortByStartedAtDesc),
@@ -79,7 +96,7 @@ function WidgetEvents() {
   const futureEvents = useMemo(() => data.futureEvents.slice(0, limit), [data.futureEvents, limit]);
   const pastEvents = useMemo(() => data.pastEvents.slice(0, limit), [data.pastEvents, limit]);
 
-  const renderList = (events: EventWithGroup[]) => {
+  const renderList = (events: ApiEvent[]) => {
     if (data.isLoading) {
       return <WidgetEventSkeleton />;
     }

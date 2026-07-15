@@ -13,12 +13,12 @@ import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
 import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
 import { formatEventDateKey } from '../utils/eventAnchors';
-import type { EventWithGroup } from '../types/events';
+import type { ApiEvent } from '../types/events';
 
 const DAY_OF_WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 
 type WidgetEventItemProps = {
-  event: EventWithGroup;
+  event: ApiEvent;
 };
 
 export function WidgetEventItem({ event }: WidgetEventItemProps) {
