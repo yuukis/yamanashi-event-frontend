@@ -8,6 +8,7 @@ import Root from './routes/Root.jsx'
 import List from './routes/List.jsx'
 import Events from './routes/Events.jsx'
 import Guide from './routes/Guide.jsx'
+import WidgetEvents from './routes/WidgetEvents.jsx'
 import AppTheme from './theme.tsx'
 import { ChakraProvider } from '@chakra-ui/react'
 
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
     path: "/events/:year",
     element: <List startYear={START_YEAR}/>,
   },
+  {
+    path: "/widget/events",
+    element: <WidgetEvents />,
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -40,7 +45,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>,
 )
 
-if ('serviceWorker' in navigator) {
+// 埋め込みウィジェット(/widget/*)はサードパーティページのiframe内で
+// 表示されるため、オフラインキャッシュやプッシュ通知登録は不要。
+if ('serviceWorker' in navigator && !location.pathname.startsWith('/widget/')) {
   window.addEventListener('load', async () => {
     await navigator.serviceWorker.register('/service-worker.js');
   });
