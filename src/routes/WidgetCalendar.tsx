@@ -153,7 +153,7 @@ function WidgetCalendar() {
         </Link>
       </Text>
 
-      <Modal isOpen={!!selectedDay} onClose={closeDay} isCentered returnFocusOnClose={false}>
+      <Modal isOpen={!!selectedDay} onClose={closeDay} isCentered>
         <ModalOverlay />
         <ModalContent maxW={{ base: 'calc(100vw - 32px)', sm: '400px' }} maxH={'80vh'} mx={'4'}>
           <ModalHeader fontSize={'sm'} textAlign={'center'} pr={'10'}>
