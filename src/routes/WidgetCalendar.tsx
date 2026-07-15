@@ -1,6 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Heading, HStack, IconButton, Stack, Text, Link } from '@chakra-ui/react';
-import { ArrowBackIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
+import {
+  Box,
+  Heading,
+  HStack,
+  IconButton,
+  Stack,
+  Text,
+  Link,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+} from '@chakra-ui/react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { MiniEventCalendar } from '../components/MiniEventCalendar';
 import { WidgetEventItem } from '../components/WidgetEventItem';
 import { buildCalendarDays, buildEventsByDate, useTodayDate } from '../utils/calendar';
@@ -63,21 +77,6 @@ function WidgetCalendar() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!selectedDay) {
-      return;
-    }
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setSelectedDay(null);
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [selectedDay]);
-
   const eventsByDate = useMemo(() => buildEventsByDate(events, calendarDays), [events, calendarDays]);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -104,7 +103,6 @@ function WidgetCalendar() {
       </HStack>
 
       <Box data-testid={'calendar-fill-wrapper'}
-           position={'relative'}
            flex={'1'}
            minH={0}
            display={'flex'}
@@ -118,34 +116,6 @@ function WidgetCalendar() {
                             onDayActivate={(dayEvents, dayKey) => setSelectedDay({ key: dayKey, events: dayEvents })}
                             fillHeight
                             />
-
-        {selectedDay && (
-          <Box position={'absolute'}
-               inset={'0'}
-               bg={'white'}
-               display={'flex'}
-               flexDirection={'column'}
-               borderWidth={'1px'}
-               borderColor={'gray.200'}
-               borderRadius={'md'}
-               >
-            <HStack p={'2'} borderBottomWidth={'1px'} borderColor={'gray.100'} flexShrink={0}>
-              <IconButton aria-label='カレンダーに戻る'
-                          icon={<ArrowBackIcon />}
-                          size={'xs'}
-                          variant={'ghost'}
-                          onClick={() => setSelectedDay(null)}
-                          />
-              <Heading size={'sm'} flex={'1'} textAlign={'center'}>{ formatDayHeading(selectedDay.key) }</Heading>
-              <Box w={'24px'} flexShrink={0} aria-hidden />
-            </HStack>
-            <Box flex={'1'} minH={0} overflowY={'auto'}>
-              <Stack spacing={'1'} divider={<Box borderBottomWidth={'1px'} borderColor={'gray.100'} />}>
-                {selectedDay.events.map((event) => <WidgetEventItem key={event.uid} event={event} />)}
-              </Stack>
-            </Box>
-          </Box>
-        )}
       </Box>
 
       <Text fontSize={'xs'} color={'gray.400'} textAlign={'right'} mt={'4'} flexShrink={0}>
@@ -154,6 +124,21 @@ function WidgetCalendar() {
           Yamanashi Developer Hub
         </Link>
       </Text>
+
+      <Modal isOpen={!!selectedDay} onClose={() => setSelectedDay(null)} isCentered>
+        <ModalOverlay />
+        <ModalContent maxW={{ base: 'calc(100vw - 32px)', sm: '400px' }} maxH={'80vh'} mx={'4'}>
+          <ModalHeader fontSize={'sm'} textAlign={'center'} pr={'10'}>
+            { selectedDay && formatDayHeading(selectedDay.key) }
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody overflowY={'auto'} pb={'4'}>
+            <Stack spacing={'1'} divider={<Box borderBottomWidth={'1px'} borderColor={'gray.100'} />}>
+              {(selectedDay?.events ?? []).map((event) => <WidgetEventItem key={event.uid} event={event} />)}
+            </Stack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }

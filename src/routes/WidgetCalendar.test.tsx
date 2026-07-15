@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { renderWithChakra } from '../test/test-utils';
 import WidgetCalendar from './WidgetCalendar';
 import { makeEvent } from '../test/fixtures';
@@ -46,7 +47,7 @@ describe('WidgetCalendar', () => {
     const link = await screen.findByRole('link', { name: '甲府もくもく会' });
     expect(link).toHaveAttribute('href', 'https://example.com/event/1');
     expect(link).toHaveAttribute('target', '_blank');
-    expect(screen.getByRole('button', { name: 'カレンダーに戻る' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('1月15日(木)')).toBeInTheDocument();
   });
 
@@ -56,17 +57,31 @@ describe('WidgetCalendar', () => {
 
     fireEvent.click(await screen.findByLabelText(/^1月10日 今日/));
 
-    expect(screen.queryByRole('button', { name: 'カレンダーに戻る' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('closes the day overlay when the back button is clicked', async () => {
+  it('closes the day overlay when the close button is clicked', async () => {
     mockEvents([makeEvent({ started_at: '2026-01-15T19:00:00+09:00', ended_at: '2026-01-15T21:00:00+09:00' })]);
     renderWithChakra(<WidgetCalendar />);
 
     fireEvent.click(await screen.findByLabelText(/^1月15日 イベントあり/));
-    fireEvent.click(await screen.findByRole('button', { name: 'カレンダーに戻る' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Close' }));
 
-    expect(screen.queryByRole('button', { name: 'カレンダーに戻る' })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('closes the day overlay when the backdrop is clicked', async () => {
+    const user = userEvent.setup();
+    mockEvents([makeEvent({ started_at: '2026-01-15T19:00:00+09:00', ended_at: '2026-01-15T21:00:00+09:00' })]);
+    const { container } = renderWithChakra(<WidgetCalendar />);
+
+    fireEvent.click(await screen.findByLabelText(/^1月15日 イベントあり/));
+    await screen.findByRole('dialog');
+
+    const overlay = container.ownerDocument.querySelector('.chakra-modal__content-container') as HTMLElement;
+    await user.click(overlay);
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('closes the day overlay when Escape is pressed', async () => {
@@ -74,11 +89,11 @@ describe('WidgetCalendar', () => {
     renderWithChakra(<WidgetCalendar />);
 
     fireEvent.click(await screen.findByLabelText(/^1月15日 イベントあり/));
-    await screen.findByRole('button', { name: 'カレンダーに戻る' });
+    const dialog = await screen.findByRole('dialog');
 
-    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.keyDown(dialog, { key: 'Escape' });
 
-    expect(screen.queryByRole('button', { name: 'カレンダーに戻る' })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('keeps the flex chain intact so the calendar grid can grow to fill the available height', async () => {
