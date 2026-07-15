@@ -242,7 +242,7 @@ function Guide() {
                                              >
                                        <option value={''}>すべてのイベント</option>
                                        {activeGroups.length > 0 && (
-                                         <optgroup label={'最近活動しているコミュニティ'}>
+                                         <optgroup label={'イベント情報のあるコミュニティ'}>
                                            {activeGroups.map((group) => (
                                              <option key={group.key} value={group.key}>{ group.title }</option>
                                            ))}
