@@ -4,20 +4,7 @@ import { WidgetEventError } from '../components/WidgetEventItem';
 import { fetchGroupEvents } from '../utils/api';
 import { useWidgetEvents } from '../utils/widgetEvents';
 import { parseWidgetLimit } from '../utils/widgetLimit';
-
-const WIDGET_GROUP_EVENTS_FIELDS = [
-  'uid',
-  'title',
-  'event_url',
-  'started_at',
-  'ended_at',
-  'updated_at',
-  'open_status',
-  'owner_name',
-  'place',
-  'address',
-  'group_name',
-].join(',');
+import { WIDGET_EVENT_ITEM_FIELDS } from '../utils/widgetFields';
 
 function WidgetGroupEvents() {
   const { groupKey } = useParams<{ groupKey: string }>();
@@ -25,7 +12,7 @@ function WidgetGroupEvents() {
   const limit = parseWidgetLimit(searchParams.get('limit'));
   const data = useWidgetEvents(() => (
     groupKey
-      ? fetchGroupEvents(groupKey, WIDGET_GROUP_EVENTS_FIELDS)
+      ? fetchGroupEvents(groupKey, WIDGET_EVENT_ITEM_FIELDS)
       : Promise.resolve({ events: [] })
   ), [groupKey]);
 
