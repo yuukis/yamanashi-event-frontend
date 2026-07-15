@@ -9,4 +9,8 @@ describe('buildListWidgetPath', () => {
   it('builds the community-scoped widget path when a group key is given', () => {
     expect(buildListWidgetPath('techmujin')).toBe('/widget/groups/techmujin/events?limit=5');
   });
+
+  it('encodes URL-reserved characters in the group key', () => {
+    expect(buildListWidgetPath('a/b?c')).toBe('/widget/groups/a%2Fb%3Fc/events?limit=5');
+  });
 });
