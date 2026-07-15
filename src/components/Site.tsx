@@ -1,6 +1,7 @@
 import icon from "../assets/images/icon.png"
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { NotificationButton } from '../components/Notification';
+import { MiniEventCalendar } from '../components/MiniEventCalendar';
 import {
   Heading,
   Box,
@@ -21,9 +22,7 @@ import {
   PopoverCloseButton,
   PopoverBody,
   PopoverFooter,
-  SimpleGrid,
   HStack,
-  Tooltip,
   useDisclosure
 } from '@chakra-ui/react';
 import { isMobile } from 'react-device-detect';
@@ -35,6 +34,7 @@ import { fetchEvents } from '../utils/api';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { subscribeHeaderVisibility, getHeaderVisible, getNearPageTop, setFixedHeaderBoundary, HEADER_HEIGHT } from '../utils/headerVisibility';
 import { jumpToAnchor } from '../utils/hashScroll';
+import { buildCalendarDays, buildEventsByDate, useTodayDate } from '../utils/calendar';
 import type { ApiEvent } from '../types/events';
 
 const todayBadgePulse = keyframes`
@@ -171,7 +171,7 @@ export function ICalendarButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [monthOffset, setMonthOffset] = useState(0);
-  const [today, setToday] = useState(() => new Date());
+  const today = useTodayDate();
   const monthStart = useMemo(
     () => new Date(today.getFullYear(), today.getMonth() + monthOffset, 1),
     [monthOffset, today],
@@ -182,61 +182,7 @@ export function ICalendarButton() {
   });
   const todayKey = formatEventDateKey(today);
   const calendarDays = useMemo(() => buildCalendarDays(monthStart), [monthStart]);
-  const eventsByDate = useMemo(() => {
-    const eventMap = new Map<string, ApiEvent[]>();
-    const visibleDateKeys = new Set(calendarDays.map((day) => day.key));
-
-    events.forEach((event) => {
-      const eventDate = new Date(event.started_at);
-      const key = formatEventDateKey(eventDate);
-
-      if (visibleDateKeys.has(key)) {
-        eventMap.set(key, [...(eventMap.get(key) ?? []), event]);
-      }
-    });
-
-    eventMap.forEach((dayEvents) => {
-      dayEvents.sort((a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime());
-    });
-
-    return eventMap;
-  }, [calendarDays, events]);
-
-  useEffect(() => {
-    let timerId: number | undefined;
-
-    const scheduleNextUpdate = () => {
-      if (timerId !== undefined) {
-        window.clearTimeout(timerId);
-      }
-
-      timerId = window.setTimeout(updateToday, getMillisecondsUntilNextDay());
-    };
-    const updateToday = () => {
-      const nextToday = new Date();
-      setToday((currentToday) => (
-        formatEventDateKey(currentToday) === formatEventDateKey(nextToday)
-          ? currentToday
-          : nextToday
-      ));
-      scheduleNextUpdate();
-    };
-    const updateTodayAfterResume = () => {
-      if (!document.hidden) {
-        updateToday();
-      }
-    };
-
-    scheduleNextUpdate();
-    document.addEventListener('visibilitychange', updateTodayAfterResume);
-
-    return () => {
-      if (timerId !== undefined) {
-        window.clearTimeout(timerId);
-      }
-      document.removeEventListener('visibilitychange', updateTodayAfterResume);
-    };
-  }, []);
+  const eventsByDate = useMemo(() => buildEventsByDate(events, calendarDays), [calendarDays, events]);
 
   const isUnmountedRef = useRef(false);
 
@@ -373,7 +319,12 @@ export function ICalendarButton() {
               eventsByDate={eventsByDate}
               isLoading={isLoading}
               errorMessage={errorMessage}
-              onJump={closePopover}
+              onDayActivate={(_dayEvents, dayKey) => {
+                jumpToAnchor(getEventDateAnchorId(dayKey));
+                if (isMobile) {
+                  closePopover();
+                }
+              }}
             />
             <Stack borderTop={'1px solid'}
                    borderColor={'gray.100'}
@@ -410,170 +361,6 @@ export function ICalendarButton() {
       </PopoverContent>
     </Popover>
   )
-}
-
-function MiniEventCalendar({
-  calendarDays,
-  todayKey,
-  eventsByDate,
-  isLoading,
-  errorMessage,
-  onJump,
-}: {
-  calendarDays: CalendarDay[];
-  todayKey: string;
-  eventsByDate: Map<string, ApiEvent[]>;
-  isLoading: boolean;
-  errorMessage: string;
-  onJump: () => void;
-}) {
-  const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
-
-  return (
-    <Stack spacing={'2'}>
-      <SimpleGrid columns={7} spacing={'1'}>
-        {weekDays.map((day, index) => (
-          <Center key={day}
-                  h={'6'}
-                  fontSize={'xs'}
-                  color={index === 0 ? 'impact.700' : index === 6 ? 'primary.800' : 'gray.500'}
-                  >
-            {day}
-          </Center>
-        ))}
-        {calendarDays.map((day) => {
-          const dayEvents = eventsByDate.get(day.key) ?? [];
-          const hasEvent = dayEvents.length > 0;
-          const isToday = day.key === todayKey;
-          const bg = getCalendarDayBg(hasEvent);
-          const color = isToday ? 'impact.700' : day.isCurrentMonth ? 'gray.800' : 'gray.300';
-          const dayLabel = `${day.date.getMonth() + 1}月${day.date.getDate()}日`;
-          const jumpToEvent = () => {
-            if (dayEvents.length === 0) {
-              return;
-            }
-
-            jumpToAnchor(getEventDateAnchorId(day.key));
-
-            if (isMobile) {
-              onJump();
-            }
-          };
-          const dayCell = (
-            <Center key={day.key}
-                    h={'9'}
-                    borderRadius={'md'}
-                    border={isToday ? '2px solid' : '1px solid'}
-                    borderColor={isToday ? 'impact.500' : 'gray.100'}
-                    bg={bg}
-                    color={color}
-                    fontSize={isToday ? 'md' : 'sm'}
-                    fontWeight={isToday || hasEvent ? 'bold' : 'normal'}
-                    tabIndex={hasEvent ? 0 : undefined}
-                    cursor={hasEvent ? 'pointer' : 'default'}
-                    role={hasEvent ? 'link' : undefined}
-                    onClick={hasEvent ? jumpToEvent : undefined}
-                    onKeyDown={hasEvent ? (e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        jumpToEvent();
-                      }
-                    } : undefined}
-                    aria-label={`${dayLabel}${isToday ? ' 今日' : ''}${hasEvent ? ' イベントあり' : ''}`}
-                    >
-              {day.date.getDate()}
-            </Center>
-          );
-
-          if (!hasEvent) {
-            return dayCell;
-          }
-
-          return (
-            <Tooltip key={day.key}
-                     label={<EventDayTooltip events={dayEvents} />}
-                     hasArrow
-                     maxW={{base: '240px', md: '280px'}}
-                     placement='top'
-                     openDelay={200}
-                     >
-              {dayCell}
-            </Tooltip>
-          );
-        })}
-      </SimpleGrid>
-      {isLoading ? (
-        <Text fontSize={'xs'} color={'gray.500'}>イベント日を読み込み中です</Text>
-      ) : errorMessage ? (
-        <Text fontSize={'xs'} color={'impact.700'}>イベント日を取得できませんでした</Text>
-      ) : null}
-    </Stack>
-  );
-}
-
-function EventDayTooltip({ events }: { events: ApiEvent[] }) {
-  return (
-    <Stack spacing={'1'}>
-      {events.map((event) => (
-        <Text key={event.uid}
-              fontSize={'xs'}
-              lineHeight={'1.4'}
-              >
-          <Text as={'span'} fontWeight={'bold'}>
-            {formatEventTime(event.started_at)}
-          </Text>{' '}
-          {event.title}
-        </Text>
-      ))}
-    </Stack>
-  );
-}
-
-type CalendarDay = {
-  date: Date;
-  key: string;
-  isCurrentMonth: boolean;
-};
-
-function buildCalendarDays(monthStart: Date): CalendarDay[] {
-  const firstCalendarDate = new Date(monthStart);
-  firstCalendarDate.setDate(monthStart.getDate() - monthStart.getDay());
-  const days = [];
-
-  for (let i = 0; i < 42; i++) {
-    const date = new Date(firstCalendarDate);
-    date.setDate(firstCalendarDate.getDate() + i);
-    days.push({
-      date,
-      key: formatEventDateKey(date),
-      isCurrentMonth: date.getMonth() === monthStart.getMonth(),
-    });
-  }
-
-  return days;
-}
-
-function getMillisecondsUntilNextDay(): number {
-  const now = new Date();
-  const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-
-  return Math.max(0, nextDay.getTime() - now.getTime());
-}
-
-function formatEventTime(startedAt: string): string {
-  const startedAtDate = new Date(startedAt);
-  const hours = startedAtDate.getHours();
-  const minutes = `${startedAtDate.getMinutes()}`.padStart(2, '0');
-
-  return `${hours}:${minutes}-`;
-}
-
-function getCalendarDayBg(hasEvent: boolean) {
-  if (hasEvent) {
-    return 'secondary.100';
-  }
-
-  return 'white';
 }
 
 export function GithubButton() {

@@ -14,7 +14,7 @@ export type WidgetEventsState = {
   errorMessage: string;
 };
 
-function extractErrorMessage(err: unknown): string {
+export function extractErrorMessage(err: unknown): string {
   const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
   return detail ?? (err as { message?: string })?.message ?? '';
 }

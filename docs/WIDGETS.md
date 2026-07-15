@@ -39,3 +39,16 @@ The `/widget/groups/:groupKey/events` page shows the same two lists (直近開�
 ```
 
 It supports the same `limit` parameter and height-resize `postMessage` mechanism (match the receiver script's selector to the embedded iframe's `src`, or use a selector that matches both widgets, e.g. `iframe[src*="hub.yamanashi.dev/widget/"]`).
+
+## Mini calendar
+
+The `/widget/calendar` page shows a one-month calendar grid with event days highlighted; hovering/focusing a highlighted day shows that day's events in a tooltip. It has its own month navigation (◀/▶) and does not take a `limit` parameter:
+
+```html
+<iframe src="https://hub.yamanashi.dev/widget/calendar"
+        style="width:100%;border:0;"
+        scrolling="no"
+        title="山梨イベントカレンダー"></iframe>
+```
+
+It uses the same height-resize `postMessage` mechanism as the other widgets, so the same receiver script works for all three (match its selector against `iframe[src*="hub.yamanashi.dev/widget/"]` to cover them all).
