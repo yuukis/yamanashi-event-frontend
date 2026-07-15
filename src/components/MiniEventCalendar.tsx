@@ -17,6 +17,10 @@ type MiniEventCalendarProps<T extends MiniEventCalendarEvent> = {
   // trueの場合、親が確保した縦幅いっぱいまで日付マスを伸ばす。
   // ヘッダーのポップオーバー(コンパクト表示)ではfalseのまま使う。
   fillHeight?: boolean;
+  // trueの場合、全マスのツールチップを無効化する。onDayActivateで
+  // モーダル等を開いた直後、遅延オープン中だったツールチップが
+  // モーダルの裏で後から表示されてしまうのを防ぐために使う。
+  suppressTooltips?: boolean;
 };
 
 const WEEK_DAYS = ['日', '月', '火', '水', '木', '金', '土'];
@@ -30,6 +34,7 @@ export function MiniEventCalendar<T extends MiniEventCalendarEvent>({
   errorMessage,
   onDayActivate,
   fillHeight = false,
+  suppressTooltips = false,
 }: MiniEventCalendarProps<T>) {
   return (
     <Stack spacing={'2'} flex={fillHeight ? '1' : undefined} minH={0}>
@@ -101,6 +106,7 @@ export function MiniEventCalendar<T extends MiniEventCalendarEvent>({
                      maxW={{base: '240px', md: '280px'}}
                      placement='top'
                      openDelay={200}
+                     isDisabled={suppressTooltips}
                      >
               {dayCell}
             </Tooltip>

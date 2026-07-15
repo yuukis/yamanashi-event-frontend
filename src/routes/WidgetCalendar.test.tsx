@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithChakra } from '../test/test-utils';
 import WidgetCalendar from './WidgetCalendar';
@@ -94,6 +94,37 @@ describe('WidgetCalendar', () => {
     fireEvent.keyDown(dialog, { key: 'Escape' });
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('suppresses a tooltip whose open-delay timer was still pending when the day was clicked', async () => {
+    // ホバー/フォーカスから200ms以内にクリックすると、ツールチップの
+    // 遅延オープン用タイマーが「クリック時点ではまだisOpen=falseだった」
+    // ために閉じるロジックをすり抜け、モーダルの裏で後からツールチップが
+    // 開いてしまうことがあった。suppressTooltipsで確実に止まることを
+    // 確認する。
+    vi.useRealTimers();
+    vi.useFakeTimers();
+    vi.setSystemTime(FIXED_NOW);
+    mockEvents([makeEvent({
+      title: 'テストイベント',
+      started_at: '2026-01-15T19:00:00+09:00',
+      ended_at: '2026-01-15T21:00:00+09:00',
+    })]);
+    renderWithChakra(<WidgetCalendar />);
+
+    await act(async () => {
+      await vi.runOnlyPendingTimersAsync();
+    });
+
+    const day15 = screen.getByLabelText(/^1月15日 イベントあり/);
+    fireEvent.focus(day15); // schedules the tooltip's 200ms open timer
+    fireEvent.click(day15); // opens the modal well before the timer fires
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500); // past the tooltip's openDelay
+    });
+
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 
   it('keeps the flex chain intact so the calendar grid can grow to fill the available height', async () => {

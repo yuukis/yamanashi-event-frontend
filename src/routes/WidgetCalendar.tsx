@@ -120,6 +120,7 @@ function WidgetCalendar() {
                             errorMessage={errorMessage}
                             onDayActivate={(dayEvents, dayKey) => setSelectedDay({ key: dayKey, events: dayEvents })}
                             fillHeight
+                            suppressTooltips={!!selectedDay}
                             />
       </Box>
 
