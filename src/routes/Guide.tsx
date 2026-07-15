@@ -237,6 +237,7 @@ function Guide() {
                                    elementId={listElementId}
                                    controls={
                                      <Select size={'sm'}
+                                             aria-label={'プレビューするコミュニティを選択'}
                                              value={selectedGroupKey}
                                              onChange={(e) => setSelectedGroupKey(e.target.value)}
                                              >
