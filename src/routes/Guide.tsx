@@ -16,11 +16,14 @@ import {
   SimpleGrid,
   Stack,
   Text,
+  useDisclosure,
 } from '@chakra-ui/react';
 import {
   BellIcon,
   CalendarIcon,
   CheckCircleIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   ExternalLinkIcon,
   InfoOutlineIcon,
   SearchIcon,
@@ -52,6 +55,8 @@ function Guide() {
       cancelled = true;
     };
   }, []);
+
+  const { isOpen: isWidgetSectionExpanded, onToggle: toggleWidgetSection } = useDisclosure();
 
   const selectedGroup = groups.find((group) => group.key === selectedGroupKey);
   const listWidgetPath = buildListWidgetPath(selectedGroupKey);
@@ -194,33 +199,59 @@ function Guide() {
             <Text fontSize={'sm'} color={'gray.600'} mb={'4'} lineHeight={'1.8'}>
               イベント情報をブログやサイトに埋め込めます。プレビューを確認して、下のスニペットをコピーしてお使いください。
             </Text>
-            <SimpleGrid columns={{base: 1, md: 2}} spacing={'4'}>
-              <WidgetPreviewCard title={'イベント一覧'}
-                                 description={'直近開催・終了したイベントを一覧表示します。プルダウンでコミュニティを絞り込めます。'}
-                                 previewPath={listWidgetPath}
-                                 embedPath={listWidgetPath}
-                                 iframeTitle={listIframeTitle}
-                                 elementId={listElementId}
-                                 controls={
-                                   <Select size={'sm'}
-                                           value={selectedGroupKey}
-                                           onChange={(e) => setSelectedGroupKey(e.target.value)}
-                                           >
-                                     <option value={''}>すべてのイベント</option>
-                                     {groups.map((group) => (
-                                       <option key={group.key} value={group.key}>{ group.title }</option>
-                                     ))}
-                                   </Select>
-                                 }
-                                 />
-              <WidgetPreviewCard title={'イベントカレンダー'}
-                                 description={'月間カレンダーでイベント日をハイライトします。日付をクリックするとその日のイベントを確認できます。'}
-                                 previewPath={'/widget/calendar'}
-                                 embedPath={'/widget/calendar'}
-                                 iframeTitle={'山梨イベントカレンダー'}
-                                 elementId={'yamanashi-hub-widget-calendar'}
-                                 />
-            </SimpleGrid>
+            <Box position={'relative'}
+                 maxH={isWidgetSectionExpanded ? '5000px' : '360px'}
+                 overflow={'hidden'}
+                 transition={'max-height 0.3s ease'}
+                 >
+              <SimpleGrid columns={{base: 1, md: 2}} spacing={'4'}>
+                <WidgetPreviewCard title={'イベント一覧'}
+                                   description={'直近開催・終了したイベントを一覧表示します。プルダウンでコミュニティを絞り込めます。'}
+                                   previewPath={listWidgetPath}
+                                   embedPath={listWidgetPath}
+                                   iframeTitle={listIframeTitle}
+                                   elementId={listElementId}
+                                   controls={
+                                     <Select size={'sm'}
+                                             value={selectedGroupKey}
+                                             onChange={(e) => setSelectedGroupKey(e.target.value)}
+                                             >
+                                       <option value={''}>すべてのイベント</option>
+                                       {groups.map((group) => (
+                                         <option key={group.key} value={group.key}>{ group.title }</option>
+                                       ))}
+                                     </Select>
+                                   }
+                                   />
+                <WidgetPreviewCard title={'イベントカレンダー'}
+                                   description={'月間カレンダーでイベント日をハイライトします。日付をクリックするとその日のイベントを確認できます。'}
+                                   previewPath={'/widget/calendar'}
+                                   embedPath={'/widget/calendar'}
+                                   iframeTitle={'山梨イベントカレンダー'}
+                                   elementId={'yamanashi-hub-widget-calendar'}
+                                   />
+              </SimpleGrid>
+              {!isWidgetSectionExpanded && (
+                <Box position={'absolute'}
+                     bottom={'0'}
+                     left={'0'}
+                     right={'0'}
+                     h={'80px'}
+                     bgGradient={'linear(to-t, gray.100, transparent)'}
+                     pointerEvents={'none'}
+                     aria-hidden
+                     />
+              )}
+            </Box>
+            <Button size={'sm'}
+                    variant={'outline'}
+                    w={'full'}
+                    mt={'3'}
+                    onClick={toggleWidgetSection}
+                    rightIcon={isWidgetSectionExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                    >
+              { isWidgetSectionExpanded ? '閉じる' : 'もっと見る' }
+            </Button>
           </Box>
 
           <Box>
