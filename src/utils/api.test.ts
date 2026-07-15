@@ -73,6 +73,40 @@ describe('fetchEvents', () => {
 
     expect(axios.get).toHaveBeenCalledTimes(2);
   });
+
+  it('requests a caller-provided field set instead of the default', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    await fetchEvents('uid,title');
+
+    expect(axios.get).toHaveBeenCalledWith(EVENTS_API_URL, { params: { fields: 'uid,title' } });
+  });
+
+  it('dedupes concurrent calls only when they request the same field set', async () => {
+    let resolveDefault: (value: unknown) => void;
+    let resolveCustom: (value: unknown) => void;
+    vi.mocked(axios.get).mockImplementation((_url, config) => {
+      const fields = (config as { params: { fields: string } }).params.fields;
+      return new Promise((resolve) => {
+        if (fields === EVENTS_FIELDS) {
+          resolveDefault = resolve;
+        } else {
+          resolveCustom = resolve;
+        }
+      }) as ReturnType<typeof axios.get>;
+    });
+
+    const defaultRequest = fetchEvents();
+    const customRequest = fetchEvents('uid,title');
+
+    expect(axios.get).toHaveBeenCalledTimes(2);
+
+    resolveDefault!({ data: [{ uid: 'a' }], headers: {} });
+    resolveCustom!({ data: [{ uid: 'b' }], headers: {} });
+
+    await expect(defaultRequest).resolves.toEqual({ events: [{ uid: 'a' }], lastModified: null });
+    await expect(customRequest).resolves.toEqual({ events: [{ uid: 'b' }], lastModified: null });
+  });
 });
 
 describe('fetchEventsByYear', () => {

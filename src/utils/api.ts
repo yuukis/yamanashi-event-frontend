@@ -32,23 +32,26 @@ export const GROUPS_FIELDS = [
   'archive_url',
 ].join(',');
 
-let inFlightEventsRequest: Promise<{ events: ApiEvent[]; lastModified: string | null }> | null = null;
+const inFlightEventsRequests = new Map<string, Promise<{ events: ApiEvent[]; lastModified: string | null }>>();
 
-export async function fetchEvents(): Promise<{ events: ApiEvent[]; lastModified: string | null }> {
-  if (inFlightEventsRequest) {
-    return inFlightEventsRequest;
+export async function fetchEvents(fields: string = EVENTS_FIELDS): Promise<{ events: ApiEvent[]; lastModified: string | null }> {
+  const inFlight = inFlightEventsRequests.get(fields);
+  if (inFlight) {
+    return inFlight;
   }
 
-  inFlightEventsRequest = axios.get(EVENTS_API_URL, { params: { fields: EVENTS_FIELDS } })
+  const request = axios.get(EVENTS_API_URL, { params: { fields } })
     .then((res) => ({
       events: res.data as ApiEvent[],
       lastModified: res.headers['last-modified'] ?? null,
     }))
     .finally(() => {
-      inFlightEventsRequest = null;
+      inFlightEventsRequests.delete(fields);
     });
 
-  return inFlightEventsRequest;
+  inFlightEventsRequests.set(fields, request);
+
+  return request;
 }
 
 export async function fetchEventsByYear(year: number): Promise<{ events: ApiEvent[]; lastModified: string | null }> {
