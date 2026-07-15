@@ -1,19 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Heading, HStack, IconButton, Text, Link } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
+import { Box, Heading, HStack, IconButton, Stack, Text, Link } from '@chakra-ui/react';
+import { ArrowBackIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { MiniEventCalendar } from '../components/MiniEventCalendar';
+import { WidgetEventItem } from '../components/WidgetEventItem';
 import { buildCalendarDays, buildEventsByDate, useTodayDate } from '../utils/calendar';
 import { formatEventDateKey } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
 import { useReportWidgetHeight } from '../utils/widgetResize';
+import { WIDGET_EVENT_ITEM_FIELDS } from '../utils/widgetFields';
+import type { ApiEvent } from '../types/events';
 
-const WIDGET_CALENDAR_FIELDS = ['uid', 'title', 'started_at'].join(',');
-
-type WidgetCalendarEvent = {
-  uid: string;
-  title: string;
-  started_at: string;
+type SelectedDay = {
+  key: string;
+  events: ApiEvent[];
 };
+
+function formatDayHeading(dayKey: string): string {
+  const date = new Date(`${dayKey}T00:00:00`);
+  const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+  return `${date.getMonth() + 1}月${date.getDate()}日(${dayOfWeek})`;
+}
 
 function WidgetCalendar() {
   const [monthOffset, setMonthOffset] = useState(0);
@@ -26,13 +32,14 @@ function WidgetCalendar() {
   const todayKey = formatEventDateKey(today);
   const calendarDays = useMemo(() => buildCalendarDays(monthStart), [monthStart]);
 
-  const [events, setEvents] = useState<WidgetCalendarEvent[]>([]);
+  const [events, setEvents] = useState<ApiEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [selectedDay, setSelectedDay] = useState<SelectedDay | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetchEvents(WIDGET_CALENDAR_FIELDS)
+    fetchEvents(WIDGET_EVENT_ITEM_FIELDS)
       .then((res) => {
         if (cancelled) {
           return;
@@ -55,6 +62,21 @@ function WidgetCalendar() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!selectedDay) {
+      return;
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedDay(null);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedDay]);
 
   const eventsByDate = useMemo(() => buildEventsByDate(events, calendarDays), [events, calendarDays]);
 
@@ -81,13 +103,44 @@ function WidgetCalendar() {
                     />
       </HStack>
 
-      <MiniEventCalendar calendarDays={calendarDays}
-                          todayKey={todayKey}
-                          eventsByDate={eventsByDate}
-                          isLoading={isLoading}
-                          errorMessage={errorMessage}
-                          fillHeight
+      <Box position={'relative'} flex={'1'} minH={0}>
+        <MiniEventCalendar calendarDays={calendarDays}
+                            todayKey={todayKey}
+                            eventsByDate={eventsByDate}
+                            isLoading={isLoading}
+                            errorMessage={errorMessage}
+                            onDayActivate={(dayEvents, dayKey) => setSelectedDay({ key: dayKey, events: dayEvents })}
+                            fillHeight
+                            />
+
+        {selectedDay && (
+          <Box position={'absolute'}
+               inset={'0'}
+               bg={'white'}
+               display={'flex'}
+               flexDirection={'column'}
+               borderWidth={'1px'}
+               borderColor={'gray.200'}
+               borderRadius={'md'}
+               >
+            <HStack p={'2'} borderBottomWidth={'1px'} borderColor={'gray.100'} flexShrink={0}>
+              <IconButton aria-label='カレンダーに戻る'
+                          icon={<ArrowBackIcon />}
+                          size={'xs'}
+                          variant={'ghost'}
+                          onClick={() => setSelectedDay(null)}
                           />
+              <Heading size={'sm'} flex={'1'} textAlign={'center'}>{ formatDayHeading(selectedDay.key) }</Heading>
+              <Box w={'24px'} flexShrink={0} aria-hidden />
+            </HStack>
+            <Box flex={'1'} minH={0} overflowY={'auto'}>
+              <Stack spacing={'1'} divider={<Box borderBottomWidth={'1px'} borderColor={'gray.100'} />}>
+                {selectedDay.events.map((event) => <WidgetEventItem key={event.uid} event={event} />)}
+              </Stack>
+            </Box>
+          </Box>
+        )}
+      </Box>
 
       <Text fontSize={'xs'} color={'gray.400'} textAlign={'right'} mt={'4'} flexShrink={0}>
         Powered by{' '}
