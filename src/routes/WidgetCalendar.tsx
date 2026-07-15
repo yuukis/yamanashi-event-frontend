@@ -37,6 +37,7 @@ function formatDayHeading(dayKey: string): string {
 
 const MIN_MONTH_OFFSET = -4;
 const MAX_MONTH_OFFSET = 4;
+const TOOLTIP_SUPPRESS_AFTER_CLOSE_MS = 300;
 
 function WidgetCalendar() {
   const [monthOffset, setMonthOffset] = useState(0);
@@ -53,6 +54,27 @@ function WidgetCalendar() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedDay, setSelectedDay] = useState<SelectedDay | null>(null);
+  const [suppressTooltips, setSuppressTooltips] = useState(false);
+  const unsuppressTimeoutRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(unsuppressTimeoutRef.current);
+    };
+  }, []);
+
+  const openDay = (dayEvents: ApiEvent[], dayKey: string) => {
+    window.clearTimeout(unsuppressTimeoutRef.current);
+    setSuppressTooltips(true);
+    setSelectedDay({ key: dayKey, events: dayEvents });
+  };
+
+  const closeDay = () => {
+    setSelectedDay(null);
+    unsuppressTimeoutRef.current = window.setTimeout(() => {
+      setSuppressTooltips(false);
+    }, TOOLTIP_SUPPRESS_AFTER_CLOSE_MS);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -118,9 +140,9 @@ function WidgetCalendar() {
                             eventsByDate={eventsByDate}
                             isLoading={isLoading}
                             errorMessage={errorMessage}
-                            onDayActivate={(dayEvents, dayKey) => setSelectedDay({ key: dayKey, events: dayEvents })}
+                            onDayActivate={openDay}
                             fillHeight
-                            suppressTooltips={!!selectedDay}
+                            suppressTooltips={suppressTooltips}
                             />
       </Box>
 
@@ -131,7 +153,7 @@ function WidgetCalendar() {
         </Link>
       </Text>
 
-      <Modal isOpen={!!selectedDay} onClose={() => setSelectedDay(null)} isCentered>
+      <Modal isOpen={!!selectedDay} onClose={closeDay} isCentered returnFocusOnClose={false}>
         <ModalOverlay />
         <ModalContent maxW={{ base: 'calc(100vw - 32px)', sm: '400px' }} maxH={'80vh'} mx={'4'}>
           <ModalHeader fontSize={'sm'} textAlign={'center'} pr={'10'}>

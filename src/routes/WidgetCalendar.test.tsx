@@ -122,6 +122,49 @@ describe('WidgetCalendar', () => {
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 
+  it('keeps a tooltip suppressed for a grace period after the overlay closes, then re-enables it on a fresh hover', async () => {
+    vi.useRealTimers();
+    vi.useFakeTimers();
+    vi.setSystemTime(FIXED_NOW);
+    mockEvents([makeEvent({
+      title: 'テストイベント',
+      started_at: '2026-01-15T19:00:00+09:00',
+      ended_at: '2026-01-15T21:00:00+09:00',
+    })]);
+    renderWithChakra(<WidgetCalendar />);
+
+    await act(async () => {
+      await vi.runOnlyPendingTimersAsync();
+    });
+
+    const day15 = screen.getByLabelText(/^1月15日 イベントあり/);
+    fireEvent.click(day15);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    fireEvent.focus(day15);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+    fireEvent.blur(day15);
+    fireEvent.focus(day15);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+  });
+
   it('keeps the flex chain intact so the calendar grid can grow to fill the available height', async () => {
     mockEvents([]);
     renderWithChakra(<WidgetCalendar />);
