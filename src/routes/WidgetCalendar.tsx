@@ -64,8 +64,8 @@ function WidgetCalendar() {
   document.title = 'Yamanashi Developer Hub - イベントカレンダーウィジェット';
 
   return (
-    <Box ref={containerRef} bg={'white'} p={'4'}>
-      <HStack spacing={'2'} mb={'3'}>
+    <Box ref={containerRef} bg={'white'} p={'4'} minH={'100vh'} display={'flex'} flexDirection={'column'}>
+      <HStack spacing={'2'} mb={'3'} flexShrink={0}>
         <IconButton aria-label='前月を表示'
                     icon={<ChevronLeftIcon />}
                     size={'xs'}
@@ -86,9 +86,10 @@ function WidgetCalendar() {
                           eventsByDate={eventsByDate}
                           isLoading={isLoading}
                           errorMessage={errorMessage}
+                          fillHeight
                           />
 
-      <Text fontSize={'xs'} color={'gray.400'} textAlign={'right'} mt={'4'}>
+      <Text fontSize={'xs'} color={'gray.400'} textAlign={'right'} mt={'4'} flexShrink={0}>
         Powered by{' '}
         <Link href={'https://hub.yamanashi.dev'} isExternal color={'primary.700'}>
           Yamanashi Developer Hub

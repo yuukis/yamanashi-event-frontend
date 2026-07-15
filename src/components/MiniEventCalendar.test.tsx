@@ -112,4 +112,23 @@ describe('MiniEventCalendar', () => {
 
     expect(screen.getByText('イベント日を取得できませんでした')).toBeInTheDocument();
   });
+
+  it('still renders all 42 day cells and the weekday header row when fillHeight is enabled', () => {
+    const calendarDays = buildCalendarDays(MONTH_START);
+    const eventsByDate = buildEventsByDate([], calendarDays);
+
+    renderWithChakra(
+      <MiniEventCalendar calendarDays={calendarDays}
+                          todayKey={TODAY_KEY}
+                          eventsByDate={eventsByDate}
+                          isLoading={false}
+                          errorMessage={''}
+                          fillHeight
+                          />,
+    );
+
+    expect(screen.getByText('日')).toBeInTheDocument();
+    expect(screen.getByLabelText('1月10日 今日')).toBeInTheDocument();
+    expect(screen.getAllByText(/^\d{1,2}$/)).toHaveLength(42);
+  });
 });

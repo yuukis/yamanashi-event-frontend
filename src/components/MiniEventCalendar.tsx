@@ -1,4 +1,4 @@
-import { SimpleGrid, Center, Stack, Text, Tooltip } from '@chakra-ui/react';
+import { Grid, SimpleGrid, Center, Stack, Text, Tooltip } from '@chakra-ui/react';
 import type { CalendarDay } from '../utils/calendar';
 
 type MiniEventCalendarEvent = {
@@ -14,9 +14,13 @@ type MiniEventCalendarProps<T extends MiniEventCalendarEvent> = {
   isLoading: boolean;
   errorMessage: string;
   onDayActivate?: (dayEvents: T[], dayKey: string) => void;
+  // trueの場合、親が確保した縦幅いっぱいまで日付マスを伸ばす。
+  // ヘッダーのポップオーバー(コンパクト表示)ではfalseのまま使う。
+  fillHeight?: boolean;
 };
 
 const WEEK_DAYS = ['日', '月', '火', '水', '木', '金', '土'];
+const WEEK_COUNT = 6;
 
 export function MiniEventCalendar<T extends MiniEventCalendarEvent>({
   calendarDays,
@@ -25,10 +29,11 @@ export function MiniEventCalendar<T extends MiniEventCalendarEvent>({
   isLoading,
   errorMessage,
   onDayActivate,
+  fillHeight = false,
 }: MiniEventCalendarProps<T>) {
   return (
-    <Stack spacing={'2'}>
-      <SimpleGrid columns={7} spacing={'1'}>
+    <Stack spacing={'2'} flex={fillHeight ? '1' : undefined} minH={0}>
+      <SimpleGrid columns={7} spacing={'1'} flexShrink={0}>
         {WEEK_DAYS.map((day, index) => (
           <Center key={day}
                   h={'6'}
@@ -38,6 +43,13 @@ export function MiniEventCalendar<T extends MiniEventCalendarEvent>({
             {day}
           </Center>
         ))}
+      </SimpleGrid>
+      <Grid templateColumns={'repeat(7, 1fr)'}
+            templateRows={fillHeight ? `repeat(${WEEK_COUNT}, 1fr)` : undefined}
+            gap={'1'}
+            flex={fillHeight ? '1' : undefined}
+            minH={0}
+            >
         {calendarDays.map((day) => {
           const dayEvents = eventsByDate.get(day.key) ?? [];
           const hasEvent = dayEvents.length > 0;
@@ -54,7 +66,7 @@ export function MiniEventCalendar<T extends MiniEventCalendarEvent>({
           };
           const dayCell = (
             <Center key={day.key}
-                    h={'9'}
+                    h={fillHeight ? '100%' : '9'}
                     borderRadius={'md'}
                     border={isToday ? '2px solid' : '1px solid'}
                     borderColor={isToday ? 'impact.500' : 'gray.100'}
@@ -94,7 +106,7 @@ export function MiniEventCalendar<T extends MiniEventCalendarEvent>({
             </Tooltip>
           );
         })}
-      </SimpleGrid>
+      </Grid>
       {isLoading ? (
         <Text fontSize={'xs'} color={'gray.500'}>イベント日を読み込み中です</Text>
       ) : errorMessage ? (
