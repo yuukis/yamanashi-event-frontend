@@ -17,10 +17,13 @@ The `/widget/events` page can be embedded on any external site with an `<iframe>
 <script>
   (function () {
     var iframe = document.getElementById('yamanashi-hub-widget-events');
+    if (!iframe) return;
     window.addEventListener('message', function (event) {
       if (event.source !== iframe.contentWindow) return;
       if (!event.data || event.data.type !== 'yamanashi-hub:widget-resize') return;
-      iframe.style.height = event.data.height + 'px';
+      var height = event.data.height;
+      if (typeof height !== 'number' || !isFinite(height) || height < 0) return;
+      iframe.style.height = height + 'px';
     });
   })();
 </script>
@@ -42,10 +45,13 @@ The `/widget/groups/:groupKey/events` page shows the same two lists (直近開�
 <script>
   (function () {
     var iframe = document.getElementById('yamanashi-hub-widget-events-techmujin');
+    if (!iframe) return;
     window.addEventListener('message', function (event) {
       if (event.source !== iframe.contentWindow) return;
       if (!event.data || event.data.type !== 'yamanashi-hub:widget-resize') return;
-      iframe.style.height = event.data.height + 'px';
+      var height = event.data.height;
+      if (typeof height !== 'number' || !isFinite(height) || height < 0) return;
+      iframe.style.height = height + 'px';
     });
   })();
 </script>
@@ -66,10 +72,13 @@ The `/widget/calendar` page shows a one-month calendar grid with event days high
 <script>
   (function () {
     var iframe = document.getElementById('yamanashi-hub-widget-calendar');
+    if (!iframe) return;
     window.addEventListener('message', function (event) {
       if (event.source !== iframe.contentWindow) return;
       if (!event.data || event.data.type !== 'yamanashi-hub:widget-resize') return;
-      iframe.style.height = event.data.height + 'px';
+      var height = event.data.height;
+      if (typeof height !== 'number' || !isFinite(height) || height < 0) return;
+      iframe.style.height = height + 'px';
     });
   })();
 </script>
