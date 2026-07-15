@@ -17,9 +17,6 @@ import { parseWidgetLimit } from '../utils/widgetLimit';
 import { useReportWidgetHeight } from '../utils/widgetResize';
 import type { ApiEvent } from '../types/events';
 
-// WidgetEventItem が実際に描画するフィールドのみ要求する(グループの
-// 画像/アーカイブ情報や description、keywords 等は不要なため /groups への
-// 問い合わせ自体も行わない)。
 const WIDGET_EVENTS_FIELDS = [
   'uid',
   'title',
@@ -87,8 +84,6 @@ function WidgetEvents() {
     if (!isLocalStorageAvailable() || data.futureEvents.length === 0) {
       return;
     }
-    // NEWバッジ判定用のfirstSeenAt記録。60秒ごとのnowティックでは書き込みが
-    // 走らないよう、依存配列にnowを含めない(Notification.tsxと同じ方針)。
     updateTrackingData((previous) => mergeTrackingData(previous, data.futureEvents, now));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.futureEvents]);

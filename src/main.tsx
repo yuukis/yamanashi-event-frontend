@@ -45,8 +45,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>,
 )
 
-// 埋め込みウィジェット(/widget/*)はサードパーティページのiframe内で
-// 表示されるため、オフラインキャッシュやプッシュ通知登録は不要。
 if ('serviceWorker' in navigator && !location.pathname.startsWith('/widget/')) {
   window.addEventListener('load', async () => {
     await navigator.serviceWorker.register('/service-worker.js');
