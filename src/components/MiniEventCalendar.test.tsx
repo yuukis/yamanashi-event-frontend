@@ -80,7 +80,7 @@ describe('MiniEventCalendar', () => {
                           />,
     );
 
-    expect(screen.queryByRole('link', { name: /1月15日/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /1月15日/ })).not.toBeInTheDocument();
   });
 
   it('shows a loading message while isLoading is true', () => {

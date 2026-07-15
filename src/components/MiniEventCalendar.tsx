@@ -76,7 +76,7 @@ export function MiniEventCalendar<T extends MiniEventCalendarEvent>({
                     fontWeight={isToday || hasEvent ? 'bold' : 'normal'}
                     tabIndex={hasEvent ? 0 : undefined}
                     cursor={isActivatable ? 'pointer' : 'default'}
-                    role={isActivatable ? 'link' : undefined}
+                    role={isActivatable ? 'button' : undefined}
                     onClick={isActivatable ? activateDay : undefined}
                     onKeyDown={isActivatable ? (e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
