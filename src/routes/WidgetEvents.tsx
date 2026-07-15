@@ -21,7 +21,7 @@ const WIDGET_EVENTS_FIELDS = [
 function WidgetEvents() {
   const [searchParams] = useSearchParams();
   const limit = parseWidgetLimit(searchParams.get('limit'));
-  const data = useWidgetEvents(() => fetchEvents(WIDGET_EVENTS_FIELDS));
+  const data = useWidgetEvents(() => fetchEvents(WIDGET_EVENTS_FIELDS), []);
 
   document.title = 'Yamanashi Developer Hub - イベント一覧ウィジェット';
 

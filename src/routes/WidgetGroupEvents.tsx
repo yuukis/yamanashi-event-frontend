@@ -27,7 +27,7 @@ function WidgetGroupEvents() {
     groupKey
       ? fetchGroupEvents(groupKey, WIDGET_GROUP_EVENTS_FIELDS)
       : Promise.resolve({ events: [] })
-  ));
+  ), [groupKey]);
 
   document.title = 'Yamanashi Developer Hub - コミュニティイベント一覧ウィジェット';
 

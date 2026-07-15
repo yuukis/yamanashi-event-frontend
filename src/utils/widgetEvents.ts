@@ -1,4 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
+import type { DependencyList } from 'react';
 import type { ApiEvent } from '../types/events';
 import { isFutureEvent, isPastEvent } from './eventGroups';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from './eventSort';
@@ -18,7 +19,7 @@ function extractErrorMessage(err: unknown): string {
   return detail ?? (err as { message?: string })?.message ?? '';
 }
 
-export function useWidgetEvents(fetcher: () => Promise<{ events: ApiEvent[] }>): WidgetEventsState {
+export function useWidgetEvents(fetcher: () => Promise<{ events: ApiEvent[] }>, deps: DependencyList): WidgetEventsState {
   const [data, setData] = useState<WidgetEventsState>({
     isLoading: true,
     pastEvents: [],
@@ -29,6 +30,7 @@ export function useWidgetEvents(fetcher: () => Promise<{ events: ApiEvent[] }>):
 
   useEffect(() => {
     let cancelled = false;
+    setData((previous) => ({ ...previous, isLoading: true, errorMessage: '' }));
     (async () => {
       try {
         const { events } = await fetcher();
@@ -52,7 +54,7 @@ export function useWidgetEvents(fetcher: () => Promise<{ events: ApiEvent[] }>):
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, deps);
 
   useEffect(() => {
     if (!isLocalStorageAvailable() || data.futureEvents.length === 0) {
