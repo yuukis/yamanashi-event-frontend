@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SiteHeader, SiteFooter, useFixedHeaderBoundary } from '../components/Site';
 import { WidgetPreviewCard } from '../components/WidgetPreviewCard';
 import '../style.css';
@@ -29,14 +29,16 @@ import {
   SearchIcon,
   StarIcon,
 } from "@chakra-ui/icons";
-import { fetchGroups } from '../utils/api';
+import { fetchEvents, fetchGroups } from '../utils/api';
 import { buildListWidgetPath } from '../utils/widgetPaths';
+import { collectActiveGroupKeys, splitGroupsByActivity } from '../utils/groupActivity';
 import type { ApiGroup } from '../types/events';
 
 function Guide() {
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
 
   const [groups, setGroups] = useState<ApiGroup[]>([]);
+  const [activeGroupKeys, setActiveGroupKeys] = useState<Set<string>>(new Set());
   const [selectedGroupKey, setSelectedGroupKey] = useState('');
 
   useEffect(() => {
@@ -44,7 +46,7 @@ function Guide() {
     fetchGroups()
       .then((res) => {
         if (!cancelled) {
-          setGroups([...res].sort((a, b) => a.title.localeCompare(b.title, 'ja')));
+          setGroups(res);
         }
       })
       .catch(() => {
@@ -55,6 +57,28 @@ function Guide() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchEvents('group_key')
+      .then((res) => {
+        if (!cancelled) {
+          setActiveGroupKeys(collectActiveGroupKeys(res.events));
+        }
+      })
+      .catch(() => {
+        // 取得に失敗しても並び順が活動状況を反映しないだけなので、
+        // プルダウン自体は利用できるよう静かに無視する
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const { activeGroups, inactiveGroups } = useMemo(
+    () => splitGroupsByActivity(groups, activeGroupKeys),
+    [groups, activeGroupKeys],
+  );
 
   const { isOpen: isWidgetSectionExpanded, onToggle: toggleWidgetSection } = useDisclosure();
 
@@ -217,9 +241,20 @@ function Guide() {
                                              onChange={(e) => setSelectedGroupKey(e.target.value)}
                                              >
                                        <option value={''}>すべてのイベント</option>
-                                       {groups.map((group) => (
-                                         <option key={group.key} value={group.key}>{ group.title }</option>
-                                       ))}
+                                       {activeGroups.length > 0 && (
+                                         <optgroup label={'最近活動しているコミュニティ'}>
+                                           {activeGroups.map((group) => (
+                                             <option key={group.key} value={group.key}>{ group.title }</option>
+                                           ))}
+                                         </optgroup>
+                                       )}
+                                       {inactiveGroups.length > 0 && (
+                                         <optgroup label={'その他のコミュニティ'}>
+                                           {inactiveGroups.map((group) => (
+                                             <option key={group.key} value={group.key}>{ group.title }</option>
+                                           ))}
+                                         </optgroup>
+                                       )}
                                      </Select>
                                    }
                                    />
