@@ -12,6 +12,18 @@ describe('CopySnippetBlock', () => {
     expect(textarea).toHaveAttribute('readonly');
   });
 
+  it('has a default accessible name when none is given', () => {
+    renderWithChakra(<CopySnippetBlock code={'<iframe></iframe>'} />);
+
+    expect(screen.getByRole('textbox', { name: '埋め込み用スニペット' })).toBeInTheDocument();
+  });
+
+  it('uses the given label as the accessible name', () => {
+    renderWithChakra(<CopySnippetBlock code={'<iframe></iframe>'} label={'イベント一覧の埋め込みスニペット'} />);
+
+    expect(screen.getByRole('textbox', { name: 'イベント一覧の埋め込みスニペット' })).toBeInTheDocument();
+  });
+
   it('copies the code to the clipboard and shows a success toast', async () => {
     const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
     renderWithChakra(<CopySnippetBlock code={'snippet-code'} />);

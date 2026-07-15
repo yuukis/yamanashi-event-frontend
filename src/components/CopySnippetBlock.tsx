@@ -3,9 +3,10 @@ import { FiCopy } from 'react-icons/fi';
 
 type CopySnippetBlockProps = {
   code: string;
+  label?: string;
 };
 
-export function CopySnippetBlock({ code }: CopySnippetBlockProps) {
+export function CopySnippetBlock({ code, label = '埋め込み用スニペット' }: CopySnippetBlockProps) {
   const toast = useToast();
 
   const handleCopy = async () => {
@@ -24,6 +25,8 @@ export function CopySnippetBlock({ code }: CopySnippetBlockProps) {
     <Box position={'relative'}>
       <Textarea value={code}
                 isReadOnly
+                aria-label={label}
+                spellCheck={false}
                 fontFamily={'mono'}
                 fontSize={'xs'}
                 rows={code.split('\n').length}
