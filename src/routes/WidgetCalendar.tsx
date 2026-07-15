@@ -103,7 +103,13 @@ function WidgetCalendar() {
                     />
       </HStack>
 
-      <Box position={'relative'} flex={'1'} minH={0} display={'flex'} flexDirection={'column'}>
+      <Box data-testid={'calendar-fill-wrapper'}
+           position={'relative'}
+           flex={'1'}
+           minH={0}
+           display={'flex'}
+           flexDirection={'column'}
+           >
         <MiniEventCalendar calendarDays={calendarDays}
                             todayKey={todayKey}
                             eventsByDate={eventsByDate}
