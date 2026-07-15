@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { SiteHeader, SiteFooter, useFixedHeaderBoundary } from '../components/Site';
+import { WidgetPreviewCard } from '../components/WidgetPreviewCard';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
 import {
@@ -10,6 +12,7 @@ import {
   Heading,
   Image,
   Link,
+  Select,
   SimpleGrid,
   Stack,
   Text,
@@ -23,9 +26,37 @@ import {
   SearchIcon,
   StarIcon,
 } from "@chakra-ui/icons";
+import { fetchGroups } from '../utils/api';
+import { buildListWidgetPath } from '../utils/widgetPaths';
+import type { ApiGroup } from '../types/events';
 
 function Guide() {
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
+
+  const [groups, setGroups] = useState<ApiGroup[]>([]);
+  const [selectedGroupKey, setSelectedGroupKey] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchGroups()
+      .then((res) => {
+        if (!cancelled) {
+          setGroups([...res].sort((a, b) => a.title.localeCompare(b.title, 'ja')));
+        }
+      })
+      .catch(() => {
+        // 一覧パーツのプレビューは「すべてのイベント」のまま利用できるので、
+        // コミュニティ選択肢の取得失敗は静かに無視する
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedGroup = groups.find((group) => group.key === selectedGroupKey);
+  const listWidgetPath = buildListWidgetPath(selectedGroupKey);
+  const listIframeTitle = selectedGroup ? `${selectedGroup.title} イベント情報` : '山梨イベント情報';
+  const listElementId = selectedGroup ? `yamanashi-hub-widget-events-${selectedGroup.key}` : 'yamanashi-hub-widget-events';
 
   document.title = 'はじめての方へ - Yamanashi Developer Hub';
 
@@ -154,6 +185,42 @@ function Guide() {
                 </Stack>
               </CardBody>
             </Card>
+          </Box>
+
+          <Box>
+            <Heading size={{base: 'sm', md: 'md'}} mb={'4'} color={'gray.600'}>
+              ブログパーツ
+            </Heading>
+            <Text fontSize={'sm'} color={'gray.600'} mb={'4'} lineHeight={'1.8'}>
+              イベント情報をブログやサイトに埋め込めます。プレビューを確認して、下のスニペットをコピーしてお使いください。
+            </Text>
+            <SimpleGrid columns={{base: 1, md: 2}} spacing={'4'}>
+              <WidgetPreviewCard title={'イベント一覧'}
+                                 description={'直近開催・終了したイベントを一覧表示します。プルダウンでコミュニティを絞り込めます。'}
+                                 previewPath={listWidgetPath}
+                                 embedPath={listWidgetPath}
+                                 iframeTitle={listIframeTitle}
+                                 elementId={listElementId}
+                                 controls={
+                                   <Select size={'sm'}
+                                           value={selectedGroupKey}
+                                           onChange={(e) => setSelectedGroupKey(e.target.value)}
+                                           >
+                                     <option value={''}>すべてのイベント</option>
+                                     {groups.map((group) => (
+                                       <option key={group.key} value={group.key}>{ group.title }</option>
+                                     ))}
+                                   </Select>
+                                 }
+                                 />
+              <WidgetPreviewCard title={'イベントカレンダー'}
+                                 description={'月間カレンダーでイベント日をハイライトします。日付をクリックするとその日のイベントを確認できます。'}
+                                 previewPath={'/widget/calendar'}
+                                 embedPath={'/widget/calendar'}
+                                 iframeTitle={'山梨イベントカレンダー'}
+                                 elementId={'yamanashi-hub-widget-calendar'}
+                                 />
+            </SimpleGrid>
           </Box>
 
           <Box>
