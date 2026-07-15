@@ -1,4 +1,6 @@
+import { useEffect, useMemo, useState } from 'react';
 import { SiteHeader, SiteFooter, useFixedHeaderBoundary } from '../components/Site';
+import { WidgetPreviewCard } from '../components/WidgetPreviewCard';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
 import {
@@ -10,22 +12,80 @@ import {
   Heading,
   Image,
   Link,
+  Select,
   SimpleGrid,
   Stack,
   Text,
+  useDisclosure,
 } from '@chakra-ui/react';
 import {
   BellIcon,
   CalendarIcon,
   CheckCircleIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   ExternalLinkIcon,
   InfoOutlineIcon,
   SearchIcon,
   StarIcon,
 } from "@chakra-ui/icons";
+import { fetchEvents, fetchGroups } from '../utils/api';
+import { buildListWidgetPath } from '../utils/widgetPaths';
+import { collectActiveGroupKeys, splitGroupsByActivity } from '../utils/groupActivity';
+import type { ApiGroup } from '../types/events';
 
 function Guide() {
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
+
+  const [groups, setGroups] = useState<ApiGroup[]>([]);
+  const [activeGroupKeys, setActiveGroupKeys] = useState<Set<string>>(new Set());
+  const [selectedGroupKey, setSelectedGroupKey] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchGroups()
+      .then((res) => {
+        if (!cancelled) {
+          setGroups(res);
+        }
+      })
+      .catch(() => {
+        // 一覧パーツのプレビューは「すべてのイベント」のまま利用できるので、
+        // コミュニティ選択肢の取得失敗は静かに無視する
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchEvents('group_key')
+      .then((res) => {
+        if (!cancelled) {
+          setActiveGroupKeys(collectActiveGroupKeys(res.events));
+        }
+      })
+      .catch(() => {
+        // 取得に失敗しても並び順が活動状況を反映しないだけなので、
+        // プルダウン自体は利用できるよう静かに無視する
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const { activeGroups, inactiveGroups } = useMemo(
+    () => splitGroupsByActivity(groups, activeGroupKeys),
+    [groups, activeGroupKeys],
+  );
+
+  const { isOpen: isWidgetSectionExpanded, onToggle: toggleWidgetSection } = useDisclosure();
+
+  const selectedGroup = groups.find((group) => group.key === selectedGroupKey);
+  const listWidgetPath = buildListWidgetPath(selectedGroupKey);
+  const listIframeTitle = selectedGroup ? `${selectedGroup.title} イベント情報` : '山梨イベント情報';
+  const listElementId = selectedGroup ? `yamanashi-hub-widget-events-${selectedGroup.key}` : 'yamanashi-hub-widget-events';
 
   document.title = 'はじめての方へ - Yamanashi Developer Hub';
 
@@ -154,6 +214,80 @@ function Guide() {
                 </Stack>
               </CardBody>
             </Card>
+          </Box>
+
+          <Box>
+            <Heading size={{base: 'sm', md: 'md'}} mb={'4'} color={'gray.600'}>
+              ブログパーツ
+            </Heading>
+            <Text fontSize={'sm'} color={'gray.600'} mb={'4'} lineHeight={'1.8'}>
+              イベント情報をブログやサイトに埋め込めます。プレビューを確認して、下のスニペットをコピーしてお使いください。
+            </Text>
+            <Box position={'relative'}
+                 maxH={isWidgetSectionExpanded ? '5000px' : '360px'}
+                 overflow={'hidden'}
+                 transition={'max-height 0.3s ease'}
+                 >
+              <SimpleGrid columns={{base: 1, md: 2}} spacing={'4'}>
+                <WidgetPreviewCard title={'イベント一覧'}
+                                   description={'直近開催・終了したイベントを一覧表示します。プルダウンでコミュニティを絞り込めます。'}
+                                   previewPath={listWidgetPath}
+                                   embedPath={listWidgetPath}
+                                   iframeTitle={listIframeTitle}
+                                   elementId={listElementId}
+                                   controls={
+                                     <Select size={'sm'}
+                                             aria-label={'プレビューするコミュニティを選択'}
+                                             value={selectedGroupKey}
+                                             onChange={(e) => setSelectedGroupKey(e.target.value)}
+                                             >
+                                       <option value={''}>すべてのイベント</option>
+                                       {activeGroups.length > 0 && (
+                                         <optgroup label={'イベント情報のあるコミュニティ'}>
+                                           {activeGroups.map((group) => (
+                                             <option key={group.key} value={group.key}>{ group.title }</option>
+                                           ))}
+                                         </optgroup>
+                                       )}
+                                       {inactiveGroups.length > 0 && (
+                                         <optgroup label={'その他のコミュニティ'}>
+                                           {inactiveGroups.map((group) => (
+                                             <option key={group.key} value={group.key}>{ group.title }</option>
+                                           ))}
+                                         </optgroup>
+                                       )}
+                                     </Select>
+                                   }
+                                   />
+                <WidgetPreviewCard title={'イベントカレンダー'}
+                                   description={'月間カレンダーでイベント日をハイライトします。日付をクリックするとその日のイベントを確認できます。'}
+                                   previewPath={'/widget/calendar'}
+                                   embedPath={'/widget/calendar'}
+                                   iframeTitle={'山梨イベントカレンダー'}
+                                   elementId={'yamanashi-hub-widget-calendar'}
+                                   />
+              </SimpleGrid>
+              {!isWidgetSectionExpanded && (
+                <Box position={'absolute'}
+                     bottom={'0'}
+                     left={'0'}
+                     right={'0'}
+                     h={'80px'}
+                     bgGradient={'linear(to-t, gray.100, transparent)'}
+                     pointerEvents={'none'}
+                     aria-hidden
+                     />
+              )}
+            </Box>
+            <Button size={'sm'}
+                    variant={'outline'}
+                    w={'full'}
+                    mt={'3'}
+                    onClick={toggleWidgetSection}
+                    rightIcon={isWidgetSectionExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                    >
+              { isWidgetSectionExpanded ? '閉じる' : 'もっと見る' }
+            </Button>
           </Box>
 
           <Box>
