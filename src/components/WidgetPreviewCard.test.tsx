@@ -15,7 +15,23 @@ describe('WidgetPreviewCard', () => {
                           />,
     );
 
-    expect(screen.getByTitle('山梨イベント情報')).toHaveAttribute('src', '/widget/events?limit=5');
+    const iframe = screen.getByTitle('山梨イベント情報');
+    expect(iframe).toHaveAttribute('src', '/widget/events?limit=5');
+    expect(iframe).toHaveAttribute('loading', 'lazy');
+  });
+
+  it('gives the copyable snippet textarea an accessible name derived from the card title', () => {
+    renderWithChakra(
+      <WidgetPreviewCard title={'イベント一覧'}
+                          description={'説明'}
+                          previewPath={'/widget/events?limit=5'}
+                          embedPath={'/widget/events?limit=5'}
+                          iframeTitle={'山梨イベント情報'}
+                          elementId={'yamanashi-hub-widget-events'}
+                          />,
+    );
+
+    expect(screen.getByRole('textbox', { name: 'イベント一覧の埋め込みスニペット' })).toBeInTheDocument();
   });
 
   it('includes the absolute embed URL and element id in the copyable snippet', () => {

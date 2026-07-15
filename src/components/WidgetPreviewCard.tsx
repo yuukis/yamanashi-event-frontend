@@ -78,10 +78,13 @@ export function WidgetPreviewCard({
             <iframe ref={iframeRef}
                     src={previewPath}
                     title={iframeTitle}
+                    loading={'lazy'}
                     style={{ width: '100%', border: 0, display: 'block' }}
                     />
           </Box>
-          <CopySnippetBlock code={buildSnippet(embedPath, iframeTitle, elementId)} />
+          <CopySnippetBlock code={buildSnippet(embedPath, iframeTitle, elementId)}
+                            label={`${title}の埋め込みスニペット`}
+                            />
         </Stack>
       </CardBody>
     </Card>
