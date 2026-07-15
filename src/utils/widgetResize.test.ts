@@ -29,6 +29,7 @@ describe('postWidgetHeight', () => {
 
 describe('useReportWidgetHeight', () => {
   const originalResizeObserver = window.ResizeObserver;
+  const originalParent = window.parent;
 
   beforeEach(() => {
     (window as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver =
@@ -37,11 +38,11 @@ describe('useReportWidgetHeight', () => {
 
   afterEach(() => {
     (window as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver = originalResizeObserver;
+    Object.defineProperty(window, 'parent', { value: originalParent, configurable: true });
   });
 
   it('reports the element height to the parent window on mount', () => {
     const parentPostMessageSpy = vi.fn();
-    const originalParent = window.parent;
     Object.defineProperty(window, 'parent', {
       value: { postMessage: parentPostMessageSpy },
       configurable: true,
@@ -51,14 +52,15 @@ describe('useReportWidgetHeight', () => {
     document.body.appendChild(div);
     const ref = { current: div };
 
-    renderHook(() => useReportWidgetHeight(ref));
+    try {
+      renderHook(() => useReportWidgetHeight(ref));
 
-    expect(parentPostMessageSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: WIDGET_RESIZE_MESSAGE_TYPE }),
-      '*',
-    );
-
-    Object.defineProperty(window, 'parent', { value: originalParent, configurable: true });
-    document.body.removeChild(div);
+      expect(parentPostMessageSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: WIDGET_RESIZE_MESSAGE_TYPE }),
+        '*',
+      );
+    } finally {
+      document.body.removeChild(div);
+    }
   });
 });
