@@ -108,6 +108,38 @@ describe('WidgetCalendar', () => {
     expect(getComputedStyle(wrapper).flexDirection).toBe('column');
   });
 
+  it('limits forward navigation to 4 months ahead and disables the next button at the boundary', async () => {
+    mockEvents([]);
+    renderWithChakra(<WidgetCalendar />);
+
+    const nextButton = await screen.findByLabelText('次月を表示');
+    for (let i = 0; i < 4; i++) {
+      fireEvent.click(nextButton);
+    }
+
+    expect(await screen.findByText('2026年5月')).toBeInTheDocument();
+    expect(nextButton).toBeDisabled();
+
+    fireEvent.click(nextButton);
+    expect(screen.getByText('2026年5月')).toBeInTheDocument();
+  });
+
+  it('limits backward navigation to 4 months behind and disables the previous button at the boundary', async () => {
+    mockEvents([]);
+    renderWithChakra(<WidgetCalendar />);
+
+    const prevButton = await screen.findByLabelText('前月を表示');
+    for (let i = 0; i < 4; i++) {
+      fireEvent.click(prevButton);
+    }
+
+    expect(await screen.findByText('2025年9月')).toBeInTheDocument();
+    expect(prevButton).toBeDisabled();
+
+    fireEvent.click(prevButton);
+    expect(screen.getByText('2025年9月')).toBeInTheDocument();
+  });
+
   it('lists every event of the day in the overlay, in the order provided', async () => {
     mockEvents([
       makeEvent({ uid: 'a', title: 'イベントA', started_at: '2026-01-15T09:00:00+09:00', ended_at: '2026-01-15T10:00:00+09:00' }),

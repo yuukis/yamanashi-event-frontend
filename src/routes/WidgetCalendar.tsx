@@ -35,6 +35,9 @@ function formatDayHeading(dayKey: string): string {
   return `${date.getMonth() + 1}月${date.getDate()}日(${dayOfWeek})`;
 }
 
+const MIN_MONTH_OFFSET = -4;
+const MAX_MONTH_OFFSET = 4;
+
 function WidgetCalendar() {
   const [monthOffset, setMonthOffset] = useState(0);
   const today = useTodayDate();
@@ -91,14 +94,16 @@ function WidgetCalendar() {
                     icon={<ChevronLeftIcon />}
                     size={'xs'}
                     variant={'outline'}
-                    onClick={() => setMonthOffset((current) => current - 1)}
+                    isDisabled={monthOffset <= MIN_MONTH_OFFSET}
+                    onClick={() => setMonthOffset((current) => Math.max(current - 1, MIN_MONTH_OFFSET))}
                     />
         <Heading size={'sm'} flex={'1'} textAlign={'center'}>{ monthLabel }</Heading>
         <IconButton aria-label='次月を表示'
                     icon={<ChevronRightIcon />}
                     size={'xs'}
                     variant={'outline'}
-                    onClick={() => setMonthOffset((current) => current + 1)}
+                    isDisabled={monthOffset >= MAX_MONTH_OFFSET}
+                    onClick={() => setMonthOffset((current) => Math.min(current + 1, MAX_MONTH_OFFSET))}
                     />
       </HStack>
 
