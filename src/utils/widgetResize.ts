@@ -40,7 +40,11 @@ export function useWidgetIframeAutoHeight(iframeRef: RefObject<HTMLIFrameElement
       if (!event.data || event.data.type !== WIDGET_RESIZE_MESSAGE_TYPE) {
         return;
       }
-      iframe.style.height = `${event.data.height}px`;
+      const height = event.data.height;
+      if (typeof height !== 'number' || !Number.isFinite(height) || height < 0) {
+        return;
+      }
+      iframe.style.height = `${height}px`;
     };
 
     window.addEventListener('message', handleMessage);

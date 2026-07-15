@@ -122,4 +122,29 @@ describe('useWidgetIframeAutoHeight', () => {
       document.body.removeChild(iframe);
     }
   });
+
+  it.each([
+    ['a non-numeric value', 'not-a-number'],
+    ['NaN', NaN],
+    ['Infinity', Infinity],
+    ['a negative number', -10],
+    [undefined, undefined],
+  ])('ignores a resize message with %s as the height', (_label, height) => {
+    const iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    const ref = { current: iframe };
+
+    try {
+      renderHook(() => useWidgetIframeAutoHeight(ref));
+
+      window.dispatchEvent(new MessageEvent('message', {
+        data: { type: WIDGET_RESIZE_MESSAGE_TYPE, height },
+        source: iframe.contentWindow,
+      }));
+
+      expect(iframe.style.height).toBe('');
+    } finally {
+      document.body.removeChild(iframe);
+    }
+  });
 });
