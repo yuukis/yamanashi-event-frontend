@@ -6,21 +6,39 @@ import { useWidgetIframeAutoHeight, WIDGET_RESIZE_MESSAGE_TYPE } from '../utils/
 
 const SITE_ORIGIN = 'https://hub.yamanashi.dev';
 
+function escapeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function escapeJsSingleQuotedString(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, '\\\'');
+}
+
 function buildSnippet(embedPath: string, iframeTitle: string, elementId: string): string {
-  const src = `${SITE_ORIGIN}${embedPath}`;
+  const src = escapeHtmlAttribute(`${SITE_ORIGIN}${embedPath}`);
+  const idAttr = escapeHtmlAttribute(elementId);
+  const idJs = escapeJsSingleQuotedString(elementId);
+  const title = escapeHtmlAttribute(iframeTitle);
   return [
-    `<iframe id="${elementId}"`,
+    `<iframe id="${idAttr}"`,
     `        src="${src}"`,
     `        style="width:100%;border:0;"`,
     `        scrolling="no"`,
-    `        title="${iframeTitle}"></iframe>`,
+    `        title="${title}"></iframe>`,
     `<script>`,
     `  (function () {`,
-    `    var iframe = document.getElementById('${elementId}');`,
+    `    var iframe = document.getElementById('${idJs}');`,
+    `    if (!iframe) return;`,
     `    window.addEventListener('message', function (event) {`,
     `      if (event.source !== iframe.contentWindow) return;`,
     `      if (!event.data || event.data.type !== '${WIDGET_RESIZE_MESSAGE_TYPE}') return;`,
-    `      iframe.style.height = event.data.height + 'px';`,
+    `      var height = event.data.height;`,
+    `      if (typeof height !== 'number' || !isFinite(height) || height < 0) return;`,
+    `      iframe.style.height = height + 'px';`,
     `    });`,
     `  })();`,
     `</script>`,
