@@ -4,7 +4,7 @@ import { renderWithChakra } from '../test/test-utils';
 import { MiniEventCalendar } from './MiniEventCalendar';
 import { buildCalendarDays, buildEventsByDate } from '../utils/calendar';
 
-const MONTH_START = new Date(2026, 0, 1); // January 2026
+const MONTH_START = new Date(2026, 0, 1);
 const TODAY_KEY = '2026-01-10';
 
 describe('MiniEventCalendar', () => {

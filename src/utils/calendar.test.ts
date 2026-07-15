@@ -4,7 +4,7 @@ import { buildCalendarDays, buildEventsByDate, useTodayDate } from './calendar';
 
 describe('buildCalendarDays', () => {
   it('builds a 42-day grid starting on the Sunday on/before the 1st, covering the whole month', () => {
-    const days = buildCalendarDays(new Date(2026, 0, 1)); // 2026-01-01 is a Thursday
+    const days = buildCalendarDays(new Date(2026, 0, 1));
 
     expect(days).toHaveLength(42);
     expect(days[0].date.getDay()).toBe(0);

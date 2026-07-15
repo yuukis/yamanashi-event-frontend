@@ -97,11 +97,6 @@ describe('WidgetCalendar', () => {
   });
 
   it('suppresses a tooltip whose open-delay timer was still pending when the day was clicked', async () => {
-    // ホバー/フォーカスから200ms以内にクリックすると、ツールチップの
-    // 遅延オープン用タイマーが「クリック時点ではまだisOpen=falseだった」
-    // ために閉じるロジックをすり抜け、モーダルの裏で後からツールチップが
-    // 開いてしまうことがあった。suppressTooltipsで確実に止まることを
-    // 確認する。
     vi.useRealTimers();
     vi.useFakeTimers();
     vi.setSystemTime(FIXED_NOW);
@@ -117,20 +112,17 @@ describe('WidgetCalendar', () => {
     });
 
     const day15 = screen.getByLabelText(/^1月15日 イベントあり/);
-    fireEvent.focus(day15); // schedules the tooltip's 200ms open timer
-    fireEvent.click(day15); // opens the modal well before the timer fires
+    fireEvent.focus(day15);
+    fireEvent.click(day15);
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(500); // past the tooltip's openDelay
+      await vi.advanceTimersByTimeAsync(500);
     });
 
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 
   it('keeps the flex chain intact so the calendar grid can grow to fill the available height', async () => {
-    // 日別オーバーレイ用のラッパーがdisplay:flexでないと、内側の
-    // MiniEventCalendar(fillHeight)のflex="1"が効かずマスが伸びなくなる
-    // (縦幅が元に戻る不具合の再発防止)。
     mockEvents([]);
     renderWithChakra(<WidgetCalendar />);
 

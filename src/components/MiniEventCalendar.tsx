@@ -14,12 +14,7 @@ type MiniEventCalendarProps<T extends MiniEventCalendarEvent> = {
   isLoading: boolean;
   errorMessage: string;
   onDayActivate?: (dayEvents: T[], dayKey: string) => void;
-  // trueの場合、親が確保した縦幅いっぱいまで日付マスを伸ばす。
-  // ヘッダーのポップオーバー(コンパクト表示)ではfalseのまま使う。
   fillHeight?: boolean;
-  // trueの場合、全マスのツールチップを無効化する。onDayActivateで
-  // モーダル等を開いた直後、遅延オープン中だったツールチップが
-  // モーダルの裏で後から表示されてしまうのを防ぐために使う。
   suppressTooltips?: boolean;
 };
 
