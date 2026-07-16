@@ -183,6 +183,8 @@ export function ICalendarButton() {
   const [isIcalExpanded, setIsIcalExpanded] = useState(false);
   const [isUrlCopied, setIsUrlCopied] = useState(false);
   const icalUrlInputRef = useRef<HTMLInputElement>(null);
+  const copyFeedbackTimeoutRef = useRef<number | null>(null);
+  const firstServiceLinkRef = useRef<HTMLAnchorElement>(null);
   const today = useTodayDate();
   const monthStart = useMemo(
     () => new Date(today.getFullYear(), today.getMonth() + monthOffset, 1),
@@ -228,6 +230,20 @@ export function ICalendarButton() {
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (copyFeedbackTimeoutRef.current !== null) {
+        window.clearTimeout(copyFeedbackTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isIcalExpanded) {
+      firstServiceLinkRef.current?.focus();
+    }
+  }, [isIcalExpanded]);
+
   const openCalendar = () => {
     if (errorMessage) {
       loadEvents();
@@ -261,6 +277,10 @@ export function ICalendarButton() {
     setMonthOffset(0);
     setIsIcalExpanded(false);
     setIsUrlCopied(false);
+    if (copyFeedbackTimeoutRef.current !== null) {
+      window.clearTimeout(copyFeedbackTimeoutRef.current);
+      copyFeedbackTimeoutRef.current = null;
+    }
     onClose();
   };
 
@@ -269,7 +289,13 @@ export function ICalendarButton() {
       navigator.clipboard.writeText(ICAL_URL)
         .then(() => {
           setIsUrlCopied(true);
-          window.setTimeout(() => setIsUrlCopied(false), 1500);
+          if (copyFeedbackTimeoutRef.current !== null) {
+            window.clearTimeout(copyFeedbackTimeoutRef.current);
+          }
+          copyFeedbackTimeoutRef.current = window.setTimeout(() => {
+            setIsUrlCopied(false);
+            copyFeedbackTimeoutRef.current = null;
+          }, 1500);
         })
         .catch(() => {
           icalUrlInputRef.current?.select();
@@ -375,7 +401,8 @@ export function ICalendarButton() {
                     外部カレンダーに登録
                   </Text>
                   <HStack spacing={'2'} align={'stretch'}>
-                    <Link href={GOOGLE_CALENDAR_ADD_URL}
+                    <Link ref={firstServiceLinkRef}
+                          href={GOOGLE_CALENDAR_ADD_URL}
                           isExternal
                           flex={'1'}
                           aria-label={'Google カレンダーに登録する'}
