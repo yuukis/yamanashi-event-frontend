@@ -298,9 +298,15 @@ export function ICalendarButton() {
           }, 1500);
         })
         .catch(() => {
+          if (copyFeedbackTimeoutRef.current !== null) {
+            window.clearTimeout(copyFeedbackTimeoutRef.current);
+            copyFeedbackTimeoutRef.current = null;
+          }
+          setIsUrlCopied(false);
           icalUrlInputRef.current?.select();
         });
     } else {
+      setIsUrlCopied(false);
       icalUrlInputRef.current?.select();
     }
   };
