@@ -28,6 +28,7 @@ import {
 import { isMobile } from 'react-device-detect';
 import { ChevronLeftIcon, ChevronRightIcon, RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
+import { FiCalendar } from 'react-icons/fi';
 import { keyframes } from '@emotion/react';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
@@ -171,6 +172,7 @@ export function ICalendarButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [monthOffset, setMonthOffset] = useState(0);
+  const [isIcalExpanded, setIsIcalExpanded] = useState(false);
   const today = useTodayDate();
   const monthStart = useMemo(
     () => new Date(today.getFullYear(), today.getMonth() + monthOffset, 1),
@@ -247,6 +249,7 @@ export function ICalendarButton() {
 
   const closePopover = () => {
     setMonthOffset(0);
+    setIsIcalExpanded(false);
     onClose();
   };
 
@@ -326,26 +329,41 @@ export function ICalendarButton() {
                 }
               }}
             />
-            <Stack borderTop={'1px solid'}
-                   borderColor={'gray.100'}
-                   pt={'3'}
-                   spacing={'2'}
-                   >
-              <Text fontSize={'xs'} color={'gray.600'}>
-                連携用URL（iCalendar）
-              </Text>
-              <Text fontSize={'xs'} color={'gray.500'}>
-                外部カレンダーに追加したい方向けです。
-              </Text>
-              <Input value={'https://hub.yamanashi.dev/event.ics'}
-                    size={'sm'}
-                    isReadOnly
-                    onSelect={(e) => {
-                      const inputElement = e.target as HTMLInputElement;
-                      inputElement.select();
-                    }}
-                    />
-            </Stack>
+            {!isIcalExpanded ? (
+              <Box borderTop={'1px solid'} borderColor={'gray.100'} pt={'2'}>
+                <Button variant={'link'}
+                        size={'xs'}
+                        fontWeight={'normal'}
+                        color={'gray.500'}
+                        leftIcon={<FiCalendar />}
+                        _hover={{color: 'gray.700'}}
+                        onClick={() => setIsIcalExpanded(true)}
+                        >
+                  お使いのカレンダーアプリでも見られます
+                </Button>
+              </Box>
+            ) : (
+              <Stack borderTop={'1px solid'}
+                     borderColor={'gray.100'}
+                     pt={'3'}
+                     spacing={'2'}
+                     >
+                <Text fontSize={'xs'} color={'gray.600'}>
+                  連携用URL（iCalendar）
+                </Text>
+                <Text fontSize={'xs'} color={'gray.500'}>
+                  外部カレンダーに追加したい方向けです。
+                </Text>
+                <Input value={'https://hub.yamanashi.dev/event.ics'}
+                      size={'sm'}
+                      isReadOnly
+                      onSelect={(e) => {
+                        const inputElement = e.target as HTMLInputElement;
+                        inputElement.select();
+                      }}
+                      />
+              </Stack>
+            )}
           </Stack>
         </PopoverBody>
         {!isMobile && (
