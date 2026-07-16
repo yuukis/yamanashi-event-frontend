@@ -21,13 +21,15 @@ import {
   PopoverHeader,
   PopoverCloseButton,
   PopoverBody,
-  PopoverFooter,
   HStack,
   useDisclosure
 } from '@chakra-ui/react';
 import { isMobile } from 'react-device-detect';
 import { ChevronLeftIcon, ChevronRightIcon, RepeatClockIcon } from "@chakra-ui/icons";
-import { Github, Calendar3, CaretRightFill } from '@chakra-icons/bootstrap';
+import { Github, Calendar3 } from '@chakra-icons/bootstrap';
+import { FiCopy, FiCheck, FiCalendar } from 'react-icons/fi';
+import { SiGoogle, SiApple } from 'react-icons/si';
+import { PiMicrosoftOutlookLogoFill } from 'react-icons/pi';
 import { keyframes } from '@emotion/react';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
@@ -41,6 +43,13 @@ const todayBadgePulse = keyframes`
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(1.2); }
 `;
+
+const ICAL_URL = 'https://hub.yamanashi.dev/event.ics';
+const ICAL_CALENDAR_NAME = 'ITイベント - 山梨県';
+const ICAL_WEBCAL_URL = ICAL_URL.replace(/^https:\/\//, 'webcal://');
+const GOOGLE_CALENDAR_ADD_URL = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(ICAL_WEBCAL_URL)}`;
+const OUTLOOK_CALENDAR_ADD_URL = `https://outlook.live.com/calendar/0/addfromweb?url=${encodeURIComponent(ICAL_URL)}&name=${encodeURIComponent(ICAL_CALENDAR_NAME)}`;
+const APPLE_CALENDAR_URL = ICAL_WEBCAL_URL;
 
 // 固定ヘッダーの表示境界をマークする ref を返す。各ページの本文先頭の
 // 見出しに付ける。
@@ -171,6 +180,11 @@ export function ICalendarButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [monthOffset, setMonthOffset] = useState(0);
+  const [isIcalExpanded, setIsIcalExpanded] = useState(false);
+  const [isUrlCopied, setIsUrlCopied] = useState(false);
+  const icalUrlInputRef = useRef<HTMLInputElement>(null);
+  const copyFeedbackTimeoutRef = useRef<number | null>(null);
+  const firstServiceLinkRef = useRef<HTMLAnchorElement>(null);
   const today = useTodayDate();
   const monthStart = useMemo(
     () => new Date(today.getFullYear(), today.getMonth() + monthOffset, 1),
@@ -216,6 +230,20 @@ export function ICalendarButton() {
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (copyFeedbackTimeoutRef.current !== null) {
+        window.clearTimeout(copyFeedbackTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isIcalExpanded) {
+      firstServiceLinkRef.current?.focus();
+    }
+  }, [isIcalExpanded]);
+
   const openCalendar = () => {
     if (errorMessage) {
       loadEvents();
@@ -247,7 +275,40 @@ export function ICalendarButton() {
 
   const closePopover = () => {
     setMonthOffset(0);
+    setIsIcalExpanded(false);
+    setIsUrlCopied(false);
+    if (copyFeedbackTimeoutRef.current !== null) {
+      window.clearTimeout(copyFeedbackTimeoutRef.current);
+      copyFeedbackTimeoutRef.current = null;
+    }
     onClose();
+  };
+
+  const handleCopyIcalUrl = () => {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(ICAL_URL)
+        .then(() => {
+          setIsUrlCopied(true);
+          if (copyFeedbackTimeoutRef.current !== null) {
+            window.clearTimeout(copyFeedbackTimeoutRef.current);
+          }
+          copyFeedbackTimeoutRef.current = window.setTimeout(() => {
+            setIsUrlCopied(false);
+            copyFeedbackTimeoutRef.current = null;
+          }, 1500);
+        })
+        .catch(() => {
+          if (copyFeedbackTimeoutRef.current !== null) {
+            window.clearTimeout(copyFeedbackTimeoutRef.current);
+            copyFeedbackTimeoutRef.current = null;
+          }
+          setIsUrlCopied(false);
+          icalUrlInputRef.current?.select();
+        });
+    } else {
+      setIsUrlCopied(false);
+      icalUrlInputRef.current?.select();
+    }
   };
 
   return (
@@ -326,38 +387,118 @@ export function ICalendarButton() {
                 }
               }}
             />
-            <Stack borderTop={'1px solid'}
-                   borderColor={'gray.100'}
-                   pt={'3'}
-                   spacing={'2'}
-                   >
-              <Text fontSize={'xs'} color={'gray.600'}>
-                連携用URL（iCalendar）
-              </Text>
-              <Text fontSize={'xs'} color={'gray.500'}>
-                外部カレンダーに追加したい方向けです。
-              </Text>
-              <Input value={'https://hub.yamanashi.dev/event.ics'}
-                    size={'sm'}
-                    isReadOnly
-                    onSelect={(e) => {
-                      const inputElement = e.target as HTMLInputElement;
-                      inputElement.select();
-                    }}
-                    />
-            </Stack>
+            {!isIcalExpanded ? (
+              <Box borderTop={'1px solid'} borderColor={'gray.100'} pt={'2'}>
+                <Button variant={'link'}
+                        size={'xs'}
+                        fontWeight={'normal'}
+                        color={'gray.500'}
+                        leftIcon={<FiCalendar />}
+                        _hover={{color: 'gray.700'}}
+                        onClick={() => setIsIcalExpanded(true)}
+                        >
+                  お使いのカレンダーアプリでも見られます
+                </Button>
+              </Box>
+            ) : (
+              <Stack borderTop={'1px solid'} borderColor={'gray.100'} pt={'3'} spacing={'3'}>
+                <Stack spacing={'2'}>
+                  <Text fontSize={'xs'} fontWeight={'bold'} color={'gray.600'}>
+                    外部カレンダーに登録
+                  </Text>
+                  <HStack spacing={'2'} align={'stretch'}>
+                    <Link ref={firstServiceLinkRef}
+                          href={GOOGLE_CALENDAR_ADD_URL}
+                          isExternal
+                          flex={'1'}
+                          aria-label={'Google カレンダーに登録する'}
+                          style={{textDecoration: 'none'}}
+                          >
+                      <Stack align={'center'}
+                             spacing={'1'}
+                             border={'1px solid'}
+                             borderColor={'gray.200'}
+                             borderRadius={'md'}
+                             py={'2'}
+                             _hover={{bg: 'gray.50', borderColor: 'gray.300'}}
+                             >
+                        <Center boxSize={'26px'} borderRadius={'md'} bg={'rgba(66,133,244,.12)'}>
+                          <SiGoogle color={'#4285F4'} size={13} />
+                        </Center>
+                        <Text fontSize={'10px'} color={'gray.600'}>Google</Text>
+                      </Stack>
+                    </Link>
+                    <Link href={OUTLOOK_CALENDAR_ADD_URL}
+                          isExternal
+                          flex={'1'}
+                          aria-label={'Outlook に登録する'}
+                          style={{textDecoration: 'none'}}
+                          >
+                      <Stack align={'center'}
+                             spacing={'1'}
+                             border={'1px solid'}
+                             borderColor={'gray.200'}
+                             borderRadius={'md'}
+                             py={'2'}
+                             _hover={{bg: 'gray.50', borderColor: 'gray.300'}}
+                             >
+                        <Center boxSize={'26px'} borderRadius={'md'} bg={'rgba(0,120,212,.12)'}>
+                          <PiMicrosoftOutlookLogoFill color={'#0078D4'} size={15} />
+                        </Center>
+                        <Text fontSize={'10px'} color={'gray.600'}>Outlook</Text>
+                      </Stack>
+                    </Link>
+                    <Link href={APPLE_CALENDAR_URL}
+                          flex={'1'}
+                          aria-label={'Apple カレンダーに登録する'}
+                          style={{textDecoration: 'none'}}
+                          >
+                      <Stack align={'center'}
+                             spacing={'1'}
+                             border={'1px solid'}
+                             borderColor={'gray.200'}
+                             borderRadius={'md'}
+                             py={'2'}
+                             _hover={{bg: 'gray.50', borderColor: 'gray.300'}}
+                             >
+                        <Center boxSize={'26px'} borderRadius={'md'} bg={'gray.800'}>
+                          <SiApple color={'white'} size={13} />
+                        </Center>
+                        <Text fontSize={'10px'} color={'gray.600'}>Apple</Text>
+                      </Stack>
+                    </Link>
+                  </HStack>
+                </Stack>
+                <Stack spacing={'2'} borderTop={'1px solid'} borderColor={'gray.100'} pt={'3'}>
+                  <Text fontSize={'xs'} fontWeight={'bold'} color={'gray.600'}>
+                    iCalendar URL
+                  </Text>
+                  <Text fontSize={'xs'} color={'gray.500'}>
+                    URLを直接お使いになりたい方はこちらをご利用ください。
+                  </Text>
+                  <HStack spacing={'2'}>
+                    <Input ref={icalUrlInputRef}
+                          value={ICAL_URL}
+                          size={'sm'}
+                          isReadOnly
+                          onSelect={(e) => {
+                            const inputElement = e.target as HTMLInputElement;
+                            inputElement.select();
+                          }}
+                          />
+                    <IconButton aria-label={'iCalendar URLをコピー'}
+                                icon={isUrlCopied ? <FiCheck /> : <FiCopy />}
+                                size={'sm'}
+                                variant={isUrlCopied ? 'solid' : 'outline'}
+                                colorScheme={isUrlCopied ? 'green' : undefined}
+                                onClick={handleCopyIcalUrl}
+                                />
+                  </HStack>
+                </Stack>
+              </Stack>
+            )}
           </Stack>
         </PopoverBody>
-        {!isMobile && (
-          <PopoverFooter>
-            <Button w={'100%'} variant={'ghost'} size={'sm'}
-                    onClick={() => { window.open('https://calendar.google.com/calendar/r/settings/addbyurl', '_blank') }}>
-              <CaretRightFill mr={'2'} />
-              <Text fontWeight={'normal'}>Google カレンダーに登録する</Text>
-              <Spacer />
-            </Button>
-          </PopoverFooter>
-        )}
       </PopoverContent>
     </Popover>
   )
