@@ -6,6 +6,7 @@ import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
+import { StructuredData } from '../components/StructuredData';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
 import root_bg from "../assets/images/root_bg.png";
@@ -30,6 +31,7 @@ import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { fetchEvents, fetchGroups } from '../utils/api';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { scrollToCurrentHash } from '../utils/hashScroll';
+import { buildEventListJsonLd, SITE_URL } from '../utils/structuredData';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
 // 星空レイヤーを上へはみ出させる量(px)。下へ追随したときに生じる領域を
@@ -173,8 +175,13 @@ function Root({startYear}: {startYear: number}) {
 
   const anchoredDateKeys = new Set<string>();
 
+  const structuredData = !data.isLoading && !data.errorMessage
+    ? buildEventListJsonLd([...data.futureEvents, ...data.pastEvents], `${SITE_URL}/`)
+    : null;
+
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
+      <StructuredData id={'structured-data-events'} data={structuredData} />
       <SiteHeader />
       <ActiveFilterBadge selectedKeyword={selectedKeyword}
                          selectedGroupName={selectedGroupName}

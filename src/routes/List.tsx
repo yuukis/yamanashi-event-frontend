@@ -6,6 +6,7 @@ import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
+import { StructuredData } from '../components/StructuredData';
 import '../style.css';
 import {
   Container,
@@ -23,6 +24,7 @@ import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGrou
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import { fetchEventsByYear, fetchGroups } from '../utils/api';
+import { buildEventListJsonLd, SITE_URL } from '../utils/structuredData';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
 type ListState = {
@@ -127,8 +129,13 @@ function List({ startYear} : {startYear: number}) {
     window.requestAnimationFrame(scrollToCurrentHash);
   }, [data.errorMessage, data.isLoading, data.events]);
 
+  const structuredData = !data.isLoading && !data.errorMessage
+    ? buildEventListJsonLd(data.events, `${SITE_URL}/events/${year}`)
+    : null;
+
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
+      <StructuredData id={'structured-data-events'} data={structuredData} />
       <SiteHeader />
       <ActiveFilterBadge selectedKeyword={selectedKeyword}
                          selectedGroupName={selectedGroupName}
