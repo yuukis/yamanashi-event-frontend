@@ -262,11 +262,12 @@ export function NotificationButton() {
                     rel={'noopener'}
                     aria-label={'X(@ymns_tech_event)をフォロー'}
                     leftIcon={<FaXTwitter />}
+                    iconSpacing={'1'}
                     size={'xs'}
-                    fontWeight={'normal'}
+                    fontWeight={'bold'}
                     variant={'outline'}
                     >
-              フォロー
+              @ymns_tech_event
             </Button>
             {isLocalStorageOk && (
               <IconButton aria-label='新着通知をクリア'
