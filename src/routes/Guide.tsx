@@ -34,6 +34,8 @@ import { buildListWidgetPath } from '../utils/widgetPaths';
 import { collectActiveGroupKeys, splitGroupsByActivity } from '../utils/groupActivity';
 import type { ApiGroup } from '../types/events';
 
+const X_ACCOUNT_URL = 'https://x.com/ymns_tech_event';
+
 function Guide() {
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
 
@@ -103,7 +105,16 @@ function Guide() {
     {
       icon: <BellIcon color={'impact.700'} />,
       title: '通知やカレンダーで追いかける',
-      body: '新しいイベントを見逃したくない方は通知を有効にしたり、iCalendar URL を普段のカレンダーに登録できます。',
+      body: (
+        <>
+          新しいイベントを見逃したくない方は通知を有効にしたり、iCalendar URL を普段のカレンダーに登録できます。
+          X(
+          <Link color={'primary.800'} href={X_ACCOUNT_URL} isExternal>
+            @ymns_tech_event<ExternalLinkIcon mx={'2px'} />
+          </Link>
+          )でも新着イベントを配信しています。
+        </>
+      ),
     },
     {
       icon: <InfoOutlineIcon color={'gray.600'} />,

@@ -25,7 +25,6 @@ import {
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
 import { CalendarIcon, ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
-import { FaXTwitter } from 'react-icons/fa6';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -43,8 +42,6 @@ const STARFIELD_BLEED = 120;
 // 星空タイル(root_top_bg.png)は幅:高さ = 1:2 なので、帯の高さは
 // bgSize で指定する幅の2倍になる。
 const STARFIELD_HEIGHT = 200;
-
-const X_ACCOUNT_URL = 'https://x.com/ymns_tech_event';
 
 type RootState = {
   isLoading: boolean;
@@ -239,30 +236,6 @@ function Root({startYear}: {startYear: number}) {
                   p={{base: '0', md: '4'}}
                   />
             <Stack pr={{md: '320px'}}>
-              <Link href={X_ACCOUNT_URL}
-                    isExternal
-                    alignSelf={{base: 'center', md: 'flex-start'}}
-                    display={'inline-flex'}
-                    alignItems={'center'}
-                    gap={'1.5'}
-                    mb={'3'}
-                    px={'3'}
-                    py={'1'}
-                    borderRadius={'full'}
-                    bg={'rgba(255,110,97,0.08)'}
-                    border={'1px solid'}
-                    borderColor={'impact.200'}
-                    fontSize={'xs'}
-                    fontWeight={'medium'}
-                    color={'impact.700'}
-                    style={{textDecoration: 'none'}}
-                    _hover={{bg: 'rgba(255,110,97,0.16)', borderColor: 'impact.300'}}
-                    transition={'background-color 120ms ease, border-color 120ms ease'}
-                    >
-                <FaXTwitter />
-                最新情報はXでも配信中
-                <ExternalLinkIcon boxSize={'2.5'} />
-              </Link>
               <Heading size={{base: 'lg', md: 'xl'}} mb={'4'} textAlign={{base: 'center', md: 'left'}}>
                 <Text as={'span'}
                       fontWeight={'100'}
