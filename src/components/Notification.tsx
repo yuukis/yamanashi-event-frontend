@@ -256,15 +256,18 @@ export function NotificationButton() {
             <Text fontSize={'sm'} flex={'1'}>
               新着イベント
             </Text>
-            <IconButton as={'a'}
-                        href={X_ACCOUNT_URL}
-                        target={'_blank'}
-                        rel={'noopener'}
-                        aria-label={'X(@ymns_tech_event)をフォロー'}
-                        icon={<FaXTwitter />}
-                        size={'xs'}
-                        variant={'outline'}
-                        />
+            <Button as={'a'}
+                    href={X_ACCOUNT_URL}
+                    target={'_blank'}
+                    rel={'noopener'}
+                    aria-label={'X(@ymns_tech_event)をフォロー'}
+                    leftIcon={<FaXTwitter />}
+                    size={'xs'}
+                    fontWeight={'normal'}
+                    variant={'outline'}
+                    >
+              フォロー
+            </Button>
             {isLocalStorageOk && (
               <IconButton aria-label='新着通知をクリア'
                           icon={<Trash3 />}
