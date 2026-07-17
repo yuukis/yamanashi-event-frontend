@@ -24,7 +24,8 @@ import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGrou
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import { fetchEventsByYear, fetchGroups } from '../utils/api';
-import { buildEventListJsonLd, SITE_URL } from '../utils/structuredData';
+import { buildEventListJsonLd } from '../utils/structuredData';
+import { SITE_URL } from '../utils/site';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
 type ListState = {
@@ -130,7 +131,7 @@ function List({ startYear} : {startYear: number}) {
   }, [data.errorMessage, data.isLoading, data.events]);
 
   const structuredData = !data.isLoading && !data.errorMessage
-    ? buildEventListJsonLd(data.events, `${SITE_URL}/events/${year}`)
+    ? buildEventListJsonLd(events, `${SITE_URL}/events/${year}`)
     : null;
 
   return (

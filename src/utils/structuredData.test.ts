@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { buildEventJsonLd, buildEventListJsonLd, buildYearArchiveJsonLd, SITE_URL } from './structuredData';
+import { buildEventJsonLd, buildEventListJsonLd, buildYearArchiveJsonLd } from './structuredData';
+import { SITE_URL } from './site';
 import { makeEvent } from '../test/fixtures';
 
 describe('buildEventJsonLd', () => {

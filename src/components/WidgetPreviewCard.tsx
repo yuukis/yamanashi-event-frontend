@@ -3,8 +3,7 @@ import type { ReactNode } from 'react';
 import { Box, Card, CardBody, Heading, Stack, Text } from '@chakra-ui/react';
 import { CopySnippetBlock } from './CopySnippetBlock';
 import { useWidgetIframeAutoHeight, WIDGET_RESIZE_MESSAGE_TYPE } from '../utils/widgetResize';
-
-const SITE_ORIGIN = 'https://hub.yamanashi.dev';
+import { SITE_URL as SITE_ORIGIN } from '../utils/site';
 
 function escapeHtmlAttribute(value: string): string {
   return value

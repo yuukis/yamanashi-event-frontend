@@ -31,7 +31,8 @@ import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
 import { fetchEvents, fetchGroups } from '../utils/api';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { scrollToCurrentHash } from '../utils/hashScroll';
-import { buildEventListJsonLd, SITE_URL } from '../utils/structuredData';
+import { buildEventListJsonLd } from '../utils/structuredData';
+import { SITE_URL } from '../utils/site';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
 // 星空レイヤーを上へはみ出させる量(px)。下へ追随したときに生じる領域を
@@ -176,7 +177,7 @@ function Root({startYear}: {startYear: number}) {
   const anchoredDateKeys = new Set<string>();
 
   const structuredData = !data.isLoading && !data.errorMessage
-    ? buildEventListJsonLd([...data.futureEvents, ...data.pastEvents], `${SITE_URL}/`)
+    ? buildEventListJsonLd([...futureEvents, ...pastEvents], `${SITE_URL}/`)
     : null;
 
   return (

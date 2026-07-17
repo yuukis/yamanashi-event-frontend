@@ -1,6 +1,5 @@
 import type { EventWithGroup } from '../types/events';
-
-export const SITE_URL = 'https://hub.yamanashi.dev';
+import { SITE_URL } from './site';
 
 const CANCELLED_STATUS = 'https://schema.org/EventCancelled';
 const SCHEDULED_STATUS = 'https://schema.org/EventScheduled';
