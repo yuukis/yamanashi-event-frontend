@@ -10,7 +10,6 @@ import {
   Button,
   IconButton,
   Divider,
-  Link,
   Popover,
   PopoverTrigger,
   PopoverContent,
@@ -20,7 +19,7 @@ import {
   PopoverBody,
   PopoverFooter
 } from '@chakra-ui/react';
-import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { FaXTwitter } from 'react-icons/fa6';
 import { isIOS } from 'react-device-detect';
 import { fetchEvents } from '../utils/api';
 import { isFutureEvent } from '../utils/eventGroups';
@@ -257,6 +256,15 @@ export function NotificationButton() {
             <Text fontSize={'sm'} flex={'1'}>
               新着イベント
             </Text>
+            <IconButton as={'a'}
+                        href={X_ACCOUNT_URL}
+                        target={'_blank'}
+                        rel={'noopener'}
+                        aria-label={'X(@ymns_tech_event)をフォロー'}
+                        icon={<FaXTwitter />}
+                        size={'xs'}
+                        variant={'outline'}
+                        />
             {isLocalStorageOk && (
               <IconButton aria-label='新着通知をクリア'
                           icon={<Trash3 />}
@@ -311,13 +319,6 @@ export function NotificationButton() {
               <Text fontSize={'xs'}>
                 新しくイベントが登録されたら通知します<br />
                 （お使いの環境によっては、通知が正しく動作しない場合があります）
-              </Text>
-              <Text fontSize={'xs'} pt={'1'}>
-                X(
-                <Link color={'primary.800'} href={X_ACCOUNT_URL} isExternal>
-                  @ymns_tech_event<ExternalLinkIcon mx={'2px'} />
-                </Link>
-                )でも新着イベントを配信しています。
               </Text>
             </Stack>
           </Stack>
