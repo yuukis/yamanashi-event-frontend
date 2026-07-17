@@ -25,6 +25,7 @@ import {
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
 import { CalendarIcon, ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
+import { FaXTwitter } from 'react-icons/fa6';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -42,6 +43,8 @@ const STARFIELD_BLEED = 120;
 // 星空タイル(root_top_bg.png)は幅:高さ = 1:2 なので、帯の高さは
 // bgSize で指定する幅の2倍になる。
 const STARFIELD_HEIGHT = 200;
+
+const X_ACCOUNT_URL = 'https://x.com/ymns_tech_event';
 
 type RootState = {
   isLoading: boolean;
@@ -290,7 +293,19 @@ function Root({startYear}: {startYear: number}) {
                   イベントアーカイブを見る
                 </Button>
               </Stack>
-            </Stack>          
+              <Link href={X_ACCOUNT_URL}
+                    isExternal
+                    alignSelf={{base: 'center', md: 'flex-start'}}
+                    display={'inline-flex'}
+                    alignItems={'center'}
+                    gap={'1'}
+                    fontSize={'xs'}
+                    color={'gray.500'}
+                    _hover={{color: 'gray.700'}}
+                    >
+                <FaXTwitter /> X (@ymns_tech_event) でも最新情報を配信中
+              </Link>
+            </Stack>
           </Container>
         </Box>
       </Box>
