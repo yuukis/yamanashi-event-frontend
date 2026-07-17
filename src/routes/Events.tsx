@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
 import { YearSummaryCard, YearSummaryCardSkeleton } from '../components/YearSummaryCard';
 import { ErrorEventBody } from '../components/EventBody';
+import { StructuredData } from '../components/StructuredData';
 import '../style.css';
 import { Container, Box, Stack, Heading, Text } from '@chakra-ui/react';
 import { fetchEventsSummary } from '../utils/api';
 import { sortYearsAscending, buildHeatmapGrid, getMaxHeatmapCount } from '../utils/eventsSummary';
+import { buildYearArchiveJsonLd } from '../utils/structuredData';
 import type { ApiEventsSummary, ApiHeatmapBucket } from '../types/events';
 
 const SKELETON_ROW_COUNT = 8;
@@ -68,8 +70,13 @@ function Events() {
   const monthsByYear = new Map(buildHeatmapGrid(heatmap).map((row) => [row.year, row.months]));
   const emptyMonths: ApiHeatmapBucket[] = [];
 
+  const structuredData = years.length > 0
+    ? buildYearArchiveJsonLd(years.map((year) => year.year))
+    : null;
+
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
+      <StructuredData id={'structured-data-events'} data={structuredData} />
       <SiteHeader />
       <Container maxW={'980px'} w={'100%'}
                  mt={'4'}

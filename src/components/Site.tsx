@@ -37,6 +37,7 @@ import { subscribeNow, getNow } from '../utils/nowTicker';
 import { subscribeHeaderVisibility, getHeaderVisible, getNearPageTop, setFixedHeaderBoundary, HEADER_HEIGHT } from '../utils/headerVisibility';
 import { jumpToAnchor } from '../utils/hashScroll';
 import { buildCalendarDays, buildEventsByDate, useTodayDate } from '../utils/calendar';
+import { SITE_URL } from '../utils/site';
 import type { ApiEvent } from '../types/events';
 
 const todayBadgePulse = keyframes`
@@ -44,7 +45,7 @@ const todayBadgePulse = keyframes`
   50% { opacity: 0.5; transform: scale(1.2); }
 `;
 
-const ICAL_URL = 'https://hub.yamanashi.dev/event.ics';
+const ICAL_URL = `${SITE_URL}/event.ics`;
 const ICAL_CALENDAR_NAME = 'ITイベント - 山梨県';
 const ICAL_WEBCAL_URL = ICAL_URL.replace(/^https:\/\//, 'webcal://');
 const GOOGLE_CALENDAR_ADD_URL = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(ICAL_WEBCAL_URL)}`;
