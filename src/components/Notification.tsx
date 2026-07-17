@@ -270,7 +270,7 @@ export function NotificationButton() {
                     _hover={{bg: 'blackAlpha.800'}}
                     _active={{bg: 'blackAlpha.900'}}
                     >
-              @ymns_tech_event
+              follow
             </Button>
             {isLocalStorageOk && (
               <IconButton aria-label='新着通知をクリア'
