@@ -290,7 +290,7 @@ function Root({startYear}: {startYear: number}) {
                   イベントアーカイブを見る
                 </Button>
               </Stack>
-            </Stack>          
+            </Stack>
           </Container>
         </Box>
       </Box>

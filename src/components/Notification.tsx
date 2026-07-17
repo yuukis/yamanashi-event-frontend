@@ -19,6 +19,7 @@ import {
   PopoverBody,
   PopoverFooter
 } from '@chakra-ui/react';
+import { FaXTwitter } from 'react-icons/fa6';
 import { isIOS } from 'react-device-detect';
 import { fetchEvents } from '../utils/api';
 import { isFutureEvent } from '../utils/eventGroups';
@@ -39,6 +40,7 @@ import {
   getTrackingDataSnapshot,
   updateTrackingData,
 } from '../utils/newEventTrackingStore';
+import { X_ACCOUNT_URL } from '../utils/site';
 import type { ApiEvent } from '../types/events';
 
 const DAY_OF_WEEK = ['日', '月', '火', '水', '木', '金', '土'];
@@ -254,6 +256,22 @@ export function NotificationButton() {
             <Text fontSize={'sm'} flex={'1'}>
               新着イベント
             </Text>
+            <Button as={'a'}
+                    href={X_ACCOUNT_URL}
+                    target={'_blank'}
+                    rel={'noopener'}
+                    aria-label={'X(@ymns_tech_event)をフォロー'}
+                    leftIcon={<FaXTwitter />}
+                    iconSpacing={'1'}
+                    size={'xs'}
+                    fontWeight={'bold'}
+                    bg={'black'}
+                    color={'white'}
+                    _hover={{bg: 'blackAlpha.800'}}
+                    _active={{bg: 'blackAlpha.900'}}
+                    >
+              follow
+            </Button>
             {isLocalStorageOk && (
               <IconButton aria-label='新着通知をクリア'
                           icon={<Trash3 />}
