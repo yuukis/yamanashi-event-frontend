@@ -38,6 +38,10 @@ export function buildEventJsonLd(event: EventWithGroup): Record<string, unknown>
   if (event.catch) {
     jsonLd.description = event.catch;
   }
+  const image = event.image_url || event.group_image_url;
+  if (image) {
+    jsonLd.image = image;
+  }
   if (event.group_name) {
     jsonLd.organizer = {
       '@type': 'Organization',

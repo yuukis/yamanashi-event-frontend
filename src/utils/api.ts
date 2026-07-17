@@ -22,6 +22,7 @@ export const EVENTS_FIELDS = [
   'group_name',
   'group_url',
   'keywords',
+  'image_url',
 ].join(',');
 
 export const GROUPS_FIELDS = [
