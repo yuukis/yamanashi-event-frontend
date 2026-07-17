@@ -65,6 +65,27 @@ describe('buildEventJsonLd', () => {
 
     expect(buildEventJsonLd(event).organizer).toBeUndefined();
   });
+
+  it('prefers the event image over the group image', () => {
+    const event = makeEvent({
+      image_url: 'https://media.connpass.com/thumbs/aa/bb/event.png',
+      group_image_url: 'https://example.com/group.png',
+    });
+
+    expect(buildEventJsonLd(event).image).toBe('https://media.connpass.com/thumbs/aa/bb/event.png');
+  });
+
+  it('falls back to the group image when the event has no image', () => {
+    const event = makeEvent({ image_url: undefined, group_image_url: 'https://example.com/group.png' });
+
+    expect(buildEventJsonLd(event).image).toBe('https://example.com/group.png');
+  });
+
+  it('omits image when neither the event nor the group has one', () => {
+    const event = makeEvent({ image_url: undefined, group_image_url: undefined });
+
+    expect(buildEventJsonLd(event).image).toBeUndefined();
+  });
 });
 
 describe('buildEventListJsonLd', () => {
