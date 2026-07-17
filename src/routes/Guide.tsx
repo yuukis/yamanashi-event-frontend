@@ -29,6 +29,7 @@ import {
   SearchIcon,
   StarIcon,
 } from "@chakra-ui/icons";
+import { FaXTwitter } from 'react-icons/fa6';
 import { fetchEvents, fetchGroups } from '../utils/api';
 import { buildListWidgetPath } from '../utils/widgetPaths';
 import { collectActiveGroupKeys, splitGroupsByActivity } from '../utils/groupActivity';
@@ -104,15 +105,25 @@ function Guide() {
     {
       icon: <BellIcon color={'impact.700'} />,
       title: '通知やカレンダーで追いかける',
-      body: (
-        <>
-          新しいイベントを見逃したくない方は通知を有効にしたり、iCalendar URL を普段のカレンダーに登録できます。
-          X(
-          <Link color={'primary.800'} href={X_ACCOUNT_URL} isExternal>
-            @ymns_tech_event<ExternalLinkIcon mx={'2px'} />
-          </Link>
-          )でも新着イベントを配信しています。
-        </>
+      body: '新しいイベントを見逃したくない方は通知を有効にしたり、iCalendar URL を普段のカレンダーに登録できます。Xでも新着イベントを配信しています。',
+      action: (
+        <Button as={'a'}
+                href={X_ACCOUNT_URL}
+                target={'_blank'}
+                rel={'noopener'}
+                aria-label={'X(@ymns_tech_event)をフォロー'}
+                leftIcon={<FaXTwitter />}
+                iconSpacing={'1'}
+                size={'xs'}
+                fontWeight={'bold'}
+                alignSelf={'flex-start'}
+                bg={'black'}
+                color={'white'}
+                _hover={{bg: 'blackAlpha.800'}}
+                _active={{bg: 'blackAlpha.900'}}
+                >
+          @ymns_tech_event
+        </Button>
       ),
     },
     {
@@ -186,6 +197,7 @@ function Guide() {
                       <Text fontSize={'sm'} color={'gray.600'} lineHeight={'1.8'}>
                         {item.body}
                       </Text>
+                      {item.action}
                     </Stack>
                   </CardBody>
                 </Card>
