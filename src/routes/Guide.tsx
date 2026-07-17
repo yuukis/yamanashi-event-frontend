@@ -32,9 +32,8 @@ import {
 import { fetchEvents, fetchGroups } from '../utils/api';
 import { buildListWidgetPath } from '../utils/widgetPaths';
 import { collectActiveGroupKeys, splitGroupsByActivity } from '../utils/groupActivity';
+import { X_ACCOUNT_URL } from '../utils/site';
 import type { ApiGroup } from '../types/events';
-
-const X_ACCOUNT_URL = 'https://x.com/ymns_tech_event';
 
 function Guide() {
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();

@@ -10,6 +10,7 @@ import {
   Button,
   IconButton,
   Divider,
+  Link,
   Popover,
   PopoverTrigger,
   PopoverContent,
@@ -19,6 +20,7 @@ import {
   PopoverBody,
   PopoverFooter
 } from '@chakra-ui/react';
+import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { isIOS } from 'react-device-detect';
 import { fetchEvents } from '../utils/api';
 import { isFutureEvent } from '../utils/eventGroups';
@@ -39,6 +41,7 @@ import {
   getTrackingDataSnapshot,
   updateTrackingData,
 } from '../utils/newEventTrackingStore';
+import { X_ACCOUNT_URL } from '../utils/site';
 import type { ApiEvent } from '../types/events';
 
 const DAY_OF_WEEK = ['日', '月', '火', '水', '木', '金', '土'];
@@ -308,6 +311,13 @@ export function NotificationButton() {
               <Text fontSize={'xs'}>
                 新しくイベントが登録されたら通知します<br />
                 （お使いの環境によっては、通知が正しく動作しない場合があります）
+              </Text>
+              <Text fontSize={'xs'} pt={'1'}>
+                X(
+                <Link color={'primary.800'} href={X_ACCOUNT_URL} isExternal>
+                  @ymns_tech_event<ExternalLinkIcon mx={'2px'} />
+                </Link>
+                )でも新着イベントを配信しています。
               </Text>
             </Stack>
           </Stack>
