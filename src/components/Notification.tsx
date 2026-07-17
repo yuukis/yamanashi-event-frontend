@@ -265,7 +265,10 @@ export function NotificationButton() {
                     iconSpacing={'1'}
                     size={'xs'}
                     fontWeight={'bold'}
-                    variant={'outline'}
+                    bg={'black'}
+                    color={'white'}
+                    _hover={{bg: 'blackAlpha.800'}}
+                    _active={{bg: 'blackAlpha.900'}}
                     >
               @ymns_tech_event
             </Button>
