@@ -239,6 +239,30 @@ function Root({startYear}: {startYear: number}) {
                   p={{base: '0', md: '4'}}
                   />
             <Stack pr={{md: '320px'}}>
+              <Link href={X_ACCOUNT_URL}
+                    isExternal
+                    alignSelf={{base: 'center', md: 'flex-start'}}
+                    display={'inline-flex'}
+                    alignItems={'center'}
+                    gap={'1.5'}
+                    mb={'3'}
+                    px={'3'}
+                    py={'1'}
+                    borderRadius={'full'}
+                    bg={'rgba(255,110,97,0.08)'}
+                    border={'1px solid'}
+                    borderColor={'impact.200'}
+                    fontSize={'xs'}
+                    fontWeight={'medium'}
+                    color={'impact.700'}
+                    style={{textDecoration: 'none'}}
+                    _hover={{bg: 'rgba(255,110,97,0.16)', borderColor: 'impact.300'}}
+                    transition={'background-color 120ms ease, border-color 120ms ease'}
+                    >
+                <FaXTwitter />
+                最新情報はXでも配信中
+                <ExternalLinkIcon boxSize={'2.5'} />
+              </Link>
               <Heading size={{base: 'lg', md: 'xl'}} mb={'4'} textAlign={{base: 'center', md: 'left'}}>
                 <Text as={'span'}
                       fontWeight={'100'}
@@ -293,18 +317,6 @@ function Root({startYear}: {startYear: number}) {
                   イベントアーカイブを見る
                 </Button>
               </Stack>
-              <Link href={X_ACCOUNT_URL}
-                    isExternal
-                    alignSelf={{base: 'center', md: 'flex-start'}}
-                    display={'inline-flex'}
-                    alignItems={'center'}
-                    gap={'1'}
-                    fontSize={'xs'}
-                    color={'gray.500'}
-                    _hover={{color: 'gray.700'}}
-                    >
-                <FaXTwitter /> X (@ymns_tech_event) でも最新情報を配信中
-              </Link>
             </Stack>
           </Container>
         </Box>
