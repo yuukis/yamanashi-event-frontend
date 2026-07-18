@@ -43,3 +43,15 @@ export function unmarkEvent(data: MarkedEventsData, uid: string): MarkedEventsDa
   delete records[uid];
   return { ...data, records };
 }
+
+// 他端末から引き継いだuidを和集合でマージする。継続同期ではなく一度きりの
+// 取り込みのため、既存レコードのmarkedAtは上書きしない。
+export function mergeMarkedEvents(data: MarkedEventsData, uids: string[], now: Date): MarkedEventsData {
+  const records = { ...data.records };
+  for (const uid of uids) {
+    if (!(uid in records)) {
+      records[uid] = { markedAt: now.toISOString() };
+    }
+  }
+  return { ...data, records };
+}
