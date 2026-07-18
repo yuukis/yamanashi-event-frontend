@@ -555,7 +555,7 @@ export function EventBody(data: EventBodyProps) {
                           icon={isMarked ? <StarFill /> : <Star />}
                           size='sm'
                           variant={isMarked ? 'solid' : 'ghost'}
-                          colorScheme={isMarked ? 'impact' : 'gray'}
+                          colorScheme={isMarked ? 'yellow' : 'gray'}
                           position='absolute'
                           bottom='2'
                           right='2'
@@ -590,7 +590,7 @@ export function EventBody(data: EventBodyProps) {
                       <IconButton aria-label={attendanceMarkLabel}
                                   icon={isMarked ? <StarFill /> : <Star />}
                                   variant={isMarked ? 'solid' : 'ghost'}
-                                  colorScheme={isMarked ? 'impact' : 'gray'}
+                                  colorScheme={isMarked ? 'yellow' : 'gray'}
                                   onClick={handleCardMarkClick}
                                   />
                     </PopoverAnchor>
@@ -674,7 +674,7 @@ export function EventBody(data: EventBodyProps) {
             <VStack spacing={2}>
               <Button w="full"
                       leftIcon={isMarked ? <StarFill /> : <Star />}
-                      colorScheme={isMarked ? 'impact' : 'gray'}
+                      colorScheme={isMarked ? 'yellow' : 'gray'}
                       onClick={handleDrawerMarkClick}
                       >
                 { attendanceMarkLabel }
