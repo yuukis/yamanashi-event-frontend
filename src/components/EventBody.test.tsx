@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { renderWithChakra, mockMatchMedia } from '../test/test-utils';
 import { EventBody, EmptyEventBody, ErrorEventBody } from './EventBody';
 import { makeEvent } from '../test/fixtures';
@@ -8,6 +8,8 @@ import type { NewEventTrackingData } from '../utils/newEventTracking';
 import { buildEventShareUrl, buildXShareUrl } from '../utils/share';
 import { getEventAnchorId } from '../utils/eventAnchors';
 import { EVENT_CARD_HIGHLIGHT_EVENT } from '../utils/hashScroll';
+import { updateMarkedEventsData } from '../utils/markedEventsStore';
+import { EMPTY_MARKED_EVENTS_DATA } from '../utils/markedEvents';
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
 const EMPTY_TRACKING_DATA: NewEventTrackingData = { version: 1, records: {}, dismissedUids: [], acknowledgedDotUids: [] };
 
@@ -19,6 +21,7 @@ vi.mock('../utils/nowTicker', () => ({
 describe('EventBody', () => {
   beforeEach(() => {
     updateTrackingData(() => EMPTY_TRACKING_DATA);
+    updateMarkedEventsData(() => EMPTY_MARKED_EVENTS_DATA);
   });
 
   it('renders the event title, address and place', () => {
@@ -388,6 +391,77 @@ describe('EventBody', () => {
     fireEvent.click(screen.getByLabelText('More options'));
 
     expect(screen.queryByRole('button', { name: '共有' })).not.toBeInTheDocument();
+  });
+
+  describe('attendance mark', () => {
+    it('marks the event and opens a popover with a share action on desktop', async () => {
+      mockMatchMedia(true);
+      const shareSpy = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'share', { value: shareSpy, configurable: true });
+      const event = makeEvent({ uid: 'event-1' });
+      renderWithChakra(<EventBody event={event} />);
+
+      fireEvent.click(screen.getByRole('button', { name: '行きたいに追加' }));
+
+      expect(screen.getByRole('button', { name: '行きたいから外す' })).toBeInTheDocument();
+      const popoverText = await screen.findByText('行きたいに追加しました');
+      expect(within(popoverText.parentElement as HTMLElement).getByRole('button', { name: '共有' })).toBeInTheDocument();
+
+      Reflect.deleteProperty(navigator, 'share');
+    });
+
+    it('unmarks the event on a second click and does not reopen the popover', () => {
+      mockMatchMedia(true);
+      const event = makeEvent({ uid: 'event-1' });
+      renderWithChakra(<EventBody event={event} />);
+
+      fireEvent.click(screen.getByRole('button', { name: '行きたいに追加' }));
+      fireEvent.click(screen.getByRole('button', { name: '行きたいから外す' }));
+
+      expect(screen.getByRole('button', { name: '行きたいに追加' })).toBeInTheDocument();
+      expect(screen.queryByText('行きたいに追加しました')).not.toBeInTheDocument();
+    });
+
+    it('shows a toast with a share action on mobile that opens the options drawer', async () => {
+      mockMatchMedia(false);
+      const shareSpy = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'share', { value: shareSpy, configurable: true });
+      const event = makeEvent({ uid: 'event-1' });
+      renderWithChakra(<EventBody event={event} />);
+
+      fireEvent.click(screen.getByRole('button', { name: '行きたいに追加' }));
+
+      await screen.findByText('行きたいに追加しました');
+      fireEvent.click(screen.getByRole('button', { name: 'シェアする' }));
+
+      expect(await screen.findByRole('button', { name: 'キャンセル' })).toBeInTheDocument();
+
+      Reflect.deleteProperty(navigator, 'share');
+    });
+
+    it('lets the user mark the event from the mobile options drawer without closing it', () => {
+      mockMatchMedia(false);
+      const event = makeEvent({ uid: 'event-1' });
+      renderWithChakra(<EventBody event={event} />);
+
+      fireEvent.click(screen.getByLabelText('More options'));
+      fireEvent.click(screen.getByRole('button', { name: '行きたいに追加' }));
+
+      expect(screen.getByRole('button', { name: '行きたいから外す' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'キャンセル' })).toBeInTheDocument();
+    });
+
+    it('persists the marked state across remounts', () => {
+      mockMatchMedia(true);
+      const event = makeEvent({ uid: 'event-1' });
+      const { unmount } = renderWithChakra(<EventBody event={event} />);
+      fireEvent.click(screen.getByRole('button', { name: '行きたいに追加' }));
+      unmount();
+
+      renderWithChakra(<EventBody event={event} />);
+
+      expect(screen.getByRole('button', { name: '行きたいから外す' })).toBeInTheDocument();
+    });
   });
 });
 
