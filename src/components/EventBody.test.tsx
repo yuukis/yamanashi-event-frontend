@@ -520,23 +520,26 @@ describe('EventBody', () => {
         expect(screen.queryByRole('button', { name: '行きたいに追加' })).not.toBeInTheDocument();
       });
 
-      it('toggles the mark silently on desktop, without opening the invite popover', () => {
+      it('opens the popover with "気になるに追加しました" (not the "行きたい" copy) on desktop', async () => {
         mockMatchMedia(true);
         renderWithChakra(<EventBody event={makePastEvent()} />);
 
         fireEvent.click(screen.getByRole('button', { name: '気になる' }));
 
         expect(screen.getByRole('button', { name: '気になる解除' })).toBeInTheDocument();
+        await screen.findByText('気になるに追加しました');
+        expect(screen.getByText('友達にシェアしてみませんか?')).toBeInTheDocument();
         expect(screen.queryByText('行きたいに追加しました')).not.toBeInTheDocument();
       });
 
-      it('toggles the mark silently on mobile, without showing the invite toast', () => {
+      it('shows the toast with "気になるに追加しました" (not the "行きたい" copy) on mobile', async () => {
         mockMatchMedia(false);
         renderWithChakra(<EventBody event={makePastEvent()} />);
 
         fireEvent.click(screen.getByRole('button', { name: '気になる' }));
 
         expect(screen.getByRole('button', { name: '気になる解除' })).toBeInTheDocument();
+        await screen.findByText('気になるに追加しました');
         expect(screen.queryByText('行きたいに追加しました')).not.toBeInTheDocument();
       });
 

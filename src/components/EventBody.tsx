@@ -181,6 +181,8 @@ export function EventBody(data: EventBodyProps) {
   const attendanceMarkLabel = has_ended
     ? (isMarked ? '気になる解除' : '気になる')
     : (isMarked ? '行きたいから外す' : '行きたいに追加');
+  const attendanceMarkConfirmationText = has_ended ? '気になるに追加しました' : '行きたいに追加しました';
+  const attendanceInviteSubtext = has_ended ? '友達にシェアしてみませんか?' : '一緒に行く友達を誘ってみませんか?';
 
   const toggleAttendanceMark = (): boolean => {
     const nowMarked = !isMarked;
@@ -197,10 +199,6 @@ export function EventBody(data: EventBodyProps) {
       onMarkPopoverClose();
       return;
     }
-    // 過去イベントは「友達を誘う」導線が成立しないため、静かにトグルするだけにする
-    if (has_ended) {
-      return;
-    }
     if (isDesktopScreenSize) {
       onMarkPopoverOpen();
     } else {
@@ -210,7 +208,7 @@ export function EventBody(data: EventBodyProps) {
         isClosable: true,
         render: ({ onClose: onToastClose }) => (
           <HStack bg={'gray.700'} color={'white'} borderRadius={'md'} px={'4'} py={'3'} boxShadow={'lg'} spacing={'3'}>
-            <Text fontSize={'sm'} flex={'1'}>行きたいに追加しました</Text>
+            <Text fontSize={'sm'} flex={'1'}>{ attendanceMarkConfirmationText }</Text>
             <Button size={'xs'} onClick={() => {
               if (isNativeShareSupported()) {
                 shareEventViaNativeShare(event, toast, onToastClose);
@@ -653,8 +651,8 @@ export function EventBody(data: EventBodyProps) {
                   <PopoverBody>
                     <Stack spacing={'2'}>
                       <Stack spacing={'0'}>
-                        <Text fontSize={'sm'} fontWeight={'bold'}>行きたいに追加しました</Text>
-                        <Text fontSize={'xs'} color={'gray.500'}>一緒に行く友達を誘ってみませんか?</Text>
+                        <Text fontSize={'sm'} fontWeight={'bold'}>{ attendanceMarkConfirmationText }</Text>
+                        <Text fontSize={'xs'} color={'gray.500'}>{ attendanceInviteSubtext }</Text>
                       </Stack>
                       <XShareButton event={event} />
                       <ShareButton event={event} />
