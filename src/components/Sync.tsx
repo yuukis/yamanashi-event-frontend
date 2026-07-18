@@ -8,13 +8,13 @@ import {
   IconButton,
   Input,
   Divider,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverArrow,
-  PopoverHeader,
-  PopoverCloseButton,
-  PopoverBody,
+  Collapse,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
   useDisclosure,
   useToast,
 } from '@chakra-ui/react';
@@ -49,7 +49,7 @@ export function SyncButton() {
     };
   }, []);
 
-  const closePopover = () => {
+  const closeModal = () => {
     setIssued(null);
     setIssueError('');
     setIsCodeCopied(false);
@@ -106,7 +106,7 @@ export function SyncButton() {
     try {
       const uids = await fetchSyncUids(code);
       mergeUidsAndNotify(uids, toast);
-      closePopover();
+      closeModal();
     } catch (err) {
       setRedeemError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -117,83 +117,85 @@ export function SyncButton() {
   const syncUrl = issued ? `${SITE_URL}/?${SYNC_QUERY_PARAM}=${encodeURIComponent(issued.code)}` : '';
 
   return (
-    <Popover isOpen={isOpen} onOpen={onOpen} onClose={closePopover} placement={'bottom-start'}>
-      <PopoverTrigger>
-        <Button leftIcon={<FiSmartphone />}
-                iconSpacing={'1'}
-                size={'xs'}
-                variant={'outline'}
-                alignSelf={'flex-start'}
-                >
-          他の端末に引き継ぐ
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent w={{ base: 'calc(100vw - 24px)', md: '360px' }}>
-        <PopoverArrow />
-        <PopoverHeader>
-          <Text fontSize={'sm'}>他の端末と記録を引き継ぐ</Text>
-        </PopoverHeader>
-        <PopoverCloseButton />
-        <PopoverBody>
-          <Stack spacing={'4'}>
-            <Stack spacing={'2'}>
-              <Text fontSize={'xs'} fontWeight={'bold'} color={'gray.600'}>この端末の記録を送る</Text>
-              {!issued ? (
-                <>
-                  <Text fontSize={'xs'} color={'gray.500'}>
-                    「気になる」「行きたい」マーク({markedCount}件)を、コードまたはQRコードで他の端末に一度だけ引き継げます。
-                  </Text>
-                  {issueError && <Text fontSize={'xs'} color={'red.500'}>{issueError}</Text>}
-                  <Button size={'sm'} onClick={handleIssue} isLoading={isIssuing} isDisabled={markedCount === 0}>
-                    コードを発行する
+    <>
+      <Button leftIcon={<FiSmartphone />}
+              iconSpacing={'1'}
+              size={'xs'}
+              variant={'outline'}
+              alignSelf={'flex-start'}
+              onClick={onOpen}
+              >
+        この記録を他の端末に引き継ぐ
+      </Button>
+      <Modal isOpen={isOpen} onClose={closeModal} isCentered>
+        <ModalOverlay />
+        <ModalContent mx={'4'}>
+          <ModalHeader>
+            <Text fontSize={'sm'}>他の端末と記録を引き継ぐ</Text>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={'6'}>
+            <Stack spacing={'4'}>
+              <Stack spacing={'2'}>
+                <Text fontSize={'xs'} fontWeight={'bold'} color={'gray.600'}>この端末の記録を送る</Text>
+                <Collapse in={!issued} animateOpacity unmountOnExit>
+                  <Stack spacing={'2'}>
+                    <Text fontSize={'xs'} color={'gray.500'}>
+                      「気になる」「行きたい」マークを、コードまたはQRコードで他の端末に一度だけ引き継げます。
+                    </Text>
+                    {issueError && <Text fontSize={'xs'} color={'red.500'}>{issueError}</Text>}
+                    <Button size={'sm'} onClick={handleIssue} isLoading={isIssuing} isDisabled={markedCount === 0}>
+                      コードを発行する
+                    </Button>
+                    {markedCount === 0 && (
+                      <Text fontSize={'xs'} color={'gray.400'}>引き継ぐ記録がありません</Text>
+                    )}
+                  </Stack>
+                </Collapse>
+                <Collapse in={!!issued} animateOpacity unmountOnExit>
+                  <Stack spacing={'3'} align={'center'} pt={'1'}>
+                    <Box bg={'white'} p={'3'} borderRadius={'md'} border={'1px solid'} borderColor={'gray.200'}>
+                      <QRCodeSVG value={syncUrl} size={160} />
+                    </Box>
+                    <HStack>
+                      <Text fontSize={'lg'} fontWeight={'bold'} letterSpacing={'wide'}>{issued?.code}</Text>
+                      <IconButton aria-label={'コードをコピー'}
+                                  icon={isCodeCopied ? <FiCheck /> : <FiCopy />}
+                                  size={'xs'}
+                                  variant={isCodeCopied ? 'solid' : 'outline'}
+                                  colorScheme={isCodeCopied ? 'green' : undefined}
+                                  onClick={handleCopyCode}
+                                  />
+                    </HStack>
+                    <Text fontSize={'xs'} color={'gray.500'} textAlign={'center'}>
+                      別の端末のカメラでQRコードを読み取るか、コードを入力すると取り込まれます(10分間有効・一度のみ)
+                    </Text>
+                  </Stack>
+                </Collapse>
+              </Stack>
+              <Divider />
+              <Stack spacing={'2'}>
+                <Text fontSize={'xs'} fontWeight={'bold'} color={'gray.600'}>コードを受け取る</Text>
+                <Text fontSize={'xs'} color={'gray.500'}>
+                  他の端末で発行したコードを入力すると、この端末に記録を取り込みます。
+                </Text>
+                {redeemError && <Text fontSize={'xs'} color={'red.500'}>{redeemError}</Text>}
+                <HStack>
+                  <Input size={'sm'}
+                         placeholder={'コードを入力'}
+                         value={redeemInput}
+                         onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
+                         maxLength={6}
+                         />
+                  <Button size={'sm'} onClick={handleRedeem} isLoading={isRedeeming} isDisabled={!redeemInput.trim()}>
+                    取り込む
                   </Button>
-                  {markedCount === 0 && (
-                    <Text fontSize={'xs'} color={'gray.400'}>引き継ぐ記録がありません</Text>
-                  )}
-                </>
-              ) : (
-                <Stack spacing={'3'} align={'center'}>
-                  <Box bg={'white'} p={'3'} borderRadius={'md'} border={'1px solid'} borderColor={'gray.200'}>
-                    <QRCodeSVG value={syncUrl} size={160} />
-                  </Box>
-                  <HStack>
-                    <Text fontSize={'lg'} fontWeight={'bold'} letterSpacing={'wide'}>{issued.code}</Text>
-                    <IconButton aria-label={'コードをコピー'}
-                                icon={isCodeCopied ? <FiCheck /> : <FiCopy />}
-                                size={'xs'}
-                                variant={isCodeCopied ? 'solid' : 'outline'}
-                                colorScheme={isCodeCopied ? 'green' : undefined}
-                                onClick={handleCopyCode}
-                                />
-                  </HStack>
-                  <Text fontSize={'xs'} color={'gray.500'} textAlign={'center'}>
-                    別の端末のカメラでQRコードを読み取るか、コードを入力すると取り込まれます(10分間有効・一度のみ)
-                  </Text>
-                </Stack>
-              )}
+                </HStack>
+              </Stack>
             </Stack>
-            <Divider />
-            <Stack spacing={'2'}>
-              <Text fontSize={'xs'} fontWeight={'bold'} color={'gray.600'}>コードを受け取る</Text>
-              <Text fontSize={'xs'} color={'gray.500'}>
-                他の端末で発行したコードを入力すると、この端末に記録を取り込みます。
-              </Text>
-              {redeemError && <Text fontSize={'xs'} color={'red.500'}>{redeemError}</Text>}
-              <HStack>
-                <Input size={'sm'}
-                       placeholder={'コードを入力'}
-                       value={redeemInput}
-                       onChange={(e) => setRedeemInput(e.target.value)}
-                       maxLength={6}
-                       />
-                <Button size={'sm'} onClick={handleRedeem} isLoading={isRedeeming} isDisabled={!redeemInput.trim()}>
-                  取り込む
-                </Button>
-              </HStack>
-            </Stack>
-          </Stack>
-        </PopoverBody>
-      </PopoverContent>
-    </Popover>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </>
   );
 }
