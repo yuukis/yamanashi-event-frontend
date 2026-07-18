@@ -34,6 +34,7 @@ import { fetchEvents, fetchGroups } from '../utils/api';
 import { buildListWidgetPath } from '../utils/widgetPaths';
 import { collectActiveGroupKeys, splitGroupsByActivity } from '../utils/groupActivity';
 import { X_ACCOUNT_URL } from '../utils/site';
+import { SyncButton } from '../components/Sync';
 import type { ApiGroup } from '../types/events';
 
 function Guide() {
@@ -106,6 +107,7 @@ function Guide() {
       icon: <StarIcon color={'secondary.800'} />,
       title: '「行きたい」をマークする',
       body: '気になるイベントは★マークで「行きたい」に追加できます。マークした直後に友達へシェアする導線も出るので、一緒に参加する仲間を誘うのに使えます。',
+      action: <SyncButton />,
     },
     {
       icon: <BellIcon color={'impact.700'} />,

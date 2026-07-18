@@ -1,6 +1,7 @@
 import icon from "../assets/images/icon.png"
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { NotificationButton } from '../components/Notification';
+import { useSyncCodeFromUrl } from '../utils/sync';
 import { MiniEventCalendar } from '../components/MiniEventCalendar';
 import {
   Heading,
@@ -111,6 +112,7 @@ function SiteHeaderContent() {
 // で画面外へ逃がすと、ヘッダー内のふきだし(Popover)だけが自身の
 // visibility 指定で見え続けたまま一緒にずれてしまう。
 export function SiteHeader() {
+  useSyncCodeFromUrl();
   const isFixedHeaderVisible = useSyncExternalStore(subscribeHeaderVisibility, getHeaderVisible);
   const isNearPageTop = useSyncExternalStore(subscribeHeaderVisibility, getNearPageTop);
   const staticHeaderRef = useRef<HTMLDivElement>(null);

@@ -4,6 +4,7 @@ import {
   isEventMarked,
   isValidMarkedEventsData,
   markEvent,
+  mergeMarkedEvents,
   unmarkEvent,
   type MarkedEventsData,
 } from './markedEvents';
@@ -56,6 +57,32 @@ describe('unmarkEvent', () => {
     const result = unmarkEvent(previous, 'e1');
 
     expect(result.records['e2']).toBeDefined();
+  });
+});
+
+describe('mergeMarkedEvents', () => {
+  it('adds records for uids not already marked, using now as markedAt', () => {
+    const result = mergeMarkedEvents(EMPTY_MARKED_EVENTS_DATA, ['e1', 'e2'], NOW);
+
+    expect(result.records['e1']).toEqual({ markedAt: NOW.toISOString() });
+    expect(result.records['e2']).toEqual({ markedAt: NOW.toISOString() });
+  });
+
+  it('does not overwrite markedAt for uids already marked', () => {
+    const earlier = new Date('2026-01-01T00:00:00+09:00');
+    const previous = markEvent(EMPTY_MARKED_EVENTS_DATA, 'e1', earlier);
+
+    const result = mergeMarkedEvents(previous, ['e1'], NOW);
+
+    expect(result.records['e1']).toEqual({ markedAt: earlier.toISOString() });
+  });
+
+  it('is a no-op when given no uids', () => {
+    const previous = markEvent(EMPTY_MARKED_EVENTS_DATA, 'e1', NOW);
+
+    const result = mergeMarkedEvents(previous, [], NOW);
+
+    expect(result.records).toEqual(previous.records);
   });
 });
 
