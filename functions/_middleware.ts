@@ -120,8 +120,8 @@ async function buildRootPageData(): Promise<BotPageData> {
     fetchJson<ApiGroup[]>(withFields(GROUPS_API_URL, GROUPS_FIELDS)),
   ]);
   const events = enrichEventsWithGroups(rawEvents, groups);
-  const futureEvents = events.filter(isFutureEvent).sort(sortByStartedAtAsc);
-  const pastEvents = events.filter(isPastEvent).sort(sortByStartedAtDesc);
+  const futureEvents = limitEvents(events.filter(isFutureEvent).sort(sortByStartedAtAsc));
+  const pastEvents = limitEvents(events.filter(isPastEvent).sort(sortByStartedAtDesc));
 
   const bodyHtml = [
     '<h1>Yamanashi Developer Hub</h1>',
@@ -138,7 +138,7 @@ async function buildRootPageData(): Promise<BotPageData> {
     description:
       'Yamanashi Developer Hubは、山梨県内で開催されるIT勉強会・イベント情報をまとめたポータルサイトです。' +
       'connpassやコミュニティのイベントカレンダー、過去の開催アーカイブから情報を集約し、直近の開催予定と過去イベントを一覧できます。',
-    ogUrl: `${SITE_URL}/`,
+    ogUrl: SITE_URL,
     jsonLd: buildEventListJsonLd([...futureEvents, ...pastEvents], `${SITE_URL}/`),
     bodyHtml,
   };
@@ -176,14 +176,15 @@ async function buildYearPageData(year: number): Promise<BotPageData> {
   const events = enrichEventsWithGroups(rawEvents, groups)
     .filter(isVisibleEvent)
     .sort(sortByStartedAtAsc);
+  const renderedEvents = limitEvents(events);
 
-  const bodyHtml = [`<h1>${year}年 開催イベント</h1>`, buildEventListHtml(events)].join('');
+  const bodyHtml = [`<h1>${year}年 開催イベント</h1>`, buildEventListHtml(renderedEvents)].join('');
 
   return {
     title: `${year}年 開催イベント - Yamanashi Developer Hub`,
     description: `${year}年に山梨県内で開催されたIT勉強会・イベントの一覧です。全${events.length}件。`,
     ogUrl: `${SITE_URL}/events/${year}`,
-    jsonLd: buildEventListJsonLd(events, `${SITE_URL}/events/${year}`),
+    jsonLd: buildEventListJsonLd(renderedEvents, `${SITE_URL}/events/${year}`),
     bodyHtml,
   };
 }
@@ -202,12 +203,15 @@ async function fetchJson<T>(url: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+function limitEvents(events: EventWithGroup[]): EventWithGroup[] {
+  return events.slice(0, MAX_LIST_ITEMS);
+}
+
 function buildEventListHtml(events: EventWithGroup[]): string {
   if (events.length === 0) {
     return '<p>該当するイベントはありません。</p>';
   }
   const items = events
-    .slice(0, MAX_LIST_ITEMS)
     .map((event) => {
       const date = formatEventDate(event.started_at);
       const group = event.group_name ? `<span>${escapeHtml(event.group_name)}</span>` : '';
@@ -289,6 +293,8 @@ function injectBotContent(response: Response, data: BotPageData): Response {
   headers.delete('content-length');
   headers.set('cache-control', 'public, max-age=120');
   headers.set('x-prerender', 'bot');
+  const existingVary = headers.get('vary');
+  headers.set('vary', existingVary ? `${existingVary}, User-Agent` : 'User-Agent');
 
   return new Response(transformed.body, {
     status: transformed.status,
