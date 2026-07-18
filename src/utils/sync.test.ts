@@ -86,6 +86,15 @@ describe('fetchSyncUids', () => {
 
     await expect(fetchSyncUids('a3k9p2')).rejects.toThrow('同期データの形式が不正です。');
   });
+
+  it.each(['__proto__', 'constructor', 'prototype'])(
+    'throws when uids contains the unsafe key "%s"',
+    async (unsafeKey) => {
+      vi.mocked(axios.get).mockResolvedValue({ data: { version: 1, uids: ['e1', unsafeKey] } });
+
+      await expect(fetchSyncUids('a3k9p2')).rejects.toThrow('同期データの形式が不正です。');
+    },
+  );
 });
 
 describe('mergeUidsAndNotify', () => {

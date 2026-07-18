@@ -8,6 +8,10 @@ import { mergeMarkedEvents } from './markedEvents';
 export const SYNC_API_URL = 'https://sync.event.yamanashi.dev';
 export const SYNC_QUERY_PARAM = 'sync';
 
+// mergeMarkedEventsは受け取ったuidをキーとしてオブジェクトへ書き込むため、
+// これらの名前は境界(fetchSyncUids)で弾いておく。
+const UNSAFE_UID_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 export type SyncIssueResult = {
   code: string;
   expiresAt: string;
@@ -42,7 +46,11 @@ export async function fetchSyncUids(code: string): Promise<string[]> {
   }
 
   const candidate = data as { version?: unknown; uids?: unknown };
-  if (candidate.version !== 1 || !Array.isArray(candidate.uids) || !candidate.uids.every((uid) => typeof uid === 'string')) {
+  if (
+    candidate.version !== 1
+    || !Array.isArray(candidate.uids)
+    || !candidate.uids.every((uid) => typeof uid === 'string' && !UNSAFE_UID_KEYS.has(uid))
+  ) {
     throw new Error('同期データの形式が不正です。');
   }
   return candidate.uids;
