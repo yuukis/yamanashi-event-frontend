@@ -180,8 +180,6 @@ export function EventBody(data: EventBodyProps) {
 
   const attendanceMarkLabel = isMarked ? '行きたいから外す' : '行きたいに追加';
 
-  // localStorageへの反映とマーク状態の反転のみを行う。呼び出し側で
-  // マーク直後の導線(Popover/トースト)を出すかどうかを判断する。
   const toggleAttendanceMark = (): boolean => {
     const nowMarked = !isMarked;
     updateMarkedEventsData((previous) =>
@@ -211,8 +209,6 @@ export function EventBody(data: EventBodyProps) {
               if (isNativeShareSupported()) {
                 shareEventViaNativeShare(event, toast, onToastClose);
               } else {
-                // 稀なフォールバック: Web Share API非対応の端末では、
-                // 既存の下部Drawer(情報提供元・マップ等の導線)を開く
                 onOpen();
                 onToastClose();
               }
