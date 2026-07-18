@@ -213,7 +213,7 @@ export function EventBody(data: EventBodyProps) {
                 onToastClose();
               }
             }}>
-              シェアする
+              友達を誘う
             </Button>
           </HStack>
         ),
@@ -646,7 +646,10 @@ export function EventBody(data: EventBodyProps) {
                   <PopoverArrow />
                   <PopoverBody>
                     <Stack spacing={'2'}>
-                      <Text fontSize={'sm'}>行きたいに追加しました</Text>
+                      <Stack spacing={'0'}>
+                        <Text fontSize={'sm'} fontWeight={'bold'}>行きたいに追加しました</Text>
+                        <Text fontSize={'xs'} color={'gray.500'}>一緒に行く友達を誘ってみませんか?</Text>
+                      </Stack>
                       <XShareButton event={event} />
                       <ShareButton event={event} />
                     </Stack>

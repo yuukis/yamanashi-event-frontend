@@ -296,7 +296,7 @@ describe('EventBody', () => {
     const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1', hash_tag: 'kofu' });
     renderWithChakra(<EventBody event={event} />);
 
-    fireEvent.click(screen.getByRole('button', { name: '共有' }));
+    fireEvent.click(screen.getByRole('button', { name: '友達を誘う' }));
 
     await waitFor(() => expect(shareSpy).toHaveBeenCalledWith({
       title: event.title,
@@ -313,7 +313,7 @@ describe('EventBody', () => {
     const event = makeEvent({ uid: 'event-1' });
     renderWithChakra(<EventBody event={event} />);
 
-    expect(screen.queryByRole('button', { name: '共有' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '友達を誘う' })).not.toBeInTheDocument();
   });
 
   it('copies only the event card URL to the clipboard and shows a confirmation toast on desktop', async () => {
@@ -343,7 +343,7 @@ describe('EventBody', () => {
     Object.defineProperty(navigator, 'clipboard', { value: originalClipboard, configurable: true });
   });
 
-  it('invokes the native Web Share API from a single 共有 button on the mobile long-press menu and closes it', async () => {
+  it('invokes the native Web Share API from a single 友達を誘う button on the mobile long-press menu and closes it', async () => {
     mockMatchMedia(false);
     const shareSpy = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'share', { value: shareSpy, configurable: true });
@@ -351,7 +351,7 @@ describe('EventBody', () => {
     renderWithChakra(<EventBody event={event} />);
 
     fireEvent.click(screen.getByLabelText('More options'));
-    fireEvent.click(screen.getByRole('button', { name: '共有' }));
+    fireEvent.click(screen.getByRole('button', { name: '友達を誘う' }));
 
     await waitFor(() => expect(shareSpy).toHaveBeenCalledWith({
       title: event.title,
@@ -371,7 +371,7 @@ describe('EventBody', () => {
     renderWithChakra(<EventBody event={event} />);
 
     fireEvent.click(screen.getByLabelText('More options'));
-    fireEvent.click(screen.getByRole('button', { name: '共有' }));
+    fireEvent.click(screen.getByRole('button', { name: '友達を誘う' }));
 
     await waitFor(() => expect(shareSpy).toHaveBeenCalledWith({
       title: event.title,
@@ -390,7 +390,7 @@ describe('EventBody', () => {
 
     fireEvent.click(screen.getByLabelText('More options'));
 
-    expect(screen.queryByRole('button', { name: '共有' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '友達を誘う' })).not.toBeInTheDocument();
   });
 
   describe('attendance mark', () => {
@@ -405,8 +405,8 @@ describe('EventBody', () => {
 
       expect(screen.getByRole('button', { name: '行きたいから外す' })).toBeInTheDocument();
       const popoverText = await screen.findByText('行きたいに追加しました');
-      const popoverButtons = within(popoverText.parentElement as HTMLElement).getAllByRole('button');
-      expect(popoverButtons.map((button) => button.textContent)).toEqual(['X(Twitter)でシェア', '共有']);
+      const popoverButtons = within(popoverText.closest('[role="dialog"]') as HTMLElement).getAllByRole('button');
+      expect(popoverButtons.map((button) => button.textContent)).toEqual(['X(Twitter)でシェア', '友達を誘う']);
 
       Reflect.deleteProperty(navigator, 'share');
     });
@@ -419,7 +419,7 @@ describe('EventBody', () => {
 
       fireEvent.click(screen.getByRole('button', { name: '行きたいに追加' }));
       const popoverText = await screen.findByText('行きたいに追加しました');
-      fireEvent.click(within(popoverText.parentElement as HTMLElement).getByRole('button', { name: 'X(Twitter)でシェア' }));
+      fireEvent.click(within(popoverText.closest('[role="dialog"]') as HTMLElement).getByRole('button', { name: 'X(Twitter)でシェア' }));
 
       const expected_url = buildXShareUrl({
         title: event.title,
@@ -453,7 +453,7 @@ describe('EventBody', () => {
       fireEvent.click(screen.getByRole('button', { name: '行きたいに追加' }));
 
       await screen.findByText('行きたいに追加しました');
-      fireEvent.click(screen.getByRole('button', { name: 'シェアする' }));
+      fireEvent.click(screen.getByRole('button', { name: '友達を誘う' }));
 
       await waitFor(() => expect(shareSpy).toHaveBeenCalledWith({
         title: event.title,
@@ -474,7 +474,7 @@ describe('EventBody', () => {
       fireEvent.click(screen.getByRole('button', { name: '行きたいに追加' }));
 
       await screen.findByText('行きたいに追加しました');
-      fireEvent.click(screen.getByRole('button', { name: 'シェアする' }));
+      fireEvent.click(screen.getByRole('button', { name: '友達を誘う' }));
 
       expect(await screen.findByRole('button', { name: 'キャンセル' })).toBeInTheDocument();
     });

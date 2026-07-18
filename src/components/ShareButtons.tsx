@@ -23,7 +23,7 @@ const SHARE_TARGETS: ShareTarget[] = [
 ];
 
 const COPY_LABEL = 'リンクをコピー';
-const NATIVE_SHARE_LABEL = '共有';
+const NATIVE_SHARE_LABEL = '友達を誘う';
 
 export function ShareIconRow({ event }: { event: EventWithGroup }) {
   const ctx = toEventShareContext(event);
