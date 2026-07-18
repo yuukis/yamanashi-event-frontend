@@ -8,8 +8,8 @@ import { mergeMarkedEvents } from './markedEvents';
 export const SYNC_API_URL = 'https://sync.event.yamanashi.dev';
 export const SYNC_QUERY_PARAM = 'sync';
 
-// mergeMarkedEventsは受け取ったuidをキーとしてオブジェクトへ書き込むため、
-// これらの名前は境界(fetchSyncUids)で弾いておく。
+// mergeMarkedEventsがuidをオブジェクトキーとして書き込むため、プロトタイプ
+// 汚染につながりうる名前をここで拒否する。
 const UNSAFE_UID_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 export type SyncIssueResult = {
