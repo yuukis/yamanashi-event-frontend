@@ -14,12 +14,19 @@ export type SyncIssueResult = {
 };
 
 export async function createSyncCode(uids: string[]): Promise<SyncIssueResult> {
+  let data: unknown;
   try {
     const res = await axios.post(`${SYNC_API_URL}/sync`, { version: 1, uids });
-    return { code: res.data.code, expiresAt: res.data.expires_at };
+    data = res.data;
   } catch {
     throw new Error('コードの発行に失敗しました。しばらくしてから再度お試しください。');
   }
+
+  const candidate = data as { code?: unknown; expires_at?: unknown };
+  if (typeof candidate.code !== 'string' || typeof candidate.expires_at !== 'string') {
+    throw new Error('コードの発行に失敗しました。しばらくしてから再度お試しください。');
+  }
+  return { code: candidate.code, expiresAt: candidate.expires_at };
 }
 
 export async function fetchSyncUids(code: string): Promise<string[]> {
@@ -44,7 +51,7 @@ export async function fetchSyncUids(code: string): Promise<string[]> {
 export function mergeUidsAndNotify(uids: string[], toast: ReturnType<typeof useToast>): void {
   const before = new Set(Object.keys(getMarkedEventsSnapshot().records));
   updateMarkedEventsData((previous) => mergeMarkedEvents(previous, uids, new Date()));
-  const addedCount = uids.filter((uid) => !before.has(uid)).length;
+  const addedCount = [...new Set(uids)].filter((uid) => !before.has(uid)).length;
   toast({
     position: 'bottom',
     duration: 4000,

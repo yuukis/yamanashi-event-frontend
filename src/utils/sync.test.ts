@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
-import { createSyncCode, fetchSyncUids, SYNC_API_URL } from './sync';
+import type { useToast } from '@chakra-ui/react';
+import { createSyncCode, fetchSyncUids, mergeUidsAndNotify, SYNC_API_URL } from './sync';
+import { updateMarkedEventsData } from './markedEventsStore';
+import { EMPTY_MARKED_EVENTS_DATA, markEvent } from './markedEvents';
+
+function makeToastSpy() {
+  return vi.fn() as unknown as ReturnType<typeof useToast>;
+}
 
 vi.mock('axios');
 
@@ -22,6 +29,18 @@ describe('createSyncCode', () => {
 
   it('throws a user-facing error when the request fails', async () => {
     vi.mocked(axios.post).mockRejectedValue(new Error('network error'));
+
+    await expect(createSyncCode(['e1'])).rejects.toThrow('コードの発行に失敗しました。しばらくしてから再度お試しください。');
+  });
+
+  it('throws when the response does not include a code', async () => {
+    vi.mocked(axios.post).mockResolvedValue({ data: { expires_at: '2026-07-18T20:33:37+09:00' } });
+
+    await expect(createSyncCode(['e1'])).rejects.toThrow('コードの発行に失敗しました。しばらくしてから再度お試しください。');
+  });
+
+  it('throws when the response does not include an expiry', async () => {
+    vi.mocked(axios.post).mockResolvedValue({ data: { code: 'A3K9P2' } });
 
     await expect(createSyncCode(['e1'])).rejects.toThrow('コードの発行に失敗しました。しばらくしてから再度お試しください。');
   });
@@ -66,5 +85,36 @@ describe('fetchSyncUids', () => {
     vi.mocked(axios.get).mockResolvedValue({ data: { version: 1, uids: ['e1', 42] } });
 
     await expect(fetchSyncUids('a3k9p2')).rejects.toThrow('同期データの形式が不正です。');
+  });
+});
+
+describe('mergeUidsAndNotify', () => {
+  beforeEach(() => {
+    updateMarkedEventsData(() => EMPTY_MARKED_EVENTS_DATA);
+  });
+
+  it('reports the number of distinct uids actually added', () => {
+    const toast = makeToastSpy();
+
+    mergeUidsAndNotify(['e1', 'e2'], toast);
+
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: '2件の記録を取り込みました' }));
+  });
+
+  it('does not over-count when the uids array contains duplicates', () => {
+    const toast = makeToastSpy();
+
+    mergeUidsAndNotify(['e1', 'e1', 'e2'], toast);
+
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: '2件の記録を取り込みました' }));
+  });
+
+  it('reports the already-synced message when every uid is already marked', () => {
+    updateMarkedEventsData((previous) => markEvent(previous, 'e1', new Date('2026-01-01T00:00:00+09:00')));
+    const toast = makeToastSpy();
+
+    mergeUidsAndNotify(['e1'], toast);
+
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'この端末にはすでにすべての記録があります' }));
   });
 });
