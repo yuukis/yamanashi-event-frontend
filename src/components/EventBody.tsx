@@ -56,7 +56,7 @@ import {
 } from '@chakra-icons/bootstrap';
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
 import { EVENT_CARD_HIGHLIGHT_EVENT } from '../utils/hashScroll';
-import { ShareIconRow, ShareButton, XShareButton } from './ShareButtons';
+import { ShareIconRow, ShareButton, XShareButton, NATIVE_SHARE_LABEL } from './ShareButtons';
 import { isNativeShareSupported, shareEventViaNativeShare } from '../utils/share';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
@@ -183,6 +183,7 @@ export function EventBody(data: EventBodyProps) {
     : (isMarked ? '行きたいから外す' : '行きたいに追加');
   const attendanceMarkConfirmationText = has_ended ? '気になるに追加しました' : '行きたいに追加しました';
   const attendanceInviteSubtext = has_ended ? '友達にシェアしてみませんか?' : '一緒に行く友達を誘ってみませんか?';
+  const nativeShareLabel = has_ended ? '友達にシェア' : NATIVE_SHARE_LABEL;
 
   const toggleAttendanceMark = (): boolean => {
     const nowMarked = !isMarked;
@@ -217,7 +218,7 @@ export function EventBody(data: EventBodyProps) {
                 onToastClose();
               }
             }}>
-              友達を誘う
+              { nativeShareLabel }
             </Button>
           </HStack>
         ),
@@ -431,7 +432,7 @@ export function EventBody(data: EventBodyProps) {
               </Badge>
             ) : null}
             <Show above='md'>
-              <ShareIconRow event={event} />
+              <ShareIconRow event={event} nativeShareLabel={nativeShareLabel} />
             </Show>
           </Stack>
           <Show above='md'>
@@ -655,7 +656,7 @@ export function EventBody(data: EventBodyProps) {
                         <Text fontSize={'xs'} color={'gray.500'}>{ attendanceInviteSubtext }</Text>
                       </Stack>
                       <XShareButton event={event} />
-                      <ShareButton event={event} />
+                      <ShareButton event={event} label={nativeShareLabel} />
                     </Stack>
                   </PopoverBody>
                 </PopoverContent>
@@ -693,7 +694,7 @@ export function EventBody(data: EventBodyProps) {
                       >
                 { attendanceMarkLabel }
               </Button>
-              <ShareButton event={event} onAfterAction={onClose} />
+              <ShareButton event={event} onAfterAction={onClose} label={nativeShareLabel} />
               <Button w="full"
                       leftIcon={<FiExternalLink />}
                       onClick={() => {

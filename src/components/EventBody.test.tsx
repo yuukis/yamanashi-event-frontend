@@ -520,19 +520,26 @@ describe('EventBody', () => {
         expect(screen.queryByRole('button', { name: '行きたいに追加' })).not.toBeInTheDocument();
       });
 
-      it('opens the popover with "気になるに追加しました" (not the "行きたい" copy) on desktop', async () => {
+      it('opens the popover with "気になるに追加しました" (not the "行きたい" copy) on desktop, and labels the share button "友達にシェア" instead of "友達を誘う"', async () => {
         mockMatchMedia(true);
+        const shareSpy = vi.fn().mockResolvedValue(undefined);
+        Object.defineProperty(navigator, 'share', { value: shareSpy, configurable: true });
         renderWithChakra(<EventBody event={makePastEvent()} />);
 
         fireEvent.click(screen.getByRole('button', { name: '気になる' }));
 
         expect(screen.getByRole('button', { name: '気になる解除' })).toBeInTheDocument();
-        await screen.findByText('気になるに追加しました');
+        const popoverText = await screen.findByText('気になるに追加しました');
         expect(screen.getByText('友達にシェアしてみませんか?')).toBeInTheDocument();
         expect(screen.queryByText('行きたいに追加しました')).not.toBeInTheDocument();
+        const dialog = popoverText.closest('[role="dialog"]') as HTMLElement;
+        expect(within(dialog).getByRole('button', { name: '友達にシェア' })).toBeInTheDocument();
+        expect(within(dialog).queryByRole('button', { name: '友達を誘う' })).not.toBeInTheDocument();
+
+        Reflect.deleteProperty(navigator, 'share');
       });
 
-      it('shows the toast with "気になるに追加しました" (not the "行きたい" copy) on mobile', async () => {
+      it('shows the toast with "気になるに追加しました" (not the "行きたい" copy) on mobile, and labels the action button "友達にシェア"', async () => {
         mockMatchMedia(false);
         renderWithChakra(<EventBody event={makePastEvent()} />);
 
@@ -541,6 +548,7 @@ describe('EventBody', () => {
         expect(screen.getByRole('button', { name: '気になる解除' })).toBeInTheDocument();
         await screen.findByText('気になるに追加しました');
         expect(screen.queryByText('行きたいに追加しました')).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: '友達にシェア' })).toBeInTheDocument();
       });
 
       it('labels the mark button "気になる" from the options drawer for an unmarked past event', () => {

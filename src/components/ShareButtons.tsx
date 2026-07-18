@@ -23,9 +23,14 @@ const SHARE_TARGETS: ShareTarget[] = [
 ];
 
 const COPY_LABEL = 'リンクをコピー';
-const NATIVE_SHARE_LABEL = '友達を誘う';
+export const NATIVE_SHARE_LABEL = '友達を誘う';
 
-export function ShareIconRow({ event }: { event: EventWithGroup }) {
+type ShareIconRowProps = {
+  event: EventWithGroup;
+  nativeShareLabel?: string;
+};
+
+export function ShareIconRow({ event, nativeShareLabel = NATIVE_SHARE_LABEL }: ShareIconRowProps) {
   const ctx = toEventShareContext(event);
   const toast = useToast();
 
@@ -43,7 +48,7 @@ export function ShareIconRow({ event }: { event: EventWithGroup }) {
                     />
       ))}
       {isNativeShareSupported() && (
-        <IconButton aria-label={NATIVE_SHARE_LABEL}
+        <IconButton aria-label={nativeShareLabel}
                     icon={<FiShare2 />}
                     size={'xs'}
                     variant={'ghost'}
@@ -80,9 +85,10 @@ export function XShareButton({ event }: { event: EventWithGroup }) {
 type ShareButtonProps = {
   event: EventWithGroup;
   onAfterAction?: () => void;
+  label?: string;
 };
 
-export function ShareButton({ event, onAfterAction }: ShareButtonProps) {
+export function ShareButton({ event, onAfterAction, label = NATIVE_SHARE_LABEL }: ShareButtonProps) {
   const toast = useToast();
 
   if (!isNativeShareSupported()) {
@@ -94,7 +100,7 @@ export function ShareButton({ event, onAfterAction }: ShareButtonProps) {
             leftIcon={<FiShare2 />}
             onClick={() => shareEventViaNativeShare(event, toast, onAfterAction)}
             >
-      { NATIVE_SHARE_LABEL }
+      { label }
     </Button>
   );
 }
