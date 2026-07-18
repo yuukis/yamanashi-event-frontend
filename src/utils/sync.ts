@@ -41,7 +41,6 @@ export async function fetchSyncUids(code: string): Promise<string[]> {
   return candidate.uids;
 }
 
-// 受け取ったuidをmarkedEventsへ和集合でマージし、取り込み件数をトースト表示する。
 export function mergeUidsAndNotify(uids: string[], toast: ReturnType<typeof useToast>): void {
   const before = new Set(Object.keys(getMarkedEventsSnapshot().records));
   updateMarkedEventsData((previous) => mergeMarkedEvents(previous, uids, new Date()));
@@ -55,9 +54,8 @@ export function mergeUidsAndNotify(uids: string[], toast: ReturnType<typeof useT
   });
 }
 
-// URLの?sync=CODEを検知したら自動で取り込む。SiteHeaderContentは固定/
-// 非固定の2枚が同時にマウントされるため、二重取り込みを避けるため
-// SiteHeader本体(1回だけ呼ばれる場所)から呼び出すこと。
+// SiteHeaderContentは固定/非固定の2枚が同時にマウントされるため、二重
+// 取り込みを避けるためSiteHeader本体(1回だけ呼ばれる場所)から呼び出すこと。
 export function useSyncCodeFromUrl(): void {
   const [searchParams, setSearchParams] = useSearchParams();
   const toast = useToast();

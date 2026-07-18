@@ -15,11 +15,9 @@ if (!window.HTMLElement.prototype.scrollTo) {
   window.HTMLElement.prototype.scrollTo = () => {};
 }
 
-// jsdom does not implement window.scrollTo; Chakra UI's Modal calls it as
-// part of its focus-trap/scroll-lock handling when it opens.
-if (!window.scrollTo) {
-  window.scrollTo = () => {};
-}
+// jsdom's window.scrollTo exists but only logs "not implemented"; Chakra
+// UI's Modal calls it as part of its focus-trap/scroll-lock handling.
+window.scrollTo = () => {};
 
 // jsdom does not implement matchMedia; Chakra UI's useMediaQuery depends on it.
 if (!window.matchMedia) {
