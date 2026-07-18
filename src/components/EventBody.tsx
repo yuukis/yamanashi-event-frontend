@@ -56,7 +56,7 @@ import {
 } from '@chakra-icons/bootstrap';
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
 import { EVENT_CARD_HIGHLIGHT_EVENT } from '../utils/hashScroll';
-import { ShareIconRow, ShareButton } from './ShareButtons';
+import { ShareIconRow, ShareButton, XShareButton } from './ShareButtons';
 import { isNativeShareSupported, shareEventViaNativeShare } from '../utils/share';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
@@ -651,6 +651,7 @@ export function EventBody(data: EventBodyProps) {
                   <PopoverBody>
                     <Stack spacing={'2'}>
                       <Text fontSize={'sm'}>行きたいに追加しました</Text>
+                      <XShareButton event={event} />
                       <ShareButton event={event} />
                     </Stack>
                   </PopoverBody>

@@ -64,6 +64,19 @@ export function ShareIconRow({ event }: { event: EventWithGroup }) {
   );
 }
 
+export function XShareButton({ event }: { event: EventWithGroup }) {
+  const ctx = toEventShareContext(event);
+
+  return (
+    <Button w="full"
+            leftIcon={<FaXTwitter />}
+            onClick={() => window.open(buildXShareUrl(ctx))}
+            >
+      X(Twitter)でシェア
+    </Button>
+  );
+}
+
 type ShareButtonProps = {
   event: EventWithGroup;
   onAfterAction?: () => void;

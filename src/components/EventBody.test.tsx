@@ -405,9 +405,30 @@ describe('EventBody', () => {
 
       expect(screen.getByRole('button', { name: '行きたいから外す' })).toBeInTheDocument();
       const popoverText = await screen.findByText('行きたいに追加しました');
-      expect(within(popoverText.parentElement as HTMLElement).getByRole('button', { name: '共有' })).toBeInTheDocument();
+      const popoverButtons = within(popoverText.parentElement as HTMLElement).getAllByRole('button');
+      expect(popoverButtons.map((button) => button.textContent)).toEqual(['X(Twitter)でシェア', '共有']);
 
       Reflect.deleteProperty(navigator, 'share');
+    });
+
+    it('opens the X(Twitter) share intent from the desktop popover', async () => {
+      mockMatchMedia(true);
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1', hash_tag: 'kofu' });
+      renderWithChakra(<EventBody event={event} />);
+
+      fireEvent.click(screen.getByRole('button', { name: '行きたいに追加' }));
+      const popoverText = await screen.findByText('行きたいに追加しました');
+      fireEvent.click(within(popoverText.parentElement as HTMLElement).getByRole('button', { name: 'X(Twitter)でシェア' }));
+
+      const expected_url = buildXShareUrl({
+        title: event.title,
+        url: buildEventShareUrl(event.uid),
+        hashTag: event.hash_tag,
+      });
+      expect(windowOpenSpy).toHaveBeenCalledWith(expected_url);
+
+      windowOpenSpy.mockRestore();
     });
 
     it('unmarks the event on a second click and does not reopen the popover', () => {
