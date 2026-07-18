@@ -30,8 +30,15 @@ import {
   SkeletonCircle,
   useMediaQuery,
   useDisclosure,
+  useToast,
   Show,
-  Hide
+  Hide,
+  Tooltip,
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverArrow,
+  PopoverBody,
 } from '@chakra-ui/react';
 import { FaXTwitter } from "react-icons/fa6";
 import { FiArchive, FiExternalLink, FiMap, FiMoreVertical } from "react-icons/fi";
@@ -44,13 +51,18 @@ import {
   Tags,
   ChevronRight,
   ExclamationTriangleFill,
+  Star,
+  StarFill,
 } from '@chakra-icons/bootstrap';
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
 import { EVENT_CARD_HIGHLIGHT_EVENT } from '../utils/hashScroll';
-import { ShareIconRow, ShareButton } from './ShareButtons';
+import { ShareIconRow, ShareButton, XShareButton, NATIVE_SHARE_LABEL } from './ShareButtons';
+import { isNativeShareSupported, shareEventViaNativeShare } from '../utils/share';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
 import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
+import { isEventMarked, markEvent, unmarkEvent } from '../utils/markedEvents';
+import { subscribeMarkedEvents, getMarkedEventsSnapshot, updateMarkedEventsData } from '../utils/markedEventsStore';
 import { EventDescriptionSummary } from './EventDescriptionSummary';
 import type { EventWithGroup } from '../types/events';
 
@@ -84,6 +96,8 @@ export function EventBody(data: EventBodyProps) {
   const event = data.event;
   const now = useSyncExternalStore(subscribeNow, getNow);
   const trackingData = useSyncExternalStore(subscribeTrackingData, getTrackingDataSnapshot);
+  const markedEventsData = useSyncExternalStore(subscribeMarkedEvents, getMarkedEventsSnapshot);
+  const isMarked = isEventMarked(markedEventsData, event.uid);
   const now_year = now.getFullYear();
   const start_date = new Date(event.started_at);
   const end_date = new Date(event.ended_at);
@@ -161,7 +175,65 @@ export function EventBody(data: EventBodyProps) {
   const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null);
   const [moved, setMoved] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  
+  const { isOpen: isMarkPopoverOpen, onOpen: onMarkPopoverOpen, onClose: onMarkPopoverClose } = useDisclosure();
+  const toast = useToast();
+
+  const attendanceMarkLabel = has_ended
+    ? (isMarked ? '気になる解除' : '気になる')
+    : (isMarked ? '行きたいから外す' : '行きたいに追加');
+  const attendanceMarkConfirmationText = has_ended ? '気になるに追加しました' : '行きたいに追加しました';
+  const attendanceInviteSubtext = has_ended ? '友達にシェアしてみませんか?' : '一緒に行く友達を誘ってみませんか?';
+  const nativeShareLabel = has_ended ? '友達にシェア' : NATIVE_SHARE_LABEL;
+
+  const toggleAttendanceMark = (): boolean => {
+    const nowMarked = !isMarked;
+    updateMarkedEventsData((previous) =>
+      nowMarked ? markEvent(previous, event.uid, new Date()) : unmarkEvent(previous, event.uid)
+    );
+    return nowMarked;
+  };
+
+  const handleCardMarkClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nowMarked = toggleAttendanceMark();
+    if (!nowMarked) {
+      onMarkPopoverClose();
+      return;
+    }
+    if (isDesktopScreenSize) {
+      onMarkPopoverOpen();
+    } else {
+      toast({
+        position: 'bottom',
+        duration: 4000,
+        isClosable: true,
+        render: ({ onClose: onToastClose }) => (
+          <HStack bg={'gray.700'} color={'white'} borderRadius={'md'} px={'4'} py={'3'} boxShadow={'lg'} spacing={'3'}>
+            <Text fontSize={'sm'} flex={'1'}>{ attendanceMarkConfirmationText }</Text>
+            <Button size={'xs'} onClick={() => {
+              if (isNativeShareSupported()) {
+                shareEventViaNativeShare(event, toast, onToastClose);
+              } else {
+                onOpen();
+                onToastClose();
+              }
+            }}>
+              { nativeShareLabel }
+            </Button>
+          </HStack>
+        ),
+      });
+    }
+  };
+
+  const handleMarkButtonTouch = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
+  const handleDrawerMarkClick = () => {
+    toggleAttendanceMark();
+  };
+
   const handleMenuButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onOpen();
@@ -360,7 +432,7 @@ export function EventBody(data: EventBodyProps) {
               </Badge>
             ) : null}
             <Show above='md'>
-              <ShareIconRow event={event} />
+              <ShareIconRow event={event} nativeShareLabel={nativeShareLabel} />
             </Show>
           </Stack>
           <Show above='md'>
@@ -489,6 +561,23 @@ export function EventBody(data: EventBodyProps) {
                           />
             </Hide>
 
+            <Hide above='md'>
+              <IconButton aria-label={attendanceMarkLabel}
+                          icon={isMarked ? <StarFill /> : <Star />}
+                          size='sm'
+                          variant={isMarked ? 'solid' : 'ghost'}
+                          colorScheme={isMarked ? 'yellow' : 'gray'}
+                          position='absolute'
+                          bottom='2'
+                          right='2'
+                          onClick={handleCardMarkClick}
+                          onTouchStart={handleMarkButtonTouch}
+                          onTouchMove={handleMarkButtonTouch}
+                          onTouchEnd={handleMarkButtonTouch}
+                          zIndex={1}
+                          />
+            </Hide>
+
             {group_image_url && (
               <Image src={ group_image_url }
                     w={'80px'}
@@ -500,49 +589,78 @@ export function EventBody(data: EventBodyProps) {
                     />
             )}
             <Show above='md'>
-              <ButtonGroup isAttached
-                          size={'md'}
-                          colorScheme={'impact'}
-                          position={'absolute'}
-                          bottom={'2'}
-                          right={'4'}
-                          >
-                <Button w={'100px'} onClick={() => window.open(event_url)}>
-                  <HStack>
-                    <Text letterSpacing={'0.2rem'}>詳細</Text>
-                  </HStack>
-                </Button>
-                <Box h="full" w="1px" />
-                <Menu placement="bottom-end" isLazy>
-                  {({ isOpen: isMenuOpen }) => (
-                    <>
-                      <MenuButton as={IconButton}
-                                  aria-label='Options'
-                                  icon={<ChevronDownIcon />}
+              <Popover isOpen={isMarkPopoverOpen} onClose={onMarkPopoverClose} placement='top-end' isLazy>
+                <HStack position={'absolute'} bottom={'2'} right={'4'} spacing={'2'}>
+                  {/* Tooltipを外側に置く: PopoverAnchorは直接の子にrefをcloneするが、
+                      Tooltipにrefを渡すとTooltip自身のポップアップ用refとして
+                      横取りされてしまい、Popoverのアンカー位置が壊れる
+                      (Tooltip内部でtooltip.getTooltipProps({}, ref)に渡る)。
+                      shouldWrapChildrenでspan包みにし、cloneElementを介さない。 */}
+                  <Tooltip label={attendanceMarkLabel} hasArrow fontSize={'xs'} shouldWrapChildren>
+                    <PopoverAnchor>
+                      <IconButton aria-label={attendanceMarkLabel}
+                                  icon={isMarked ? <StarFill /> : <Star />}
+                                  variant={isMarked ? 'solid' : 'ghost'}
+                                  colorScheme={isMarked ? 'yellow' : 'gray'}
+                                  onClick={handleCardMarkClick}
                                   />
-                      <MenuList fontSize={'sm'} display={isMenuOpen ? 'block' : 'none'}>
-                        <MenuItem icon={<FiExternalLink />}
-                                  onClick={() => window.open(event_url)}
-                                  >
-                          情報提供元のページを開く
-                        </MenuItem>
-                        <MenuItem icon={<FaXTwitter />}
-                                  onClick={() => window.open(event_x_search_url)}
-                                  >
-                          { x_search_label }
-                        </MenuItem>
-                        {archive_url && (
-                          <MenuItem icon={<FiArchive />}
-                                    onClick={() => window.open(archive_url)}
-                                    >
-                            アーカイブ元を開く
-                          </MenuItem>
-                        )}
-                      </MenuList>
-                    </>
-                  )}
-                </Menu>
-              </ButtonGroup>
+                    </PopoverAnchor>
+                  </Tooltip>
+                  <ButtonGroup isAttached
+                              size={'md'}
+                              colorScheme={'impact'}
+                              >
+                    <Button w={'100px'} onClick={() => window.open(event_url)}>
+                      <HStack>
+                        <Text letterSpacing={'0.2rem'}>詳細</Text>
+                      </HStack>
+                    </Button>
+                    <Box h="full" w="1px" />
+                    <Menu placement="bottom-end" isLazy>
+                      {({ isOpen: isMenuOpen }) => (
+                        <>
+                          <MenuButton as={IconButton}
+                                      aria-label='Options'
+                                      icon={<ChevronDownIcon />}
+                                      />
+                          <MenuList fontSize={'sm'} display={isMenuOpen ? 'block' : 'none'}>
+                            <MenuItem icon={<FiExternalLink />}
+                                      onClick={() => window.open(event_url)}
+                                      >
+                              情報提供元のページを開く
+                            </MenuItem>
+                            <MenuItem icon={<FaXTwitter />}
+                                      onClick={() => window.open(event_x_search_url)}
+                                      >
+                              { x_search_label }
+                            </MenuItem>
+                            {archive_url && (
+                              <MenuItem icon={<FiArchive />}
+                                        onClick={() => window.open(archive_url)}
+                                        >
+                                アーカイブ元を開く
+                              </MenuItem>
+                            )}
+                          </MenuList>
+                        </>
+                      )}
+                    </Menu>
+                  </ButtonGroup>
+                </HStack>
+                <PopoverContent w={'auto'}>
+                  <PopoverArrow />
+                  <PopoverBody>
+                    <Stack spacing={'2'}>
+                      <Stack spacing={'0'}>
+                        <Text fontSize={'sm'} fontWeight={'bold'}>{ attendanceMarkConfirmationText }</Text>
+                        <Text fontSize={'xs'} color={'gray.500'}>{ attendanceInviteSubtext }</Text>
+                      </Stack>
+                      <XShareButton event={event} />
+                      <ShareButton event={event} label={nativeShareLabel} />
+                    </Stack>
+                  </PopoverBody>
+                </PopoverContent>
+              </Popover>
             </Show>
           </Box>
         </Flex>
@@ -569,6 +687,14 @@ export function EventBody(data: EventBodyProps) {
           </DrawerHeader>
           <DrawerBody>
             <VStack spacing={2}>
+              <Button w="full"
+                      leftIcon={isMarked ? <StarFill /> : <Star />}
+                      colorScheme={isMarked ? 'yellow' : 'gray'}
+                      onClick={handleDrawerMarkClick}
+                      >
+                { attendanceMarkLabel }
+              </Button>
+              <ShareButton event={event} onAfterAction={onClose} label={nativeShareLabel} />
               <Button w="full"
                       leftIcon={<FiExternalLink />}
                       onClick={() => {
@@ -609,7 +735,6 @@ export function EventBody(data: EventBodyProps) {
                   アーカイブ元を開く
                 </Button>
               )}
-              <ShareButton event={event} onAfterAction={onClose} />
               <Button w="full"
                       colorScheme="red"
                       onClick={onClose}

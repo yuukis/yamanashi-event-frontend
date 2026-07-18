@@ -3,8 +3,10 @@ import type { IconType } from 'react-icons';
 import { FaXTwitter, FaLink } from 'react-icons/fa6';
 import { FiShare2 } from 'react-icons/fi';
 import {
-  buildEventShareUrl,
   buildXShareUrl,
+  toEventShareContext,
+  isNativeShareSupported,
+  shareEventViaNativeShare,
   type ShareContext,
 } from '../utils/share';
 import type { EventWithGroup } from '../types/events';
@@ -21,21 +23,15 @@ const SHARE_TARGETS: ShareTarget[] = [
 ];
 
 const COPY_LABEL = 'リンクをコピー';
-const NATIVE_SHARE_LABEL = '共有';
-function isNativeShareSupported(): boolean {
-  return typeof navigator.share === 'function';
-}
+export const NATIVE_SHARE_LABEL = '友達を誘う';
 
-function toShareContext(event: EventWithGroup): ShareContext {
-  return {
-    title: event.title,
-    url: buildEventShareUrl(event.uid),
-    hashTag: event.hash_tag,
-  };
-}
+type ShareIconRowProps = {
+  event: EventWithGroup;
+  nativeShareLabel?: string;
+};
 
-export function ShareIconRow({ event }: { event: EventWithGroup }) {
-  const ctx = toShareContext(event);
+export function ShareIconRow({ event, nativeShareLabel = NATIVE_SHARE_LABEL }: ShareIconRowProps) {
+  const ctx = toEventShareContext(event);
   const toast = useToast();
 
   return (
@@ -52,13 +48,13 @@ export function ShareIconRow({ event }: { event: EventWithGroup }) {
                     />
       ))}
       {isNativeShareSupported() && (
-        <IconButton aria-label={NATIVE_SHARE_LABEL}
+        <IconButton aria-label={nativeShareLabel}
                     icon={<FiShare2 />}
                     size={'xs'}
                     variant={'ghost'}
                     color={'gray.400'}
                     _hover={{ color: 'gray.600' }}
-                    onClick={() => shareViaNativeShare(ctx, toast)}
+                    onClick={() => shareEventViaNativeShare(event, toast)}
                     />
       )}
       <IconButton aria-label={COPY_LABEL}
@@ -73,44 +69,40 @@ export function ShareIconRow({ event }: { event: EventWithGroup }) {
   );
 }
 
+export function XShareButton({ event }: { event: EventWithGroup }) {
+  const ctx = toEventShareContext(event);
+
+  return (
+    <Button w="full"
+            leftIcon={<FaXTwitter />}
+            onClick={() => window.open(buildXShareUrl(ctx))}
+            >
+      X(Twitter)でシェア
+    </Button>
+  );
+}
+
 type ShareButtonProps = {
   event: EventWithGroup;
   onAfterAction?: () => void;
+  label?: string;
 };
 
-export function ShareButton({ event, onAfterAction }: ShareButtonProps) {
+export function ShareButton({ event, onAfterAction, label = NATIVE_SHARE_LABEL }: ShareButtonProps) {
   const toast = useToast();
 
   if (!isNativeShareSupported()) {
     return null;
   }
 
-  const ctx = toShareContext(event);
-
   return (
     <Button w="full"
             leftIcon={<FiShare2 />}
-            onClick={() => shareViaNativeShare(ctx, toast, onAfterAction)}
+            onClick={() => shareEventViaNativeShare(event, toast, onAfterAction)}
             >
-      { NATIVE_SHARE_LABEL }
+      { label }
     </Button>
   );
-}
-
-async function shareViaNativeShare(ctx: ShareContext, toast: ReturnType<typeof useToast>, onAfterAction?: () => void): Promise<void> {
-  try {
-    await navigator.share({
-      title: ctx.title,
-      text: ctx.hashTag ? `${ctx.title} #${ctx.hashTag}` : ctx.title,
-      url: ctx.url,
-    });
-  } catch (err) {
-    if ((err as Error)?.name !== 'AbortError') {
-      toast({ title: '共有に失敗しました', status: 'error', duration: 2000, isClosable: true });
-    }
-  } finally {
-    onAfterAction?.();
-  }
 }
 
 function copyEventLink(url: string, toast: ReturnType<typeof useToast>, onAfterAction?: () => void): void {
