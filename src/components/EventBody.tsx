@@ -178,7 +178,9 @@ export function EventBody(data: EventBodyProps) {
   const { isOpen: isMarkPopoverOpen, onOpen: onMarkPopoverOpen, onClose: onMarkPopoverClose } = useDisclosure();
   const toast = useToast();
 
-  const attendanceMarkLabel = isMarked ? '行きたいから外す' : '行きたいに追加';
+  const attendanceMarkLabel = has_ended
+    ? (isMarked ? '気になるから外す' : '気になる')
+    : (isMarked ? '行きたいから外す' : '行きたいに追加');
 
   const toggleAttendanceMark = (): boolean => {
     const nowMarked = !isMarked;
@@ -193,6 +195,10 @@ export function EventBody(data: EventBodyProps) {
     const nowMarked = toggleAttendanceMark();
     if (!nowMarked) {
       onMarkPopoverClose();
+      return;
+    }
+    // 過去イベントは「友達を誘う」導線が成立しないため、静かにトグルするだけにする
+    if (has_ended) {
       return;
     }
     if (isDesktopScreenSize) {

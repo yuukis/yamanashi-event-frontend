@@ -502,6 +502,53 @@ describe('EventBody', () => {
 
       expect(screen.getByRole('button', { name: '行きたいから外す' })).toBeInTheDocument();
     });
+
+    describe('for a past event', () => {
+      function makePastEvent() {
+        return makeEvent({
+          uid: 'event-1',
+          started_at: '2026-01-01T18:00:00+09:00',
+          ended_at: '2026-01-01T20:00:00+09:00',
+        });
+      }
+
+      it('labels the mark button "気になる" instead of "行きたいに追加" on desktop', () => {
+        mockMatchMedia(true);
+        renderWithChakra(<EventBody event={makePastEvent()} />);
+
+        expect(screen.getByRole('button', { name: '気になる' })).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: '行きたいに追加' })).not.toBeInTheDocument();
+      });
+
+      it('toggles the mark silently on desktop, without opening the invite popover', () => {
+        mockMatchMedia(true);
+        renderWithChakra(<EventBody event={makePastEvent()} />);
+
+        fireEvent.click(screen.getByRole('button', { name: '気になる' }));
+
+        expect(screen.getByRole('button', { name: '気になるから外す' })).toBeInTheDocument();
+        expect(screen.queryByText('行きたいに追加しました')).not.toBeInTheDocument();
+      });
+
+      it('toggles the mark silently on mobile, without showing the invite toast', () => {
+        mockMatchMedia(false);
+        renderWithChakra(<EventBody event={makePastEvent()} />);
+
+        fireEvent.click(screen.getByRole('button', { name: '気になる' }));
+
+        expect(screen.getByRole('button', { name: '気になるから外す' })).toBeInTheDocument();
+        expect(screen.queryByText('行きたいに追加しました')).not.toBeInTheDocument();
+      });
+
+      it('labels the mark button "気になるから外す" from the options drawer', () => {
+        mockMatchMedia(false);
+        renderWithChakra(<EventBody event={makePastEvent()} />);
+
+        fireEvent.click(screen.getByLabelText('More options'));
+
+        expect(screen.getByRole('button', { name: '気になる' })).toBeInTheDocument();
+      });
+    });
   });
 });
 
