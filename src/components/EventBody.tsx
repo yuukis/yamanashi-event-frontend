@@ -179,7 +179,7 @@ export function EventBody(data: EventBodyProps) {
   const toast = useToast();
 
   const attendanceMarkLabel = has_ended
-    ? (isMarked ? '気になるから外す' : '気になる')
+    ? (isMarked ? '気になる解除' : '気になる')
     : (isMarked ? '行きたいから外す' : '行きたいに追加');
 
   const toggleAttendanceMark = (): boolean => {

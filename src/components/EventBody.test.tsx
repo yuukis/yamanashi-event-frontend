@@ -526,7 +526,7 @@ describe('EventBody', () => {
 
         fireEvent.click(screen.getByRole('button', { name: '気になる' }));
 
-        expect(screen.getByRole('button', { name: '気になるから外す' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: '気になる解除' })).toBeInTheDocument();
         expect(screen.queryByText('行きたいに追加しました')).not.toBeInTheDocument();
       });
 
@@ -536,11 +536,11 @@ describe('EventBody', () => {
 
         fireEvent.click(screen.getByRole('button', { name: '気になる' }));
 
-        expect(screen.getByRole('button', { name: '気になるから外す' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: '気になる解除' })).toBeInTheDocument();
         expect(screen.queryByText('行きたいに追加しました')).not.toBeInTheDocument();
       });
 
-      it('labels the mark button "気になるから外す" from the options drawer', () => {
+      it('labels the mark button "気になる" from the options drawer for an unmarked past event', () => {
         mockMatchMedia(false);
         renderWithChakra(<EventBody event={makePastEvent()} />);
 
