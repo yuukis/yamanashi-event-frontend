@@ -422,10 +422,31 @@ describe('EventBody', () => {
       expect(screen.queryByText('行きたいに追加しました')).not.toBeInTheDocument();
     });
 
-    it('shows a toast with a share action on mobile that opens the options drawer', async () => {
+    it('shows a toast whose share action invokes the native Web Share API directly on mobile', async () => {
       mockMatchMedia(false);
       const shareSpy = vi.fn().mockResolvedValue(undefined);
       Object.defineProperty(navigator, 'share', { value: shareSpy, configurable: true });
+      const event = makeEvent({ uid: 'event-1', title: '甲府もくもく会 #1', hash_tag: 'kofu' });
+      renderWithChakra(<EventBody event={event} />);
+
+      fireEvent.click(screen.getByRole('button', { name: '行きたいに追加' }));
+
+      await screen.findByText('行きたいに追加しました');
+      fireEvent.click(screen.getByRole('button', { name: 'シェアする' }));
+
+      await waitFor(() => expect(shareSpy).toHaveBeenCalledWith({
+        title: event.title,
+        text: '甲府もくもく会 #1 #kofu',
+        url: buildEventShareUrl(event.uid),
+      }));
+      expect(screen.queryByRole('button', { name: 'キャンセル' })).not.toBeInTheDocument();
+
+      Reflect.deleteProperty(navigator, 'share');
+    });
+
+    it('falls back to opening the options drawer from the toast when the Web Share API is unsupported', async () => {
+      mockMatchMedia(false);
+      expect(navigator.share).toBeUndefined();
       const event = makeEvent({ uid: 'event-1' });
       renderWithChakra(<EventBody event={event} />);
 
@@ -435,8 +456,6 @@ describe('EventBody', () => {
       fireEvent.click(screen.getByRole('button', { name: 'シェアする' }));
 
       expect(await screen.findByRole('button', { name: 'キャンセル' })).toBeInTheDocument();
-
-      Reflect.deleteProperty(navigator, 'share');
     });
 
     it('lets the user mark the event from the mobile options drawer without closing it', () => {

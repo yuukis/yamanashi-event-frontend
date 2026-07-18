@@ -1,4 +1,6 @@
+import type { useToast } from '@chakra-ui/react';
 import { getEventAnchorId } from './eventAnchors';
+import type { EventWithGroup } from '../types/events';
 
 export type ShareContext = {
   title: string;
@@ -16,4 +18,37 @@ export function buildXShareUrl(ctx: ShareContext): string {
     params.set('hashtags', ctx.hashTag);
   }
   return `https://twitter.com/intent/tweet?${params.toString()}`;
+}
+
+export function toEventShareContext(event: EventWithGroup): ShareContext {
+  return {
+    title: event.title,
+    url: buildEventShareUrl(event.uid),
+    hashTag: event.hash_tag,
+  };
+}
+
+export function isNativeShareSupported(): boolean {
+  return typeof navigator.share === 'function';
+}
+
+export async function shareEventViaNativeShare(
+  event: EventWithGroup,
+  toast: ReturnType<typeof useToast>,
+  onAfterAction?: () => void,
+): Promise<void> {
+  const ctx = toEventShareContext(event);
+  try {
+    await navigator.share({
+      title: ctx.title,
+      text: ctx.hashTag ? `${ctx.title} #${ctx.hashTag}` : ctx.title,
+      url: ctx.url,
+    });
+  } catch (err) {
+    if ((err as Error)?.name !== 'AbortError') {
+      toast({ title: '共有に失敗しました', status: 'error', duration: 2000, isClosable: true });
+    }
+  } finally {
+    onAfterAction?.();
+  }
 }

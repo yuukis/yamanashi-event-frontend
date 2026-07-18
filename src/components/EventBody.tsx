@@ -57,6 +57,7 @@ import {
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
 import { EVENT_CARD_HIGHLIGHT_EVENT } from '../utils/hashScroll';
 import { ShareIconRow, ShareButton } from './ShareButtons';
+import { isNativeShareSupported, shareEventViaNativeShare } from '../utils/share';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
 import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
@@ -206,7 +207,16 @@ export function EventBody(data: EventBodyProps) {
         render: ({ onClose: onToastClose }) => (
           <HStack bg={'gray.700'} color={'white'} borderRadius={'md'} px={'4'} py={'3'} boxShadow={'lg'} spacing={'3'}>
             <Text fontSize={'sm'} flex={'1'}>行きたいに追加しました</Text>
-            <Button size={'xs'} onClick={() => { onOpen(); onToastClose(); }}>
+            <Button size={'xs'} onClick={() => {
+              if (isNativeShareSupported()) {
+                shareEventViaNativeShare(event, toast, onToastClose);
+              } else {
+                // 稀なフォールバック: Web Share API非対応の端末では、
+                // 既存の下部Drawer(情報提供元・マップ等の導線)を開く
+                onOpen();
+                onToastClose();
+              }
+            }}>
               シェアする
             </Button>
           </HStack>
