@@ -26,7 +26,6 @@ import {
   ChevronUpIcon,
   ExternalLinkIcon,
   InfoOutlineIcon,
-  RepeatIcon,
   SearchIcon,
   StarIcon,
 } from "@chakra-ui/icons";
@@ -107,12 +106,7 @@ function Guide() {
     {
       icon: <StarIcon color={'secondary.800'} />,
       title: '「行きたい」をマークする',
-      body: '気になるイベントは★マークで「行きたい」に追加できます。マークした直後に友達へシェアする導線も出るので、一緒に参加する仲間を誘うのに使えます。',
-    },
-    {
-      icon: <RepeatIcon color={'secondary.700'} />,
-      title: '他の端末に記録を引き継ぐ',
-      body: '「行きたい」マークはこの端末だけに保存されます。スマホとパソコンなど別の端末でも同じ記録を見たい場合は、コードまたはQRコードで一度だけ引き継げます。',
+      body: '気になるイベントは★マークで「行きたい」に追加できます。マークした直後に友達へシェアする導線も出るので、一緒に参加する仲間を誘うのに使えます。この記録はこの端末だけに保存されるので、他の端末でも見たい場合は下のボタンから引き継げます。',
       action: <SyncButton />,
     },
     {
