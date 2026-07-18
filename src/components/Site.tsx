@@ -1,7 +1,6 @@
 import icon from "../assets/images/icon.png"
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { NotificationButton } from '../components/Notification';
-import { SyncButton } from '../components/Sync';
 import { useSyncCodeFromUrl } from '../utils/sync';
 import { MiniEventCalendar } from '../components/MiniEventCalendar';
 import {
@@ -95,7 +94,6 @@ function SiteHeaderContent() {
         <Spacer />
         <ICalendarButton />
         <NotificationButton />
-        <SyncButton />
         <GithubButton />
       </Stack>
       <Stack spacing={'2px'}>

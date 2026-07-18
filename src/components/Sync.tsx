@@ -117,9 +117,16 @@ export function SyncButton() {
   const syncUrl = issued ? `${SITE_URL}/?${SYNC_QUERY_PARAM}=${encodeURIComponent(issued.code)}` : '';
 
   return (
-    <Popover isOpen={isOpen} onOpen={onOpen} onClose={closePopover} placement={'bottom-end'}>
+    <Popover isOpen={isOpen} onOpen={onOpen} onClose={closePopover} placement={'bottom-start'}>
       <PopoverTrigger>
-        <IconButton aria-label={'この端末の記録を引き継ぐ'} variant={'ghost'} icon={<FiSmartphone />} />
+        <Button leftIcon={<FiSmartphone />}
+                iconSpacing={'1'}
+                size={'xs'}
+                variant={'outline'}
+                alignSelf={'flex-start'}
+                >
+          他の端末に引き継ぐ
+        </Button>
       </PopoverTrigger>
       <PopoverContent w={{ base: 'calc(100vw - 24px)', md: '360px' }}>
         <PopoverArrow />
