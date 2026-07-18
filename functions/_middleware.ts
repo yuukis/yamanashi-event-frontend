@@ -1,5 +1,3 @@
-/// <reference types="@cloudflare/workers-types" />
-
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, isVisibleEvent } from '../src/utils/eventGroups';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../src/utils/eventSort';
 import { buildEventListJsonLd, buildYearArchiveJsonLd } from '../src/utils/structuredData';
@@ -271,7 +269,6 @@ class SetInnerHtmlHandler implements HTMLRewriterElementContentHandlers {
 }
 
 function injectBotContent(response: Response, data: BotPageData): Response {
-  // `<` を Unicode エスケープし、</script> によるタグの早期終了を防ぐ
   const jsonLdText = JSON.stringify(data.jsonLd).replace(/</g, '\\u003c');
   const jsonLdScript = `<script type="application/ld+json">${jsonLdText}</script>`;
 
