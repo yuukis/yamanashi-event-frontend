@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
+import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
@@ -67,7 +67,7 @@ function Root({startYear}: {startYear: number}) {
     errorMessage: ''
   });
 
-  const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
+  const headerBoundaryRef = useFixedHeaderBoundary<HTMLDivElement>();
 
   document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
 
@@ -304,11 +304,16 @@ function Root({startYear}: {startYear: number}) {
                           onSelect={handleGroupSelect}
                           isLoading={data.isLoading}
                           />
-          <Heading ref={headerBoundaryRef}
-                   size={{base: 'sm', md: 'md'}}
-                   ml={{base: '4', md: '0'}}
+          {/* sticky 化した見出しは座標が動かず境界にできないため、目印として使う */}
+          <Box ref={headerBoundaryRef} />
+          <Heading size={{base: 'sm', md: 'md'}}
+                   position={'sticky'}
+                   top={STICKY_HEADING_TOP}
+                   zIndex={'docked'}
+                   bg={'gray.100'}
+                   px={{base: '4', md: '0'}}
                    mt={'8'}
-                   mb={'2'}
+                   py={'2'}
                    color={'gray.600'}
                    >
             直近開催イベント
@@ -346,9 +351,13 @@ function Root({startYear}: {startYear: number}) {
           }
 
           <Heading size={{base: 'sm', md: 'md'}}
-                   ml={{base: '4', md: '0'}}
+                   position={'sticky'}
+                   top={STICKY_HEADING_TOP}
+                   zIndex={'docked'}
+                   bg={'gray.100'}
+                   px={{base: '4', md: '0'}}
                    mt={'8'}
-                   mb={'2'}
+                   py={'2'}
                    color={'gray.600'}
                    >
             終了したイベント
