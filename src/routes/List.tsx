@@ -12,12 +12,19 @@ import {
   Container,
   Box,
   Stack,
+  HStack,
   Card,
   CardBody,
   Heading,
   Button,
+  IconButton,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
   Spacer
 } from '@chakra-ui/react';
+import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import { AnimatePresence } from 'framer-motion';
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
@@ -41,6 +48,11 @@ function List({ startYear} : {startYear: number}) {
   const year = parseInt(param_year as string);
   const prev_year = year - 1;
   const next_year = year + 1;
+  const currentYear = new Date().getFullYear();
+  const yearOptions = [];
+  for (let y = currentYear; y >= startYear; y--) {
+    yearOptions.push(y);
+  }
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedGroup = searchParams.get('group');
@@ -172,20 +184,46 @@ function List({ startYear} : {startYear: number}) {
               { year }年 開催イベント
             </Heading>
             <Spacer />
-            {
-              prev_year >= startYear && (
-                    <Button size={'xs'}
+            <HStack spacing={'1'}>
+              <IconButton aria-label={`${prev_year}年のイベントを表示`}
+                          icon={<ChevronLeftIcon />}
+                          size={'xs'}
+                          variant={'ghost'}
+                          colorScheme={'impact'}
+                          isDisabled={prev_year < startYear}
+                          onClick={() => {window.open('/events/' + prev_year, '_self')}}
+                          />
+              <Menu placement={'bottom'} isLazy>
+                <MenuButton as={Button}
+                            size={'xs'}
                             variant={'ghost'}
                             colorScheme={'impact'}
-                            onClick={() => {window.open('/events/' + prev_year, '_self')}}
-                    >← { prev_year }年</Button>
-                )
-            }
-            <Button size={'xs'}
-                    variant={'ghost'}
-                    colorScheme={'impact'}
-                    onClick={() => {window.open('/events/' + next_year, '_self')}}
-                    >{ next_year }年 →</Button>
+                            rightIcon={<ChevronDownIcon />}
+                            >
+                  { year }年
+                </MenuButton>
+                <MenuList fontSize={'sm'} minW={'28'}>
+                  {yearOptions.map((y) => (
+                    <MenuItem key={y}
+                              fontWeight={y === year ? 'bold' : 'normal'}
+                              bg={y === year ? '#f9f1e8' : undefined}
+                              color={y === year ? 'impact.700' : undefined}
+                              onClick={() => {window.open('/events/' + y, '_self')}}
+                              >
+                      { y }年
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
+              <IconButton aria-label={`${next_year}年のイベントを表示`}
+                          icon={<ChevronRightIcon />}
+                          size={'xs'}
+                          variant={'ghost'}
+                          colorScheme={'impact'}
+                          isDisabled={next_year > currentYear}
+                          onClick={() => {window.open('/events/' + next_year, '_self')}}
+                          />
+            </HStack>
           </Stack>
           {!data.isLoading && !data.errorMessage && (
             <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
