@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from "react-router-dom";
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
+import { YearSwitcher, YEAR_HEADING_ANCHOR_ID } from '../components/YearSwitcher';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
@@ -15,7 +16,6 @@ import {
   Card,
   CardBody,
   Heading,
-  Button,
   Spacer
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
@@ -39,8 +39,6 @@ type ListState = {
 function List({ startYear} : {startYear: number}) {
   let { year: param_year } = useParams();
   const year = parseInt(param_year as string);
-  const prev_year = year - 1;
-  const next_year = year + 1;
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedGroup = searchParams.get('group');
@@ -155,7 +153,8 @@ function List({ startYear} : {startYear: number}) {
                           />
           {/* sticky 化した見出しバーは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
-          <Stack direction={'row'} spacing={'2'}
+          <Stack id={YEAR_HEADING_ANCHOR_ID}
+                 direction={'row'} spacing={'2'}
                  position={'sticky'}
                  top={STICKY_HEADING_TOP}
                  zIndex={'docked'}
@@ -164,6 +163,7 @@ function List({ startYear} : {startYear: number}) {
                  mt={'4'}
                  mb={'2'}
                  py={'2'}
+                 scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
                  display={'flex'} alignItems={'flex-end'}
                  >
             <Heading size={{base: 'sm', md: 'md'}}
@@ -172,20 +172,7 @@ function List({ startYear} : {startYear: number}) {
               { year }年 開催イベント
             </Heading>
             <Spacer />
-            {
-              prev_year >= startYear && (
-                    <Button size={'xs'}
-                            variant={'ghost'}
-                            colorScheme={'impact'}
-                            onClick={() => {window.open('/events/' + prev_year, '_self')}}
-                    >← { prev_year }年</Button>
-                )
-            }
-            <Button size={'xs'}
-                    variant={'ghost'}
-                    colorScheme={'impact'}
-                    onClick={() => {window.open('/events/' + next_year, '_self')}}
-                    >{ next_year }年 →</Button>
+            <YearSwitcher startYear={startYear} selectedYear={year} />
           </Stack>
           {!data.isLoading && !data.errorMessage && (
             <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}

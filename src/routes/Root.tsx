@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
+import { YearSwitcher, FUTURE_EVENTS_ANCHOR_ID } from '../components/YearSwitcher';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
@@ -21,7 +22,8 @@ import {
   Text,
   Image,
   Link,
-  Button
+  Button,
+  Spacer
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
 import { CalendarIcon, ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
@@ -306,18 +308,26 @@ function Root({startYear}: {startYear: number}) {
                           />
           {/* sticky 化した見出しは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
-          <Heading size={{base: 'sm', md: 'md'}}
-                   position={'sticky'}
-                   top={STICKY_HEADING_TOP}
-                   zIndex={'docked'}
-                   bg={'gray.100'}
-                   px={{base: '4', md: '0'}}
-                   mt={'8'}
-                   py={'2'}
-                   color={'gray.600'}
-                   >
-            直近開催イベント
-          </Heading>
+          <Stack id={FUTURE_EVENTS_ANCHOR_ID}
+                 direction={'row'} spacing={'2'}
+                 position={'sticky'}
+                 top={STICKY_HEADING_TOP}
+                 zIndex={'docked'}
+                 bg={'gray.100'}
+                 px={{base: '4', md: '0'}}
+                 mt={'8'}
+                 py={'2'}
+                 scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
+                 display={'flex'} alignItems={'flex-end'}
+                 >
+            <Heading size={{base: 'sm', md: 'md'}}
+                     color={'gray.600'}
+                     >
+              直近開催イベント
+            </Heading>
+            <Spacer />
+            <YearSwitcher startYear={startYear} selectedYear={null} showChevrons={false} />
+          </Stack>
           {!data.isLoading && !data.errorMessage && (
             <ChipBar items={futureKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
                      selected={selectedKeyword}
