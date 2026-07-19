@@ -159,13 +159,13 @@ function List({ startYear} : {startYear: number}) {
                  zIndex={'docked'}
                  bg={'gray.100'}
                  px={{base: '4', md: '0'}}
+                 mt={'4'}
                  mb={'2'}
                  py={'2'}
                  display={'flex'} alignItems={'flex-end'}
                  >
             <Heading ref={headerBoundaryRef}
                      size={{base: 'sm', md: 'md'}}
-                     mt={'4'}
                      color={'gray.600'}
                      >
               { year }年 開催イベント
