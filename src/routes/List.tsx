@@ -197,10 +197,9 @@ function List({ startYear} : {startYear: number}) {
               <Menu placement={'bottom'} isLazy>
                 <MenuButton as={Button}
                             size={'xs'}
-                            bg={'#f9f1e8'}
-                            color={'impact.700'}
-                            _hover={{bg: '#f3e6d3'}}
-                            _active={{bg: '#f3e6d3'}}
+                            variant={'solid'}
+                            colorScheme={'impact'}
+                            color={'white'}
                             rightIcon={<ChevronDownIcon />}
                             >
                   { year }年
