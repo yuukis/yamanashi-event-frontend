@@ -188,7 +188,7 @@ function List({ startYear} : {startYear: number}) {
                           icon={<ChevronLeftIcon />}
                           size={'xs'}
                           variant={'outline'}
-                          colorScheme={'impact'}
+                          colorScheme={'primary'}
                           isDisabled={prev_year < startYear}
                           onClick={() => {window.open('/events/' + prev_year, '_self')}}
                           />
@@ -196,7 +196,7 @@ function List({ startYear} : {startYear: number}) {
                 <MenuButton as={Button}
                             size={'xs'}
                             variant={'solid'}
-                            colorScheme={'impact'}
+                            colorScheme={'primary'}
                             color={'white'}
                             rightIcon={<ChevronDownIcon />}
                             >
@@ -206,8 +206,8 @@ function List({ startYear} : {startYear: number}) {
                   {yearOptions.map((y) => (
                     <MenuItem key={y}
                               fontWeight={y === year ? 'bold' : 'normal'}
-                              bg={y === year ? '#f9f1e8' : undefined}
-                              color={y === year ? 'impact.700' : undefined}
+                              bg={y === year ? '#e8f6fb' : undefined}
+                              color={y === year ? 'primary.800' : undefined}
                               onClick={() => {window.open('/events/' + y, '_self')}}
                               >
                       { y }年
@@ -219,7 +219,7 @@ function List({ startYear} : {startYear: number}) {
                           icon={<ChevronRightIcon />}
                           size={'xs'}
                           variant={'outline'}
-                          colorScheme={'impact'}
+                          colorScheme={'primary'}
                           onClick={() => {window.open('/events/' + next_year, '_self')}}
                           />
             </HStack>
