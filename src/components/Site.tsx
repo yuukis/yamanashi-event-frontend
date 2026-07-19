@@ -554,6 +554,12 @@ export function GithubButton() {
             <Spacer />
           </Button>
           <Button w={'100%'} variant={'ghost'} size={'sm'}
+                  onClick={() => { window.open('https://github.com/yuukis/yamanashi-event-sync-backend', '_blank') }}>
+            <Github mr={'2'} />
+            <Text fontWeight={'normal'}>yuukis/yamanashi-event-sync-backend</Text>
+            <Spacer />
+          </Button>
+          <Button w={'100%'} variant={'ghost'} size={'sm'}
                   onClick={() => { window.open('https://github.com/yuukis/yamanashi-event-feed', '_blank') }}>
             <Github mr={'2'} />
             <Text fontWeight={'normal'}>yuukis/yamanashi-event-feed</Text>
