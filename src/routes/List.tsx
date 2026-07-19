@@ -43,6 +43,8 @@ type ListState = {
   errorMessage: string;
 };
 
+const YEAR_HEADING_ANCHOR_ID = 'year-heading';
+
 function List({ startYear} : {startYear: number}) {
   let { year: param_year } = useParams();
   const year = parseInt(param_year as string);
@@ -166,7 +168,8 @@ function List({ startYear} : {startYear: number}) {
                           />
           {/* sticky 化した見出しバーは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
-          <Stack direction={'row'} spacing={'2'}
+          <Stack id={YEAR_HEADING_ANCHOR_ID}
+                 direction={'row'} spacing={'2'}
                  position={'sticky'}
                  top={STICKY_HEADING_TOP}
                  zIndex={'docked'}
@@ -175,6 +178,7 @@ function List({ startYear} : {startYear: number}) {
                  mt={'4'}
                  mb={'2'}
                  py={'2'}
+                 scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
                  display={'flex'} alignItems={'flex-end'}
                  >
             <Heading size={{base: 'sm', md: 'md'}}
@@ -188,7 +192,7 @@ function List({ startYear} : {startYear: number}) {
                           icon={<ChevronLeftIcon />}
                           variant={'outline'}
                           isDisabled={prev_year < startYear}
-                          onClick={() => {window.open('/events/' + prev_year, '_self')}}
+                          onClick={() => {window.open(`/events/${prev_year}#${YEAR_HEADING_ANCHOR_ID}`, '_self')}}
                           />
               <Menu placement={'bottom'} isLazy>
                 <MenuButton as={Button}
@@ -204,7 +208,7 @@ function List({ startYear} : {startYear: number}) {
                               fontWeight={y === year ? 'bold' : 'normal'}
                               bg={y === year ? '#e8f6fb' : undefined}
                               color={y === year ? 'primary.800' : undefined}
-                              onClick={() => {window.open('/events/' + y, '_self')}}
+                              onClick={() => {window.open(`/events/${y}#${YEAR_HEADING_ANCHOR_ID}`, '_self')}}
                               >
                       { y }年
                     </MenuItem>
@@ -214,7 +218,7 @@ function List({ startYear} : {startYear: number}) {
               <IconButton aria-label={`${next_year}年のイベントを表示`}
                           icon={<ChevronRightIcon />}
                           variant={'outline'}
-                          onClick={() => {window.open('/events/' + next_year, '_self')}}
+                          onClick={() => {window.open(`/events/${next_year}#${YEAR_HEADING_ANCHOR_ID}`, '_self')}}
                           />
             </ButtonGroup>
           </Stack>
