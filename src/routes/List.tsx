@@ -48,8 +48,6 @@ function List({ startYear} : {startYear: number}) {
   const year = parseInt(param_year as string);
   const prev_year = year - 1;
   const next_year = year + 1;
-  // 未来の日付でイベントが登録されている可能性があるため、当年より先の
-  // 年も(閲覧中の年として)一覧に含める。
   const yearOptions = [];
   for (let y = Math.max(new Date().getFullYear(), year); y >= startYear; y--) {
     yearOptions.push(y);
