@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, IconButton, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
+import { Box, Button, ButtonGroup, IconButton, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from '@chakra-ui/icons';
 
 export const YEAR_HEADING_ANCHOR_ID = 'year-heading';
@@ -77,14 +77,18 @@ export function YearSwitcher({ startYear, selectedYear, showChevrons = true }: Y
     <ButtonGroup size={'xs'} colorScheme={'primary'} isAttached>
       <IconButton aria-label={`${prevYear}年のイベントを表示`}
                   icon={<ChevronLeftIcon />}
-                  variant={'outline'}
+                  variant={'solid'}
+                  color={'white'}
                   isDisabled={prevYear < startYear}
                   onClick={() => goToYear(prevYear)}
                   />
+      <Box h={'full'} w={'1px'} />
       { menu }
+      <Box h={'full'} w={'1px'} />
       <IconButton aria-label={`${nextYear}年のイベントを表示`}
                   icon={<ChevronRightIcon />}
-                  variant={'outline'}
+                  variant={'solid'}
+                  color={'white'}
                   onClick={() => goToYear(nextYear)}
                   />
     </ButtonGroup>
