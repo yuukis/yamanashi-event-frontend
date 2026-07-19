@@ -189,7 +189,7 @@ function List({ startYear} : {startYear: number}) {
               <IconButton aria-label={`${prev_year}年のイベントを表示`}
                           icon={<ChevronLeftIcon />}
                           size={'xs'}
-                          variant={'ghost'}
+                          variant={'outline'}
                           colorScheme={'impact'}
                           isDisabled={prev_year < startYear}
                           onClick={() => {window.open('/events/' + prev_year, '_self')}}
@@ -219,7 +219,7 @@ function List({ startYear} : {startYear: number}) {
               <IconButton aria-label={`${next_year}年のイベントを表示`}
                           icon={<ChevronRightIcon />}
                           size={'xs'}
-                          variant={'ghost'}
+                          variant={'outline'}
                           colorScheme={'impact'}
                           onClick={() => {window.open('/events/' + next_year, '_self')}}
                           />
