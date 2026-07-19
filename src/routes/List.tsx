@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from "react-router-dom";
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
+import { YearSwitcher, YEAR_HEADING_ANCHOR_ID } from '../components/YearSwitcher';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
@@ -15,16 +16,8 @@ import {
   Card,
   CardBody,
   Heading,
-  Button,
-  ButtonGroup,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   Spacer
 } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import { AnimatePresence } from 'framer-motion';
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
@@ -43,17 +36,9 @@ type ListState = {
   errorMessage: string;
 };
 
-const YEAR_HEADING_ANCHOR_ID = 'year-heading';
-
 function List({ startYear} : {startYear: number}) {
   let { year: param_year } = useParams();
   const year = parseInt(param_year as string);
-  const prev_year = year - 1;
-  const next_year = year + 1;
-  const yearOptions = [];
-  for (let y = Math.max(new Date().getFullYear(), year); y >= startYear; y--) {
-    yearOptions.push(y);
-  }
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedGroup = searchParams.get('group');
@@ -187,40 +172,7 @@ function List({ startYear} : {startYear: number}) {
               { year }年 開催イベント
             </Heading>
             <Spacer />
-            <ButtonGroup size={'xs'} colorScheme={'primary'} isAttached>
-              <IconButton aria-label={`${prev_year}年のイベントを表示`}
-                          icon={<ChevronLeftIcon />}
-                          variant={'outline'}
-                          isDisabled={prev_year < startYear}
-                          onClick={() => {window.open(`/events/${prev_year}#${YEAR_HEADING_ANCHOR_ID}`, '_self')}}
-                          />
-              <Menu placement={'bottom'} isLazy>
-                <MenuButton as={Button}
-                            variant={'solid'}
-                            color={'white'}
-                            rightIcon={<ChevronDownIcon />}
-                            >
-                  { year }年
-                </MenuButton>
-                <MenuList fontSize={'sm'} minW={'28'}>
-                  {yearOptions.map((y) => (
-                    <MenuItem key={y}
-                              fontWeight={y === year ? 'bold' : 'normal'}
-                              bg={y === year ? '#e8f6fb' : undefined}
-                              color={y === year ? 'primary.800' : undefined}
-                              onClick={() => {window.open(`/events/${y}#${YEAR_HEADING_ANCHOR_ID}`, '_self')}}
-                              >
-                      { y }年
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </Menu>
-              <IconButton aria-label={`${next_year}年のイベントを表示`}
-                          icon={<ChevronRightIcon />}
-                          variant={'outline'}
-                          onClick={() => {window.open(`/events/${next_year}#${YEAR_HEADING_ANCHOR_ID}`, '_self')}}
-                          />
-            </ButtonGroup>
+            <YearSwitcher startYear={startYear} selectedYear={year} />
           </Stack>
           {!data.isLoading && !data.errorMessage && (
             <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
