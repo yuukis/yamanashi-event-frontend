@@ -12,11 +12,11 @@ import {
   Container,
   Box,
   Stack,
-  HStack,
   Card,
   CardBody,
   Heading,
   Button,
+  ButtonGroup,
   IconButton,
   Menu,
   MenuButton,
@@ -183,20 +183,16 @@ function List({ startYear} : {startYear: number}) {
               { year }年 開催イベント
             </Heading>
             <Spacer />
-            <HStack spacing={'1'}>
+            <ButtonGroup size={'xs'} colorScheme={'primary'} isAttached>
               <IconButton aria-label={`${prev_year}年のイベントを表示`}
                           icon={<ChevronLeftIcon />}
-                          size={'xs'}
                           variant={'outline'}
-                          colorScheme={'primary'}
                           isDisabled={prev_year < startYear}
                           onClick={() => {window.open('/events/' + prev_year, '_self')}}
                           />
               <Menu placement={'bottom'} isLazy>
                 <MenuButton as={Button}
-                            size={'xs'}
                             variant={'solid'}
-                            colorScheme={'primary'}
                             color={'white'}
                             rightIcon={<ChevronDownIcon />}
                             >
@@ -217,12 +213,10 @@ function List({ startYear} : {startYear: number}) {
               </Menu>
               <IconButton aria-label={`${next_year}年のイベントを表示`}
                           icon={<ChevronRightIcon />}
-                          size={'xs'}
                           variant={'outline'}
-                          colorScheme={'primary'}
                           onClick={() => {window.open('/events/' + next_year, '_self')}}
                           />
-            </HStack>
+            </ButtonGroup>
           </Stack>
           {!data.isLoading && !data.errorMessage && (
             <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
