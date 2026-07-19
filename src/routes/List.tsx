@@ -153,9 +153,7 @@ function List({ startYear} : {startYear: number}) {
                           onSelect={handleGroupSelect}
                           isLoading={data.isLoading}
                           />
-          {/* 固定ヘッダーの表示境界を計測するための目印。sticky な見出しバー
-              自身を境界にすると、貼り付いた後は座標が動かなくなり判定が
-              壊れるため、通常フローに留まるこの要素を代わりに使う。 */}
+          {/* sticky 化した見出しバーは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
           <Stack direction={'row'} spacing={'2'}
                  position={'sticky'}

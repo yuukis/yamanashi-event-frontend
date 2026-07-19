@@ -53,8 +53,7 @@ const GOOGLE_CALENDAR_ADD_URL = `https://calendar.google.com/calendar/render?cid
 const OUTLOOK_CALENDAR_ADD_URL = `https://outlook.live.com/calendar/0/addfromweb?url=${encodeURIComponent(ICAL_URL)}&name=${encodeURIComponent(ICAL_CALENDAR_NAME)}`;
 const APPLE_CALENDAR_URL = ICAL_WEBCAL_URL;
 
-// 固定ヘッダーの表示境界をマークする ref を返す。各ページの本文先頭の
-// 見出しに付ける。
+// 固定ヘッダーの表示境界をマークする ref を返す。各ページの本文先頭に付ける。
 export function useFixedHeaderBoundary<T extends HTMLElement>() {
   const boundaryRef = useRef<T>(null);
 
@@ -66,9 +65,6 @@ export function useFixedHeaderBoundary<T extends HTMLElement>() {
   return boundaryRef;
 }
 
-// 各ページのセクション見出しを画面上端に貼り付ける(position: sticky)際の
-// top オフセット。固定ヘッダーの表示/非表示に関わらず常に画面最上部に
-// 固定する(ヘッダー表示中は見出しの上にヘッダーが重なる)。
 export const STICKY_HEADING_TOP = '0';
 
 function SiteHeaderContent() {
