@@ -66,6 +66,11 @@ export function useFixedHeaderBoundary<T extends HTMLElement>() {
   return boundaryRef;
 }
 
+// 各ページのセクション見出しを画面上端に貼り付ける(position: sticky)際の
+// top オフセット。固定ヘッダーの表示/非表示に関わらず常に画面最上部に
+// 固定する(ヘッダー表示中は見出しの上にヘッダーが重なる)。
+export const STICKY_HEADING_TOP = '0';
+
 function SiteHeaderContent() {
   return (
     <>

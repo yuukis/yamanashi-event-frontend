@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
+import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
@@ -306,9 +306,13 @@ function Root({startYear}: {startYear: number}) {
                           />
           <Heading ref={headerBoundaryRef}
                    size={{base: 'sm', md: 'md'}}
-                   ml={{base: '4', md: '0'}}
+                   position={'sticky'}
+                   top={STICKY_HEADING_TOP}
+                   zIndex={'docked'}
+                   bg={'gray.100'}
+                   px={{base: '4', md: '0'}}
                    mt={'8'}
-                   mb={'2'}
+                   py={'2'}
                    color={'gray.600'}
                    >
             直近開催イベント
@@ -346,9 +350,13 @@ function Root({startYear}: {startYear: number}) {
           }
 
           <Heading size={{base: 'sm', md: 'md'}}
-                   ml={{base: '4', md: '0'}}
+                   position={'sticky'}
+                   top={STICKY_HEADING_TOP}
+                   zIndex={'docked'}
+                   bg={'gray.100'}
+                   px={{base: '4', md: '0'}}
                    mt={'8'}
-                   mb={'2'}
+                   py={'2'}
                    color={'gray.600'}
                    >
             終了したイベント
