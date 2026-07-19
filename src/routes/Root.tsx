@@ -67,7 +67,7 @@ function Root({startYear}: {startYear: number}) {
     errorMessage: ''
   });
 
-  const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
+  const headerBoundaryRef = useFixedHeaderBoundary<HTMLDivElement>();
 
   document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
 
@@ -304,8 +304,11 @@ function Root({startYear}: {startYear: number}) {
                           onSelect={handleGroupSelect}
                           isLoading={data.isLoading}
                           />
-          <Heading ref={headerBoundaryRef}
-                   size={{base: 'sm', md: 'md'}}
+          {/* 固定ヘッダーの表示境界を計測するための目印。sticky な見出し
+              自身を境界にすると、貼り付いた後は座標が動かなくなり判定が
+              壊れるため、通常フローに留まるこの要素を代わりに使う。 */}
+          <Box ref={headerBoundaryRef} />
+          <Heading size={{base: 'sm', md: 'md'}}
                    position={'sticky'}
                    top={STICKY_HEADING_TOP}
                    zIndex={'docked'}

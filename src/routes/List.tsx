@@ -82,7 +82,7 @@ function List({ startYear} : {startYear: number}) {
     : null;
   const events = filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup);
 
-  const headerBoundaryRef = useFixedHeaderBoundary<HTMLHeadingElement>();
+  const headerBoundaryRef = useFixedHeaderBoundary<HTMLDivElement>();
 
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
 
@@ -153,6 +153,10 @@ function List({ startYear} : {startYear: number}) {
                           onSelect={handleGroupSelect}
                           isLoading={data.isLoading}
                           />
+          {/* 固定ヘッダーの表示境界を計測するための目印。sticky な見出しバー
+              自身を境界にすると、貼り付いた後は座標が動かなくなり判定が
+              壊れるため、通常フローに留まるこの要素を代わりに使う。 */}
+          <Box ref={headerBoundaryRef} />
           <Stack direction={'row'} spacing={'2'}
                  position={'sticky'}
                  top={STICKY_HEADING_TOP}
@@ -164,8 +168,7 @@ function List({ startYear} : {startYear: number}) {
                  py={'2'}
                  display={'flex'} alignItems={'flex-end'}
                  >
-            <Heading ref={headerBoundaryRef}
-                     size={{base: 'sm', md: 'md'}}
+            <Heading size={{base: 'sm', md: 'md'}}
                      color={'gray.600'}
                      >
               { year }年 開催イベント
