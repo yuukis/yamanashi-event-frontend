@@ -9,10 +9,7 @@ const HIGHLIGHT_COLOR = 'primary.800';
 
 type YearSwitcherProps = {
   startYear: number;
-  // 表示中の年。トップページの「直近開催イベント」など、特定の年に
-  // 紐付かない画面では null を渡す。
   selectedYear: number | null;
-  // 前後の年へのシェブロンボタンを表示するか。
   showChevrons?: boolean;
 };
 
