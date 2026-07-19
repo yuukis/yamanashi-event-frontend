@@ -174,7 +174,7 @@ function List({ startYear} : {startYear: number}) {
                  px={{base: '4', md: '0'}}
                  mt={'4'}
                  mb={'2'}
-                 py={'1'}
+                 py={'2'}
                  display={'flex'} alignItems={'flex-end'}
                  >
             <Heading size={{base: 'sm', md: 'md'}}
@@ -183,7 +183,7 @@ function List({ startYear} : {startYear: number}) {
               { year }年 開催イベント
             </Heading>
             <Spacer />
-            <ButtonGroup size={'sm'} colorScheme={'primary'} isAttached>
+            <ButtonGroup size={'xs'} colorScheme={'primary'} isAttached>
               <IconButton aria-label={`${prev_year}年のイベントを表示`}
                           icon={<ChevronLeftIcon />}
                           variant={'outline'}
