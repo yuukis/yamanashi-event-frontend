@@ -409,16 +409,17 @@ function Group() {
                     </Wrap>
                     <CollapsibleDescription html={descriptionHtml} />
                     {externalLinks.length > 0 && (
-                      <Wrap spacing={'2'}>
+                      <Wrap spacing={'2'} align={'center'}>
                         {externalLinks.map((link) => (
                           <WrapItem key={link.id}>
                             <Button as={'a'}
                                     href={link.url}
                                     target={'_blank'}
                                     rel={'noopener'}
-                                    size={'xs'}
-                                    variant={'outline'}
-                                    fontWeight={'normal'}
+                                    size={link.prominent ? {base: 'sm', md: 'md'} : 'xs'}
+                                    variant={link.variant}
+                                    colorScheme={link.prominent ? 'primary' : undefined}
+                                    fontWeight={link.fontWeight}
                                     rightIcon={<ExternalLinkIcon />}
                                     >
                               {link.label}

@@ -57,11 +57,11 @@ describe('buildGroupExternalLinks', () => {
     });
 
     expect(buildGroupExternalLinks(group)).toEqual([
-      { id: 'group-url', label: 'イベントページ', url: 'https://example.connpass.com/' },
-      { id: 'website', label: 'Webサイト', url: 'https://example.com/' },
-      { id: 'x', label: 'X(Twitter)', url: 'https://x.com/example' },
-      { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/example' },
-      { id: 'archive', label: 'アーカイブ元(kofu-mokumoku)', url: 'https://archive.example.com/' },
+      { id: 'group-url', label: 'イベントに参加する', url: 'https://example.connpass.com/', prominent: true, variant: 'solid', fontWeight: 'bold' },
+      { id: 'website', label: '公式サイト', url: 'https://example.com/', prominent: true, variant: 'outline', fontWeight: 'normal' },
+      { id: 'x', label: 'X(Twitter)', url: 'https://x.com/example', prominent: false, variant: 'outline', fontWeight: 'normal' },
+      { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/example', prominent: true, variant: 'outline', fontWeight: 'normal' },
+      { id: 'archive', label: 'アーカイブ元(kofu-mokumoku)', url: 'https://archive.example.com/', prominent: false, variant: 'outline', fontWeight: 'normal' },
     ]);
   });
 
@@ -75,7 +75,7 @@ describe('buildGroupExternalLinks', () => {
     const group = makeGroupDetail({ url: null, archive_url: 'https://archive.example.com/' });
 
     expect(buildGroupExternalLinks(group)).toEqual([
-      { id: 'archive', label: 'アーカイブ元', url: 'https://archive.example.com/' },
+      { id: 'archive', label: 'アーカイブ元', url: 'https://archive.example.com/', prominent: false, variant: 'outline', fontWeight: 'normal' },
     ]);
   });
 });
