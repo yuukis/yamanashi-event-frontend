@@ -34,7 +34,10 @@ import { buildListWidgetPath } from '../utils/widgetPaths';
 import { sanitizeDescriptionHtml } from '../utils/descriptionHtml';
 import type { ApiGroupDetail, EventWithGroup } from '../types/events';
 
-const PAST_EVENTS_INITIAL_COUNT = 10;
+// 過去のイベントは新しい順(order=desc)にこの件数ずつAPIから取得する。
+// 未来のイベントは通常この件数を大きく下回るため、1ページ目だけで
+// 「今後の開催予定」を取りこぼす心配はない。
+const GROUP_EVENTS_PAGE_SIZE = 20;
 // 折りたたみ時に見せる説明文の高さ(fontSize sm × lineHeight 1.8 の約5行分)
 const DESCRIPTION_COLLAPSED_MAX_H = '8em';
 
@@ -137,33 +140,47 @@ type GroupState = {
   lastModified: string | null;
   errorMessage: string;
   isNotFound: boolean;
+  page: number;
+  // APIのx-total-count/x-total-pagesヘッダーはAccess-Control-Expose-Headers
+  // が設定されておらず、ブラウザからは読めない(curlでは見えるが
+  // fetch/axiosではnullになる)。そのため「もっと見る」の表示可否は
+  // ヘッダーに頼らず、直前に取得したページの件数がページサイズと
+  // 一致するか(=まだ続きがありそうか)で判定する。
+  hasMorePastEvents: boolean;
+  totalCount: number | null;
+  isLoadingMorePastEvents: boolean;
+  loadMorePastEventsErrorMessage: string;
 };
 
-function Group() {
-  const { groupKey } = useParams();
-
-  const [data, setData] = useState<GroupState>({
+function initialGroupState(): GroupState {
+  return {
     isLoading: true,
     group: null,
     events: [],
     lastModified: null,
     errorMessage: '',
     isNotFound: false,
-  });
-  const [isPastExpanded, setIsPastExpanded] = useState(false);
+    page: 0,
+    hasMorePastEvents: false,
+    totalCount: null,
+    isLoadingMorePastEvents: false,
+    loadMorePastEventsErrorMessage: '',
+  };
+}
+
+function extractErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+function Group() {
+  const { groupKey } = useParams();
+
+  const [data, setData] = useState<GroupState>(initialGroupState);
 
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLDivElement>();
 
   useEffect(() => {
-    setData({
-      isLoading: true,
-      group: null,
-      events: [],
-      lastModified: null,
-      errorMessage: '',
-      isNotFound: false,
-    });
-    setIsPastExpanded(false);
+    setData(initialGroupState());
 
     if (!groupKey) {
       return;
@@ -172,20 +189,22 @@ function Group() {
     let cancelled = false;
     const getData = async () => {
       try {
-        const [group, eventsResponse] = await Promise.all([
+        const [group, eventsPage] = await Promise.all([
           fetchGroup(groupKey),
-          fetchGroupEvents(groupKey),
+          fetchGroupEvents(groupKey, { perPage: GROUP_EVENTS_PAGE_SIZE, order: 'desc' }),
         ]);
         if (cancelled) {
           return;
         }
         setData({
+          ...initialGroupState(),
           isLoading: false,
           group,
-          events: enrichEventsWithGroups(eventsResponse.events, [group]).filter(isVisibleEvent),
-          lastModified: eventsResponse.lastModified,
-          errorMessage: '',
-          isNotFound: false,
+          events: enrichEventsWithGroups(eventsPage.events, [group]).filter(isVisibleEvent),
+          lastModified: eventsPage.lastModified,
+          page: eventsPage.page ?? 1,
+          hasMorePastEvents: eventsPage.events.length >= GROUP_EVENTS_PAGE_SIZE,
+          totalCount: eventsPage.totalCount,
         });
       } catch (err) {
         if (cancelled) {
@@ -194,11 +213,9 @@ function Group() {
         const status = (err as { response?: { status?: number } })?.response?.status;
         const isNotFound = status === 404;
         setData({
+          ...initialGroupState(),
           isLoading: false,
-          group: null,
-          events: [],
-          lastModified: null,
-          errorMessage: isNotFound ? '' : (err instanceof Error ? err.message : String(err)),
+          errorMessage: isNotFound ? '' : extractErrorMessage(err),
           isNotFound,
         });
       }
@@ -210,6 +227,34 @@ function Group() {
   }, [groupKey]);
 
   const group = data.group;
+
+  const handleLoadMorePastEvents = async () => {
+    if (!groupKey || !group || data.isLoadingMorePastEvents || !data.hasMorePastEvents) {
+      return;
+    }
+
+    setData((previous) => ({ ...previous, isLoadingMorePastEvents: true, loadMorePastEventsErrorMessage: '' }));
+
+    const nextPage = data.page + 1;
+    try {
+      const eventsPage = await fetchGroupEvents(groupKey, { page: nextPage, perPage: GROUP_EVENTS_PAGE_SIZE, order: 'desc' });
+      const newEvents = enrichEventsWithGroups(eventsPage.events, [group]).filter(isVisibleEvent);
+      setData((previous) => ({
+        ...previous,
+        events: [...previous.events, ...newEvents],
+        page: eventsPage.page ?? nextPage,
+        hasMorePastEvents: eventsPage.events.length >= GROUP_EVENTS_PAGE_SIZE,
+        totalCount: eventsPage.totalCount ?? previous.totalCount,
+        isLoadingMorePastEvents: false,
+      }));
+    } catch (err) {
+      setData((previous) => ({
+        ...previous,
+        isLoadingMorePastEvents: false,
+        loadMorePastEventsErrorMessage: extractErrorMessage(err),
+      }));
+    }
+  };
 
   useEffect(() => {
     if (!group) {
@@ -228,9 +273,15 @@ function Group() {
 
   const upcomingEvents = data.events.filter(isFutureEvent).sort(sortByStartedAtAsc);
   const pastEvents = data.events.filter(isPastEvent).sort(sortByStartedAtDesc);
-  const visiblePastEvents = isPastExpanded ? pastEvents : pastEvents.slice(0, PAST_EVENTS_INITIAL_COUNT);
-
-  const firstEventYear = data.events.length > 0
+  // 開催イベント数はAPIの総件数ヘッダーが取得できればそれを、できなければ
+  // 読み込み済み件数を使う。ヘッダーが読めず、かつまだ続きがある場合は
+  // 「N件以上」として、まだ全体の数ではないことを示す。
+  const eventCount = data.totalCount ?? data.events.length;
+  const eventCountUnit = data.totalCount === null && data.hasMorePastEvents ? '件以上' : '件';
+  // 活動開始年は「最も古いイベント」から求めるため、過去ページを
+  // すべて読み込み終えるまでは不正確(実際より新しい年になる)。
+  // 全ページ読み込み完了後にのみ表示する。
+  const firstEventYear = !data.hasMorePastEvents && data.events.length > 0
     ? Math.min(...data.events.map((event) => new Date(event.started_at).getFullYear()))
     : null;
   const descriptionHtml = group?.description ? sanitizeDescriptionHtml(group.description) : '';
@@ -326,9 +377,9 @@ function Group() {
                           borderColor={'gray.100'}
                           py={'3'}
                           >
-                      {data.events.length > 0 && (
+                      {eventCount > 0 && (
                         <WrapItem>
-                          <GroupStat label={'開催イベント'} value={data.events.length} unit={'件'} testId={'group-stat-events'} />
+                          <GroupStat label={'開催イベント'} value={eventCount} unit={eventCountUnit} testId={'group-stat-events'} />
                         </WrapItem>
                       )}
                       {firstEventYear && (
@@ -441,7 +492,7 @@ function Group() {
                   {pastEvents.length === 0 ? (
                     <EmptyEventBody />
                   ) : (
-                    visiblePastEvents.map((event) => (
+                    pastEvents.map((event) => (
                       <AnimatedEventItem key={event.uid}>
                         <EventBody event={event}
                                    enableSummarizer
@@ -453,15 +504,22 @@ function Group() {
                 </Stack>
               </CardBody>
             </Card>
-            {!isPastExpanded && pastEvents.length > PAST_EVENTS_INITIAL_COUNT && (
+            {data.hasMorePastEvents && (
               <Box px={{base: '4', md: '0'}}>
                 <Button size={'sm'}
                         variant={'outline'}
                         w={'full'}
-                        onClick={() => setIsPastExpanded(true)}
+                        onClick={handleLoadMorePastEvents}
+                        isLoading={data.isLoadingMorePastEvents}
+                        loadingText={'読み込み中…'}
                         >
-                  過去のイベントをすべて表示({pastEvents.length}件)
+                  過去のイベントをもっと見る
                 </Button>
+                {data.loadMorePastEventsErrorMessage && (
+                  <Text fontSize={'xs'} color={'impact.600'} mt={'2'} textAlign={'center'}>
+                    読み込みに失敗しました({data.loadMorePastEventsErrorMessage})
+                  </Text>
+                )}
               </Box>
             )}
             {data.lastModified && (

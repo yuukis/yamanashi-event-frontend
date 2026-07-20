@@ -57,11 +57,16 @@ describe('Group', () => {
         makeEvent({ uid: 'past-1', title: 'AI BASE #9', group_key: 'aibase', started_at: '2025-12-07T09:00:00+09:00', ended_at: '2025-12-07T10:00:00+09:00', open_status: 'close' }),
       ],
       lastModified: null,
+      page: 1,
+      perPage: 20,
+      totalCount: 2,
+      totalPages: 1,
     });
 
     renderGroupPage();
 
     expect(await screen.findByRole('heading', { name: 'AI BASE', level: 1 })).toBeInTheDocument();
+    expect(fetchGroupEvents).toHaveBeenCalledWith('aibase', { perPage: 20, order: 'desc' });
     expect(screen.getByText('山梨の生成AIコミュニティ')).toBeInTheDocument();
     const description = screen.getByTestId('group-description');
     expect(description).toHaveTextContent('『AI BASE』は生成AIに興味がある山梨のコミュニティです。');
@@ -100,37 +105,114 @@ describe('Group', () => {
     expect(screen.getByRole('link', { name: 'トップページでイベントを見る' })).toHaveAttribute('href', '/');
   });
 
-  it('collapses long past event lists behind an expand button', async () => {
+  it('shows a message when the community has no upcoming events', async () => {
     vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({ key: 'aibase', title: 'AI BASE' }));
     vi.mocked(fetchGroupEvents).mockResolvedValue({
-      events: Array.from({ length: 12 }).map((_, i) => makeEvent({
-        uid: `past-${i}`,
-        title: `AI BASE #${i}`,
-        group_key: 'aibase',
-        started_at: '2025-12-07T09:00:00+09:00',
-        ended_at: '2025-12-07T10:00:00+09:00',
-        open_status: 'close',
-      })),
-      lastModified: null,
+      events: [], lastModified: null, page: 1, perPage: 20, totalCount: 0, totalPages: 0,
     });
 
     renderGroupPage();
 
-    const expandButton = await screen.findByRole('button', { name: '過去のイベントをすべて表示(12件)' });
-    expect(screen.queryByText('AI BASE #11')).not.toBeInTheDocument();
-
-    fireEvent.click(expandButton);
-
-    expect(screen.getByText('AI BASE #11')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /過去のイベントをすべて表示/ })).not.toBeInTheDocument();
+    expect(await screen.findByText('現在予定されているイベントはありません。')).toBeInTheDocument();
   });
 
-  it('shows a message when the community has no upcoming events', async () => {
-    vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({ key: 'aibase', title: 'AI BASE' }));
-    vi.mocked(fetchGroupEvents).mockResolvedValue({ events: [], lastModified: null });
+  describe('paginated past events', () => {
+    function makePastEvents(count: number, offset: number) {
+      return Array.from({ length: count }).map((_, i) => {
+        const n = offset + i;
+        return makeEvent({
+          uid: `past-${n}`,
+          title: `AI BASE #${n}`,
+          group_key: 'aibase',
+          started_at: `2020-01-${String((n % 28) + 1).padStart(2, '0')}T09:00:00+09:00`,
+          ended_at: `2020-01-${String((n % 28) + 1).padStart(2, '0')}T10:00:00+09:00`,
+          open_status: 'close',
+        });
+      });
+    }
 
-    renderGroupPage();
+    function mockTwoPageGroup() {
+      vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({ key: 'aibase', title: 'AI BASE' }));
+      vi.mocked(fetchGroupEvents).mockImplementation(async (_key, options) => {
+        if (options?.page === 2) {
+          return { events: makePastEvents(12, 20), lastModified: null, page: 2, perPage: 20, totalCount: 32, totalPages: 2 };
+        }
+        return { events: makePastEvents(20, 0), lastModified: null, page: 1, perPage: 20, totalCount: 32, totalPages: 2 };
+      });
+    }
 
-    expect(await screen.findByText('現在予定されているイベントはありません。')).toBeInTheDocument();
+    it('loads the first page and shows a "load more" button while more pages remain', async () => {
+      mockTwoPageGroup();
+
+      renderGroupPage();
+
+      expect(await screen.findByText('AI BASE #0')).toBeInTheDocument();
+      expect(screen.getByText('AI BASE #19')).toBeInTheDocument();
+      expect(screen.queryByText('AI BASE #20')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '過去のイベントをもっと見る' })).toBeInTheDocument();
+      // 全ページ読み込み前は「活動開始」年が不正確になるため表示しない
+      expect(screen.queryByTestId('group-stat-since')).not.toBeInTheDocument();
+      expect(screen.getByTestId('group-stat-events')).toHaveTextContent('開催イベント32件');
+    });
+
+    it('appends the next page and hides the button once every page is loaded', async () => {
+      mockTwoPageGroup();
+
+      renderGroupPage();
+      await screen.findByText('AI BASE #0');
+
+      fireEvent.click(screen.getByRole('button', { name: '過去のイベントをもっと見る' }));
+
+      expect(await screen.findByText('AI BASE #31')).toBeInTheDocument();
+      expect(screen.getByText('AI BASE #0')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '過去のイベントをもっと見る' })).not.toBeInTheDocument();
+      expect(fetchGroupEvents).toHaveBeenLastCalledWith('aibase', { page: 2, perPage: 20, order: 'desc' });
+      expect(screen.getByTestId('group-stat-since')).toHaveTextContent('活動開始2020年');
+    });
+
+    it('shows "N件以上" and a load-more button from page fullness alone, when pagination headers are unavailable (CORS)', async () => {
+      // x-total-count 等はブラウザからは読めない(APIがAccess-Control-
+      // Expose-Headersを設定していないため)。totalCount/totalPagesが
+      // 一切取得できない状況でも、取得件数だけで「もっと見る」を
+      // 出し分けられることを確認する。
+      vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({ key: 'aibase', title: 'AI BASE' }));
+      vi.mocked(fetchGroupEvents).mockImplementation(async (_key, options) => {
+        if (options?.page === 2) {
+          return { events: makePastEvents(12, 20), lastModified: null, page: 2, perPage: 20, totalCount: null, totalPages: null };
+        }
+        return { events: makePastEvents(20, 0), lastModified: null, page: 1, perPage: 20, totalCount: null, totalPages: null };
+      });
+
+      renderGroupPage();
+
+      await screen.findByText('AI BASE #0');
+      expect(screen.getByTestId('group-stat-events')).toHaveTextContent('開催イベント20件以上');
+      expect(screen.getByRole('button', { name: '過去のイベントをもっと見る' })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: '過去のイベントをもっと見る' }));
+
+      expect(await screen.findByText('AI BASE #31')).toBeInTheDocument();
+      expect(screen.getByTestId('group-stat-events')).toHaveTextContent('開催イベント32件');
+      expect(screen.queryByRole('button', { name: '過去のイベントをもっと見る' })).not.toBeInTheDocument();
+    });
+
+    it('shows an error and keeps the button clickable to retry when loading more fails', async () => {
+      vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({ key: 'aibase', title: 'AI BASE' }));
+      vi.mocked(fetchGroupEvents).mockImplementation(async (_key, options) => {
+        if (options?.page === 2) {
+          throw new Error('Network Error');
+        }
+        return { events: makePastEvents(20, 0), lastModified: null, page: 1, perPage: 20, totalCount: 32, totalPages: 2 };
+      });
+
+      renderGroupPage();
+      await screen.findByText('AI BASE #0');
+
+      fireEvent.click(screen.getByRole('button', { name: '過去のイベントをもっと見る' }));
+
+      expect(await screen.findByText('読み込みに失敗しました(Network Error)')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '過去のイベントをもっと見る' })).toBeEnabled();
+      expect(screen.queryByText('AI BASE #20')).not.toBeInTheDocument();
+    });
   });
 });

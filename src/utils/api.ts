@@ -78,11 +78,49 @@ export async function fetchEventsByYear(year: number): Promise<{ events: ApiEven
   };
 }
 
-export async function fetchGroupEvents(groupKey: string, fields: string = EVENTS_FIELDS): Promise<{ events: ApiEvent[]; lastModified: string | null }> {
-  const res = await axios.get(`${GROUPS_API_URL}/${encodeURIComponent(groupKey)}/events`, { params: { fields } });
+export type GroupEventsOrder = 'asc' | 'desc';
+
+export type GroupEventsPageOptions = {
+  fields?: string;
+  page?: number;
+  perPage?: number;
+  order?: GroupEventsOrder;
+};
+
+export type GroupEventsPage = {
+  events: ApiEvent[];
+  lastModified: string | null;
+  page: number | null;
+  perPage: number | null;
+  totalCount: number | null;
+  totalPages: number | null;
+};
+
+function parseIntHeader(value: unknown): number | null {
+  return value === undefined ? null : Number(value);
+}
+
+export async function fetchGroupEvents(groupKey: string, options: GroupEventsPageOptions = {}): Promise<GroupEventsPage> {
+  const { fields = EVENTS_FIELDS, page, perPage, order } = options;
+  const params: Record<string, string | number> = { fields };
+  if (page !== undefined) {
+    params.page = page;
+  }
+  if (perPage !== undefined) {
+    params.per_page = perPage;
+  }
+  if (order !== undefined) {
+    params.order = order;
+  }
+
+  const res = await axios.get(`${GROUPS_API_URL}/${encodeURIComponent(groupKey)}/events`, { params });
   return {
     events: res.data as ApiEvent[],
     lastModified: res.headers['last-modified'] ?? null,
+    page: parseIntHeader(res.headers['x-page']),
+    perPage: parseIntHeader(res.headers['x-per-page']),
+    totalCount: parseIntHeader(res.headers['x-total-count']),
+    totalPages: parseIntHeader(res.headers['x-total-pages']),
   };
 }
 

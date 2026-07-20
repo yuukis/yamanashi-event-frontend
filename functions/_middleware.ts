@@ -53,6 +53,10 @@ const BOT_UA_PATTERN =
 
 const FETCH_TIMEOUT_MS = 5000;
 const MAX_LIST_ITEMS = 300;
+// list_group_events の per_page 上限(APIドキュメント準拠)。bot向け
+// レンダリングはクリック操作ができないため、1回のフェッチで取得できる
+// 最大件数を使い、ページングなしで完結させる。
+const GROUP_EVENTS_FETCH_PER_PAGE = 200;
 
 type ResolvedPage =
   | { kind: 'root' }
@@ -221,7 +225,7 @@ async function buildGroupPageData(key: string): Promise<BotPageData> {
   const encodedKey = encodeURIComponent(key);
   const [group, rawEvents] = await Promise.all([
     fetchJson<ApiGroupDetail>(withFields(`${GROUPS_API_URL}/${encodedKey}`, GROUP_DETAIL_FIELDS)),
-    fetchJson<ApiEvent[]>(withFields(`${GROUPS_API_URL}/${encodedKey}/events`, EVENTS_FIELDS)),
+    fetchJson<ApiEvent[]>(withGroupEventsParams(`${GROUPS_API_URL}/${encodedKey}/events`, EVENTS_FIELDS)),
   ]);
   const events = enrichEventsWithGroups(rawEvents, [group]).filter(isVisibleEvent);
   const upcomingEvents = limitEvents(events.filter(isFutureEvent).sort(sortByStartedAtAsc));
@@ -264,6 +268,12 @@ async function buildGroupPageData(key: string): Promise<BotPageData> {
 function withFields(base: string, fields: string): string {
   const u = new URL(base);
   u.searchParams.set('fields', fields);
+  return u.toString();
+}
+
+function withGroupEventsParams(base: string, fields: string): string {
+  const u = new URL(withFields(base, fields));
+  u.searchParams.set('per_page', String(GROUP_EVENTS_FETCH_PER_PAGE));
   return u.toString();
 }
 
