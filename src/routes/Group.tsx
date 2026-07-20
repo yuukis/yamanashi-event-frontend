@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from "react-router-dom";
-import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
+import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
 import { ShareContextIconRow } from '../components/ShareButtons';
@@ -456,9 +456,9 @@ function Group() {
                                     href={link.url}
                                     target={'_blank'}
                                     rel={'noopener'}
-                                    size={link.prominent ? {base: 'sm', md: 'md'} : 'xs'}
+                                    size={{base: 'sm', md: 'md'}}
                                     variant={link.variant}
-                                    colorScheme={link.prominent ? 'primary' : undefined}
+                                    colorScheme={'primary'}
                                     fontWeight={link.fontWeight}
                                     rightIcon={<ExternalLinkIcon />}
                                     >
@@ -514,11 +514,18 @@ function Group() {
         </Stack>
         {!data.isLoading && !data.isNotFound && !data.errorMessage && group && (
           <Stack>
-            <Box px={{base: '4', md: '0'}}>
-              <Heading size={{base: 'sm', md: 'md'}} color={'gray.600'} mt={'4'} mb={'2'}>
-                今後の開催予定
-              </Heading>
-            </Box>
+            <Heading size={{base: 'sm', md: 'md'}}
+                     position={'sticky'}
+                     top={STICKY_HEADING_TOP}
+                     zIndex={'docked'}
+                     bg={'gray.100'}
+                     px={{base: '4', md: '0'}}
+                     mt={'4'}
+                     py={'2'}
+                     color={'gray.600'}
+                     >
+              今後の開催予定
+            </Heading>
             <Card variant={{base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
@@ -545,11 +552,18 @@ function Group() {
               </CardBody>
             </Card>
 
-            <Box px={{base: '4', md: '0'}}>
-              <Heading size={{base: 'sm', md: 'md'}} color={'gray.600'} mt={'4'} mb={'2'}>
-                過去のイベント
-              </Heading>
-            </Box>
+            <Heading size={{base: 'sm', md: 'md'}}
+                     position={'sticky'}
+                     top={STICKY_HEADING_TOP}
+                     zIndex={'docked'}
+                     bg={'gray.100'}
+                     px={{base: '4', md: '0'}}
+                     mt={'4'}
+                     py={'2'}
+                     color={'gray.600'}
+                     >
+              過去のイベント
+            </Heading>
             <Card variant={{base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}

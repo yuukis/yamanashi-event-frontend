@@ -40,9 +40,6 @@ export type GroupExternalLink = {
   id: string;
   label: string;
   url: string;
-  // イベントページ・公式サイト・Facebookは「このコミュニティを知る入口」
-  // として主役級に大きく見せ、X・アーカイブ元は補助的な扱いにする。
-  prominent: boolean;
   variant: 'solid' | 'outline';
   fontWeight: 'normal' | 'bold';
 };
@@ -50,24 +47,23 @@ export type GroupExternalLink = {
 export function buildGroupExternalLinks(group: ApiGroupDetail): GroupExternalLink[] {
   const links: GroupExternalLink[] = [];
   if (group.url) {
-    links.push({ id: 'group-url', label: 'イベントに参加する', url: group.url, prominent: true, variant: 'solid', fontWeight: 'bold' });
+    links.push({ id: 'group-url', label: 'イベントに参加する', url: group.url, variant: 'solid', fontWeight: 'bold' });
   }
   if (group.website_url) {
-    links.push({ id: 'website', label: '公式サイト', url: group.website_url, prominent: true, variant: 'outline', fontWeight: 'normal' });
+    links.push({ id: 'website', label: '公式サイト', url: group.website_url, variant: 'outline', fontWeight: 'normal' });
   }
   const xUrl = buildXProfileUrl(group.x_username);
   if (xUrl) {
-    links.push({ id: 'x', label: 'X(Twitter)', url: xUrl, prominent: false, variant: 'outline', fontWeight: 'normal' });
+    links.push({ id: 'x', label: 'X(Twitter)', url: xUrl, variant: 'outline', fontWeight: 'normal' });
   }
   if (group.facebook_url) {
-    links.push({ id: 'facebook', label: 'Facebook', url: group.facebook_url, prominent: true, variant: 'outline', fontWeight: 'normal' });
+    links.push({ id: 'facebook', label: 'Facebook', url: group.facebook_url, variant: 'outline', fontWeight: 'normal' });
   }
   if (group.archive_url) {
     links.push({
       id: 'archive',
-      label: group.archive_source ? `アーカイブ元(${group.archive_source})` : 'アーカイブ元',
+      label: 'アーカイブ元',
       url: group.archive_url,
-      prominent: false,
       variant: 'outline',
       fontWeight: 'normal',
     });

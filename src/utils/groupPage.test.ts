@@ -52,16 +52,15 @@ describe('buildGroupExternalLinks', () => {
       website_url: 'https://example.com/',
       x_username: 'example',
       facebook_url: 'https://www.facebook.com/example',
-      archive_source: 'kofu-mokumoku',
       archive_url: 'https://archive.example.com/',
     });
 
     expect(buildGroupExternalLinks(group)).toEqual([
-      { id: 'group-url', label: 'イベントに参加する', url: 'https://example.connpass.com/', prominent: true, variant: 'solid', fontWeight: 'bold' },
-      { id: 'website', label: '公式サイト', url: 'https://example.com/', prominent: true, variant: 'outline', fontWeight: 'normal' },
-      { id: 'x', label: 'X(Twitter)', url: 'https://x.com/example', prominent: false, variant: 'outline', fontWeight: 'normal' },
-      { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/example', prominent: true, variant: 'outline', fontWeight: 'normal' },
-      { id: 'archive', label: 'アーカイブ元(kofu-mokumoku)', url: 'https://archive.example.com/', prominent: false, variant: 'outline', fontWeight: 'normal' },
+      { id: 'group-url', label: 'イベントに参加する', url: 'https://example.connpass.com/', variant: 'solid', fontWeight: 'bold' },
+      { id: 'website', label: '公式サイト', url: 'https://example.com/', variant: 'outline', fontWeight: 'normal' },
+      { id: 'x', label: 'X(Twitter)', url: 'https://x.com/example', variant: 'outline', fontWeight: 'normal' },
+      { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/example', variant: 'outline', fontWeight: 'normal' },
+      { id: 'archive', label: 'アーカイブ元', url: 'https://archive.example.com/', variant: 'outline', fontWeight: 'normal' },
     ]);
   });
 
@@ -69,14 +68,6 @@ describe('buildGroupExternalLinks', () => {
     const group = makeGroupDetail({ url: null, x_username: '' });
 
     expect(buildGroupExternalLinks(group)).toEqual([]);
-  });
-
-  it('labels the archive link without a source name when archive_source is absent', () => {
-    const group = makeGroupDetail({ url: null, archive_url: 'https://archive.example.com/' });
-
-    expect(buildGroupExternalLinks(group)).toEqual([
-      { id: 'archive', label: 'アーカイブ元', url: 'https://archive.example.com/', prominent: false, variant: 'outline', fontWeight: 'normal' },
-    ]);
   });
 
   it('drops links with a non-http(s) scheme, so API data can never render as an executable link', () => {
@@ -88,7 +79,7 @@ describe('buildGroupExternalLinks', () => {
     });
 
     expect(buildGroupExternalLinks(group)).toEqual([
-      { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/example', prominent: true, variant: 'outline', fontWeight: 'normal' },
+      { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/example', variant: 'outline', fontWeight: 'normal' },
     ]);
   });
 });
