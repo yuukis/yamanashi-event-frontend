@@ -11,9 +11,6 @@ export type PageBreadcrumbItem = {
 
 const HOME_ITEM: PageBreadcrumbItem = { label: 'トップ', href: '/' };
 
-// トップページ以外の各ページ先頭に置く。現在地(最後の項目)はリンクにせず
-// aria-current="page" のテキストとして示す。BreadcrumbList の構造化データも
-// あわせて出力するため、呼び出し側は JSON-LD を個別に組み立てなくてよい。
 export function PageBreadcrumb({ items }: { items: PageBreadcrumbItem[] }) {
   const allItems = [HOME_ITEM, ...items];
   const structuredData = buildBreadcrumbJsonLd(

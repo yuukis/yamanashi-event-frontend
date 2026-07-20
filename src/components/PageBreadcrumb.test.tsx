@@ -24,7 +24,6 @@ describe('PageBreadcrumb', () => {
     const groups = screen.getByRole('link', { name: 'コミュニティ一覧' });
     expect(groups).toHaveAttribute('href', '/groups');
 
-    // Current page is not a link and is marked with aria-current="page"
     expect(screen.queryByRole('link', { name: 'Kofu.rb' })).toBeNull();
     const current = screen.getByText('Kofu.rb');
     expect(current).toHaveAttribute('aria-current', 'page');
