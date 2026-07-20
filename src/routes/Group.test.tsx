@@ -23,6 +23,7 @@ vi.mock('../components/Site', () => ({
   SiteFooter: () => null,
   FooterLastModified: () => null,
   useFixedHeaderBoundary: () => ({ current: null }),
+  STICKY_HEADING_TOP: '0',
 }));
 
 function renderGroupPage(groupKey = 'aibase') {
