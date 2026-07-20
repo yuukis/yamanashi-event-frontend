@@ -48,7 +48,7 @@ describe('Group', () => {
       title: 'AI BASE',
       sub_title: '山梨の生成AIコミュニティ',
       url: 'https://aibase.connpass.com/',
-      description: '<p>『AI BASE』は生成AIに興味がある山梨のコミュニティです。</p>',
+      description: '<h2>紹介</h2><p><strong>『AI BASE』</strong>は生成AIに興味がある山梨のコミュニティです。<a href="https://discord.gg/example">Discord</a></p>',
       member_users_count: 44,
     }));
     vi.mocked(fetchGroupEvents).mockResolvedValue({
@@ -63,7 +63,14 @@ describe('Group', () => {
 
     expect(await screen.findByRole('heading', { name: 'AI BASE', level: 1 })).toBeInTheDocument();
     expect(screen.getByText('山梨の生成AIコミュニティ')).toBeInTheDocument();
-    expect(screen.getByText('『AI BASE』は生成AIに興味がある山梨のコミュニティです。')).toBeInTheDocument();
+    const description = screen.getByTestId('group-description');
+    expect(description).toHaveTextContent('『AI BASE』は生成AIに興味がある山梨のコミュニティです。');
+    expect(screen.getByText('『AI BASE』').tagName).toBe('STRONG');
+    expect(description.querySelector('h1, h2, h3, h4, h5, h6')).toBeNull();
+    expect(description.querySelector('p.desc-h2')).toHaveTextContent('紹介');
+    const descriptionLink = description.querySelector('a');
+    expect(descriptionLink).toHaveAttribute('href', 'https://discord.gg/example');
+    expect(descriptionLink).toHaveAttribute('target', '_blank');
     expect(screen.getByTestId('group-stat-events')).toHaveTextContent('開催イベント2件');
     expect(screen.getByTestId('group-stat-since')).toHaveTextContent('活動開始2025年');
     expect(screen.getByTestId('group-stat-members')).toHaveTextContent('メンバー44人');

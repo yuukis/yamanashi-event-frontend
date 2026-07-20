@@ -10,5 +10,5 @@
     "noEmit": true,
     "resolveJsonModule": true
   },
-  "include": ["**/*.ts", "../src/utils/eventGroups.ts", "../src/utils/eventSort.ts", "../src/utils/structuredData.ts", "../src/utils/htmlText.ts", "../src/utils/groupPage.ts", "../src/utils/site.ts", "../src/types/events.ts"]
+  "include": ["**/*.ts", "../src/utils/eventGroups.ts", "../src/utils/eventSort.ts", "../src/utils/structuredData.ts", "../src/utils/htmlText.ts", "../src/utils/descriptionHtml.ts", "../src/utils/groupPage.ts", "../src/utils/site.ts", "../src/types/events.ts"]
 }

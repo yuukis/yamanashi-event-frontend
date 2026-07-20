@@ -30,7 +30,7 @@ import { fetchGroup, fetchGroupEvents } from '../utils/api';
 import { buildGroupPageUrl, buildGroupExternalLinks } from '../utils/groupPage';
 import { buildGroupPageJsonLd } from '../utils/structuredData';
 import { buildListWidgetPath } from '../utils/widgetPaths';
-import { htmlToParagraphs } from '../utils/htmlText';
+import { sanitizeDescriptionHtml } from '../utils/descriptionHtml';
 import type { ApiGroupDetail, EventWithGroup } from '../types/events';
 
 const PAST_EVENTS_INITIAL_COUNT = 10;
@@ -49,7 +49,29 @@ function GroupStat({ label, value, unit, testId }: { label: string; value: numbe
   );
 }
 
-function CollapsibleDescription({ paragraphs }: { paragraphs: string[] }) {
+// sanitizeDescriptionHtml が出力する許可タグと desc-hN(見出し由来の
+// 段落)に対するスタイル。見出しは文字の大きさ・太さを変えるだけで、
+// 文書のアウトラインには参加させない。
+const DESCRIPTION_STYLES = {
+  fontSize: 'sm',
+  color: 'gray.700',
+  lineHeight: '1.8',
+  '& > :first-of-type': { marginTop: '0' },
+  '& p': { marginBottom: '0.6em' },
+  '& .desc-h1, & .desc-h2': { fontSize: 'md', fontWeight: 'bold', marginTop: '1em', marginBottom: '0.4em' },
+  '& .desc-h3, & .desc-h4, & .desc-h5, & .desc-h6': { fontWeight: 'bold', marginTop: '1em', marginBottom: '0.4em' },
+  '& a': { color: 'primary.800', textDecoration: 'underline' },
+  '& ul, & ol': { paddingLeft: '1.6em', marginBottom: '0.6em' },
+  '& table': { display: 'block', overflowX: 'auto', maxWidth: '100%', borderCollapse: 'collapse', marginBottom: '0.6em' },
+  '& th, & td': { border: '1px solid', borderColor: 'gray.200', padding: '0.25em 0.6em' },
+  '& th': { bg: 'gray.50' },
+  '& blockquote': { borderLeft: '3px solid', borderLeftColor: 'gray.200', paddingLeft: '0.75em', color: 'gray.600', marginBottom: '0.6em' },
+  '& pre': { bg: 'gray.50', padding: '0.5em 0.75em', borderRadius: 'md', overflowX: 'auto', fontSize: 'xs', marginBottom: '0.6em' },
+  '& code': { fontFamily: 'mono', fontSize: '0.9em', bg: 'gray.50', paddingX: '0.3em', borderRadius: 'sm' },
+  '& hr': { marginY: '0.75em', borderColor: 'gray.200' },
+};
+
+function CollapsibleDescription({ html }: { html: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -63,31 +85,22 @@ function CollapsibleDescription({ paragraphs }: { paragraphs: string[] }) {
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
-  }, [paragraphs, isExpanded]);
+  }, [html, isExpanded]);
 
-  if (paragraphs.length === 0) {
+  if (!html) {
     return null;
   }
 
   return (
     <Box>
       <Box position={'relative'}>
-        <Stack ref={bodyRef}
-               spacing={'2'}
-               maxH={isExpanded ? undefined : DESCRIPTION_COLLAPSED_MAX_H}
-               overflow={'hidden'}
-               >
-          {paragraphs.map((paragraph, index) => (
-            <Text key={index}
-                  fontSize={'sm'}
-                  color={'gray.700'}
-                  lineHeight={'1.8'}
-                  whiteSpace={'pre-line'}
-                  >
-              {paragraph}
-            </Text>
-          ))}
-        </Stack>
+        <Box ref={bodyRef}
+             data-testid={'group-description'}
+             maxH={isExpanded ? undefined : DESCRIPTION_COLLAPSED_MAX_H}
+             overflow={'hidden'}
+             sx={DESCRIPTION_STYLES}
+             dangerouslySetInnerHTML={{ __html: html }}
+             />
         {!isExpanded && hasOverflow && (
           <Box position={'absolute'}
                bottom={'0'}
@@ -203,7 +216,7 @@ function Group() {
   const firstEventYear = data.events.length > 0
     ? Math.min(...data.events.map((event) => new Date(event.started_at).getFullYear()))
     : null;
-  const descriptionParagraphs = group?.description ? htmlToParagraphs(group.description) : [];
+  const descriptionHtml = group?.description ? sanitizeDescriptionHtml(group.description) : '';
   const externalLinks = group ? buildGroupExternalLinks(group) : [];
 
   document.title = group
@@ -312,7 +325,7 @@ function Group() {
                         </WrapItem>
                       )}
                     </Wrap>
-                    <CollapsibleDescription paragraphs={descriptionParagraphs} />
+                    <CollapsibleDescription html={descriptionHtml} />
                     {externalLinks.length > 0 && (
                       <Wrap spacing={'2'}>
                         {externalLinks.map((link) => (

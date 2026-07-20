@@ -2,13 +2,22 @@
 // Cloudflare Pages Functions(DOM無し環境)からも使うため、DOMParserに依存しない。
 const BLOCK_END_PATTERN = /<\/(?:p|div|section|article|li|ul|ol|dl|dt|dd|h[1-6]|blockquote|pre|table|tr)>/gi;
 
-function decodeBasicEntities(text: string): string {
+function safeFromCodePoint(codePoint: number): string {
+  try {
+    return String.fromCodePoint(codePoint);
+  } catch {
+    return '';
+  }
+}
+
+export function decodeHtmlEntities(text: string): string {
   return text
+    .replace(/&#(\d+);/g, (_, digits) => safeFromCodePoint(Number(digits)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => safeFromCodePoint(parseInt(hex, 16)))
     .replace(/&nbsp;/gi, ' ')
     .replace(/&lt;/gi, '<')
     .replace(/&gt;/gi, '>')
     .replace(/&quot;/gi, '"')
-    .replace(/&#0*39;/g, "'")
     .replace(/&amp;/gi, '&');
 }
 
@@ -19,7 +28,7 @@ export function htmlToParagraphs(html: string): string[] {
     .replace(BLOCK_END_PATTERN, '\n\n')
     .replace(/<[^>]*>/g, '');
 
-  return decodeBasicEntities(text)
+  return decodeHtmlEntities(text)
     .split(/\n{2,}/)
     .map((paragraph) =>
       paragraph

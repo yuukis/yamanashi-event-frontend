@@ -29,6 +29,10 @@ describe('htmlToParagraphs', () => {
     expect(htmlToParagraphs(html)).toEqual(['A & B <C> "D" \'E\' F']);
   });
 
+  it('decodes numeric character references', () => {
+    expect(htmlToParagraphs('<p>&#x27;A&#x27; &#12354;</p>')).toEqual(["'A' あ"]);
+  });
+
   it('removes script and style contents entirely', () => {
     const html = '<style>p { color: red; }</style><p>本文</p><script>alert(1)</script>';
 

@@ -1,7 +1,8 @@
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, isVisibleEvent } from '../src/utils/eventGroups';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../src/utils/eventSort';
 import { buildEventListJsonLd, buildGroupPageJsonLd, buildYearArchiveJsonLd } from '../src/utils/structuredData';
-import { htmlToParagraphs, htmlToText, truncateText } from '../src/utils/htmlText';
+import { htmlToText, truncateText } from '../src/utils/htmlText';
+import { sanitizeDescriptionHtml } from '../src/utils/descriptionHtml';
 import { buildGroupExternalLinks, buildGroupPageUrl } from '../src/utils/groupPage';
 import { SITE_URL } from '../src/utils/site';
 import type { ApiEvent, ApiEventsSummary, ApiGroup, ApiGroupDetail, EventWithGroup } from '../src/types/events';
@@ -225,7 +226,6 @@ async function buildGroupPageData(key: string): Promise<BotPageData> {
   const upcomingEvents = limitEvents(events.filter(isFutureEvent).sort(sortByStartedAtAsc));
   const pastEvents = limitEvents(events.filter(isPastEvent).sort(sortByStartedAtDesc));
 
-  const paragraphs = group.description ? htmlToParagraphs(group.description) : [];
   const links = buildGroupExternalLinks(group)
     .map((link) => `<li><a href="${escapeHtml(link.url)}" rel="nofollow">${escapeHtml(link.label)}</a></li>`)
     .join('');
@@ -233,7 +233,7 @@ async function buildGroupPageData(key: string): Promise<BotPageData> {
   const bodyHtml = [
     `<h1>${escapeHtml(group.title)}</h1>`,
     group.sub_title ? `<p>${escapeHtml(group.sub_title)}</p>` : '',
-    ...paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, '<br>')}</p>`),
+    group.description ? sanitizeDescriptionHtml(group.description) : '',
     links ? `<ul>${links}</ul>` : '',
     '<h2>今後の開催予定</h2>',
     buildEventListHtml(upcomingEvents),
