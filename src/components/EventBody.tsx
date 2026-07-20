@@ -600,7 +600,6 @@ export function EventBody(data: EventBodyProps) {
                         h={'54px'}
                         minW={'auto'}
                         p={'0'}
-                        zIndex={1}
                         onClick={handleGroupLogoClick}
                         onTouchStart={handleGroupLogoTouch}
                         onTouchMove={handleGroupLogoTouch}
