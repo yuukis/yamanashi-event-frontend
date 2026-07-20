@@ -456,9 +456,9 @@ function Group() {
                                     href={link.url}
                                     target={'_blank'}
                                     rel={'noopener'}
-                                    size={link.prominent ? {base: 'sm', md: 'md'} : 'xs'}
+                                    size={{base: 'sm', md: 'md'}}
                                     variant={link.variant}
-                                    colorScheme={link.prominent ? 'primary' : undefined}
+                                    colorScheme={'primary'}
                                     fontWeight={link.fontWeight}
                                     rightIcon={<ExternalLinkIcon />}
                                     >
