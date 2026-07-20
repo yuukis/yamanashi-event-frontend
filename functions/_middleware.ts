@@ -285,6 +285,10 @@ function withFields(base: string, fields: string): string {
 function withGroupEventsParams(base: string, fields: string): string {
   const u = new URL(withFields(base, fields));
   u.searchParams.set('per_page', String(GROUP_EVENTS_FETCH_PER_PAGE));
+  // featuredKeywords はevents配列の先頭N件(直近のイベント)に依存する。
+  // APIのデフォルト順序はdescだが、フロントエンド(Group.tsx)と同じく
+  // 明示しておく。デフォルトの変更やCDN等の挙動差に左右されないため。
+  u.searchParams.set('order', 'desc');
   return u.toString();
 }
 
