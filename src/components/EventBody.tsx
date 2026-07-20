@@ -600,6 +600,9 @@ export function EventBody(data: EventBodyProps) {
                         h={'54px'}
                         minW={'auto'}
                         p={'0'}
+                        opacity={'1'}
+                        transition={'opacity 120ms ease-out'}
+                        _hover={{ opacity: '0.7' }}
                         onClick={handleGroupLogoClick}
                         onTouchStart={handleGroupLogoTouch}
                         onTouchMove={handleGroupLogoTouch}
