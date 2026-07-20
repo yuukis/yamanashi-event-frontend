@@ -17,6 +17,7 @@ export type ApiEvent = {
   group_url?: string | null;
   keywords?: string[] | null;
   image_url?: string | null;
+  source?: 'connpass' | 'icalendar' | 'archive' | null;
 };
 
 export type ApiGroup = {

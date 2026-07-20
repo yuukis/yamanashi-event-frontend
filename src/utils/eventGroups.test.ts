@@ -4,6 +4,7 @@ import {
   isVisibleEvent,
   isPastEvent,
   isFutureEvent,
+  isArchiveEvent,
   countGroups,
   filterEventsByGroup,
 } from './eventGroups';
@@ -65,6 +66,21 @@ describe('isVisibleEvent / isPastEvent / isFutureEvent', () => {
     expect(isVisibleEvent(event)).toBe(true);
     expect(isPastEvent(event)).toBe(false);
     expect(isFutureEvent(event)).toBe(true);
+  });
+});
+
+describe('isArchiveEvent', () => {
+  it('treats an event with source "archive" as archived', () => {
+    expect(isArchiveEvent(makeEvent({ source: 'archive' }))).toBe(true);
+  });
+
+  it('treats connpass/icalendar-sourced events as not archived', () => {
+    expect(isArchiveEvent(makeEvent({ source: 'connpass' }))).toBe(false);
+    expect(isArchiveEvent(makeEvent({ source: 'icalendar' }))).toBe(false);
+  });
+
+  it('treats an event without a source as not archived (backward compatibility)', () => {
+    expect(isArchiveEvent(makeEvent())).toBe(false);
   });
 });
 
