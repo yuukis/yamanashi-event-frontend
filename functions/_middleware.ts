@@ -1,8 +1,10 @@
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, isVisibleEvent } from '../src/utils/eventGroups';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../src/utils/eventSort';
-import { buildEventListJsonLd, buildYearArchiveJsonLd } from '../src/utils/structuredData';
+import { buildEventListJsonLd, buildGroupPageJsonLd, buildYearArchiveJsonLd } from '../src/utils/structuredData';
+import { htmlToParagraphs, htmlToText, truncateText } from '../src/utils/htmlText';
+import { buildGroupExternalLinks, buildGroupPageUrl } from '../src/utils/groupPage';
 import { SITE_URL } from '../src/utils/site';
-import type { ApiEvent, ApiEventsSummary, ApiGroup, EventWithGroup } from '../src/types/events';
+import type { ApiEvent, ApiEventsSummary, ApiGroup, ApiGroupDetail, EventWithGroup } from '../src/types/events';
 
 const EVENTS_API_URL = 'https://api.event.yamanashi.dev/events';
 const GROUPS_API_URL = 'https://api.event.yamanashi.dev/groups';
@@ -30,6 +32,21 @@ const EVENTS_FIELDS = [
 
 const GROUPS_FIELDS = ['key', 'title', 'image_url', 'archive_source', 'archive_url'].join(',');
 
+const GROUP_DETAIL_FIELDS = [
+  'key',
+  'title',
+  'sub_title',
+  'url',
+  'description',
+  'image_url',
+  'website_url',
+  'x_username',
+  'facebook_url',
+  'member_users_count',
+  'archive_source',
+  'archive_url',
+].join(',');
+
 const BOT_UA_PATTERN =
   /bot|spider|crawl|slurp|facebookexternalhit|whatsapp|pinterest|embedly|quora link preview|outbrain|w3c_validator|google-inspectiontool|telegram/i;
 
@@ -39,7 +56,8 @@ const MAX_LIST_ITEMS = 300;
 type ResolvedPage =
   | { kind: 'root' }
   | { kind: 'events-archive' }
-  | { kind: 'events-year'; year: number };
+  | { kind: 'events-year'; year: number }
+  | { kind: 'group'; key: string };
 
 type BotPageData = {
   title: string;
@@ -98,6 +116,14 @@ function resolvePage(pathname: string): ResolvedPage | null {
   if (yearMatch) {
     return { kind: 'events-year', year: Number(yearMatch[1]) };
   }
+  const groupMatch = pathname.match(/^\/groups\/([^/]+)\/?$/);
+  if (groupMatch) {
+    try {
+      return { kind: 'group', key: decodeURIComponent(groupMatch[1]) };
+    } catch {
+      return null;
+    }
+  }
   return null;
 }
 
@@ -109,6 +135,8 @@ async function buildBotPageData(page: ResolvedPage): Promise<BotPageData> {
       return buildEventsArchivePageData();
     case 'events-year':
       return buildYearPageData(page.year);
+    case 'group':
+      return buildGroupPageData(page.key);
   }
 }
 
@@ -187,6 +215,47 @@ async function buildYearPageData(year: number): Promise<BotPageData> {
   };
 }
 
+async function buildGroupPageData(key: string): Promise<BotPageData> {
+  const encodedKey = encodeURIComponent(key);
+  const [group, rawEvents] = await Promise.all([
+    fetchJson<ApiGroupDetail>(withFields(`${GROUPS_API_URL}/${encodedKey}`, GROUP_DETAIL_FIELDS)),
+    fetchJson<ApiEvent[]>(withFields(`${GROUPS_API_URL}/${encodedKey}/events`, EVENTS_FIELDS)),
+  ]);
+  const events = enrichEventsWithGroups(rawEvents, [group]).filter(isVisibleEvent);
+  const upcomingEvents = limitEvents(events.filter(isFutureEvent).sort(sortByStartedAtAsc));
+  const pastEvents = limitEvents(events.filter(isPastEvent).sort(sortByStartedAtDesc));
+
+  const paragraphs = group.description ? htmlToParagraphs(group.description) : [];
+  const links = buildGroupExternalLinks(group)
+    .map((link) => `<li><a href="${escapeHtml(link.url)}" rel="nofollow">${escapeHtml(link.label)}</a></li>`)
+    .join('');
+
+  const bodyHtml = [
+    `<h1>${escapeHtml(group.title)}</h1>`,
+    group.sub_title ? `<p>${escapeHtml(group.sub_title)}</p>` : '',
+    ...paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, '<br>')}</p>`),
+    links ? `<ul>${links}</ul>` : '',
+    '<h2>今後の開催予定</h2>',
+    buildEventListHtml(upcomingEvents),
+    '<h2>過去のイベント</h2>',
+    buildEventListHtml(pastEvents),
+  ].filter(Boolean).join('');
+
+  const descriptionText = group.description ? htmlToText(group.description) : '';
+  const description = truncateText(
+    `${group.title}のイベント情報と開催履歴。${descriptionText || '山梨県内で開催されるIT勉強会・イベント情報をまとめています。'}`,
+    160,
+  );
+
+  return {
+    title: `${group.title} - 山梨のITコミュニティ | Yamanashi Developer Hub`,
+    description,
+    ogUrl: buildGroupPageUrl(group.key),
+    jsonLd: buildGroupPageJsonLd(group, [...upcomingEvents, ...pastEvents]),
+    bodyHtml,
+  };
+}
+
 function withFields(base: string, fields: string): string {
   const u = new URL(base);
   u.searchParams.set('fields', fields);
@@ -212,7 +281,12 @@ function buildEventListHtml(events: EventWithGroup[]): string {
   const items = events
     .map((event) => {
       const date = formatEventDate(event.started_at);
-      const group = event.group_name ? `<span>${escapeHtml(event.group_name)}</span>` : '';
+      const groupName = event.group_name ? escapeHtml(event.group_name) : '';
+      const group = groupName
+        ? event.group_key
+          ? `<span><a href="${escapeHtml(buildGroupPageUrl(event.group_key))}">${groupName}</a></span>`
+          : `<span>${groupName}</span>`
+        : '';
       const place = event.place ? `<span>${escapeHtml(event.place)}</span>` : '';
       return (
         `<li><a href="${escapeHtml(event.event_url)}">${escapeHtml(event.title)}</a>` +
