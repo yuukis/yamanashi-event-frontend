@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { buildEventJsonLd, buildEventListJsonLd, buildYearArchiveJsonLd } from './structuredData';
+import { buildEventJsonLd, buildEventListJsonLd, buildGroupPageJsonLd, buildYearArchiveJsonLd } from './structuredData';
 import { SITE_URL } from './site';
-import { makeEvent } from '../test/fixtures';
+import { makeEvent, makeGroupDetail } from '../test/fixtures';
 
 describe('buildEventJsonLd', () => {
   it('builds an offline Event with a Place location when address is present', () => {
@@ -104,6 +104,55 @@ describe('buildEventListJsonLd', () => {
     expect(itemListElement[0].position).toBe(1);
     expect(itemListElement[1].position).toBe(2);
     expect(itemListElement[0].item['@type']).toBe('Event');
+  });
+});
+
+describe('buildGroupPageJsonLd', () => {
+  it('builds a graph of an Organization and an event ItemList', () => {
+    const group = makeGroupDetail({
+      key: 'aibase',
+      title: 'AI BASE',
+      url: 'https://aibase.connpass.com/',
+      description: '<p>『AI BASE』は生成AIに興味がある山梨のコミュニティです。</p>',
+      image_url: 'https://example.com/logo.png',
+      website_url: 'https://example.com/',
+      x_username: 'aibase',
+    });
+    const events = [makeEvent({ uid: 'a' }), makeEvent({ uid: 'b' })];
+
+    const jsonLd = buildGroupPageJsonLd(group, events);
+
+    expect(jsonLd['@context']).toBe('https://schema.org');
+    const [organization, itemList] = jsonLd['@graph'] as Array<Record<string, unknown>>;
+    expect(organization).toEqual({
+      '@type': 'Organization',
+      name: 'AI BASE',
+      url: 'https://aibase.connpass.com/',
+      description: '『AI BASE』は生成AIに興味がある山梨のコミュニティです。',
+      logo: 'https://example.com/logo.png',
+      sameAs: ['https://example.com/', 'https://x.com/aibase'],
+    });
+    expect(itemList).toMatchObject({
+      '@type': 'ItemList',
+      url: `${SITE_URL}/groups/aibase`,
+      numberOfItems: 2,
+    });
+    const itemListElement = itemList.itemListElement as Array<{ position: number; item: { '@type': string } }>;
+    expect(itemListElement[0].position).toBe(1);
+    expect(itemListElement[0].item['@type']).toBe('Event');
+  });
+
+  it('falls back to the community page URL and omits optional fields when data is sparse', () => {
+    const group = makeGroupDetail({ key: 'g', title: 'G', url: null });
+
+    const jsonLd = buildGroupPageJsonLd(group, []);
+
+    const [organization] = jsonLd['@graph'] as Array<Record<string, unknown>>;
+    expect(organization).toEqual({
+      '@type': 'Organization',
+      name: 'G',
+      url: `${SITE_URL}/groups/g`,
+    });
   });
 });
 

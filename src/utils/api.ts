@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiEvent, ApiGroup, ApiEventsSummary } from '../types/events';
+import type { ApiEvent, ApiGroup, ApiGroupDetail, ApiEventsSummary } from '../types/events';
 
 export const EVENTS_API_URL = 'https://api.event.yamanashi.dev/events';
 export const GROUPS_API_URL = 'https://api.event.yamanashi.dev/groups';
@@ -29,6 +29,21 @@ export const GROUPS_FIELDS = [
   'key',
   'title',
   'image_url',
+  'archive_source',
+  'archive_url',
+].join(',');
+
+export const GROUP_DETAIL_FIELDS = [
+  'key',
+  'title',
+  'sub_title',
+  'url',
+  'description',
+  'image_url',
+  'website_url',
+  'x_username',
+  'facebook_url',
+  'member_users_count',
   'archive_source',
   'archive_url',
 ].join(',');
@@ -76,6 +91,11 @@ export async function fetchEventDescription(uid: string, options?: { year?: numb
   const res = await axios.get(url, { params: { fields: 'description', uid } });
   const event = Array.isArray(res.data) ? res.data[0] : res.data;
   return (event?.description ?? '') as string;
+}
+
+export async function fetchGroup(groupKey: string): Promise<ApiGroupDetail> {
+  const res = await axios.get(`${GROUPS_API_URL}/${encodeURIComponent(groupKey)}`, { params: { fields: GROUP_DETAIL_FIELDS } });
+  return res.data as ApiGroupDetail;
 }
 
 export async function fetchGroups(): Promise<ApiGroup[]> {

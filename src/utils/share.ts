@@ -37,7 +37,14 @@ export async function shareEventViaNativeShare(
   toast: ReturnType<typeof useToast>,
   onAfterAction?: () => void,
 ): Promise<void> {
-  const ctx = toEventShareContext(event);
+  return shareViaNativeShare(toEventShareContext(event), toast, onAfterAction);
+}
+
+export async function shareViaNativeShare(
+  ctx: ShareContext,
+  toast: ReturnType<typeof useToast>,
+  onAfterAction?: () => void,
+): Promise<void> {
   try {
     await navigator.share({
       title: ctx.title,

@@ -1,4 +1,4 @@
-import type { ApiGroup, EventWithGroup } from '../types/events';
+import type { ApiGroup, ApiGroupDetail, EventWithGroup } from '../types/events';
 
 export function makeEvent(overrides: Partial<EventWithGroup> = {}): EventWithGroup {
   return {
@@ -17,6 +17,15 @@ export function makeGroup(overrides: Partial<ApiGroup> = {}): ApiGroup {
   return {
     key: 'group-1',
     title: 'Sample Group',
+    ...overrides,
+  };
+}
+
+export function makeGroupDetail(overrides: Partial<ApiGroupDetail> = {}): ApiGroupDetail {
+  return {
+    key: 'group-1',
+    title: 'Sample Group',
+    url: 'https://example.connpass.com/',
     ...overrides,
   };
 }

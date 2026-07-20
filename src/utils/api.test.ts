@@ -5,6 +5,7 @@ import {
   fetchEventsByYear,
   fetchGroupEvents,
   fetchEventDescription,
+  fetchGroup,
   fetchGroups,
   fetchEventsSummary,
   EVENTS_API_URL,
@@ -12,6 +13,7 @@ import {
   EVENTS_SUMMARY_API_URL,
   EVENTS_FIELDS,
   GROUPS_FIELDS,
+  GROUP_DETAIL_FIELDS,
 } from './api';
 
 vi.mock('axios');
@@ -232,6 +234,29 @@ describe('fetchGroups', () => {
 
     expect(axios.get).toHaveBeenCalledWith(GROUPS_API_URL, { params: { fields: GROUPS_FIELDS } });
     expect(result).toEqual([{ key: 'g1' }]);
+  });
+});
+
+describe('fetchGroup', () => {
+  it('requests the single group endpoint with detail fields and returns the parsed data', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: { key: 'g1', title: 'Group 1' } });
+
+    const result = await fetchGroup('g1');
+
+    expect(axios.get).toHaveBeenCalledWith(`${GROUPS_API_URL}/g1`, { params: { fields: GROUP_DETAIL_FIELDS } });
+    expect(result).toEqual({ key: 'g1', title: 'Group 1' });
+  });
+
+  it('URL-encodes the group key in the request path', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: {} });
+
+    await fetchGroup('a b/c');
+
+    expect(axios.get).toHaveBeenCalledWith(`${GROUPS_API_URL}/a%20b%2Fc`, { params: { fields: GROUP_DETAIL_FIELDS } });
+  });
+
+  it('requests the description field for the community profile', () => {
+    expect(GROUP_DETAIL_FIELDS.split(',')).toContain('description');
   });
 });
 
