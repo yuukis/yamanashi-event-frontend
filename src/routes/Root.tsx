@@ -224,9 +224,9 @@ function Root({startYear}: {startYear: number}) {
             bgSize={{base: '200%', md: '960px'}}
             >
           <Container maxW={'860px'}
-                    p={{base: '8', md: '4'}}
+                    p={{base: '10', md: '4'}}
                     w={'100%'}
-                    h={{md: '320px'}}
+                    h={{md: '380px'}}
                     display={'flex'}
                     alignItems={'center'}
                     position={'relative'}
