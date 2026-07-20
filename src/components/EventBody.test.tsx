@@ -239,12 +239,23 @@ describe('EventBody', () => {
 
       const logo = container.querySelector('img[src="https://example.com/logo.png"]') as HTMLElement;
       expect(logo).not.toBeNull();
+      expect(logo).toHaveAttribute('alt', 'AI BASE');
 
       fireEvent.touchStart(logo, { touches: [{ clientX: 0, clientY: 0 }] });
       fireEvent.touchEnd(logo);
 
       expect(windowOpenSpy).toHaveBeenCalledWith('https://example.com/event/1', '_self');
       windowOpenSpy.mockRestore();
+    });
+
+    it('marks the community logo as decorative when it sits inside the labelled desktop button', () => {
+      mockMatchMedia(true);
+      const { container } = renderWithChakra(
+        <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE', group_image_url: 'https://example.com/logo.png' })} />,
+      );
+
+      const logo = container.querySelector('img[src="https://example.com/logo.png"]');
+      expect(logo).toHaveAttribute('alt', '');
     });
 
     it('includes a "コミュニティページを見る" item in the desktop options menu', () => {

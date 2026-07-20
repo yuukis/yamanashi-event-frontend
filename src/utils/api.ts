@@ -97,7 +97,11 @@ export type GroupEventsPage = {
 };
 
 function parseIntHeader(value: unknown): number | null {
-  return value === undefined ? null : Number(value);
+  if (value === undefined || value === null) {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 export async function fetchGroupEvents(groupKey: string, options: GroupEventsPageOptions = {}): Promise<GroupEventsPage> {

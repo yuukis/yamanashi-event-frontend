@@ -608,10 +608,11 @@ export function EventBody(data: EventBodyProps) {
                         onTouchMove={handleGroupLogoTouch}
                         onTouchEnd={handleGroupLogoTouch}
                         >
-                  <Image src={ group_image_url } w={'100%'} h={'100%'} fit={'contain'} />
+                  <Image src={ group_image_url } alt={''} w={'100%'} h={'100%'} fit={'contain'} />
                 </Button>
               ) : (
                 <Image src={ group_image_url }
+                      alt={group_name ?? ''}
                       w={'80px'}
                       h={'54px'}
                       fit={'contain'}

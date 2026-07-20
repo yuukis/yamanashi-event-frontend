@@ -223,6 +223,18 @@ describe('fetchGroupEvents', () => {
     expect(result.totalCount).toBeNull();
     expect(result.totalPages).toBeNull();
   });
+
+  it('returns null (not NaN) for a non-numeric pagination header, so callers\' ?? fallback still applies', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      data: [],
+      headers: { 'x-page': 'not-a-number' },
+    });
+
+    const result = await fetchGroupEvents('techmujin');
+
+    expect(result.page).toBeNull();
+    expect(result.page).not.toBeNaN();
+  });
 });
 
 describe('fetchEventDescription', () => {
