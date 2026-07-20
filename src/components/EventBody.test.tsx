@@ -186,6 +186,90 @@ describe('EventBody', () => {
     expect(screen.getByText('オーナー太郎')).toBeInTheDocument();
   });
 
+  describe('community page links', () => {
+    it('navigates to the community page when the group name button is clicked on desktop', () => {
+      mockMatchMedia(true);
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      renderWithChakra(
+        <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE' })} />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'AI BASE' }));
+
+      expect(windowOpenSpy).toHaveBeenCalledWith('/groups/aibase', '_self');
+      windowOpenSpy.mockRestore();
+    });
+
+    it('shows the group name as plain text (not a button) when the event has no group_key', () => {
+      mockMatchMedia(true);
+      renderWithChakra(
+        <EventBody event={makeEvent({ group_key: null, group_name: 'AI BASE' })} />,
+      );
+
+      expect(screen.queryByRole('button', { name: 'AI BASE' })).not.toBeInTheDocument();
+      expect(screen.getByText('AI BASE')).toBeInTheDocument();
+    });
+
+    it('navigates to the community page when the community logo is clicked on desktop', () => {
+      mockMatchMedia(true);
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      renderWithChakra(
+        <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE', group_image_url: 'https://example.com/logo.png' })} />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'AI BASEのページを見る' }));
+
+      expect(windowOpenSpy).toHaveBeenCalledWith('/groups/aibase', '_self');
+      windowOpenSpy.mockRestore();
+    });
+
+    it('includes a "コミュニティページを見る" item in the desktop options menu', () => {
+      mockMatchMedia(true);
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      renderWithChakra(
+        <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE' })} />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+      fireEvent.click(screen.getByText('コミュニティページを見る'));
+
+      expect(windowOpenSpy).toHaveBeenCalledWith('/groups/aibase', '_self');
+      windowOpenSpy.mockRestore();
+    });
+
+    it('omits the community page menu item when the event has no group_key', () => {
+      mockMatchMedia(true);
+      renderWithChakra(<EventBody event={makeEvent({ group_key: null })} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+
+      expect(screen.queryByText('コミュニティページを見る')).not.toBeInTheDocument();
+    });
+
+    it('includes a "コミュニティページを見る" button in the mobile options drawer', () => {
+      mockMatchMedia(false);
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      renderWithChakra(
+        <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE' })} />,
+      );
+
+      fireEvent.click(screen.getByLabelText('More options'));
+      fireEvent.click(screen.getByRole('button', { name: 'コミュニティページを見る' }));
+
+      expect(windowOpenSpy).toHaveBeenCalledWith('/groups/aibase', '_self');
+      windowOpenSpy.mockRestore();
+    });
+
+    it('omits the community page drawer button when the event has no group_key', () => {
+      mockMatchMedia(false);
+      renderWithChakra(<EventBody event={makeEvent({ group_key: null })} />);
+
+      fireEvent.click(screen.getByLabelText('More options'));
+
+      expect(screen.queryByRole('button', { name: 'コミュニティページを見る' })).not.toBeInTheDocument();
+    });
+  });
+
   it('shows an archive badge when the event has an archive source', () => {
     mockMatchMedia(true);
     renderWithChakra(

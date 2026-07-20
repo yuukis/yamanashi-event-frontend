@@ -2,6 +2,7 @@ import { LinkBox, LinkOverlay, Box, Flex, Tooltip, Image, Center, Text, Skeleton
 import { People } from '@chakra-icons/bootstrap';
 import type { ApiHeatmapBucket, ApiYearSummary } from '../types/events';
 import { formatMonthCountTooltip, getBarHeightPercent } from '../utils/eventsSummary';
+import { buildGroupPagePath } from '../utils/groupPage';
 
 const AVATAR_SIZE = { base: '24px', md: '30px', lg: '36px' };
 const CHART_HEIGHT = { base: '32px', md: '32px', lg: '40px' };
@@ -63,15 +64,19 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
         {summary.groups.length > 0 ? (
           summary.groups.map((group) => (
             <Tooltip key={group.key} label={group.name ?? group.key} hasArrow fontSize={'xs'}>
-              <Center position={'relative'}
+              <Center as={'a'}
+                      href={buildGroupPagePath(group.key)}
+                      position={'relative'}
+                      zIndex={1}
                       boxSize={AVATAR_SIZE}
                       borderRadius={'full'}
                       bg={'gray.100'}
                       overflow={'hidden'}
                       flexShrink={0}
                       tabIndex={0}
-                      aria-label={group.name ?? group.key}
+                      aria-label={`${group.name ?? group.key}のページを見る`}
                       data-avatar={group.key}
+                      _hover={{ opacity: 0.8 }}
                       >
                 {group.image_url ? (
                   <Image src={group.image_url} boxSize={'100%'} fit={'cover'} alt={group.name ?? group.key} />
