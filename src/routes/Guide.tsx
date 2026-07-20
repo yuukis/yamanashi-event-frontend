@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SiteHeader, SiteFooter, useFixedHeaderBoundary } from '../components/Site';
+import { PageBreadcrumb } from '../components/PageBreadcrumb';
 import { WidgetPreviewCard } from '../components/WidgetPreviewCard';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
@@ -144,6 +145,7 @@ function Guide() {
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <SiteHeader />
       <Box bg={'#fffafa'}>
+        <PageBreadcrumb items={[{ label: 'はじめての方へ', href: '/guide' }]} />
         <Container maxW={'980px'}
                    p={{base: '8', md: '10'}}
                    display={'flex'}

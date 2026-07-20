@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from "react-router-dom";
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
+import { PageBreadcrumb } from '../components/PageBreadcrumb';
 import { YearSwitcher, YEAR_HEADING_ANCHOR_ID } from '../components/YearSwitcher';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { ChipBar } from '../components/ChipBar';
@@ -136,6 +137,11 @@ function List({ startYear} : {startYear: number}) {
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-events'} data={structuredData} />
       <SiteHeader />
+      <PageBreadcrumb items={[
+                        { label: 'イベントアーカイブ', href: '/events' },
+                        { label: `${year}年`, href: `/events/${year}` },
+                      ]}
+                      />
       <ActiveFilterBadge selectedKeyword={selectedKeyword}
                          selectedGroupName={selectedGroupName}
                          selectedGroupKey={selectedGroup}

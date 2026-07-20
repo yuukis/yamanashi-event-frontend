@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildEventJsonLd, buildEventListJsonLd, buildGroupPageJsonLd, buildGroupsIndexJsonLd, buildYearArchiveJsonLd } from './structuredData';
+import { buildEventJsonLd, buildEventListJsonLd, buildGroupPageJsonLd, buildGroupsIndexJsonLd, buildYearArchiveJsonLd, buildBreadcrumbJsonLd } from './structuredData';
 import { SITE_URL } from './site';
 import { makeEvent, makeGroup, makeGroupDetail } from '../test/fixtures';
 
@@ -182,6 +182,26 @@ describe('buildYearArchiveJsonLd', () => {
     expect(jsonLd.itemListElement).toEqual([
       { '@type': 'ListItem', position: 1, url: `${SITE_URL}/events/2024`, name: '2024年 開催イベント' },
       { '@type': 'ListItem', position: 2, url: `${SITE_URL}/events/2025`, name: '2025年 開催イベント' },
+    ]);
+  });
+});
+
+describe('buildBreadcrumbJsonLd', () => {
+  it('lists each item as a positioned ListItem with its name and url', () => {
+    const jsonLd = buildBreadcrumbJsonLd([
+      { name: 'トップ', url: `${SITE_URL}/` },
+      { name: 'コミュニティ一覧', url: `${SITE_URL}/groups` },
+      { name: 'Kofu.rb', url: `${SITE_URL}/groups/kofurb` },
+    ]);
+
+    expect(jsonLd).toMatchObject({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+    });
+    expect(jsonLd.itemListElement).toEqual([
+      { '@type': 'ListItem', position: 1, name: 'トップ', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'コミュニティ一覧', item: `${SITE_URL}/groups` },
+      { '@type': 'ListItem', position: 3, name: 'Kofu.rb', item: `${SITE_URL}/groups/kofurb` },
     ]);
   });
 });

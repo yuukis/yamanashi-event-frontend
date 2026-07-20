@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from "react-router-dom";
 import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
+import { PageBreadcrumb } from '../components/PageBreadcrumb';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
 import { ShareContextIconRow } from '../components/ShareButtons';
@@ -32,7 +33,7 @@ import { enrichEventsWithGroups, isVisibleEvent, isFutureEvent, isPastEvent } fr
 import { countKeywords } from '../utils/eventKeywords';
 import { fetchGroup, fetchGroupEvents } from '../utils/api';
 import type { GroupEventsPage } from '../utils/api';
-import { buildGroupPageUrl, buildGroupExternalLinks, buildGroupFeedUrl, buildGroupFeedTitle } from '../utils/groupPage';
+import { buildGroupPageUrl, buildGroupPagePath, buildGroupExternalLinks, buildGroupFeedUrl, buildGroupFeedTitle } from '../utils/groupPage';
 import { buildGroupPageJsonLd } from '../utils/structuredData';
 import { buildListWidgetPath } from '../utils/widgetPaths';
 import { sanitizeDescriptionHtml } from '../utils/descriptionHtml';
@@ -336,6 +337,15 @@ function Group() {
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-group'} data={structuredData} />
       <SiteHeader />
+      <PageBreadcrumb items={
+                        group
+                          ? [
+                              { label: 'コミュニティ一覧', href: '/groups' },
+                              { label: group.title, href: buildGroupPagePath(group.key) },
+                            ]
+                          : [{ label: 'コミュニティ一覧', href: '/groups' }]
+                      }
+                      />
       <Container maxW={'980px'} w={'100%'}
                  mt={'4'}
                  p={{base: '0', md: '4'}}
