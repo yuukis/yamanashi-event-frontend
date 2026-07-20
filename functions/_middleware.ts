@@ -1,7 +1,8 @@
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, isVisibleEvent } from '../src/utils/eventGroups';
+import { collectActiveGroupKeys, splitGroupsByActivity } from '../src/utils/groupActivity';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../src/utils/eventSort';
 import { countKeywords } from '../src/utils/eventKeywords';
-import { buildEventListJsonLd, buildGroupPageJsonLd, buildYearArchiveJsonLd } from '../src/utils/structuredData';
+import { buildEventListJsonLd, buildGroupPageJsonLd, buildGroupsIndexJsonLd, buildYearArchiveJsonLd } from '../src/utils/structuredData';
 import { htmlToText, truncateText } from '../src/utils/htmlText';
 import { sanitizeDescriptionHtml } from '../src/utils/descriptionHtml';
 import { buildGroupExternalLinks, buildGroupPageUrl, buildGroupFeedUrl, buildGroupFeedTitle } from '../src/utils/groupPage';
@@ -33,6 +34,7 @@ const EVENTS_FIELDS = [
 ].join(',');
 
 const GROUPS_FIELDS = ['key', 'title', 'image_url', 'archive_source', 'archive_url'].join(',');
+const GROUPS_SUMMARY_FIELDS = ['key', 'title', 'sub_title', 'image_url', 'member_users_count', 'archive_source', 'archive_url'].join(',');
 
 const GROUP_DETAIL_FIELDS = [
   'key',
@@ -68,6 +70,7 @@ type ResolvedPage =
   | { kind: 'root' }
   | { kind: 'events-archive' }
   | { kind: 'events-year'; year: number }
+  | { kind: 'groups-index' }
   | { kind: 'group'; key: string };
 
 type BotPageData = {
@@ -128,6 +131,9 @@ function resolvePage(pathname: string): ResolvedPage | null {
   if (yearMatch) {
     return { kind: 'events-year', year: Number(yearMatch[1]) };
   }
+  if (pathname === '/groups' || pathname === '/groups/') {
+    return { kind: 'groups-index' };
+  }
   const groupMatch = pathname.match(/^\/groups\/([^/]+)\/?$/);
   if (groupMatch) {
     try {
@@ -147,6 +153,8 @@ async function buildBotPageData(page: ResolvedPage): Promise<BotPageData> {
       return buildEventsArchivePageData();
     case 'events-year':
       return buildYearPageData(page.year);
+    case 'groups-index':
+      return buildGroupsIndexPageData();
     case 'group':
       return buildGroupPageData(page.key);
   }
@@ -225,6 +233,45 @@ async function buildYearPageData(year: number): Promise<BotPageData> {
     jsonLd: buildEventListJsonLd(renderedEvents, `${SITE_URL}/events/${year}`),
     bodyHtml,
   };
+}
+
+async function buildGroupsIndexPageData(): Promise<BotPageData> {
+  const [groups, rawEvents] = await Promise.all([
+    fetchJson<ApiGroup[]>(withFields(GROUPS_API_URL, GROUPS_SUMMARY_FIELDS)),
+    fetchJson<Pick<ApiEvent, 'group_key'>[]>(withFields(EVENTS_API_URL, 'group_key')),
+  ]);
+  const activeGroupKeys = collectActiveGroupKeys(rawEvents);
+  const { activeGroups, inactiveGroups } = splitGroupsByActivity(groups, activeGroupKeys);
+
+  const bodyHtml = [
+    '<h1>コミュニティ一覧</h1>',
+    '<p>山梨県内で活動するITコミュニティを紹介しています。気になるコミュニティを見つけたら、ページから過去の活動やイベント情報を確認できます。</p>',
+    '<h2>イベント情報のあるコミュニティ</h2>',
+    buildGroupListHtml(activeGroups),
+    '<h2>その他のコミュニティ</h2>',
+    buildGroupListHtml(inactiveGroups),
+  ].join('');
+
+  return {
+    title: 'コミュニティ一覧 - Yamanashi Developer Hub',
+    description: `山梨県内で活動するITコミュニティ${groups.length}件を紹介しています。気になるコミュニティのページから過去の活動やイベント情報を確認できます。`,
+    ogUrl: `${SITE_URL}/groups`,
+    jsonLd: buildGroupsIndexJsonLd([...activeGroups, ...inactiveGroups]),
+    bodyHtml,
+  };
+}
+
+function buildGroupListHtml(groups: ApiGroup[]): string {
+  if (groups.length === 0) {
+    return '<p>該当するコミュニティはありません。</p>';
+  }
+  const items = groups
+    .map((group) => {
+      const subTitle = group.sub_title ? `<p>${escapeHtml(group.sub_title)}</p>` : '';
+      return `<li><a href="${escapeHtml(buildGroupPageUrl(group.key))}">${escapeHtml(group.title)}</a>${subTitle}</li>`;
+    })
+    .join('');
+  return `<ul>${items}</ul>`;
 }
 
 async function buildGroupPageData(key: string): Promise<BotPageData> {

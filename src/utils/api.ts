@@ -34,6 +34,16 @@ export const GROUPS_FIELDS = [
   'archive_url',
 ].join(',');
 
+export const GROUPS_SUMMARY_FIELDS = [
+  'key',
+  'title',
+  'sub_title',
+  'image_url',
+  'member_users_count',
+  'archive_source',
+  'archive_url',
+].join(',');
+
 export const GROUP_DETAIL_FIELDS = [
   'key',
   'title',
@@ -141,8 +151,8 @@ export async function fetchGroup(groupKey: string): Promise<ApiGroupDetail> {
   return res.data as ApiGroupDetail;
 }
 
-export async function fetchGroups(): Promise<ApiGroup[]> {
-  const res = await axios.get(GROUPS_API_URL, { params: { fields: GROUPS_FIELDS } });
+export async function fetchGroups(fields: string = GROUPS_FIELDS): Promise<ApiGroup[]> {
+  const res = await axios.get(GROUPS_API_URL, { params: { fields } });
   return res.data as ApiGroup[];
 }
 

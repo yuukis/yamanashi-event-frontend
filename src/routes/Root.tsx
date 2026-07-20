@@ -27,6 +27,7 @@ import {
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
 import { CalendarIcon, ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
+import { People } from '@chakra-icons/bootstrap';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -307,6 +308,18 @@ function Root({startYear}: {startYear: number}) {
                           onSelect={handleGroupSelect}
                           isLoading={data.isLoading}
                           />
+          <Box display={'flex'} justifyContent={'flex-start'} px={{base: '4', md: '0'}} mt={'-2'}>
+            <Button as={'a'}
+                    href={'/groups'}
+                    variant={'link'}
+                    size={'sm'}
+                    fontWeight={'normal'}
+                    color={'gray.600'}
+                    leftIcon={<People />}
+                    >
+              コミュニティ一覧からイベントを探す
+            </Button>
+          </Box>
           {/* sticky 化した見出しは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
           <Stack id={FUTURE_EVENTS_ANCHOR_ID}
