@@ -528,7 +528,7 @@ function Group() {
 
             <Box px={{base: '4', md: '0'}} mt={'4'}>
               <Heading size={{base: 'sm', md: 'md'}} color={'gray.600'} mb={'4'}>
-                コミュニティ運営者の方へ
+                ブログパーツ
               </Heading>
               <WidgetPreviewCard title={'イベント一覧を埋め込む'}
                                  description={`${group.title} のイベント一覧をブログやWebサイトに埋め込めます。プレビューを確認して、下のスニペットをコピーしてお使いください。`}
