@@ -3,7 +3,7 @@ import { sortByStartedAtAsc, sortByStartedAtDesc } from '../src/utils/eventSort'
 import { buildEventListJsonLd, buildGroupPageJsonLd, buildYearArchiveJsonLd } from '../src/utils/structuredData';
 import { htmlToText, truncateText } from '../src/utils/htmlText';
 import { sanitizeDescriptionHtml } from '../src/utils/descriptionHtml';
-import { buildGroupExternalLinks, buildGroupPageUrl } from '../src/utils/groupPage';
+import { buildGroupExternalLinks, buildGroupPageUrl, buildGroupFeedUrl, buildGroupFeedTitle } from '../src/utils/groupPage';
 import { SITE_URL } from '../src/utils/site';
 import type { ApiEvent, ApiEventsSummary, ApiGroup, ApiGroupDetail, EventWithGroup } from '../src/types/events';
 
@@ -67,6 +67,7 @@ type BotPageData = {
   ogImage?: string;
   jsonLd: unknown;
   bodyHtml: string;
+  headExtraHtml?: string;
 };
 
 export const onRequest: PagesFunction = async (context) => {
@@ -253,6 +254,10 @@ async function buildGroupPageData(key: string): Promise<BotPageData> {
     ogUrl: buildGroupPageUrl(group.key),
     jsonLd: buildGroupPageJsonLd(group, [...upcomingEvents, ...pastEvents]),
     bodyHtml,
+    headExtraHtml:
+      `<link rel="alternate" type="application/rss+xml" ` +
+      `title="${escapeHtml(buildGroupFeedTitle(group.title))}" ` +
+      `href="${escapeHtml(buildGroupFeedUrl(group.key))}">`,
   };
 }
 
@@ -352,7 +357,7 @@ function injectBotContent(response: Response, data: BotPageData): Response {
     .on('meta[property="og:title"]', new AttrContentHandler('content', data.title))
     .on('meta[property="og:description"]', new AttrContentHandler('content', data.description))
     .on('meta[property="og:url"]', new AttrContentHandler('content', data.ogUrl))
-    .on('head', new AppendHtmlHandler(jsonLdScript))
+    .on('head', new AppendHtmlHandler(jsonLdScript + (data.headExtraHtml ?? '')))
     .on('#root', new SetInnerHtmlHandler(data.bodyHtml));
 
   if (data.ogImage) {

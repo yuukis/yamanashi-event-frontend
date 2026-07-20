@@ -1,4 +1,4 @@
-import { SITE_URL } from './site';
+import { SITE_URL, FEED_ORIGIN } from './site';
 import type { ApiGroupDetail } from '../types/events';
 
 export function buildGroupPagePath(groupKey: string): string {
@@ -7,6 +7,14 @@ export function buildGroupPagePath(groupKey: string): string {
 
 export function buildGroupPageUrl(groupKey: string): string {
   return `${SITE_URL}${buildGroupPagePath(groupKey)}`;
+}
+
+export function buildGroupFeedUrl(groupKey: string): string {
+  return `${FEED_ORIGIN}/${encodeURIComponent(groupKey)}/feed.xml`;
+}
+
+export function buildGroupFeedTitle(groupTitle: string): string {
+  return `${groupTitle} - 新着・更新イベント`;
 }
 
 export function buildXProfileUrl(username?: string | null): string | null {

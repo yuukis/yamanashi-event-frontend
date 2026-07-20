@@ -75,6 +75,11 @@ describe('Group', () => {
     expect(screen.getByTestId('group-stat-since')).toHaveTextContent('活動開始2025年');
     expect(screen.getByTestId('group-stat-members')).toHaveTextContent('メンバー44人');
     expect(screen.getByRole('link', { name: /イベントページ/ })).toHaveAttribute('href', 'https://aibase.connpass.com/');
+    expect(screen.getByRole('link', { name: /新着イベントをRSSで購読/ }))
+      .toHaveAttribute('href', 'https://feed.event.yamanashi.dev/aibase/feed.xml');
+    const feedLink = document.head.querySelector('link[rel="alternate"][type="application/rss+xml"]');
+    expect(feedLink).toHaveAttribute('href', 'https://feed.event.yamanashi.dev/aibase/feed.xml');
+    expect(feedLink).toHaveAttribute('title', 'AI BASE - 新着・更新イベント');
     expect(screen.getByRole('heading', { name: '今後の開催予定' })).toBeInTheDocument();
     expect(screen.getByText('AI BASE #10')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '過去のイベント' })).toBeInTheDocument();

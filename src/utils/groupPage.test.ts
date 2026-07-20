@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildGroupPagePath, buildGroupPageUrl, buildXProfileUrl, buildGroupExternalLinks } from './groupPage';
+import { buildGroupPagePath, buildGroupPageUrl, buildGroupFeedUrl, buildGroupFeedTitle, buildXProfileUrl, buildGroupExternalLinks } from './groupPage';
 import { SITE_URL } from './site';
 import { makeGroupDetail } from '../test/fixtures';
 
@@ -11,6 +11,20 @@ describe('buildGroupPagePath / buildGroupPageUrl', () => {
 
   it('URL-encodes unsafe characters in the group key', () => {
     expect(buildGroupPagePath('a b/c')).toBe('/groups/a%20b%2Fc');
+  });
+});
+
+describe('buildGroupFeedUrl / buildGroupFeedTitle', () => {
+  it('builds the community feed URL from the group key', () => {
+    expect(buildGroupFeedUrl('aibase')).toBe('https://feed.event.yamanashi.dev/aibase/feed.xml');
+  });
+
+  it('URL-encodes unsafe characters in the group key', () => {
+    expect(buildGroupFeedUrl('a b')).toBe('https://feed.event.yamanashi.dev/a%20b/feed.xml');
+  });
+
+  it('builds the feed title matching the feed channel naming', () => {
+    expect(buildGroupFeedTitle('AI BASE')).toBe('AI BASE - 新着・更新イベント');
   });
 });
 

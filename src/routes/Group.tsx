@@ -23,11 +23,12 @@ import {
   Skeleton,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import { FiRss } from 'react-icons/fi';
 import { People } from '@chakra-icons/bootstrap';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, isFutureEvent, isPastEvent } from '../utils/eventGroups';
 import { fetchGroup, fetchGroupEvents } from '../utils/api';
-import { buildGroupPageUrl, buildGroupExternalLinks } from '../utils/groupPage';
+import { buildGroupPageUrl, buildGroupExternalLinks, buildGroupFeedUrl, buildGroupFeedTitle } from '../utils/groupPage';
 import { buildGroupPageJsonLd } from '../utils/structuredData';
 import { buildListWidgetPath } from '../utils/widgetPaths';
 import { sanitizeDescriptionHtml } from '../utils/descriptionHtml';
@@ -209,6 +210,22 @@ function Group() {
   }, [groupKey]);
 
   const group = data.group;
+
+  useEffect(() => {
+    if (!group) {
+      return;
+    }
+    const link = document.createElement('link');
+    link.rel = 'alternate';
+    link.type = 'application/rss+xml';
+    link.title = buildGroupFeedTitle(group.title);
+    link.href = buildGroupFeedUrl(group.key);
+    document.head.appendChild(link);
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, [group]);
+
   const upcomingEvents = data.events.filter(isFutureEvent).sort(sortByStartedAtAsc);
   const pastEvents = data.events.filter(isPastEvent).sort(sortByStartedAtDesc);
   const visiblePastEvents = isPastExpanded ? pastEvents : pastEvents.slice(0, PAST_EVENTS_INITIAL_COUNT);
@@ -345,15 +362,32 @@ function Group() {
                         ))}
                       </Wrap>
                     )}
-                    <HStack spacing={'2'}>
-                      <Text fontSize={'xs'} color={'gray.500'}>このページをシェア</Text>
-                      <ShareContextIconRow ctx={{
-                                             title: `${group.title} - 山梨のITコミュニティ | Yamanashi Developer Hub`,
-                                             url: buildGroupPageUrl(group.key),
-                                           }}
-                                           nativeShareLabel={'このページを共有'}
-                                           />
-                    </HStack>
+                    <Wrap spacing={'4'} align={'center'}>
+                      <WrapItem>
+                        <Button as={'a'}
+                                href={buildGroupFeedUrl(group.key)}
+                                target={'_blank'}
+                                rel={'noopener'}
+                                size={'xs'}
+                                variant={'outline'}
+                                fontWeight={'normal'}
+                                leftIcon={<FiRss color={'#f26522'} />}
+                                >
+                          新着イベントをRSSで購読
+                        </Button>
+                      </WrapItem>
+                      <WrapItem>
+                        <HStack spacing={'2'}>
+                          <Text fontSize={'xs'} color={'gray.500'}>このページをシェア</Text>
+                          <ShareContextIconRow ctx={{
+                                                 title: `${group.title} - 山梨のITコミュニティ | Yamanashi Developer Hub`,
+                                                 url: buildGroupPageUrl(group.key),
+                                               }}
+                                               nativeShareLabel={'このページを共有'}
+                                               />
+                        </HStack>
+                      </WrapItem>
+                    </Wrap>
                   </Stack>
                 </CardBody>
               </Card>
