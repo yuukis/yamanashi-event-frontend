@@ -21,13 +21,15 @@ import {
   Image,
   Button,
   Skeleton,
+  Tag,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { FiCode } from 'react-icons/fi';
 import { FiRss } from 'react-icons/fi';
-import { People } from '@chakra-icons/bootstrap';
+import { People, Tags } from '@chakra-icons/bootstrap';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, isFutureEvent, isPastEvent } from '../utils/eventGroups';
+import { countKeywords } from '../utils/eventKeywords';
 import { fetchGroup, fetchGroupEvents } from '../utils/api';
 import { buildGroupPageUrl, buildGroupExternalLinks, buildGroupFeedUrl, buildGroupFeedTitle } from '../utils/groupPage';
 import { buildGroupPageJsonLd } from '../utils/structuredData';
@@ -43,6 +45,7 @@ const GROUP_EVENTS_PAGE_SIZE = 20;
 // 折りたたみ時に見せる説明文の高さ(fontSize sm × lineHeight 1.8 の約5行分)
 const DESCRIPTION_COLLAPSED_MAX_H = '8em';
 const BLOG_PARTS_ANCHOR_ID = 'blog-parts';
+const FEATURED_KEYWORDS_LIMIT = 5;
 
 function GroupStat({ label, value, unit, testId }: { label: string; value: number | string; unit: string; testId: string }) {
   return (
@@ -140,6 +143,10 @@ type GroupState = {
   isLoading: boolean;
   group: ApiGroupDetail | null;
   events: EventWithGroup[];
+  // 特徴キーワードの元データ。最初に取得した1ページ目のイベントで
+  // 固定し、「もっと見る」で過去イベントを継ぎ足しても再集計しない
+  // (直近の活動傾向を示す指標として安定させる)。
+  initialEvents: EventWithGroup[];
   lastModified: string | null;
   errorMessage: string;
   isNotFound: boolean;
@@ -160,6 +167,7 @@ function initialGroupState(): GroupState {
     isLoading: true,
     group: null,
     events: [],
+    initialEvents: [],
     lastModified: null,
     errorMessage: '',
     isNotFound: false,
@@ -199,11 +207,13 @@ function Group() {
         if (cancelled) {
           return;
         }
+        const initialEvents = enrichEventsWithGroups(eventsPage.events, [group]).filter(isVisibleEvent);
         setData({
           ...initialGroupState(),
           isLoading: false,
           group,
-          events: enrichEventsWithGroups(eventsPage.events, [group]).filter(isVisibleEvent),
+          events: initialEvents,
+          initialEvents,
           lastModified: eventsPage.lastModified,
           page: eventsPage.page ?? 1,
           hasMorePastEvents: eventsPage.events.length >= GROUP_EVENTS_PAGE_SIZE,
@@ -300,6 +310,9 @@ function Group() {
     : null;
   const descriptionHtml = group?.description ? sanitizeDescriptionHtml(group.description) : '';
   const externalLinks = group ? buildGroupExternalLinks(group) : [];
+  const featuredKeywords = countKeywords(data.initialEvents)
+    .slice(0, FEATURED_KEYWORDS_LIMIT)
+    .map(([keyword]) => keyword);
 
   document.title = group
     ? `${group.title} - 山梨のITコミュニティ | Yamanashi Developer Hub`
@@ -357,7 +370,7 @@ function Group() {
               <Card variant={'outline'}>
                 <CardBody>
                   <Stack spacing={'4'}>
-                    <Stack direction={'row'} spacing={{base: '4', md: '6'}} alignItems={'center'}>
+                    <Stack direction={'row'} spacing={{base: '4', md: '6'}} alignItems={'flex-start'}>
                       <Box boxSize={{base: '72px', md: '96px'}}
                            bg={'gray.50'}
                            borderRadius={'md'}
@@ -382,6 +395,25 @@ function Group() {
                           <Text fontSize={'sm'} color={'gray.600'} mt={'1'}>
                             {group.sub_title}
                           </Text>
+                        )}
+                        {featuredKeywords.length > 0 && (
+                          <HStack data-testid={'group-featured-keywords'} alignItems={'flex-start'} color={'gray.500'} mt={'2'}>
+                            <Tags mt={'3px'} />
+                            <Wrap spacing={'1'}>
+                              {featuredKeywords.map((keyword) => (
+                                <WrapItem key={keyword}>
+                                  <Tag size={'sm'}
+                                       fontSize={'xs'}
+                                       fontWeight={'normal'}
+                                       bg={'blackAlpha.100'}
+                                       color={'gray.500'}
+                                       >
+                                    {keyword}
+                                  </Tag>
+                                </WrapItem>
+                              ))}
+                            </Wrap>
+                          </HStack>
                         )}
                       </Box>
                     </Stack>

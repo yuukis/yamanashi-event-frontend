@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { renderWithChakra, mockMatchMedia } from '../test/test-utils';
 import Group from './Group';
@@ -79,9 +79,10 @@ describe('Group', () => {
     expect(screen.getByTestId('group-stat-events')).toHaveTextContent('開催イベント2件');
     expect(screen.getByTestId('group-stat-since')).toHaveTextContent('活動開始2025年');
     expect(screen.getByTestId('group-stat-members')).toHaveTextContent('メンバー44人');
-    expect(screen.getByRole('link', { name: /イベントページ/ })).toHaveAttribute('href', 'https://aibase.connpass.com/');
-    expect(screen.getByRole('link', { name: /新着イベントをRSSで購読/ }))
+    expect(screen.getByRole('link', { name: /イベントに参加する/ })).toHaveAttribute('href', 'https://aibase.connpass.com/');
+    expect(screen.getByRole('link', { name: 'RSS' }))
       .toHaveAttribute('href', 'https://feed.event.yamanashi.dev/aibase/feed.xml');
+    expect(screen.getByRole('link', { name: 'ブログパーツ' })).toHaveAttribute('href', '#blog-parts');
     const feedLink = document.head.querySelector('link[rel="alternate"][type="application/rss+xml"]');
     expect(feedLink).toHaveAttribute('href', 'https://feed.event.yamanashi.dev/aibase/feed.xml');
     expect(feedLink).toHaveAttribute('title', 'AI BASE - 新着・更新イベント');
@@ -114,6 +115,106 @@ describe('Group', () => {
     renderGroupPage();
 
     expect(await screen.findByText('現在予定されているイベントはありません。')).toBeInTheDocument();
+  });
+
+  describe('featured keywords', () => {
+    it('shows up to 5 keywords ordered by frequency across the first page of events', async () => {
+      vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({ key: 'aibase', title: 'AI BASE' }));
+      vi.mocked(fetchGroupEvents).mockResolvedValue({
+        events: [
+          makeEvent({ uid: 'e1', group_key: 'aibase', keywords: ['AI', '初心者歓迎', 'LT会'] }),
+          makeEvent({ uid: 'e2', group_key: 'aibase', keywords: ['AI', '初心者歓迎'] }),
+          makeEvent({ uid: 'e3', group_key: 'aibase', keywords: ['AI', 'ハンズオン', 'Python', 'もくもく会'] }),
+        ],
+        lastModified: null, page: 1, perPage: 20, totalCount: 3, totalPages: 1,
+      });
+
+      renderGroupPage();
+
+      await screen.findByRole('heading', { name: 'AI BASE', level: 1 });
+      const keywordArea = within(screen.getByTestId('group-featured-keywords'));
+
+      // AI(3), 初心者歓迎(2), 残りは頻度1のため出現順で上位5件になる
+      expect(keywordArea.getByText('AI')).toBeInTheDocument();
+      expect(keywordArea.getByText('初心者歓迎')).toBeInTheDocument();
+      expect(keywordArea.getByText('LT会')).toBeInTheDocument();
+      expect(keywordArea.getByText('ハンズオン')).toBeInTheDocument();
+      expect(keywordArea.getByText('Python')).toBeInTheDocument();
+      expect(keywordArea.queryByText('もくもく会')).not.toBeInTheDocument();
+    });
+
+    it('shows nothing when the first page of events has no keywords', async () => {
+      vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({ key: 'aibase', title: 'AI BASE' }));
+      vi.mocked(fetchGroupEvents).mockResolvedValue({
+        events: [makeEvent({ uid: 'e1', group_key: 'aibase', keywords: [] })],
+        lastModified: null, page: 1, perPage: 20, totalCount: 1, totalPages: 1,
+      });
+
+      renderGroupPage();
+
+      await screen.findByRole('heading', { name: 'AI BASE', level: 1 });
+
+      expect(screen.queryByTestId('group-stat-events')).toBeInTheDocument();
+      expect(screen.queryByTestId('group-featured-keywords')).not.toBeInTheDocument();
+    });
+
+    it('keeps the keyword set fixed to the first page after loading more past events', async () => {
+      vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({ key: 'aibase', title: 'AI BASE' }));
+      vi.mocked(fetchGroupEvents).mockImplementation(async (_key, options) => {
+        if (options?.page === 2) {
+          return {
+            events: [makeEvent({ uid: 'old-1', group_key: 'aibase', open_status: 'close', keywords: ['レガシー'] })],
+            lastModified: null, page: 2, perPage: 20, totalCount: 21, totalPages: 2,
+          };
+        }
+        return {
+          events: Array.from({ length: 20 }).map((_, i) => makeEvent({
+            uid: `e${i}`,
+            group_key: 'aibase',
+            open_status: 'close',
+            keywords: ['AI'],
+          })),
+          lastModified: null, page: 1, perPage: 20, totalCount: 21, totalPages: 2,
+        };
+      });
+
+      renderGroupPage();
+      await screen.findByRole('heading', { name: 'AI BASE', level: 1 });
+      const keywordArea = within(screen.getByTestId('group-featured-keywords'));
+      expect(keywordArea.getByText('AI')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: '過去のイベントをもっと見る' }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('button', { name: '過去のイベントをもっと見る' })).not.toBeInTheDocument();
+      });
+      expect(keywordArea.queryByText('レガシー')).not.toBeInTheDocument();
+    });
+  });
+
+  it('keeps the fixed header visible when jumping to the blog parts section', async () => {
+    vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({ key: 'aibase', title: 'AI BASE' }));
+    vi.mocked(fetchGroupEvents).mockResolvedValue({
+      events: [], lastModified: null, page: 1, perPage: 20, totalCount: 0, totalPages: 0,
+    });
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0);
+      return 0;
+    });
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+
+    renderGroupPage();
+    await screen.findByRole('heading', { name: 'AI BASE', level: 1 });
+
+    fireEvent.click(screen.getByRole('link', { name: 'ブログパーツ' }));
+
+    expect(window.location.hash).toBe('#blog-parts');
+    const dispatchedTypes = dispatchSpy.mock.calls.map(([event]) => (event as Event).type);
+    // 素のアンカー遷移でスクロール位置がずれてヘッダーが消えないよう、
+    // scrollToCurrentHashと同じくsite-header-showを発火させる
+    expect(dispatchedTypes).toContain('site-header-show');
+    expect(document.getElementById('blog-parts')?.scrollIntoView).toHaveBeenCalled();
   });
 
   describe('paginated past events', () => {
