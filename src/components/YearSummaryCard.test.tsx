@@ -88,6 +88,17 @@ describe('YearSummaryCard', () => {
     expect(await screen.findByText('8月: 2件')).toBeInTheDocument();
   });
 
+  it('links each group avatar to its /groups/:key community page', () => {
+    renderWithChakra(
+      <YearSummaryCard summary={makeYearSummary({ groups: [makeGroupActivity({ key: 'aibase', name: 'AI BASE' })] })}
+                       months={makeMonths(Array(12).fill(0))}
+                       maxMonthCount={0}
+                       />,
+    );
+
+    expect(screen.getByRole('link', { name: 'AI BASEのページを見る' })).toHaveAttribute('href', '/groups/aibase');
+  });
+
   it('reveals a community avatar tooltip on keyboard focus, not only on hover', async () => {
     const { container } = renderWithChakra(
       <YearSummaryCard summary={makeYearSummary({ groups: [makeGroupActivity({ key: 'g1', name: 'shingen.py' })] })}

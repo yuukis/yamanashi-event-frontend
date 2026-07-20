@@ -7,6 +7,7 @@ import {
 import Root from './routes/Root.jsx'
 import List from './routes/List.jsx'
 import Events from './routes/Events.jsx'
+import Group from './routes/Group.jsx'
 import Guide from './routes/Guide.jsx'
 import WidgetEvents from './routes/WidgetEvents.jsx'
 import WidgetGroupEvents from './routes/WidgetGroupEvents.jsx'
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
   {
     path: "/events/:year",
     element: <List startYear={START_YEAR}/>,
+  },
+  {
+    path: "/groups/:groupKey",
+    element: <Group />,
   },
   {
     path: "/widget/events",

@@ -27,6 +27,16 @@ export type ApiGroup = {
   archive_url?: string | null;
 };
 
+export type ApiGroupDetail = ApiGroup & {
+  sub_title?: string | null;
+  url?: string | null;
+  description?: string | null;
+  website_url?: string | null;
+  x_username?: string | null;
+  facebook_url?: string | null;
+  member_users_count?: number | null;
+};
+
 export type EventWithGroup = ApiEvent & {
   group_image_url?: string | null;
   archive_source?: string | null;

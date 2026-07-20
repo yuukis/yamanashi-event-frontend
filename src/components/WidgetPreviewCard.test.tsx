@@ -100,4 +100,20 @@ describe('WidgetPreviewCard', () => {
 
     expect(screen.getByTestId('custom-controls')).toBeInTheDocument();
   });
+
+  it('still renders the preview and the copyable snippet when using the side-by-side layout', () => {
+    renderWithChakra(
+      <WidgetPreviewCard title={'イベント一覧'}
+                          description={'説明'}
+                          previewPath={'/widget/events?limit=5'}
+                          embedPath={'/widget/events?limit=5'}
+                          iframeTitle={'山梨イベント情報'}
+                          elementId={'yamanashi-hub-widget-events'}
+                          layout={'side-by-side'}
+                          />,
+    );
+
+    expect(screen.getByTitle('山梨イベント情報')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'イベント一覧の埋め込みスニペット' })).toBeInTheDocument();
+  });
 });

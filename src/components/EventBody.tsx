@@ -64,6 +64,7 @@ import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEven
 import { isEventMarked, markEvent, unmarkEvent } from '../utils/markedEvents';
 import { subscribeMarkedEvents, getMarkedEventsSnapshot, updateMarkedEventsData } from '../utils/markedEventsStore';
 import { EventDescriptionSummary } from './EventDescriptionSummary';
+import { buildGroupPagePath } from '../utils/groupPage';
 import type { EventWithGroup } from '../types/events';
 
 type EventBodyProps = {
@@ -119,8 +120,8 @@ export function EventBody(data: EventBodyProps) {
   const place = event.place;
   const event_url = event.event_url;
   const owner_name = event.owner_name;
+  const group_key = event.group_key;
   const group_name = event.group_name;
-  const group_url = event.group_url;
   const group_image_url = event.group_image_url;
   const archive_source = event.archive_source;
   const archive_url = event.archive_url;
@@ -232,6 +233,16 @@ export function EventBody(data: EventBodyProps) {
 
   const handleDrawerMarkClick = () => {
     toggleAttendanceMark();
+  };
+
+  const handleGroupLogoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (group_key) {
+      window.open(buildGroupPagePath(group_key), '_self');
+    }
+  };
+  const handleGroupLogoTouch = (e: React.TouchEvent) => {
+    e.stopPropagation();
   };
 
   const handleMenuButtonClick = (e: React.MouseEvent) => {
@@ -522,9 +533,9 @@ export function EventBody(data: EventBodyProps) {
                   <HStack>
                     <People />
                     <Show above='md'>
-                      {group_url ? (
+                      {group_key ? (
                         <Button size={'xs'}
-                                onClick={() => window.open(group_url)}
+                                onClick={() => window.open(buildGroupPagePath(group_key), '_self')}
                                 >{group_name}</Button>
                       ) : (
                         <Text fontSize={'sm'} noOfLines={1}>{group_name}</Text>
@@ -579,14 +590,37 @@ export function EventBody(data: EventBodyProps) {
             </Hide>
 
             {group_image_url && (
-              <Image src={ group_image_url }
-                    w={'80px'}
-                    h={'54px'}
-                    fit={'contain'}
-                    position={'absolute'}
-                    top={{base: '4', md: '2'}}
-                    right={{base: '4', md: '4'}}
-                    />
+              group_key && isDesktopScreenSize ? (
+                <Button variant={'unstyled'}
+                        aria-label={`${group_name ?? 'コミュニティ'}のページを見る`}
+                        position={'absolute'}
+                        top={{base: '4', md: '2'}}
+                        right={{base: '4', md: '4'}}
+                        w={'80px'}
+                        h={'54px'}
+                        minW={'auto'}
+                        p={'0'}
+                        opacity={'1'}
+                        transition={'opacity 120ms ease-out'}
+                        _hover={{ opacity: '0.7' }}
+                        onClick={handleGroupLogoClick}
+                        onTouchStart={handleGroupLogoTouch}
+                        onTouchMove={handleGroupLogoTouch}
+                        onTouchEnd={handleGroupLogoTouch}
+                        >
+                  <Image src={ group_image_url } alt={''} w={'100%'} h={'100%'} fit={'contain'} />
+                </Button>
+              ) : (
+                <Image src={ group_image_url }
+                      alt={group_name ?? ''}
+                      w={'80px'}
+                      h={'54px'}
+                      fit={'contain'}
+                      position={'absolute'}
+                      top={{base: '4', md: '2'}}
+                      right={{base: '4', md: '4'}}
+                      />
+              )
             )}
             <Show above='md'>
               <Popover isOpen={isMarkPopoverOpen} onClose={onMarkPopoverClose} placement='top-end' isLazy>
@@ -629,6 +663,13 @@ export function EventBody(data: EventBodyProps) {
                                       >
                               情報提供元のページを開く
                             </MenuItem>
+                            {group_key && (
+                              <MenuItem icon={<People />}
+                                        onClick={() => window.open(buildGroupPagePath(group_key), '_self')}
+                                        >
+                                コミュニティページを見る
+                              </MenuItem>
+                            )}
                             <MenuItem icon={<FaXTwitter />}
                                       onClick={() => window.open(event_x_search_url)}
                                       >
@@ -704,6 +745,17 @@ export function EventBody(data: EventBodyProps) {
                       >
                 情報提供元のページを開く
               </Button>
+              {group_key && (
+                <Button w="full"
+                        leftIcon={<People />}
+                        onClick={() => {
+                          window.open(buildGroupPagePath(group_key), '_self');
+                          onClose();
+                        }}
+                        >
+                  コミュニティページを見る
+                </Button>
+              )}
               {address_array.length > 0 && (
                 <Button w="full"
                         leftIcon={<FiMap />}

@@ -7,6 +7,7 @@ import {
   toEventShareContext,
   isNativeShareSupported,
   shareEventViaNativeShare,
+  shareViaNativeShare,
   type ShareContext,
 } from '../utils/share';
 import type { EventWithGroup } from '../types/events';
@@ -25,13 +26,12 @@ const SHARE_TARGETS: ShareTarget[] = [
 const COPY_LABEL = 'リンクをコピー';
 export const NATIVE_SHARE_LABEL = '友達を誘う';
 
-type ShareIconRowProps = {
-  event: EventWithGroup;
+type ShareContextIconRowProps = {
+  ctx: ShareContext;
   nativeShareLabel?: string;
 };
 
-export function ShareIconRow({ event, nativeShareLabel = NATIVE_SHARE_LABEL }: ShareIconRowProps) {
-  const ctx = toEventShareContext(event);
+export function ShareContextIconRow({ ctx, nativeShareLabel = NATIVE_SHARE_LABEL }: ShareContextIconRowProps) {
   const toast = useToast();
 
   return (
@@ -54,7 +54,7 @@ export function ShareIconRow({ event, nativeShareLabel = NATIVE_SHARE_LABEL }: S
                     variant={'ghost'}
                     color={'gray.400'}
                     _hover={{ color: 'gray.600' }}
-                    onClick={() => shareEventViaNativeShare(event, toast)}
+                    onClick={() => shareViaNativeShare(ctx, toast)}
                     />
       )}
       <IconButton aria-label={COPY_LABEL}
@@ -67,6 +67,15 @@ export function ShareIconRow({ event, nativeShareLabel = NATIVE_SHARE_LABEL }: S
                   />
     </HStack>
   );
+}
+
+type ShareIconRowProps = {
+  event: EventWithGroup;
+  nativeShareLabel?: string;
+};
+
+export function ShareIconRow({ event, nativeShareLabel = NATIVE_SHARE_LABEL }: ShareIconRowProps) {
+  return <ShareContextIconRow ctx={toEventShareContext(event)} nativeShareLabel={nativeShareLabel} />;
 }
 
 export function XShareButton({ event }: { event: EventWithGroup }) {

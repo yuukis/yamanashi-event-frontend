@@ -12,7 +12,7 @@ function WidgetGroupEvents() {
   const limit = parseWidgetLimit(searchParams.get('limit'));
   const data = useWidgetEvents(() => (
     groupKey
-      ? fetchGroupEvents(groupKey, WIDGET_EVENT_ITEM_FIELDS)
+      ? fetchGroupEvents(groupKey, { fields: WIDGET_EVENT_ITEM_FIELDS })
       : Promise.resolve({ events: [] })
   ), [groupKey]);
 

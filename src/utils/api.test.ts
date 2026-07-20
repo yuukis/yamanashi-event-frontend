@@ -5,6 +5,7 @@ import {
   fetchEventsByYear,
   fetchGroupEvents,
   fetchEventDescription,
+  fetchGroup,
   fetchGroups,
   fetchEventsSummary,
   EVENTS_API_URL,
@@ -12,6 +13,7 @@ import {
   EVENTS_SUMMARY_API_URL,
   EVENTS_FIELDS,
   GROUPS_FIELDS,
+  GROUP_DETAIL_FIELDS,
 } from './api';
 
 vi.mock('axios');
@@ -144,7 +146,7 @@ describe('fetchGroupEvents', () => {
     vi.mocked(axios.get).mockReset();
   });
 
-  it('requests the group-scoped events endpoint and returns events with last-modified', async () => {
+  it('requests the group-scoped events endpoint with only the fields param by default', async () => {
     vi.mocked(axios.get).mockResolvedValue({
       data: [{ uid: 'a' }],
       headers: { 'last-modified': 'Wed, 01 Jan 2026 00:00:00 GMT' },
@@ -156,15 +158,29 @@ describe('fetchGroupEvents', () => {
     expect(result).toEqual({
       events: [{ uid: 'a' }],
       lastModified: 'Wed, 01 Jan 2026 00:00:00 GMT',
+      page: null,
+      perPage: null,
+      totalCount: null,
+      totalPages: null,
     });
   });
 
   it('requests a caller-provided field set instead of the default', async () => {
     vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
 
-    await fetchGroupEvents('techmujin', 'uid,title');
+    await fetchGroupEvents('techmujin', { fields: 'uid,title' });
 
     expect(axios.get).toHaveBeenCalledWith(`${GROUPS_API_URL}/techmujin/events`, { params: { fields: 'uid,title' } });
+  });
+
+  it('includes page, per_page and order only when explicitly provided', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    await fetchGroupEvents('techmujin', { page: 2, perPage: 20, order: 'desc' });
+
+    expect(axios.get).toHaveBeenCalledWith(`${GROUPS_API_URL}/techmujin/events`, {
+      params: { fields: EVENTS_FIELDS, page: 2, per_page: 20, order: 'desc' },
+    });
   });
 
   it('encodes the group key when building the URL', async () => {
@@ -181,6 +197,43 @@ describe('fetchGroupEvents', () => {
     const result = await fetchGroupEvents('techmujin');
 
     expect(result.lastModified).toBeNull();
+  });
+
+  it('parses pagination headers into numbers', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      data: [],
+      headers: { 'x-page': '2', 'x-per-page': '20', 'x-total-count': '111', 'x-total-pages': '6' },
+    });
+
+    const result = await fetchGroupEvents('shingenpy', { page: 2, perPage: 20 });
+
+    expect(result.page).toBe(2);
+    expect(result.perPage).toBe(20);
+    expect(result.totalCount).toBe(111);
+    expect(result.totalPages).toBe(6);
+  });
+
+  it('returns null pagination fields when the headers are absent', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    const result = await fetchGroupEvents('techmujin');
+
+    expect(result.page).toBeNull();
+    expect(result.perPage).toBeNull();
+    expect(result.totalCount).toBeNull();
+    expect(result.totalPages).toBeNull();
+  });
+
+  it('returns null (not NaN) for a non-numeric pagination header, so callers\' ?? fallback still applies', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      data: [],
+      headers: { 'x-page': 'not-a-number' },
+    });
+
+    const result = await fetchGroupEvents('techmujin');
+
+    expect(result.page).toBeNull();
+    expect(result.page).not.toBeNaN();
   });
 });
 
@@ -232,6 +285,29 @@ describe('fetchGroups', () => {
 
     expect(axios.get).toHaveBeenCalledWith(GROUPS_API_URL, { params: { fields: GROUPS_FIELDS } });
     expect(result).toEqual([{ key: 'g1' }]);
+  });
+});
+
+describe('fetchGroup', () => {
+  it('requests the single group endpoint with detail fields and returns the parsed data', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: { key: 'g1', title: 'Group 1' } });
+
+    const result = await fetchGroup('g1');
+
+    expect(axios.get).toHaveBeenCalledWith(`${GROUPS_API_URL}/g1`, { params: { fields: GROUP_DETAIL_FIELDS } });
+    expect(result).toEqual({ key: 'g1', title: 'Group 1' });
+  });
+
+  it('URL-encodes the group key in the request path', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: {} });
+
+    await fetchGroup('a b/c');
+
+    expect(axios.get).toHaveBeenCalledWith(`${GROUPS_API_URL}/a%20b%2Fc`, { params: { fields: GROUP_DETAIL_FIELDS } });
+  });
+
+  it('requests the description field for the community profile', () => {
+    expect(GROUP_DETAIL_FIELDS.split(',')).toContain('description');
   });
 });
 

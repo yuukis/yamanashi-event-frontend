@@ -59,6 +59,32 @@ describe('ActiveFilterBadge', () => {
     expect(onClearKeyword).not.toHaveBeenCalled();
   });
 
+  it('links to the community page when a group with a key is selected', () => {
+    renderWithChakra(
+      <ActiveFilterBadge selectedKeyword={null}
+                          selectedGroupName={'甲府もくもく会'}
+                          selectedGroupKey={'kofu-mokumoku'}
+                          onClearKeyword={() => {}}
+                          onClearGroup={() => {}}
+                          />,
+    );
+
+    const link = screen.getByRole('link', { name: 'コミュニティページ' });
+    expect(link).toHaveAttribute('href', '/groups/kofu-mokumoku');
+  });
+
+  it('does not show the community page link for keyword filters or when the key is missing', () => {
+    renderWithChakra(
+      <ActiveFilterBadge selectedKeyword={'React'}
+                          selectedGroupName={null}
+                          onClearKeyword={() => {}}
+                          onClearGroup={() => {}}
+                          />,
+    );
+
+    expect(screen.queryByRole('link', { name: 'コミュニティページ' })).not.toBeInTheDocument();
+  });
+
   it('calls onClearKeyword when clearing a keyword-only filter', () => {
     const onClearKeyword = vi.fn();
     renderWithChakra(

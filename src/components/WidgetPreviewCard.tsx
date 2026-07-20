@@ -44,6 +44,10 @@ function buildSnippet(embedPath: string, iframeTitle: string, elementId: string)
   ].join('\n');
 }
 
+// 横並び表示(md以上)にしたときのプレビュー枠の固定幅。ブログの
+// サイドバーに置くウィジェットとして想定している幅に合わせる。
+const SIDE_BY_SIDE_PREVIEW_WIDTH = '360px';
+
 type WidgetPreviewCardProps = {
   title: string;
   description: string;
@@ -52,6 +56,8 @@ type WidgetPreviewCardProps = {
   iframeTitle: string;
   elementId: string;
   controls?: ReactNode;
+  // side-by-sideはプレビューがカード幅いっぱいに間延びするのを防ぐ
+  layout?: 'stacked' | 'side-by-side';
 };
 
 export function WidgetPreviewCard({
@@ -62,9 +68,12 @@ export function WidgetPreviewCard({
   iframeTitle,
   elementId,
   controls,
+  layout = 'stacked',
 }: WidgetPreviewCardProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   useWidgetIframeAutoHeight(iframeRef);
+
+  const isSideBySide = layout === 'side-by-side';
 
   return (
     <Card variant={'outline'} borderRadius={'md'}>
@@ -73,17 +82,31 @@ export function WidgetPreviewCard({
           <Heading size={'sm'} color={'gray.700'}>{ title }</Heading>
           <Text fontSize={'sm'} color={'gray.600'} lineHeight={'1.8'}>{ description }</Text>
           { controls }
-          <Box borderWidth={'1px'} borderColor={'gray.200'} borderRadius={'md'} overflow={'hidden'} bg={'white'}>
-            <iframe ref={iframeRef}
-                    src={previewPath}
-                    title={iframeTitle}
-                    loading={'lazy'}
-                    style={{ width: '100%', border: 0, display: 'block' }}
-                    />
-          </Box>
-          <CopySnippetBlock code={buildSnippet(embedPath, iframeTitle, elementId)}
-                            label={`${title}の埋め込みスニペット`}
-                            />
+          <Stack direction={isSideBySide ? {base: 'column', md: 'row'} : 'column'}
+                 spacing={isSideBySide ? '4' : '3'}
+                 align={'flex-start'}
+                 >
+            <Box borderWidth={'1px'}
+                 borderColor={'gray.200'}
+                 borderRadius={'md'}
+                 overflow={'hidden'}
+                 bg={'white'}
+                 w={isSideBySide ? {base: '100%', md: SIDE_BY_SIDE_PREVIEW_WIDTH} : '100%'}
+                 flexShrink={0}
+                 >
+              <iframe ref={iframeRef}
+                      src={previewPath}
+                      title={iframeTitle}
+                      loading={'lazy'}
+                      style={{ width: '100%', border: 0, display: 'block' }}
+                      />
+            </Box>
+            <Box w={'100%'} minW={'0'} flex={isSideBySide ? '1' : undefined}>
+              <CopySnippetBlock code={buildSnippet(embedPath, iframeTitle, elementId)}
+                                label={`${title}の埋め込みスニペット`}
+                                />
+            </Box>
+          </Stack>
         </Stack>
       </CardBody>
     </Card>

@@ -1,5 +1,7 @@
-import type { EventWithGroup } from '../types/events';
+import type { ApiGroupDetail, EventWithGroup } from '../types/events';
 import { SITE_URL } from './site';
+import { htmlToText } from './htmlText';
+import { buildGroupPageUrl, buildXProfileUrl } from './groupPage';
 
 const CANCELLED_STATUS = 'https://schema.org/EventCancelled';
 const SCHEDULED_STATUS = 'https://schema.org/EventScheduled';
@@ -64,6 +66,45 @@ export function buildEventListJsonLd(events: EventWithGroup[], listUrl: string):
       position: index + 1,
       item: buildEventJsonLd(event),
     })),
+  };
+}
+
+export function buildGroupPageJsonLd(group: ApiGroupDetail, events: EventWithGroup[]): Record<string, unknown> {
+  const pageUrl = buildGroupPageUrl(group.key);
+
+  const organization: Record<string, unknown> = {
+    '@type': 'Organization',
+    name: group.title,
+    url: group.url || pageUrl,
+  };
+  const descriptionText = group.description ? htmlToText(group.description) : '';
+  if (descriptionText) {
+    organization.description = descriptionText;
+  }
+  if (group.image_url) {
+    organization.logo = group.image_url;
+  }
+  const sameAs = [group.website_url, buildXProfileUrl(group.x_username), group.facebook_url]
+    .filter((url): url is string => Boolean(url));
+  if (sameAs.length > 0) {
+    organization.sameAs = sameAs;
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      organization,
+      {
+        '@type': 'ItemList',
+        url: pageUrl,
+        numberOfItems: events.length,
+        itemListElement: events.map((event, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          item: buildEventJsonLd(event),
+        })),
+      },
+    ],
   };
 }
 
