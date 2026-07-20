@@ -188,6 +188,7 @@ function Root({startYear}: {startYear: number}) {
       <SiteHeader />
       <ActiveFilterBadge selectedKeyword={selectedKeyword}
                          selectedGroupName={selectedGroupName}
+                         selectedGroupKey={selectedGroup}
                          onClearKeyword={() => handleKeywordSelect(null)}
                          onClearGroup={() => handleGroupSelect(null)}
                          />

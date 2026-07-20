@@ -1,11 +1,13 @@
 import { useSyncExternalStore } from 'react';
-import { Box, Container, HStack, IconButton, Text } from '@chakra-ui/react';
-import { SmallCloseIcon } from '@chakra-ui/icons';
+import { Box, Container, HStack, IconButton, Link, Text } from '@chakra-ui/react';
+import { ChevronRightIcon, SmallCloseIcon } from '@chakra-ui/icons';
 import { subscribeHeaderVisibility, getHeaderAreaOccupied, HEADER_HEIGHT } from '../utils/headerVisibility';
+import { buildGroupPagePath } from '../utils/groupPage';
 
 type ActiveFilterBadgeProps = {
   selectedKeyword: string | null;
   selectedGroupName: string | null;
+  selectedGroupKey?: string | null;
   onClearKeyword: () => void;
   onClearGroup: () => void;
 };
@@ -16,6 +18,7 @@ type ActiveFilterBadgeProps = {
 export function ActiveFilterBadge({
   selectedKeyword,
   selectedGroupName,
+  selectedGroupKey,
   onClearKeyword,
   onClearGroup,
 }: ActiveFilterBadgeProps) {
@@ -58,6 +61,18 @@ export function ActiveFilterBadge({
                 >
             {label}
           </Text>
+          {selectedGroupName && selectedGroupKey && (
+            <Link href={buildGroupPagePath(selectedGroupKey)}
+                  fontSize={'xs'}
+                  fontWeight={'bold'}
+                  color={'impact.700'}
+                  whiteSpace={'nowrap'}
+                  display={'inline-flex'}
+                  alignItems={'center'}
+                  >
+              コミュニティページ<ChevronRightIcon />
+            </Link>
+          )}
           <IconButton aria-label={'絞り込みを解除'}
                       icon={<SmallCloseIcon />}
                       size={'xs'}
