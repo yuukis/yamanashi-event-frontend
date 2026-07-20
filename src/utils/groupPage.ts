@@ -62,7 +62,7 @@ export function buildGroupExternalLinks(group: ApiGroupDetail): GroupExternalLin
   if (group.archive_url) {
     links.push({
       id: 'archive',
-      label: group.archive_source ? `アーカイブ元(${group.archive_source})` : 'アーカイブ元',
+      label: 'アーカイブ元',
       url: group.archive_url,
       variant: 'outline',
       fontWeight: 'normal',
