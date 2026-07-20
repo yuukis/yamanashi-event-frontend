@@ -19,7 +19,8 @@ async function fetchGroupKeys() {
     const groups = await res.json();
     return groups.map((group) => group.key).filter(Boolean);
   } catch (err) {
-    console.warn(`sitemap.xml: groups API unavailable, group URLs omitted (${err.message})`);
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`sitemap.xml: groups API unavailable, group URLs omitted (${message})`);
     return [];
   }
 }

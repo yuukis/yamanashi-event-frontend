@@ -17,6 +17,17 @@ export function buildGroupFeedTitle(groupTitle: string): string {
   return `${groupTitle} - 新着・更新イベント`;
 }
 
+// APIから来るURLをそのまま<a href target="_blank">に流すため、
+// javascript: 等の危険なスキームを弾く。http/https以外は表示しない。
+function isHttpUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export function buildXProfileUrl(username?: string | null): string | null {
   const trimmed = username?.trim().replace(/^@/, '');
   if (!trimmed) {
@@ -61,5 +72,5 @@ export function buildGroupExternalLinks(group: ApiGroupDetail): GroupExternalLin
       fontWeight: 'normal',
     });
   }
-  return links;
+  return links.filter((link) => isHttpUrl(link.url));
 }

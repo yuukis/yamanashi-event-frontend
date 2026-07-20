@@ -78,4 +78,17 @@ describe('buildGroupExternalLinks', () => {
       { id: 'archive', label: 'アーカイブ元', url: 'https://archive.example.com/', prominent: false, variant: 'outline', fontWeight: 'normal' },
     ]);
   });
+
+  it('drops links with a non-http(s) scheme, so API data can never render as an executable link', () => {
+    const group = makeGroupDetail({
+      url: 'javascript:alert(1)',
+      website_url: 'data:text/html,<script>alert(1)</script>',
+      facebook_url: 'https://www.facebook.com/example',
+      archive_url: 'not a url at all',
+    });
+
+    expect(buildGroupExternalLinks(group)).toEqual([
+      { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/example', prominent: true, variant: 'outline', fontWeight: 'normal' },
+    ]);
+  });
 });

@@ -31,6 +31,7 @@ import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, isFutureEvent, isPastEvent } from '../utils/eventGroups';
 import { countKeywords } from '../utils/eventKeywords';
 import { fetchGroup, fetchGroupEvents } from '../utils/api';
+import type { GroupEventsPage } from '../utils/api';
 import { buildGroupPageUrl, buildGroupExternalLinks, buildGroupFeedUrl, buildGroupFeedTitle } from '../utils/groupPage';
 import { buildGroupPageJsonLd } from '../utils/structuredData';
 import { buildListWidgetPath } from '../utils/widgetPaths';
@@ -46,6 +47,18 @@ const GROUP_EVENTS_PAGE_SIZE = 20;
 const DESCRIPTION_COLLAPSED_MAX_H = '8em';
 const BLOG_PARTS_ANCHOR_ID = 'blog-parts';
 const FEATURED_KEYWORDS_LIMIT = 5;
+
+// x-total-pagesヘッダーが読める(=totalPagesが取得できた)場合はそれを
+// 優先する。ヘッダーがブラウザから読めない状況(CORSのAccess-Control-
+// Expose-Headers未設定等)でのみ、取得件数がページサイズと一致するかの
+// ヒューリスティックにフォールバックする。fallbackPageはeventsPage.page
+// が読めなかった場合に備えた呼び出し側の手元のページ番号。
+function computeHasMorePastEvents(eventsPage: GroupEventsPage, fallbackPage: number): boolean {
+  if (eventsPage.totalPages !== null) {
+    return (eventsPage.page ?? fallbackPage) < eventsPage.totalPages;
+  }
+  return eventsPage.events.length >= GROUP_EVENTS_PAGE_SIZE;
+}
 
 function GroupStat({ label, value, unit, testId }: { label: string; value: number | string; unit: string; testId: string }) {
   return (
@@ -216,7 +229,7 @@ function Group() {
           initialEvents,
           lastModified: eventsPage.lastModified,
           page: eventsPage.page ?? 1,
-          hasMorePastEvents: eventsPage.events.length >= GROUP_EVENTS_PAGE_SIZE,
+          hasMorePastEvents: computeHasMorePastEvents(eventsPage, 1),
           totalCount: eventsPage.totalCount,
         });
       } catch (err) {
@@ -267,7 +280,7 @@ function Group() {
         ...previous,
         events: [...previous.events, ...newEvents],
         page: eventsPage.page ?? nextPage,
-        hasMorePastEvents: eventsPage.events.length >= GROUP_EVENTS_PAGE_SIZE,
+        hasMorePastEvents: computeHasMorePastEvents(eventsPage, nextPage),
         totalCount: eventsPage.totalCount ?? previous.totalCount,
         isLoadingMorePastEvents: false,
       }));

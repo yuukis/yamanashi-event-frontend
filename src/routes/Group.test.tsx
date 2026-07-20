@@ -315,5 +315,32 @@ describe('Group', () => {
       expect(screen.getByRole('button', { name: '過去のイベントをもっと見る' })).toBeEnabled();
       expect(screen.queryByText('AI BASE #20')).not.toBeInTheDocument();
     });
+
+    it('hides the "load more" button using totalPages, even when the first page happens to be exactly full', async () => {
+      // ページサイズ(20件)ちょうどで全件が収まるコミュニティ。件数だけの
+      // ヒューリスティックだと「まだ続きがありそう」と誤判定してしまうが、
+      // totalPagesが読める(CORSヘッダー対応済み)ならそちらを優先する。
+      vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({ key: 'aibase', title: 'AI BASE' }));
+      vi.mocked(fetchGroupEvents).mockResolvedValue({
+        events: makePastEvents(20, 0), lastModified: null, page: 1, perPage: 20, totalCount: 20, totalPages: 1,
+      });
+
+      renderGroupPage();
+
+      await screen.findByText('AI BASE #0');
+      expect(screen.queryByRole('button', { name: '過去のイベントをもっと見る' })).not.toBeInTheDocument();
+    });
+
+    it('falls back to the page-fullness heuristic when totalPages cannot be read (CORS)', async () => {
+      vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({ key: 'aibase', title: 'AI BASE' }));
+      vi.mocked(fetchGroupEvents).mockResolvedValue({
+        events: makePastEvents(20, 0), lastModified: null, page: 1, perPage: 20, totalCount: null, totalPages: null,
+      });
+
+      renderGroupPage();
+
+      await screen.findByText('AI BASE #0');
+      expect(screen.getByRole('button', { name: '過去のイベントをもっと見る' })).toBeInTheDocument();
+    });
   });
 });
