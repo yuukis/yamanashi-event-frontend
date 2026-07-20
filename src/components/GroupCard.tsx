@@ -49,7 +49,7 @@ export function GroupCard({ group }: GroupCardProps) {
             {group.sub_title}
           </Text>
         )}
-        {group.member_users_count && (
+        {(group.member_users_count ?? 0) > 0 && (
           <Text fontSize={'xs'} color={'gray.500'} mt={'2'} noOfLines={1}>
             {`メンバー${group.member_users_count}人`}
           </Text>
