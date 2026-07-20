@@ -63,8 +63,6 @@ describe('Groups', () => {
   });
 
   it('orders the structured data to match the displayed active-then-other order, unaffected by the search query', async () => {
-    // 五十音順ではAI BASEより先に来るKofu.rbを後ろにして、
-    // 「アクティブ→その他」の分類順が反映されているかを確認する。
     vi.mocked(fetchGroups).mockResolvedValue([KOFURB, AIBASE]);
     vi.mocked(fetchEvents).mockResolvedValue({
       events: [makeEvent({ group_key: 'aibase' })],

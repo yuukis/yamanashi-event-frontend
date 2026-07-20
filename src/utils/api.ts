@@ -34,9 +34,8 @@ export const GROUPS_FIELDS = [
   'archive_url',
 ].join(',');
 
-// /groups の一覧表示用。カードに表示するsub_titleとmember_users_countを
-// 追加で要求する(通常のGROUPS_FIELDSは他ページの軽量な取得に使うため
-// 据え置く)。
+// GROUPS_FIELDSは他ページの軽量な取得のため据え置き、/groups の一覧
+// 表示にだけsub_titleとmember_users_countを追加で要求する。
 export const GROUPS_SUMMARY_FIELDS = [
   'key',
   'title',
