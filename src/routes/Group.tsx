@@ -23,6 +23,7 @@ import {
   Skeleton,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import { FiCode } from 'react-icons/fi';
 import { FiRss } from 'react-icons/fi';
 import { People } from '@chakra-icons/bootstrap';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
@@ -32,6 +33,7 @@ import { buildGroupPageUrl, buildGroupExternalLinks, buildGroupFeedUrl, buildGro
 import { buildGroupPageJsonLd } from '../utils/structuredData';
 import { buildListWidgetPath } from '../utils/widgetPaths';
 import { sanitizeDescriptionHtml } from '../utils/descriptionHtml';
+import { scrollToCurrentHash } from '../utils/hashScroll';
 import type { ApiGroupDetail, EventWithGroup } from '../types/events';
 
 // 過去のイベントは新しい順(order=desc)にこの件数ずつAPIから取得する。
@@ -40,6 +42,7 @@ import type { ApiGroupDetail, EventWithGroup } from '../types/events';
 const GROUP_EVENTS_PAGE_SIZE = 20;
 // 折りたたみ時に見せる説明文の高さ(fontSize sm × lineHeight 1.8 の約5行分)
 const DESCRIPTION_COLLAPSED_MAX_H = '8em';
+const BLOG_PARTS_ANCHOR_ID = 'blog-parts';
 
 function GroupStat({ label, value, unit, testId }: { label: string; value: number | string; unit: string; testId: string }) {
   return (
@@ -227,6 +230,17 @@ function Group() {
   }, [groupKey]);
 
   const group = data.group;
+
+  // 素のアンカーリンク(#blog-parts への遷移)に任せると、大きくスクロール
+  // した際に固定ヘッダーの自動非表示ロジックが働いてヘッダーが消え、
+  // scrollMarginTop の前提が崩れて着地位置がずれる。ホームページの
+  // アンカージャンプ(scrollToCurrentHash)と同じくsite-header-showを
+  // 発火してヘッダー表示を保ちながらジャンプする。
+  const handleBlogPartsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.history.replaceState(window.history.state, '', `#${BLOG_PARTS_ANCHOR_ID}`);
+    window.requestAnimationFrame(scrollToCurrentHash);
+  };
 
   const handleLoadMorePastEvents = async () => {
     if (!groupKey || !group || data.isLoadingMorePastEvents || !data.hasMorePastEvents) {
@@ -424,7 +438,19 @@ function Group() {
                                 fontWeight={'normal'}
                                 leftIcon={<FiRss color={'#f26522'} />}
                                 >
-                          新着イベントをRSSで購読
+                          RSS
+                        </Button>
+                      </WrapItem>
+                      <WrapItem>
+                        <Button as={'a'}
+                                href={`#${BLOG_PARTS_ANCHOR_ID}`}
+                                onClick={handleBlogPartsClick}
+                                size={'xs'}
+                                variant={'outline'}
+                                fontWeight={'normal'}
+                                leftIcon={<FiCode />}
+                                >
+                          ブログパーツ
                         </Button>
                       </WrapItem>
                       <WrapItem>
@@ -526,7 +552,11 @@ function Group() {
               <FooterLastModified lastModified={data.lastModified} />
             )}
 
-            <Box px={{base: '4', md: '0'}} mt={'4'}>
+            <Box id={BLOG_PARTS_ANCHOR_ID}
+                 px={{base: '4', md: '0'}}
+                 mt={'4'}
+                 scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
+                 >
               <Heading size={{base: 'sm', md: 'md'}} color={'gray.600'} mb={'4'}>
                 ブログパーツ
               </Heading>
