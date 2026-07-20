@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from "react-router-dom";
 import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
+import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
 import { ShareContextIconRow } from '../components/ShareButtons';
 import { WidgetPreviewCard } from '../components/WidgetPreviewCard';
 import { StructuredData } from '../components/StructuredData';
@@ -21,7 +22,7 @@ import {
   Button,
   Skeleton,
 } from '@chakra-ui/react';
-import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { People } from '@chakra-icons/bootstrap';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, isFutureEvent, isPastEvent } from '../utils/eventGroups';
@@ -33,6 +34,87 @@ import { htmlToParagraphs } from '../utils/htmlText';
 import type { ApiGroupDetail, EventWithGroup } from '../types/events';
 
 const PAST_EVENTS_INITIAL_COUNT = 10;
+// 折りたたみ時に見せる説明文の高さ(fontSize sm × lineHeight 1.8 の約5行分)
+const DESCRIPTION_COLLAPSED_MAX_H = '8em';
+
+function GroupStat({ label, value, unit, testId }: { label: string; value: number | string; unit: string; testId: string }) {
+  return (
+    <Box data-testid={testId} minW={'0'}>
+      <Text fontSize={'xs'} color={'gray.500'} whiteSpace={'nowrap'}>{label}</Text>
+      <Text fontSize={'sm'} color={'gray.700'} whiteSpace={'nowrap'}>
+        <Text as={'span'} fontSize={'lg'} fontWeight={'bold'} mr={'1'}>{value}</Text>
+        {unit}
+      </Text>
+    </Box>
+  );
+}
+
+function CollapsibleDescription({ paragraphs }: { paragraphs: string[] }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) {
+      return;
+    }
+    const check = () => setHasOverflow(el.scrollHeight > el.clientHeight + 1);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, [paragraphs, isExpanded]);
+
+  if (paragraphs.length === 0) {
+    return null;
+  }
+
+  return (
+    <Box>
+      <Box position={'relative'}>
+        <Stack ref={bodyRef}
+               spacing={'2'}
+               maxH={isExpanded ? undefined : DESCRIPTION_COLLAPSED_MAX_H}
+               overflow={'hidden'}
+               >
+          {paragraphs.map((paragraph, index) => (
+            <Text key={index}
+                  fontSize={'sm'}
+                  color={'gray.700'}
+                  lineHeight={'1.8'}
+                  whiteSpace={'pre-line'}
+                  >
+              {paragraph}
+            </Text>
+          ))}
+        </Stack>
+        {!isExpanded && hasOverflow && (
+          <Box position={'absolute'}
+               bottom={'0'}
+               left={'0'}
+               right={'0'}
+               h={'3em'}
+               bgGradient={'linear(to-t, white, transparent)'}
+               pointerEvents={'none'}
+               aria-hidden
+               />
+        )}
+      </Box>
+      {(hasOverflow || isExpanded) && (
+        <Button variant={'link'}
+                size={'sm'}
+                mt={'2'}
+                fontWeight={'normal'}
+                color={'primary.800'}
+                rightIcon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                onClick={() => setIsExpanded(!isExpanded)}
+                >
+          {isExpanded ? '閉じる' : '続きを読む'}
+        </Button>
+      )}
+    </Box>
+  );
+}
 
 type GroupState = {
   isLoading: boolean;
@@ -179,25 +261,25 @@ function Group() {
             <>
               <Card variant={'outline'}>
                 <CardBody>
-                  <Stack direction={{base: 'column', md: 'row'}} spacing={'6'}>
-                    <Box boxSize={'96px'}
-                         bg={'gray.50'}
-                         borderRadius={'md'}
-                         border={'1px solid'}
-                         borderColor={'gray.100'}
-                         display={'flex'}
-                         alignItems={'center'}
-                         justifyContent={'center'}
-                         flexShrink={0}
-                         >
-                      {group.image_url ? (
-                        <Image src={group.image_url} boxSize={'100%'} fit={'contain'} alt={group.title} />
-                      ) : (
-                        <People boxSize={'8'} color={'gray.400'} />
-                      )}
-                    </Box>
-                    <Stack flex={'1'} spacing={'3'} minW={'0'}>
-                      <Box>
+                  <Stack spacing={'4'}>
+                    <Stack direction={'row'} spacing={{base: '4', md: '6'}} alignItems={'center'}>
+                      <Box boxSize={{base: '72px', md: '96px'}}
+                           bg={'gray.50'}
+                           borderRadius={'md'}
+                           border={'1px solid'}
+                           borderColor={'gray.100'}
+                           display={'flex'}
+                           alignItems={'center'}
+                           justifyContent={'center'}
+                           flexShrink={0}
+                           >
+                        {group.image_url ? (
+                          <Image src={group.image_url} boxSize={'100%'} fit={'contain'} alt={group.title} />
+                        ) : (
+                          <People boxSize={'8'} color={'gray.400'} />
+                        )}
+                      </Box>
+                      <Box minW={'0'}>
                         <Heading as={'h1'} size={{base: 'md', md: 'lg'}} color={'primary.800'}>
                           {group.title}
                         </Heading>
@@ -207,56 +289,58 @@ function Group() {
                           </Text>
                         )}
                       </Box>
-                      <Wrap spacing={'4'} color={'gray.600'} fontSize={'sm'}>
-                        {data.events.length > 0 && (
-                          <WrapItem>開催イベント {data.events.length}件</WrapItem>
-                        )}
-                        {firstEventYear && (
-                          <WrapItem>{firstEventYear}年から活動</WrapItem>
-                        )}
-                        {(group.member_users_count ?? 0) > 0 && (
-                          <WrapItem>メンバー {group.member_users_count}人</WrapItem>
-                        )}
-                      </Wrap>
-                      {descriptionParagraphs.map((paragraph, index) => (
-                        <Text key={index}
-                              fontSize={'sm'}
-                              color={'gray.700'}
-                              lineHeight={'1.8'}
-                              whiteSpace={'pre-line'}
-                              >
-                          {paragraph}
-                        </Text>
-                      ))}
-                      {externalLinks.length > 0 && (
-                        <Wrap spacing={'2'}>
-                          {externalLinks.map((link) => (
-                            <WrapItem key={link.id}>
-                              <Button as={'a'}
-                                      href={link.url}
-                                      target={'_blank'}
-                                      rel={'noopener'}
-                                      size={'xs'}
-                                      variant={'outline'}
-                                      fontWeight={'normal'}
-                                      rightIcon={<ExternalLinkIcon />}
-                                      >
-                                {link.label}
-                              </Button>
-                            </WrapItem>
-                          ))}
-                        </Wrap>
-                      )}
-                      <HStack spacing={'2'}>
-                        <Text fontSize={'xs'} color={'gray.500'}>このページをシェア</Text>
-                        <ShareContextIconRow ctx={{
-                                               title: `${group.title} - 山梨のITコミュニティ | Yamanashi Developer Hub`,
-                                               url: buildGroupPageUrl(group.key),
-                                             }}
-                                             nativeShareLabel={'このページを共有'}
-                                             />
-                      </HStack>
                     </Stack>
+                    <Wrap spacing={{base: '6', md: '10'}}
+                          borderTop={'1px solid'}
+                          borderBottom={'1px solid'}
+                          borderColor={'gray.100'}
+                          py={'3'}
+                          >
+                      {data.events.length > 0 && (
+                        <WrapItem>
+                          <GroupStat label={'開催イベント'} value={data.events.length} unit={'件'} testId={'group-stat-events'} />
+                        </WrapItem>
+                      )}
+                      {firstEventYear && (
+                        <WrapItem>
+                          <GroupStat label={'活動開始'} value={firstEventYear} unit={'年'} testId={'group-stat-since'} />
+                        </WrapItem>
+                      )}
+                      {(group.member_users_count ?? 0) > 0 && (
+                        <WrapItem>
+                          <GroupStat label={'メンバー'} value={group.member_users_count!} unit={'人'} testId={'group-stat-members'} />
+                        </WrapItem>
+                      )}
+                    </Wrap>
+                    <CollapsibleDescription paragraphs={descriptionParagraphs} />
+                    {externalLinks.length > 0 && (
+                      <Wrap spacing={'2'}>
+                        {externalLinks.map((link) => (
+                          <WrapItem key={link.id}>
+                            <Button as={'a'}
+                                    href={link.url}
+                                    target={'_blank'}
+                                    rel={'noopener'}
+                                    size={'xs'}
+                                    variant={'outline'}
+                                    fontWeight={'normal'}
+                                    rightIcon={<ExternalLinkIcon />}
+                                    >
+                              {link.label}
+                            </Button>
+                          </WrapItem>
+                        ))}
+                      </Wrap>
+                    )}
+                    <HStack spacing={'2'}>
+                      <Text fontSize={'xs'} color={'gray.500'}>このページをシェア</Text>
+                      <ShareContextIconRow ctx={{
+                                             title: `${group.title} - 山梨のITコミュニティ | Yamanashi Developer Hub`,
+                                             url: buildGroupPageUrl(group.key),
+                                           }}
+                                           nativeShareLabel={'このページを共有'}
+                                           />
+                    </HStack>
                   </Stack>
                 </CardBody>
               </Card>
@@ -275,7 +359,7 @@ function Group() {
                   p={'0'}
                   >
               <CardBody>
-                <Stack spacing={'8'}>
+                <Stack spacing={EVENT_LIST_SPACING}>
                   {upcomingEvents.length === 0 ? (
                     <Box px={{base: '4', md: '0'}} py={{base: '2', md: '0'}}>
                       <Text fontSize={'sm'} color={'gray.600'}>
@@ -284,11 +368,12 @@ function Group() {
                     </Box>
                   ) : (
                     upcomingEvents.map((event) => (
-                      <EventBody key={event.uid}
-                                 event={event}
-                                 enableSummarizer
-                                 summaryDescriptionYear={new Date(event.started_at).getFullYear()}
-                                 />
+                      <AnimatedEventItem key={event.uid}>
+                        <EventBody event={event}
+                                   enableSummarizer
+                                   summaryDescriptionYear={new Date(event.started_at).getFullYear()}
+                                   />
+                      </AnimatedEventItem>
                     ))
                   )}
                 </Stack>
@@ -305,16 +390,17 @@ function Group() {
                   p={'0'}
                   >
               <CardBody>
-                <Stack spacing={'8'}>
+                <Stack spacing={EVENT_LIST_SPACING}>
                   {pastEvents.length === 0 ? (
                     <EmptyEventBody />
                   ) : (
                     visiblePastEvents.map((event) => (
-                      <EventBody key={event.uid}
-                                 event={event}
-                                 enableSummarizer
-                                 summaryDescriptionYear={new Date(event.started_at).getFullYear()}
-                                 />
+                      <AnimatedEventItem key={event.uid}>
+                        <EventBody event={event}
+                                   enableSummarizer
+                                   summaryDescriptionYear={new Date(event.started_at).getFullYear()}
+                                   />
+                      </AnimatedEventItem>
                     ))
                   )}
                 </Stack>

@@ -64,9 +64,9 @@ describe('Group', () => {
     expect(await screen.findByRole('heading', { name: 'AI BASE', level: 1 })).toBeInTheDocument();
     expect(screen.getByText('山梨の生成AIコミュニティ')).toBeInTheDocument();
     expect(screen.getByText('『AI BASE』は生成AIに興味がある山梨のコミュニティです。')).toBeInTheDocument();
-    expect(screen.getByText('開催イベント 2件')).toBeInTheDocument();
-    expect(screen.getByText('2025年から活動')).toBeInTheDocument();
-    expect(screen.getByText('メンバー 44人')).toBeInTheDocument();
+    expect(screen.getByTestId('group-stat-events')).toHaveTextContent('開催イベント2件');
+    expect(screen.getByTestId('group-stat-since')).toHaveTextContent('活動開始2025年');
+    expect(screen.getByTestId('group-stat-members')).toHaveTextContent('メンバー44人');
     expect(screen.getByRole('link', { name: /イベントページ/ })).toHaveAttribute('href', 'https://aibase.connpass.com/');
     expect(screen.getByRole('heading', { name: '今後の開催予定' })).toBeInTheDocument();
     expect(screen.getByText('AI BASE #10')).toBeInTheDocument();
