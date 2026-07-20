@@ -144,8 +144,8 @@ function Guide() {
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <SiteHeader />
-      <PageBreadcrumb items={[{ label: 'はじめての方へ', href: '/guide' }]} />
       <Box bg={'#fffafa'}>
+        <PageBreadcrumb items={[{ label: 'はじめての方へ', href: '/guide' }]} />
         <Container maxW={'980px'}
                    p={{base: '8', md: '10'}}
                    display={'flex'}
