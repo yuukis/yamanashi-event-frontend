@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { buildEventJsonLd, buildEventListJsonLd, buildGroupPageJsonLd, buildYearArchiveJsonLd } from './structuredData';
+import { buildEventJsonLd, buildEventListJsonLd, buildGroupPageJsonLd, buildGroupsIndexJsonLd, buildYearArchiveJsonLd } from './structuredData';
 import { SITE_URL } from './site';
-import { makeEvent, makeGroupDetail } from '../test/fixtures';
+import { makeEvent, makeGroup, makeGroupDetail } from '../test/fixtures';
 
 describe('buildEventJsonLd', () => {
   it('builds an offline Event with a Place location when address is present', () => {
@@ -153,6 +153,25 @@ describe('buildGroupPageJsonLd', () => {
       name: 'G',
       url: `${SITE_URL}/groups/g`,
     });
+  });
+});
+
+describe('buildGroupsIndexJsonLd', () => {
+  it('lists each group as a ListItem wrapping an Organization', () => {
+    const groups = [makeGroup({ key: 'aibase', title: 'AI BASE' }), makeGroup({ key: 'kofurb', title: 'Kofu.rb' })];
+
+    const jsonLd = buildGroupsIndexJsonLd(groups);
+
+    expect(jsonLd).toMatchObject({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      url: `${SITE_URL}/groups`,
+      numberOfItems: 2,
+    });
+    expect(jsonLd.itemListElement).toEqual([
+      { '@type': 'ListItem', position: 1, item: { '@type': 'Organization', name: 'AI BASE', url: `${SITE_URL}/groups/aibase` } },
+      { '@type': 'ListItem', position: 2, item: { '@type': 'Organization', name: 'Kofu.rb', url: `${SITE_URL}/groups/kofurb` } },
+    ]);
   });
 });
 

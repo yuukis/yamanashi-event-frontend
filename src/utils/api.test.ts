@@ -13,6 +13,7 @@ import {
   EVENTS_SUMMARY_API_URL,
   EVENTS_FIELDS,
   GROUPS_FIELDS,
+  GROUPS_SUMMARY_FIELDS,
   GROUP_DETAIL_FIELDS,
 } from './api';
 
@@ -285,6 +286,14 @@ describe('fetchGroups', () => {
 
     expect(axios.get).toHaveBeenCalledWith(GROUPS_API_URL, { params: { fields: GROUPS_FIELDS } });
     expect(result).toEqual([{ key: 'g1' }]);
+  });
+
+  it('requests a custom field set when given one', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [{ key: 'g1' }] });
+
+    await fetchGroups(GROUPS_SUMMARY_FIELDS);
+
+    expect(axios.get).toHaveBeenCalledWith(GROUPS_API_URL, { params: { fields: GROUPS_SUMMARY_FIELDS } });
   });
 });
 

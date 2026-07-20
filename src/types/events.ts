@@ -23,19 +23,19 @@ export type ApiEvent = {
 export type ApiGroup = {
   key: string;
   title: string;
+  sub_title?: string | null;
   image_url?: string | null;
+  member_users_count?: number | null;
   archive_source?: string | null;
   archive_url?: string | null;
 };
 
 export type ApiGroupDetail = ApiGroup & {
-  sub_title?: string | null;
   url?: string | null;
   description?: string | null;
   website_url?: string | null;
   x_username?: string | null;
   facebook_url?: string | null;
-  member_users_count?: number | null;
 };
 
 export type EventWithGroup = ApiEvent & {

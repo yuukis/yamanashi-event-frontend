@@ -1,4 +1,4 @@
-import type { ApiGroupDetail, EventWithGroup } from '../types/events';
+import type { ApiGroup, ApiGroupDetail, EventWithGroup } from '../types/events';
 import { SITE_URL } from './site';
 import { htmlToText } from './htmlText';
 import { buildGroupPageUrl, buildXProfileUrl } from './groupPage';
@@ -105,6 +105,24 @@ export function buildGroupPageJsonLd(group: ApiGroupDetail, events: EventWithGro
         })),
       },
     ],
+  };
+}
+
+export function buildGroupsIndexJsonLd(groups: ApiGroup[]): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    url: `${SITE_URL}/groups`,
+    numberOfItems: groups.length,
+    itemListElement: groups.map((group, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'Organization',
+        name: group.title,
+        url: buildGroupPageUrl(group.key),
+      },
+    })),
   };
 }
 
