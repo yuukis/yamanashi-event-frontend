@@ -536,6 +536,7 @@ function Group() {
                                  embedPath={buildListWidgetPath(group.key)}
                                  iframeTitle={`${group.title} イベント情報`}
                                  elementId={`yamanashi-hub-widget-events-${group.key}`}
+                                 layout={'side-by-side'}
                                  />
             </Box>
           </Stack>
