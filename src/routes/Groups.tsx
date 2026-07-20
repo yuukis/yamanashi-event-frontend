@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
+import { PageBreadcrumb } from '../components/PageBreadcrumb';
 import { ErrorEventBody } from '../components/EventBody';
 import { GroupCard, GroupCardSkeleton } from '../components/GroupCard';
 import { StructuredData } from '../components/StructuredData';
@@ -90,6 +91,7 @@ function Groups() {
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-groups'} data={structuredData} />
       <SiteHeader />
+      <PageBreadcrumb items={[{ label: 'コミュニティ一覧', href: '/groups' }]} />
       <Container maxW={'980px'} w={'100%'}
                  mt={'4'}
                  p={{base: '0', md: '4'}}

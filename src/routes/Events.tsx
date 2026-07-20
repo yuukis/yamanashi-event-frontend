@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary } from '../components/Site';
+import { PageBreadcrumb } from '../components/PageBreadcrumb';
 import { YearSummaryCard, YearSummaryCardSkeleton } from '../components/YearSummaryCard';
 import { ErrorEventBody } from '../components/EventBody';
 import { StructuredData } from '../components/StructuredData';
@@ -78,6 +79,7 @@ function Events() {
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-events'} data={structuredData} />
       <SiteHeader />
+      <PageBreadcrumb items={[{ label: 'イベントアーカイブ', href: '/events' }]} />
       <Container maxW={'980px'} w={'100%'}
                  mt={'4'}
                  p={{base: '0', md: '4'}}
