@@ -3,7 +3,7 @@ type Listener = () => void;
 // SiteHeader の実高さ(ロゴ行 + 下線3本分)。ActiveFilterBadge がヘッダー
 // 直下に位置合わせする際にも同じ値を使うため、両方から参照できるように
 // ここで定義する。
-const HEADER_ROW_REM = { base: 3, md: 4 };
+const HEADER_ROW_REM = { base: 3.5, md: 4 };
 const HEADER_UNDERLINE_PX = 7;
 export const HEADER_HEIGHT = {
   base: `calc(${HEADER_ROW_REM.base}rem + ${HEADER_UNDERLINE_PX}px)`,

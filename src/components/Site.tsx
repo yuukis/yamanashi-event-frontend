@@ -70,10 +70,10 @@ export const STICKY_HEADING_TOP = '0';
 function SiteHeaderContent() {
   return (
     <>
-      <Stack h={{base: '12', md: '16'}}
-             maxW={'980px'}
+      <Stack maxW={'980px'}
              m={'auto'}
-             p={'4'}
+             px={'4'}
+             py={{base: '2', md: '3'}}
              direction={'row'}
              alignItems={'center'}
              bg={'white'}
@@ -84,12 +84,22 @@ function SiteHeaderContent() {
                    boxSize={{base: '6', md: '8'}}
                    alt='Yamanashi Developer Hub'
                    />
-            <Heading size={{base: 'sm', md: 'md'}}
-                     fontWeight={'normal'}
-                     noOfLines={1}
-                     >
-              <strong>Yamanashi</strong> Developer Hub
-            </Heading>
+            <Stack spacing={'0'}>
+              <Heading size={{base: 'sm', md: 'md'}}
+                       fontWeight={'normal'}
+                       lineHeight={'1.2'}
+                       noOfLines={1}
+                       >
+                <strong>Yamanashi</strong> Developer Hub
+              </Heading>
+              <Text fontSize={{base: '0.625rem', md: 'xs'}}
+                    lineHeight={'1.2'}
+                    color={'gray.500'}
+                    noOfLines={1}
+                    >
+                山梨のITコミュニティが見つかる
+              </Text>
+            </Stack>
           </Stack>
         </Link>
         <Spacer />

@@ -140,7 +140,7 @@ describe('headerVisibility', () => {
 
   it('uses the base header height for the occupied range on narrow screens', () => {
     // setup.ts の matchMedia モックは matches: false(base ブレークポイント扱い)
-    setScrollY(60);
+    setScrollY(70);
     const unsub = mod.subscribeHeaderVisibility(() => {});
 
     expect(mod.getHeaderAreaOccupied()).toBe(false);
