@@ -26,7 +26,7 @@ async function fetchGroupKeys() {
 }
 
 const currentYear = new Date().getFullYear();
-const paths = ['/', '/guide', '/events'];
+const paths = ['/', '/guide', '/events', '/groups'];
 for (let year = START_YEAR; year <= currentYear; year++) {
   paths.push(`/events/${year}`);
 }
