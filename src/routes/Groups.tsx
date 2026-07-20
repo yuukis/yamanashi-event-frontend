@@ -77,10 +77,14 @@ function Groups() {
     };
   }, []);
 
-  const filteredGroups = data.groups.filter((group) => matchesQuery(group, query));
-  const { activeGroups, inactiveGroups } = splitGroupsByActivity(filteredGroups, data.activeGroupKeys);
+  const { activeGroups: allActiveGroups, inactiveGroups: allInactiveGroups } = splitGroupsByActivity(data.groups, data.activeGroupKeys);
+  const activeGroups = allActiveGroups.filter((group) => matchesQuery(group, query));
+  const inactiveGroups = allInactiveGroups.filter((group) => matchesQuery(group, query));
 
-  const structuredData = data.groups.length > 0 ? buildGroupsIndexJsonLd(data.groups) : null;
+  // 構造化データは検索欄の入力(一時的なUI状態)に左右されず、ページの
+  // 正規のコミュニティ一覧を表す必要があるため、フィルタ前の全件から
+  // 表示と同じ順序(アクティブ→その他)で組み立てる。
+  const structuredData = data.groups.length > 0 ? buildGroupsIndexJsonLd([...allActiveGroups, ...allInactiveGroups]) : null;
 
   return (
     <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>

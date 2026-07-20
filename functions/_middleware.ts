@@ -238,7 +238,7 @@ async function buildYearPageData(year: number): Promise<BotPageData> {
 async function buildGroupsIndexPageData(): Promise<BotPageData> {
   const [groups, rawEvents] = await Promise.all([
     fetchJson<ApiGroup[]>(withFields(GROUPS_API_URL, GROUPS_SUMMARY_FIELDS)),
-    fetchJson<ApiEvent[]>(withFields(EVENTS_API_URL, 'group_key')),
+    fetchJson<Pick<ApiEvent, 'group_key'>[]>(withFields(EVENTS_API_URL, 'group_key')),
   ]);
   const activeGroupKeys = collectActiveGroupKeys(rawEvents);
   const { activeGroups, inactiveGroups } = splitGroupsByActivity(groups, activeGroupKeys);
@@ -256,7 +256,7 @@ async function buildGroupsIndexPageData(): Promise<BotPageData> {
     title: 'コミュニティ一覧 - Yamanashi Developer Hub',
     description: `山梨県内で活動するITコミュニティ${groups.length}件を紹介しています。気になるコミュニティのページから過去の活動やイベント情報を確認できます。`,
     ogUrl: `${SITE_URL}/groups`,
-    jsonLd: buildGroupsIndexJsonLd(groups),
+    jsonLd: buildGroupsIndexJsonLd([...activeGroups, ...inactiveGroups]),
     bodyHtml,
   };
 }

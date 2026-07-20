@@ -62,6 +62,26 @@ describe('Groups', () => {
     expect(document.title).toBe('コミュニティ一覧 - Yamanashi Developer Hub');
   });
 
+  it('orders the structured data to match the displayed active-then-other order, unaffected by the search query', async () => {
+    // 五十音順ではAI BASEより先に来るKofu.rbを後ろにして、
+    // 「アクティブ→その他」の分類順が反映されているかを確認する。
+    vi.mocked(fetchGroups).mockResolvedValue([KOFURB, AIBASE]);
+    vi.mocked(fetchEvents).mockResolvedValue({
+      events: [makeEvent({ group_key: 'aibase' })],
+      lastModified: null,
+    });
+
+    renderGroupsPage();
+    await screen.findByText('AI BASE');
+
+    fireEvent.change(screen.getByLabelText('コミュニティ名で検索'), { target: { value: 'AI BASE' } });
+    expect(screen.queryByText('Kofu.rb')).not.toBeInTheDocument();
+
+    const script = document.getElementById('structured-data-groups');
+    const jsonLd = JSON.parse(script!.textContent!);
+    expect(jsonLd.itemListElement.map((item: any) => item.item.name)).toEqual(['AI BASE', 'Kofu.rb']);
+  });
+
   it('filters the visible communities as the user types a search query', async () => {
     vi.mocked(fetchGroups).mockResolvedValue([AIBASE, KOFURB]);
     vi.mocked(fetchEvents).mockResolvedValue({ events: [], lastModified: null });
