@@ -590,7 +590,7 @@ export function EventBody(data: EventBodyProps) {
             </Hide>
 
             {group_image_url && (
-              group_key ? (
+              group_key && isDesktopScreenSize ? (
                 <Button variant={'unstyled'}
                         aria-label={`${group_name ?? 'コミュニティ'}のページを見る`}
                         position={'absolute'}

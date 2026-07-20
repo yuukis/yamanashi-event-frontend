@@ -223,6 +223,30 @@ describe('EventBody', () => {
       windowOpenSpy.mockRestore();
     });
 
+    it('treats a tap on the community logo the same as a tap on the card below the desktop breakpoint', () => {
+      mockMatchMedia(false);
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      const event = makeEvent({
+        uid: 'event-1',
+        event_url: 'https://example.com/event/1',
+        group_key: 'aibase',
+        group_name: 'AI BASE',
+        group_image_url: 'https://example.com/logo.png',
+      });
+      const { container } = renderWithChakra(<EventBody event={event} />);
+
+      expect(screen.queryByRole('button', { name: 'AI BASEのページを見る' })).not.toBeInTheDocument();
+
+      const logo = container.querySelector('img[src="https://example.com/logo.png"]') as HTMLElement;
+      expect(logo).not.toBeNull();
+
+      fireEvent.touchStart(logo, { touches: [{ clientX: 0, clientY: 0 }] });
+      fireEvent.touchEnd(logo);
+
+      expect(windowOpenSpy).toHaveBeenCalledWith('https://example.com/event/1', '_self');
+      windowOpenSpy.mockRestore();
+    });
+
     it('includes a "コミュニティページを見る" item in the desktop options menu', () => {
       mockMatchMedia(true);
       const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
