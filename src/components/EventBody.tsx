@@ -62,6 +62,7 @@ import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
 import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
 import { isEventMarked, markEvent, unmarkEvent } from '../utils/markedEvents';
+import { isArchiveEvent } from '../utils/eventGroups';
 import { subscribeMarkedEvents, getMarkedEventsSnapshot, updateMarkedEventsData } from '../utils/markedEventsStore';
 import { EventDescriptionSummary } from './EventDescriptionSummary';
 import { buildGroupPagePath } from '../utils/groupPage';
@@ -123,8 +124,8 @@ export function EventBody(data: EventBodyProps) {
   const group_key = event.group_key;
   const group_name = event.group_name;
   const group_image_url = event.group_image_url;
-  const archive_source = event.archive_source;
   const archive_url = event.archive_url;
+  const is_archive_event = isArchiveEvent(event);
   const keywords = event.keywords ?? [];
   const x_search_keywords_array = [];
   if (hash_tag) {
@@ -471,7 +472,7 @@ export function EventBody(data: EventBodyProps) {
                     md: '140px'
                   }}
                   >{ sub_title }</Text>
-            {archive_source && (
+            {is_archive_event && (
               <Badge colorScheme="secondary" variant="subtle"
                      display={'block'} w={'fit-content'}
                      >
@@ -675,7 +676,7 @@ export function EventBody(data: EventBodyProps) {
                                       >
                               { x_search_label }
                             </MenuItem>
-                            {archive_url && (
+                            {is_archive_event && archive_url && (
                               <MenuItem icon={<FiArchive />}
                                         onClick={() => window.open(archive_url)}
                                         >
@@ -776,7 +777,7 @@ export function EventBody(data: EventBodyProps) {
                       >
                 { x_search_label }
               </Button>
-              {archive_url && (
+              {is_archive_event && archive_url && (
                 <Button w="full"
                         leftIcon={<FiArchive />}
                         onClick={() => {

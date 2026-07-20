@@ -35,6 +35,10 @@ export function isFutureEvent(event: ApiEvent) {
   return isVisibleEvent(event) && !isPastEvent(event);
 }
 
+export function isArchiveEvent(event: ApiEvent) {
+  return event.source === 'archive';
+}
+
 export type GroupEventDates = {
   uid: string;
   started_at: string;

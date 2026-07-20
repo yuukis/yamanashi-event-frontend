@@ -305,13 +305,44 @@ describe('EventBody', () => {
     });
   });
 
-  it('shows an archive badge when the event has an archive source', () => {
+  it('shows an archive badge when the event source is archive', () => {
     mockMatchMedia(true);
     renderWithChakra(
-      <EventBody event={makeEvent({ archive_source: 'connpass' })} />,
+      <EventBody event={makeEvent({ source: 'archive' })} />,
     );
 
     expect(screen.getByText('アーカイブ')).toBeInTheDocument();
+  });
+
+  it('does not show an archive badge for a live event even when its group has an archive source', () => {
+    mockMatchMedia(true);
+    renderWithChakra(
+      <EventBody event={makeEvent({ source: 'connpass', archive_source: 'connpass', archive_url: 'https://example.com/archive' })} />,
+    );
+
+    expect(screen.queryByText('アーカイブ')).not.toBeInTheDocument();
+  });
+
+  it('includes a "アーカイブ元を開く" item in the desktop options menu for an archived event', () => {
+    mockMatchMedia(true);
+    renderWithChakra(
+      <EventBody event={makeEvent({ source: 'archive', archive_source: 'connpass', archive_url: 'https://example.com/archive' })} />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+
+    expect(screen.getByText('アーカイブ元を開く')).toBeInTheDocument();
+  });
+
+  it('omits the "アーカイブ元を開く" menu item for a live event even when its group has an archive URL', () => {
+    mockMatchMedia(true);
+    renderWithChakra(
+      <EventBody event={makeEvent({ source: 'connpass', archive_source: 'connpass', archive_url: 'https://example.com/archive' })} />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+
+    expect(screen.queryByText('アーカイブ元を開く')).not.toBeInTheDocument();
   });
 
   it('calls onKeywordClick when a keyword tag is clicked on desktop', () => {
