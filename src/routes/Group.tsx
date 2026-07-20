@@ -164,11 +164,6 @@ type GroupState = {
   errorMessage: string;
   isNotFound: boolean;
   page: number;
-  // APIのx-total-count/x-total-pagesヘッダーはAccess-Control-Expose-Headers
-  // が設定されておらず、ブラウザからは読めない(curlでは見えるが
-  // fetch/axiosではnullになる)。そのため「もっと見る」の表示可否は
-  // ヘッダーに頼らず、直前に取得したページの件数がページサイズと
-  // 一致するか(=まだ続きがありそうか)で判定する。
   hasMorePastEvents: boolean;
   totalCount: number | null;
   isLoadingMorePastEvents: boolean;

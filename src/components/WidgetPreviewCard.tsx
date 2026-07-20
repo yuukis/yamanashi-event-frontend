@@ -56,9 +56,7 @@ type WidgetPreviewCardProps = {
   iframeTitle: string;
   elementId: string;
   controls?: ReactNode;
-  // 'stacked'(既定): プレビューとスニペットを常に縦に並べる。
-  // 'side-by-side': md以上でプレビューを固定幅にしてスニペットと横に並べる
-  // (プレビューがカード幅いっぱいに間延びするのを防ぐ)。
+  // side-by-sideはプレビューがカード幅いっぱいに間延びするのを防ぐ
   layout?: 'stacked' | 'side-by-side';
 };
 

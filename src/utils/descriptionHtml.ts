@@ -42,9 +42,8 @@ const TAG_MAP: Record<string, { tag: string; className?: string }> = {
 };
 
 const VOID_TAGS = new Set(['br', 'hr']);
-// 中身のテキストごと捨てるタグ
 const DROP_CONTENT_TAGS = new Set(['script', 'style', 'noscript', 'iframe', 'object', 'svg', 'head', 'title']);
-// 空になったら要素ごと取り除くタグ(th/tdは表の列を保つため残す)
+// th/tdは空でも表の列数を保つため対象外にする
 const PRUNE_IF_EMPTY = new Set([
   'a', 'p', 'li', 'ul', 'ol', 'blockquote', 'pre', 'code',
   'table', 'thead', 'tbody', 'tfoot', 'tr',
@@ -127,7 +126,6 @@ function parse(html: string): SanitizedNode[] {
     }
 
     if (isClosing) {
-      // 対応する開きタグまで閉じる。見つからない閉じタグは無視する
       for (let i = stack.length - 1; i > 0; i--) {
         if (stack[i].tag === mapping.tag) {
           stack.length = i;
