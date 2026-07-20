@@ -1,5 +1,6 @@
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, isVisibleEvent } from '../src/utils/eventGroups';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../src/utils/eventSort';
+import { countKeywords } from '../src/utils/eventKeywords';
 import { buildEventListJsonLd, buildGroupPageJsonLd, buildYearArchiveJsonLd } from '../src/utils/structuredData';
 import { htmlToText, truncateText } from '../src/utils/htmlText';
 import { sanitizeDescriptionHtml } from '../src/utils/descriptionHtml';
@@ -57,6 +58,11 @@ const MAX_LIST_ITEMS = 300;
 // レンダリングはクリック操作ができないため、1回のフェッチで取得できる
 // 最大件数を使い、ページングなしで完結させる。
 const GROUP_EVENTS_FETCH_PER_PAGE = 200;
+// 特徴キーワードの集計対象件数。フロントエンド(Group.tsx)の
+// GROUP_EVENTS_PAGE_SIZEと合わせ、「最初のページ相当」から算出する
+// (直近の活動傾向を示す指標として安定させるため、全件からは集計しない)。
+const GROUP_FEATURED_KEYWORDS_SOURCE_COUNT = 20;
+const FEATURED_KEYWORDS_LIMIT = 5;
 
 type ResolvedPage =
   | { kind: 'root' }
@@ -235,9 +241,14 @@ async function buildGroupPageData(key: string): Promise<BotPageData> {
     .map((link) => `<li><a href="${escapeHtml(link.url)}" rel="nofollow">${escapeHtml(link.label)}</a></li>`)
     .join('');
 
+  const featuredKeywords = countKeywords(events.slice(0, GROUP_FEATURED_KEYWORDS_SOURCE_COUNT))
+    .slice(0, FEATURED_KEYWORDS_LIMIT)
+    .map(([keyword]) => keyword);
+
   const bodyHtml = [
     `<h1>${escapeHtml(group.title)}</h1>`,
     group.sub_title ? `<p>${escapeHtml(group.sub_title)}</p>` : '',
+    featuredKeywords.length > 0 ? `<p>キーワード: ${featuredKeywords.map(escapeHtml).join('、')}</p>` : '',
     group.description ? sanitizeDescriptionHtml(group.description) : '',
     links ? `<ul>${links}</ul>` : '',
     '<h2>今後の開催予定</h2>',
