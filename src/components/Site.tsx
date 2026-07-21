@@ -23,6 +23,8 @@ import {
   PopoverCloseButton,
   PopoverBody,
   HStack,
+  Wrap,
+  WrapItem,
   useDisclosure
 } from '@chakra-ui/react';
 import { isMobile } from 'react-device-detect';
@@ -31,6 +33,7 @@ import { Github, Calendar3 } from '@chakra-icons/bootstrap';
 import { FiCopy, FiCheck, FiCalendar } from 'react-icons/fi';
 import { SiGoogle, SiApple } from 'react-icons/si';
 import { PiMicrosoftOutlookLogoFill } from 'react-icons/pi';
+import { FaXTwitter } from 'react-icons/fa6';
 import { keyframes } from '@emotion/react';
 import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors';
 import { fetchEvents } from '../utils/api';
@@ -38,7 +41,7 @@ import { subscribeNow, getNow } from '../utils/nowTicker';
 import { subscribeHeaderVisibility, getHeaderVisible, getNearPageTop, setFixedHeaderBoundary, HEADER_HEIGHT } from '../utils/headerVisibility';
 import { jumpToAnchor } from '../utils/hashScroll';
 import { buildCalendarDays, buildEventsByDate, useTodayDate } from '../utils/calendar';
-import { SITE_URL } from '../utils/site';
+import { SITE_URL, X_ACCOUNT_URL } from '../utils/site';
 import type { ApiEvent } from '../types/events';
 
 const todayBadgePulse = keyframes`
@@ -180,11 +183,59 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <Center p={'4'}>
-      <Text fontSize={'xs'} color={'gray'}>
-        Yamanashi Developer Hub
-      </Text>
-    </Center>
+    <Box as={'footer'} borderTop={'1px solid'} borderColor={'gray.100'} mt={'8'}>
+      <Stack maxW={'980px'} m={'auto'} px={'4'} py={'6'} spacing={'4'} align={'center'}>
+        <Wrap justify={'center'} spacing={'4'}>
+          <WrapItem>
+            <Link href={'/'} fontSize={'sm'} color={'gray.600'} _hover={{color: 'gray.800'}}>
+              トップ
+            </Link>
+          </WrapItem>
+          <WrapItem>
+            <Link href={'/guide'} fontSize={'sm'} color={'gray.600'} _hover={{color: 'gray.800'}}>
+              はじめての方へ
+            </Link>
+          </WrapItem>
+          <WrapItem>
+            <Link href={'/events'} fontSize={'sm'} color={'gray.600'} _hover={{color: 'gray.800'}}>
+              イベントアーカイブ
+            </Link>
+          </WrapItem>
+          <WrapItem>
+            <Link href={'/groups'} fontSize={'sm'} color={'gray.600'} _hover={{color: 'gray.800'}}>
+              コミュニティ一覧
+            </Link>
+          </WrapItem>
+        </Wrap>
+        <HStack spacing={'3'}>
+          <Button as={'a'}
+                  href={X_ACCOUNT_URL}
+                  target={'_blank'}
+                  rel={'noopener'}
+                  size={'xs'}
+                  variant={'outline'}
+                  fontWeight={'normal'}
+                  leftIcon={<FaXTwitter />}
+                  >
+            Follow
+          </Button>
+          <Button as={'a'}
+                  href={'https://github.com/yuukis/yamanashi-event-frontend'}
+                  target={'_blank'}
+                  rel={'noopener'}
+                  size={'xs'}
+                  variant={'outline'}
+                  fontWeight={'normal'}
+                  leftIcon={<Github />}
+                  >
+            GitHub
+          </Button>
+        </HStack>
+        <Text fontSize={'sm'} color={'gray.600'} pt={'2'}>
+          Yamanashi Developer Hub
+        </Text>
+      </Stack>
+    </Box>
   );
 }
 
