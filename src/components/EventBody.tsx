@@ -127,8 +127,7 @@ export function EventBody(data: EventBodyProps) {
   const group_image_url = event.group_image_url;
   const is_registered_group = event.is_registered_group;
   const archive_url = event.archive_url;
-  // is_registered_groupが未設定(enrichEventsWithGroupsを経由しない
-  // 呼び出し元)の場合は、後方互換のため登録済みとして扱う。
+  // 後方互換: is_registered_group未設定の呼び出し元を壊さないため
   const has_group_page = Boolean(group_key) && is_registered_group !== false;
   const is_archive_event = isArchiveEvent(event);
   const keywords = event.keywords ?? [];
