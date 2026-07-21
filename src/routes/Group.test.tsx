@@ -283,6 +283,26 @@ describe('Group', () => {
       expect(screen.queryByTestId('group-stat-since-loading')).not.toBeInTheDocument();
     });
 
+    it('clears the placeholder without getting stuck when the start year summary request fails', async () => {
+      mockTwoPageGroup();
+      let rejectStartYear: (err: Error) => void = () => {};
+      vi.mocked(fetchGroupStartYear).mockReturnValue(new Promise((_resolve, reject) => {
+        rejectStartYear = reject;
+      }));
+
+      renderGroupPage();
+
+      await screen.findByText('AI BASE #0');
+      expect(screen.getByTestId('group-stat-since-loading')).toBeInTheDocument();
+
+      rejectStartYear(new Error('Network Error'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('group-stat-since-loading')).not.toBeInTheDocument();
+      });
+      expect(screen.queryByTestId('group-stat-since')).not.toBeInTheDocument();
+    });
+
     it('appends the next page and hides the button once every page is loaded', async () => {
       mockTwoPageGroup();
 

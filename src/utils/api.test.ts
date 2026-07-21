@@ -374,4 +374,12 @@ describe('fetchGroupStartYear', () => {
 
     expect(result).toBeNull();
   });
+
+  it('returns null when start_year is not a finite number (e.g. a string or NaN)', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: { start_year: '2018' } });
+    await expect(fetchGroupStartYear('aibase')).resolves.toBeNull();
+
+    vi.mocked(axios.get).mockResolvedValue({ data: { start_year: Infinity } });
+    await expect(fetchGroupStartYear('aibase')).resolves.toBeNull();
+  });
 });

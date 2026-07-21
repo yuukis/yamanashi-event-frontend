@@ -167,5 +167,6 @@ export async function fetchEventsSummary(): Promise<{ summary: ApiEventsSummary;
 
 export async function fetchGroupStartYear(groupKey: string): Promise<number | null> {
   const res = await axios.get(`${GROUPS_SUMMARY_API_URL}/${encodeURIComponent(groupKey)}`, { params: { fields: 'start_year' } });
-  return (res.data?.start_year ?? null) as number | null;
+  const startYear = res.data?.start_year;
+  return typeof startYear === 'number' && Number.isFinite(startYear) ? startYear : null;
 }

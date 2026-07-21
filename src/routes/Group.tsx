@@ -202,11 +202,11 @@ function extractErrorMessage(err: unknown): string {
 }
 
 type StartYearSummaryState = {
-  status: 'idle' | 'loading' | 'loaded' | 'error';
+  isLoading: boolean;
   year: number | null;
 };
 
-const IDLE_START_YEAR_SUMMARY: StartYearSummaryState = { status: 'idle', year: null };
+const IDLE_START_YEAR_SUMMARY: StartYearSummaryState = { isLoading: false, year: null };
 
 function Group() {
   const { groupKey } = useParams();
@@ -250,17 +250,16 @@ function Group() {
           totalCount: eventsPage.totalCount,
         });
         if (hasMorePastEvents) {
-          setStartYearSummary({ status: 'loading', year: null });
+          setStartYearSummary({ isLoading: true, year: null });
           fetchGroupStartYear(groupKey)
             .then((year) => {
-              if (cancelled) {
-                return;
+              if (!cancelled) {
+                setStartYearSummary({ isLoading: false, year });
               }
-              setStartYearSummary({ status: 'loaded', year });
             })
             .catch(() => {
               if (!cancelled) {
-                setStartYearSummary({ status: 'error', year: null });
+                setStartYearSummary({ isLoading: false, year: null });
               }
             });
         }
@@ -353,10 +352,8 @@ function Group() {
   // 結果があればそちらを使う。
   const firstEventYear = !data.hasMorePastEvents && data.events.length > 0
     ? Math.min(...data.events.map((event) => new Date(event.started_at).getFullYear()))
-    : startYearSummary.status === 'loaded'
-      ? startYearSummary.year
-      : null;
-  const isFirstEventYearLoading = firstEventYear === null && data.hasMorePastEvents && startYearSummary.status === 'loading';
+    : startYearSummary.year;
+  const isFirstEventYearLoading = firstEventYear === null && startYearSummary.isLoading;
   const descriptionHtml = group?.description ? sanitizeDescriptionHtml(group.description) : '';
   const externalLinks = group ? buildGroupExternalLinks(group) : [];
   const featuredKeywords = countKeywords(data.initialEvents)
