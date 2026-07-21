@@ -88,7 +88,7 @@ function Groups() {
   const structuredData = data.groups.length > 0 ? buildGroupsIndexJsonLd([...allActiveGroups, ...allInactiveGroups]) : null;
 
   return (
-    <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
+    <Box className={'section-bg-pattern'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-groups'} data={structuredData} />
       <SiteHeader />
       <PageBreadcrumb items={[{ label: 'コミュニティ一覧', href: '/groups' }]} />

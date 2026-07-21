@@ -134,7 +134,7 @@ function List({ startYear} : {startYear: number}) {
     : null;
 
   return (
-    <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
+    <Box className={'section-bg-pattern'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-events'} data={structuredData} />
       <SiteHeader />
       <PageBreadcrumb items={[

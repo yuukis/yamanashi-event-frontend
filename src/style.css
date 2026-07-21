@@ -51,3 +51,20 @@
     background-color: rgba(255, 110, 97, 0.25);
   }
 }
+
+/*
+ * ヘッダー/heroを除く背景 (#edf2f7) に敷く繰り返しパターンの実験用クラス。
+ * background-color には触れず、background-image 系だけを上書きする。
+ */
+.section-bg-pattern {
+  background-color: #edf2f7;
+  background-image:
+    repeating-linear-gradient(35deg,
+      rgba(255, 255, 255, 0.2) 0px, rgba(255, 255, 255, 0.2) 3px, transparent 3px, transparent 24px,
+      rgba(255, 255, 255, 0.2) 24px, rgba(255, 255, 255, 0.2) 27px, transparent 27px, transparent 48px,
+      rgba(255, 255, 255, 0.2) 48px, rgba(255, 255, 255, 0.2) 51px, transparent 51px, transparent 96px),
+    repeating-linear-gradient(-35deg,
+      rgba(255, 255, 255, 0.2) 0px, rgba(255, 255, 255, 0.2) 3px, transparent 3px, transparent 24px,
+      rgba(255, 255, 255, 0.2) 24px, rgba(255, 255, 255, 0.2) 27px, transparent 27px, transparent 48px,
+      rgba(255, 255, 255, 0.2) 48px, rgba(255, 255, 255, 0.2) 51px, transparent 51px, transparent 96px);
+}
