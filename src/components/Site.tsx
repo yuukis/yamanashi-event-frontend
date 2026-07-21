@@ -231,9 +231,12 @@ export function SiteFooter() {
             GitHub
           </Button>
         </HStack>
-        <Text fontSize={'sm'} color={'gray.600'} pt={'2'}>
-          Yamanashi Developer Hub
-        </Text>
+        <HStack spacing={'3'} pt={'2'}>
+          <Image src={icon} boxSize={'6'} alt={'Yamanashi Developer Hub'} />
+          <Heading size={'sm'} fontWeight={'normal'} color={'gray.600'}>
+            <strong>Yamanashi</strong> Developer Hub
+          </Heading>
+        </HStack>
       </Stack>
     </Box>
   );
