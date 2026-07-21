@@ -678,19 +678,13 @@ export function EventBody(data: EventBodyProps) {
                                       >
                               情報提供元のページを開く
                             </MenuItem>
-                            {has_group_page ? (
+                            {has_group_page && (
                               <MenuItem icon={<People />}
                                         onClick={() => window.open(buildGroupPagePath(group_key!), '_self')}
                                         >
                                 コミュニティページを見る
                               </MenuItem>
-                            ) : group_url ? (
-                              <MenuItem icon={<FiExternalLink />}
-                                        onClick={() => window.open(group_url)}
-                                        >
-                                コミュニティのページを見る
-                              </MenuItem>
-                            ) : null}
+                            )}
                             <MenuItem icon={<FaXTwitter />}
                                       onClick={() => window.open(event_x_search_url)}
                                       >
@@ -766,7 +760,7 @@ export function EventBody(data: EventBodyProps) {
                       >
                 情報提供元のページを開く
               </Button>
-              {has_group_page ? (
+              {has_group_page && (
                 <Button w="full"
                         leftIcon={<People />}
                         onClick={() => {
@@ -776,17 +770,7 @@ export function EventBody(data: EventBodyProps) {
                         >
                   コミュニティページを見る
                 </Button>
-              ) : group_url ? (
-                <Button w="full"
-                        leftIcon={<FiExternalLink />}
-                        onClick={() => {
-                          window.open(group_url);
-                          onClose();
-                        }}
-                        >
-                  コミュニティのページを見る
-                </Button>
-              ) : null}
+              )}
               {address_array.length > 0 && (
                 <Button w="full"
                         leftIcon={<FiMap />}

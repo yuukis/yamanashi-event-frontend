@@ -309,9 +309,8 @@ describe('EventBody', () => {
       expect(screen.queryByText('コミュニティページを見る')).not.toBeInTheDocument();
     });
 
-    it('opens the event\'s group_url in the desktop options menu when the community has no page on this site', () => {
+    it('omits the community page menu item when the community has no page on this site (unregistered group)', () => {
       mockMatchMedia(true);
-      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
       renderWithChakra(
         <EventBody event={makeEvent({
           group_key: 'unlisted-group',
@@ -322,11 +321,9 @@ describe('EventBody', () => {
       );
 
       fireEvent.click(screen.getByRole('button', { name: 'Options' }));
-      expect(screen.queryByText('コミュニティページを見る')).not.toBeInTheDocument();
-      fireEvent.click(screen.getByText('コミュニティのページを見る'));
 
-      expect(windowOpenSpy).toHaveBeenCalledWith('https://ai-base.connpass.com/');
-      windowOpenSpy.mockRestore();
+      expect(screen.queryByText('コミュニティページを見る')).not.toBeInTheDocument();
+      expect(screen.queryByText('コミュニティのページを見る')).not.toBeInTheDocument();
     });
 
     it('includes a "コミュニティページを見る" button in the mobile options drawer', () => {
@@ -352,9 +349,8 @@ describe('EventBody', () => {
       expect(screen.queryByRole('button', { name: 'コミュニティページを見る' })).not.toBeInTheDocument();
     });
 
-    it('opens the event\'s group_url in the mobile options drawer when the community has no page on this site', () => {
+    it('omits the community page drawer button when the community has no page on this site (unregistered group)', () => {
       mockMatchMedia(false);
-      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
       renderWithChakra(
         <EventBody event={makeEvent({
           group_key: 'unlisted-group',
@@ -365,11 +361,9 @@ describe('EventBody', () => {
       );
 
       fireEvent.click(screen.getByLabelText('More options'));
-      expect(screen.queryByRole('button', { name: 'コミュニティページを見る' })).not.toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: 'コミュニティのページを見る' }));
 
-      expect(windowOpenSpy).toHaveBeenCalledWith('https://ai-base.connpass.com/');
-      windowOpenSpy.mockRestore();
+      expect(screen.queryByRole('button', { name: 'コミュニティページを見る' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'コミュニティのページを見る' })).not.toBeInTheDocument();
     });
   });
 
