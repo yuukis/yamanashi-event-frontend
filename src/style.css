@@ -52,16 +52,6 @@
   }
 }
 
-/*
- * ヘッダー/heroを除く背景 (#edf2f7) に敷く繰り返しパターンの実験用クラス。
- * background-color には触れず、background-image 系だけを上書きする。
- *
- * 各ページの中央コンテンツは Container maxW="980px" で揃っているため、
- * その外側の余白(片側 = 50vw - 490px、最小0)にだけ模様の帯を敷き、
- * コンテンツ幅の内側は単色のまま見せる。同じグラデーションを左右2枚ずつ
- * 用意し、no-repeat + background-size で幅を余白ぶんに絞って左右端へ
- * 個別に配置する。
- */
 .section-bg-pattern {
   --section-bg-pattern-gutter: max(0px, calc(50vw - 490px));
   background-color: #edf2f7;
