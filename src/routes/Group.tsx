@@ -212,8 +212,6 @@ function Group() {
   const { groupKey } = useParams();
 
   const [data, setData] = useState<GroupState>(initialGroupState);
-  // 初回取得した過去イベントだけでは「活動開始年」が確定しない(まだ
-  // 続きがある)場合にのみ、コストの高い集計エンドポイントへ問い合わせる。
   const [startYearSummary, setStartYearSummary] = useState<StartYearSummaryState>(IDLE_START_YEAR_SUMMARY);
 
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLDivElement>();
@@ -348,8 +346,6 @@ function Group() {
   const eventCountUnit = data.totalCount === null && data.hasMorePastEvents ? '件以上' : '件';
   // 活動開始年は「最も古いイベント」から求めるため、過去ページを
   // すべて読み込み終えるまでは不正確(実際より新しい年になる)。
-  // 全ページ読み込み完了前は、集計エンドポイント(/summary/groups)の
-  // 結果があればそちらを使う。
   const firstEventYear = !data.hasMorePastEvents && data.events.length > 0
     ? Math.min(...data.events.map((event) => new Date(event.started_at).getFullYear()))
     : startYearSummary.year;
