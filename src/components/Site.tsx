@@ -231,19 +231,16 @@ export function SiteFooter() {
             GitHub
           </Button>
         </HStack>
-        <HStack spacing={'3'}
-                pt={'2'}
+        <HStack as={'button'}
+                type={'button'}
+                spacing={'3'}
                 cursor={'pointer'}
-                role={'button'}
-                tabIndex={0}
+                bg={'transparent'}
+                border={'none'}
+                p={'0'}
+                pt={'2'}
                 aria-label={'ページの先頭へ戻る'}
                 onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    window.scrollTo({top: 0, behavior: 'smooth'});
-                  }
-                }}
                 >
           <Image src={icon} boxSize={'6'} alt={'Yamanashi Developer Hub'} />
           <Heading size={'sm'} fontWeight={'normal'} color={'gray.600'}>
