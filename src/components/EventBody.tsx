@@ -127,11 +127,8 @@ export function EventBody(data: EventBodyProps) {
   const group_image_url = event.group_image_url;
   const is_registered_group = event.is_registered_group;
   const archive_url = event.archive_url;
-  // group_keyがあってもコミュニティが/groupsに未登録(サイトに個別ページが
-  // ない)場合は、コミュニティページへのリンク先をイベント側のgroup_urlに
-  // フォールバックする。is_registered_groupが明示的にfalseの場合のみ
-  // 未登録として扱い、未設定(enrichEventsWithGroupsを経由していない
-  // 呼び出し元)ではこれまで通り登録済みとみなす。
+  // is_registered_groupが未設定(enrichEventsWithGroupsを経由しない
+  // 呼び出し元)の場合は、後方互換のため登録済みとして扱う。
   const has_group_page = Boolean(group_key) && is_registered_group !== false;
   const is_archive_event = isArchiveEvent(event);
   const keywords = event.keywords ?? [];
