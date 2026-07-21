@@ -25,22 +25,23 @@ describe('enrichEventsWithGroups', () => {
     expect(result.group_image_url).toBe('https://example.com/g1.png');
     expect(result.archive_source).toBe('connpass');
     expect(result.archive_url).toBe('https://example.com/archive');
+    expect(result.is_registered_group).toBe(true);
   });
 
-  it('leaves the event untouched when there is no group_key', () => {
+  it('marks the event as an unregistered group when there is no group_key', () => {
     const event = makeEvent({ group_key: null });
 
     const [result] = enrichEventsWithGroups([event], [makeGroup()]);
 
-    expect(result).toEqual(event);
+    expect(result).toEqual({ ...event, is_registered_group: false });
   });
 
-  it('leaves the event untouched when group_key does not match any group', () => {
+  it('marks the event as an unregistered group when group_key does not match any group', () => {
     const event = makeEvent({ group_key: 'missing' });
 
     const [result] = enrichEventsWithGroups([event], [makeGroup({ key: 'g1' })]);
 
-    expect(result).toEqual(event);
+    expect(result).toEqual({ ...event, is_registered_group: false });
   });
 });
 
