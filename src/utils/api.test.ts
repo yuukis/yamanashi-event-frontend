@@ -8,9 +8,11 @@ import {
   fetchGroup,
   fetchGroups,
   fetchEventsSummary,
+  fetchGroupStartYear,
   EVENTS_API_URL,
   GROUPS_API_URL,
   EVENTS_SUMMARY_API_URL,
+  GROUPS_SUMMARY_API_URL,
   EVENTS_FIELDS,
   GROUPS_FIELDS,
   GROUPS_SUMMARY_FIELDS,
@@ -344,5 +346,32 @@ describe('fetchEventsSummary', () => {
     const result = await fetchEventsSummary();
 
     expect(result.lastModified).toBeNull();
+  });
+});
+
+describe('fetchGroupStartYear', () => {
+  it('requests the group summary endpoint for only the start_year field', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: { start_year: 2018 } });
+
+    const result = await fetchGroupStartYear('aibase');
+
+    expect(axios.get).toHaveBeenCalledWith(`${GROUPS_SUMMARY_API_URL}/aibase`, { params: { fields: 'start_year' } });
+    expect(result).toBe(2018);
+  });
+
+  it('URL-encodes the group key in the request path', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: { start_year: 2018 } });
+
+    await fetchGroupStartYear('a b/c');
+
+    expect(axios.get).toHaveBeenCalledWith(`${GROUPS_SUMMARY_API_URL}/a%20b%2Fc`, { params: { fields: 'start_year' } });
+  });
+
+  it('returns null when start_year is absent from the response', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: {} });
+
+    const result = await fetchGroupStartYear('aibase');
+
+    expect(result).toBeNull();
   });
 });

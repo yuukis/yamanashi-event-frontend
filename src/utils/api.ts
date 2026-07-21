@@ -4,6 +4,7 @@ import type { ApiEvent, ApiGroup, ApiGroupDetail, ApiEventsSummary } from '../ty
 export const EVENTS_API_URL = 'https://api.event.yamanashi.dev/events';
 export const GROUPS_API_URL = 'https://api.event.yamanashi.dev/groups';
 export const EVENTS_SUMMARY_API_URL = 'https://api.event.yamanashi.dev/summary/events';
+export const GROUPS_SUMMARY_API_URL = 'https://api.event.yamanashi.dev/summary/groups';
 
 export const EVENTS_FIELDS = [
   'uid',
@@ -162,4 +163,9 @@ export async function fetchEventsSummary(): Promise<{ summary: ApiEventsSummary;
     summary: res.data as ApiEventsSummary,
     lastModified: res.headers['last-modified'] ?? null,
   };
+}
+
+export async function fetchGroupStartYear(groupKey: string): Promise<number | null> {
+  const res = await axios.get(`${GROUPS_SUMMARY_API_URL}/${encodeURIComponent(groupKey)}`, { params: { fields: 'start_year' } });
+  return (res.data?.start_year ?? null) as number | null;
 }
