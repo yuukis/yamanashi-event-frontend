@@ -31,7 +31,7 @@ import { People, Tags } from '@chakra-icons/bootstrap';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, isFutureEvent, isPastEvent } from '../utils/eventGroups';
 import { countKeywords } from '../utils/eventKeywords';
-import { fetchGroup, fetchGroupEvents } from '../utils/api';
+import { fetchGroup, fetchGroupEvents, fetchGroupStartYear } from '../utils/api';
 import type { GroupEventsPage } from '../utils/api';
 import { buildGroupPageUrl, buildGroupPagePath, buildGroupExternalLinks, buildGroupFeedUrl, buildGroupFeedTitle } from '../utils/groupPage';
 import { buildGroupPageJsonLd } from '../utils/structuredData';
@@ -69,6 +69,15 @@ function GroupStat({ label, value, unit, testId }: { label: string; value: numbe
         <Text as={'span'} fontSize={'lg'} fontWeight={'bold'} mr={'1'}>{value}</Text>
         {unit}
       </Text>
+    </Box>
+  );
+}
+
+function GroupStatSkeleton({ label, testId }: { label: string; testId: string }) {
+  return (
+    <Box data-testid={testId} minW={'0'}>
+      <Text fontSize={'xs'} color={'gray.500'} whiteSpace={'nowrap'}>{label}</Text>
+      <Skeleton h={'1.25rem'} w={'2.5rem'} mt={'1'} />
     </Box>
   );
 }
@@ -192,15 +201,26 @@ function extractErrorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
+type StartYearSummaryState = {
+  status: 'idle' | 'loading' | 'loaded' | 'error';
+  year: number | null;
+};
+
+const IDLE_START_YEAR_SUMMARY: StartYearSummaryState = { status: 'idle', year: null };
+
 function Group() {
   const { groupKey } = useParams();
 
   const [data, setData] = useState<GroupState>(initialGroupState);
+  // 初回取得した過去イベントだけでは「活動開始年」が確定しない(まだ
+  // 続きがある)場合にのみ、コストの高い集計エンドポイントへ問い合わせる。
+  const [startYearSummary, setStartYearSummary] = useState<StartYearSummaryState>(IDLE_START_YEAR_SUMMARY);
 
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLDivElement>();
 
   useEffect(() => {
     setData(initialGroupState());
+    setStartYearSummary(IDLE_START_YEAR_SUMMARY);
 
     if (!groupKey) {
       return;
@@ -217,6 +237,7 @@ function Group() {
           return;
         }
         const initialEvents = enrichEventsWithGroups(eventsPage.events, [group]).filter(isVisibleEvent);
+        const hasMorePastEvents = computeHasMorePastEvents(eventsPage, 1);
         setData({
           ...initialGroupState(),
           isLoading: false,
@@ -225,9 +246,24 @@ function Group() {
           initialEvents,
           lastModified: eventsPage.lastModified,
           page: eventsPage.page ?? 1,
-          hasMorePastEvents: computeHasMorePastEvents(eventsPage, 1),
+          hasMorePastEvents,
           totalCount: eventsPage.totalCount,
         });
+        if (hasMorePastEvents) {
+          setStartYearSummary({ status: 'loading', year: null });
+          fetchGroupStartYear(groupKey)
+            .then((year) => {
+              if (cancelled) {
+                return;
+              }
+              setStartYearSummary({ status: 'loaded', year });
+            })
+            .catch(() => {
+              if (!cancelled) {
+                setStartYearSummary({ status: 'error', year: null });
+              }
+            });
+        }
       } catch (err) {
         if (cancelled) {
           return;
@@ -313,10 +349,14 @@ function Group() {
   const eventCountUnit = data.totalCount === null && data.hasMorePastEvents ? '件以上' : '件';
   // 活動開始年は「最も古いイベント」から求めるため、過去ページを
   // すべて読み込み終えるまでは不正確(実際より新しい年になる)。
-  // 全ページ読み込み完了後にのみ表示する。
+  // 全ページ読み込み完了前は、集計エンドポイント(/summary/groups)の
+  // 結果があればそちらを使う。
   const firstEventYear = !data.hasMorePastEvents && data.events.length > 0
     ? Math.min(...data.events.map((event) => new Date(event.started_at).getFullYear()))
-    : null;
+    : startYearSummary.status === 'loaded'
+      ? startYearSummary.year
+      : null;
+  const isFirstEventYearLoading = firstEventYear === null && data.hasMorePastEvents && startYearSummary.status === 'loading';
   const descriptionHtml = group?.description ? sanitizeDescriptionHtml(group.description) : '';
   const externalLinks = group ? buildGroupExternalLinks(group) : [];
   const featuredKeywords = countKeywords(data.initialEvents)
@@ -446,11 +486,15 @@ function Group() {
                           <GroupStat label={'開催イベント'} value={eventCount} unit={eventCountUnit} testId={'group-stat-events'} />
                         </WrapItem>
                       )}
-                      {firstEventYear && (
+                      {firstEventYear ? (
                         <WrapItem>
                           <GroupStat label={'活動開始'} value={firstEventYear} unit={'年'} testId={'group-stat-since'} />
                         </WrapItem>
-                      )}
+                      ) : isFirstEventYearLoading ? (
+                        <WrapItem>
+                          <GroupStatSkeleton label={'活動開始'} testId={'group-stat-since-loading'} />
+                        </WrapItem>
+                      ) : null}
                       {(group.member_users_count ?? 0) > 0 && (
                         <WrapItem>
                           <GroupStat label={'メンバー'} value={group.member_users_count!} unit={'人'} testId={'group-stat-members'} />

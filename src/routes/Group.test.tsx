@@ -4,7 +4,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { renderWithChakra, mockMatchMedia } from '../test/test-utils';
 import Group from './Group';
 import { makeEvent, makeGroupDetail } from '../test/fixtures';
-import { fetchGroup, fetchGroupEvents } from '../utils/api';
+import { fetchGroup, fetchGroupEvents, fetchGroupStartYear } from '../utils/api';
 
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
 
@@ -16,6 +16,7 @@ vi.mock('../utils/nowTicker', () => ({
 vi.mock('../utils/api', () => ({
   fetchGroup: vi.fn(),
   fetchGroupEvents: vi.fn(),
+  fetchGroupStartYear: vi.fn(),
 }));
 
 vi.mock('../components/Site', () => ({
@@ -41,6 +42,8 @@ describe('Group', () => {
     mockMatchMedia(true);
     vi.mocked(fetchGroup).mockReset();
     vi.mocked(fetchGroupEvents).mockReset();
+    vi.mocked(fetchGroupStartYear).mockReset();
+    vi.mocked(fetchGroupStartYear).mockResolvedValue(null);
   });
 
   it('renders the community profile with description, stats and external links', async () => {
@@ -80,6 +83,9 @@ describe('Group', () => {
     expect(screen.getByTestId('group-stat-events')).toHaveTextContent('開催イベント2件');
     expect(screen.getByTestId('group-stat-since')).toHaveTextContent('活動開始2025年');
     expect(screen.getByTestId('group-stat-members')).toHaveTextContent('メンバー44人');
+    // 初回取得で活動開始年が確定した(全ページ読み込み済み)ので、集計
+    // エンドポイントへは問い合わせない
+    expect(fetchGroupStartYear).not.toHaveBeenCalled();
     expect(screen.getByRole('link', { name: /イベントに参加する/ })).toHaveAttribute('href', 'https://aibase.connpass.com/');
     expect(screen.getByRole('link', { name: 'RSS' }))
       .toHaveAttribute('href', 'https://feed.event.yamanashi.dev/aibase/feed.xml');
@@ -255,6 +261,26 @@ describe('Group', () => {
       // 全ページ読み込み前は「活動開始」年が不正確になるため表示しない
       expect(screen.queryByTestId('group-stat-since')).not.toBeInTheDocument();
       expect(screen.getByTestId('group-stat-events')).toHaveTextContent('開催イベント32件');
+    });
+
+    it('fetches the start year from the summary endpoint while pagination is incomplete, showing a placeholder until it resolves', async () => {
+      mockTwoPageGroup();
+      let resolveStartYear: (year: number | null) => void = () => {};
+      vi.mocked(fetchGroupStartYear).mockReturnValue(new Promise((resolve) => {
+        resolveStartYear = resolve;
+      }));
+
+      renderGroupPage();
+
+      await screen.findByText('AI BASE #0');
+      expect(fetchGroupStartYear).toHaveBeenCalledWith('aibase');
+      expect(screen.getByTestId('group-stat-since-loading')).toBeInTheDocument();
+      expect(screen.queryByTestId('group-stat-since')).not.toBeInTheDocument();
+
+      resolveStartYear(2016);
+
+      expect(await screen.findByTestId('group-stat-since')).toHaveTextContent('活動開始2016年');
+      expect(screen.queryByTestId('group-stat-since-loading')).not.toBeInTheDocument();
     });
 
     it('appends the next page and hides the button once every page is loaded', async () => {
