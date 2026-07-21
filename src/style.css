@@ -55,10 +55,32 @@
 /*
  * ヘッダー/heroを除く背景 (#edf2f7) に敷く繰り返しパターンの実験用クラス。
  * background-color には触れず、background-image 系だけを上書きする。
+ *
+ * 各ページの中央コンテンツは Container maxW="980px" で揃っているため、
+ * その外側の余白(片側 = 50vw - 490px、最小0)にだけ模様の帯を敷き、
+ * コンテンツ幅の内側は単色のまま見せる。同じグラデーションを左右2枚ずつ
+ * 用意し、no-repeat + background-size で幅を余白ぶんに絞って左右端へ
+ * 個別に配置する。
  */
 .section-bg-pattern {
+  --section-bg-pattern-gutter: max(0px, calc(50vw - 490px));
   background-color: #edf2f7;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  background-position: left top, left top, right top, right top;
+  background-size:
+    var(--section-bg-pattern-gutter) 100%,
+    var(--section-bg-pattern-gutter) 100%,
+    var(--section-bg-pattern-gutter) 100%,
+    var(--section-bg-pattern-gutter) 100%;
   background-image:
+    repeating-linear-gradient(35deg,
+      rgba(255, 255, 255, 0.2) 0px, rgba(255, 255, 255, 0.2) 3px, transparent 3px, transparent 24px,
+      rgba(255, 255, 255, 0.2) 24px, rgba(255, 255, 255, 0.2) 27px, transparent 27px, transparent 48px,
+      rgba(255, 255, 255, 0.2) 48px, rgba(255, 255, 255, 0.2) 51px, transparent 51px, transparent 96px),
+    repeating-linear-gradient(-35deg,
+      rgba(255, 255, 255, 0.2) 0px, rgba(255, 255, 255, 0.2) 3px, transparent 3px, transparent 24px,
+      rgba(255, 255, 255, 0.2) 24px, rgba(255, 255, 255, 0.2) 27px, transparent 27px, transparent 48px,
+      rgba(255, 255, 255, 0.2) 48px, rgba(255, 255, 255, 0.2) 51px, transparent 51px, transparent 96px),
     repeating-linear-gradient(35deg,
       rgba(255, 255, 255, 0.2) 0px, rgba(255, 255, 255, 0.2) 3px, transparent 3px, transparent 24px,
       rgba(255, 255, 255, 0.2) 24px, rgba(255, 255, 255, 0.2) 27px, transparent 27px, transparent 48px,
