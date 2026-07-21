@@ -129,8 +129,10 @@ export function EventBody(data: EventBodyProps) {
   const archive_url = event.archive_url;
   // group_keyがあってもコミュニティが/groupsに未登録(サイトに個別ページが
   // ない)場合は、コミュニティページへのリンク先をイベント側のgroup_urlに
-  // フォールバックする。
-  const has_group_page = Boolean(group_key && is_registered_group);
+  // フォールバックする。is_registered_groupが明示的にfalseの場合のみ
+  // 未登録として扱い、未設定(enrichEventsWithGroupsを経由していない
+  // 呼び出し元)ではこれまで通り登録済みとみなす。
+  const has_group_page = Boolean(group_key) && is_registered_group !== false;
   const is_archive_event = isArchiveEvent(event);
   const keywords = event.keywords ?? [];
   const x_search_keywords_array = [];

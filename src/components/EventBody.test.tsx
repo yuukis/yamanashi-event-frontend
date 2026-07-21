@@ -200,6 +200,19 @@ describe('EventBody', () => {
       windowOpenSpy.mockRestore();
     });
 
+    it('treats the group as registered (internal link) when is_registered_group is not set, for backward compatibility', () => {
+      mockMatchMedia(true);
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      renderWithChakra(
+        <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE' })} />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'AI BASE' }));
+
+      expect(windowOpenSpy).toHaveBeenCalledWith('/groups/aibase', '_self');
+      windowOpenSpy.mockRestore();
+    });
+
     it('links the group name button to the event\'s group_url, marked as external, when the community has no page on this site', () => {
       mockMatchMedia(true);
       renderWithChakra(
