@@ -42,6 +42,7 @@ export type EventWithGroup = ApiEvent & {
   group_image_url?: string | null;
   archive_source?: string | null;
   archive_url?: string | null;
+  is_registered_group?: boolean;
 };
 
 export type ApiGroupActivity = {

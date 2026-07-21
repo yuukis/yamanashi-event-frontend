@@ -59,6 +59,21 @@ const theme = extendTheme({
         },
       },
     },
+    Button: {
+      baseStyle: {
+        // Button as={'a'}だとグローバルのa{textDecoration:underline}を継承してしまうため
+        textDecoration: 'none',
+      },
+      variants: {
+        // サイト共通のリンクの見た目(下線あり)に合わせるため
+        link: {
+          textDecoration: 'underline',
+          _hover: {
+            textDecoration: 'none',
+          },
+        },
+      },
+    },
   },
 })
 

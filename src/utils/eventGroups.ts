@@ -11,7 +11,7 @@ export function enrichEventsWithGroups(
   return events.map((event) => {
     const group = event.group_key ? groupByKey[event.group_key] : undefined;
     if (!group) {
-      return event;
+      return { ...event, is_registered_group: false };
     }
 
     return {
@@ -19,6 +19,7 @@ export function enrichEventsWithGroups(
       group_image_url: group.image_url,
       archive_source: group.archive_source,
       archive_url: group.archive_url,
+      is_registered_group: true,
     };
   });
 }

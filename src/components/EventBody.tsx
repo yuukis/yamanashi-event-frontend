@@ -123,8 +123,12 @@ export function EventBody(data: EventBodyProps) {
   const owner_name = event.owner_name;
   const group_key = event.group_key;
   const group_name = event.group_name;
+  const group_url = event.group_url;
   const group_image_url = event.group_image_url;
+  const is_registered_group = event.is_registered_group;
   const archive_url = event.archive_url;
+  // 後方互換: is_registered_group未設定の呼び出し元を壊さないため
+  const has_group_page = Boolean(group_key) && is_registered_group !== false;
   const is_archive_event = isArchiveEvent(event);
   const keywords = event.keywords ?? [];
   const x_search_keywords_array = [];
@@ -534,9 +538,17 @@ export function EventBody(data: EventBodyProps) {
                   <HStack>
                     <People />
                     <Show above='md'>
-                      {group_key ? (
+                      {has_group_page ? (
                         <Button size={'xs'}
-                                onClick={() => window.open(buildGroupPagePath(group_key), '_self')}
+                                onClick={() => window.open(buildGroupPagePath(group_key!), '_self')}
+                                >{group_name}</Button>
+                      ) : group_key && group_url ? (
+                        <Button size={'xs'}
+                                as={'a'}
+                                href={group_url}
+                                target={'_blank'}
+                                rel={'noopener'}
+                                rightIcon={<FiExternalLink />}
                                 >{group_name}</Button>
                       ) : (
                         <Text fontSize={'sm'} noOfLines={1}>{group_name}</Text>
@@ -664,9 +676,9 @@ export function EventBody(data: EventBodyProps) {
                                       >
                               情報提供元のページを開く
                             </MenuItem>
-                            {group_key && (
+                            {has_group_page && (
                               <MenuItem icon={<People />}
-                                        onClick={() => window.open(buildGroupPagePath(group_key), '_self')}
+                                        onClick={() => window.open(buildGroupPagePath(group_key!), '_self')}
                                         >
                                 コミュニティページを見る
                               </MenuItem>
@@ -746,11 +758,11 @@ export function EventBody(data: EventBodyProps) {
                       >
                 情報提供元のページを開く
               </Button>
-              {group_key && (
+              {has_group_page && (
                 <Button w="full"
                         leftIcon={<People />}
                         onClick={() => {
-                          window.open(buildGroupPagePath(group_key), '_self');
+                          window.open(buildGroupPagePath(group_key!), '_self');
                           onClose();
                         }}
                         >

@@ -191,6 +191,19 @@ describe('EventBody', () => {
       mockMatchMedia(true);
       const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
       renderWithChakra(
+        <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE', is_registered_group: true })} />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'AI BASE' }));
+
+      expect(windowOpenSpy).toHaveBeenCalledWith('/groups/aibase', '_self');
+      windowOpenSpy.mockRestore();
+    });
+
+    it('treats the group as registered (internal link) when is_registered_group is not set, for backward compatibility', () => {
+      mockMatchMedia(true);
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      renderWithChakra(
         <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE' })} />,
       );
 
@@ -198,6 +211,49 @@ describe('EventBody', () => {
 
       expect(windowOpenSpy).toHaveBeenCalledWith('/groups/aibase', '_self');
       windowOpenSpy.mockRestore();
+    });
+
+    it('links the group name button to the event\'s group_url, marked as external, when the community has no page on this site', () => {
+      mockMatchMedia(true);
+      renderWithChakra(
+        <EventBody event={makeEvent({
+          group_key: 'unlisted-group',
+          group_name: 'AI BASE',
+          group_url: 'https://ai-base.connpass.com/',
+          is_registered_group: false,
+        })} />,
+      );
+
+      const link = screen.getByRole('link', { name: /AI BASE/ });
+      expect(link).toHaveAttribute('href', 'https://ai-base.connpass.com/');
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(screen.queryByRole('button', { name: 'AI BASE' })).not.toBeInTheDocument();
+    });
+
+    it('shows the group name as plain text (not a link) when the community has no page and no group_url', () => {
+      mockMatchMedia(true);
+      renderWithChakra(
+        <EventBody event={makeEvent({ group_key: 'unlisted-group', group_name: 'AI BASE', is_registered_group: false })} />,
+      );
+
+      expect(screen.queryByRole('button', { name: 'AI BASE' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /AI BASE/ })).not.toBeInTheDocument();
+      expect(screen.getByText('AI BASE')).toBeInTheDocument();
+    });
+
+    it('shows the group name as plain text (not a link) when there is no group_key, even if group_url happens to be set', () => {
+      mockMatchMedia(true);
+      renderWithChakra(
+        <EventBody event={makeEvent({
+          group_key: null,
+          group_name: 'AI BASE',
+          group_url: 'https://ai-base.connpass.com/',
+        })} />,
+      );
+
+      expect(screen.queryByRole('button', { name: 'AI BASE' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /AI BASE/ })).not.toBeInTheDocument();
+      expect(screen.getByText('AI BASE')).toBeInTheDocument();
     });
 
     it('shows the group name as plain text (not a button) when the event has no group_key', () => {
@@ -262,7 +318,7 @@ describe('EventBody', () => {
       mockMatchMedia(true);
       const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
       renderWithChakra(
-        <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE' })} />,
+        <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE', is_registered_group: true })} />,
       );
 
       fireEvent.click(screen.getByRole('button', { name: 'Options' }));
@@ -281,11 +337,28 @@ describe('EventBody', () => {
       expect(screen.queryByText('コミュニティページを見る')).not.toBeInTheDocument();
     });
 
+    it('omits the community page menu item when the community has no page on this site (unregistered group)', () => {
+      mockMatchMedia(true);
+      renderWithChakra(
+        <EventBody event={makeEvent({
+          group_key: 'unlisted-group',
+          group_name: 'AI BASE',
+          group_url: 'https://ai-base.connpass.com/',
+          is_registered_group: false,
+        })} />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+
+      expect(screen.queryByText('コミュニティページを見る')).not.toBeInTheDocument();
+      expect(screen.queryByText('コミュニティのページを見る')).not.toBeInTheDocument();
+    });
+
     it('includes a "コミュニティページを見る" button in the mobile options drawer', () => {
       mockMatchMedia(false);
       const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
       renderWithChakra(
-        <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE' })} />,
+        <EventBody event={makeEvent({ group_key: 'aibase', group_name: 'AI BASE', is_registered_group: true })} />,
       );
 
       fireEvent.click(screen.getByLabelText('More options'));
@@ -302,6 +375,23 @@ describe('EventBody', () => {
       fireEvent.click(screen.getByLabelText('More options'));
 
       expect(screen.queryByRole('button', { name: 'コミュニティページを見る' })).not.toBeInTheDocument();
+    });
+
+    it('omits the community page drawer button when the community has no page on this site (unregistered group)', () => {
+      mockMatchMedia(false);
+      renderWithChakra(
+        <EventBody event={makeEvent({
+          group_key: 'unlisted-group',
+          group_name: 'AI BASE',
+          group_url: 'https://ai-base.connpass.com/',
+          is_registered_group: false,
+        })} />,
+      );
+
+      fireEvent.click(screen.getByLabelText('More options'));
+
+      expect(screen.queryByRole('button', { name: 'コミュニティページを見る' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'コミュニティのページを見る' })).not.toBeInTheDocument();
     });
   });
 
