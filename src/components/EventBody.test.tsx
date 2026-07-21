@@ -241,6 +241,21 @@ describe('EventBody', () => {
       expect(screen.getByText('AI BASE')).toBeInTheDocument();
     });
 
+    it('shows the group name as plain text (not a link) when there is no group_key, even if group_url happens to be set', () => {
+      mockMatchMedia(true);
+      renderWithChakra(
+        <EventBody event={makeEvent({
+          group_key: null,
+          group_name: 'AI BASE',
+          group_url: 'https://ai-base.connpass.com/',
+        })} />,
+      );
+
+      expect(screen.queryByRole('button', { name: 'AI BASE' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /AI BASE/ })).not.toBeInTheDocument();
+      expect(screen.getByText('AI BASE')).toBeInTheDocument();
+    });
+
     it('shows the group name as plain text (not a button) when the event has no group_key', () => {
       mockMatchMedia(true);
       renderWithChakra(

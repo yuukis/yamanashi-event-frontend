@@ -546,7 +546,7 @@ export function EventBody(data: EventBodyProps) {
                         <Button size={'xs'}
                                 onClick={() => window.open(buildGroupPagePath(group_key!), '_self')}
                                 >{group_name}</Button>
-                      ) : group_url ? (
+                      ) : group_key && group_url ? (
                         <Button size={'xs'}
                                 as={'a'}
                                 href={group_url}
