@@ -59,6 +59,24 @@ const theme = extendTheme({
         },
       },
     },
+    Button: {
+      baseStyle: {
+        // グローバルの a { textDecoration: 'underline' } は、<button>には
+        // 影響しないが Button as={'a'} で描画した場合にのみ乗ってしまう。
+        // ボタン外観を保つため明示的に打ち消す。
+        textDecoration: 'none',
+      },
+      variants: {
+        // variant='link' はサイト共通のリンクの見た目(通常時下線・
+        // hoverで下線なし)に合わせるため、baseStyleの打ち消しを戻す。
+        link: {
+          textDecoration: 'underline',
+          _hover: {
+            textDecoration: 'none',
+          },
+        },
+      },
+    },
   },
 })
 
