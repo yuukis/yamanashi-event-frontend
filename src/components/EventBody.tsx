@@ -123,8 +123,14 @@ export function EventBody(data: EventBodyProps) {
   const owner_name = event.owner_name;
   const group_key = event.group_key;
   const group_name = event.group_name;
+  const group_url = event.group_url;
   const group_image_url = event.group_image_url;
+  const is_registered_group = event.is_registered_group;
   const archive_url = event.archive_url;
+  // group_keyがあってもコミュニティが/groupsに未登録(サイトに個別ページが
+  // ない)場合は、コミュニティページへのリンク先をイベント側のgroup_urlに
+  // フォールバックする。
+  const has_group_page = Boolean(group_key && is_registered_group);
   const is_archive_event = isArchiveEvent(event);
   const keywords = event.keywords ?? [];
   const x_search_keywords_array = [];
@@ -534,9 +540,17 @@ export function EventBody(data: EventBodyProps) {
                   <HStack>
                     <People />
                     <Show above='md'>
-                      {group_key ? (
+                      {has_group_page ? (
                         <Button size={'xs'}
-                                onClick={() => window.open(buildGroupPagePath(group_key), '_self')}
+                                onClick={() => window.open(buildGroupPagePath(group_key!), '_self')}
+                                >{group_name}</Button>
+                      ) : group_url ? (
+                        <Button size={'xs'}
+                                as={'a'}
+                                href={group_url}
+                                target={'_blank'}
+                                rel={'noopener'}
+                                rightIcon={<FiExternalLink />}
                                 >{group_name}</Button>
                       ) : (
                         <Text fontSize={'sm'} noOfLines={1}>{group_name}</Text>
@@ -664,13 +678,19 @@ export function EventBody(data: EventBodyProps) {
                                       >
                               情報提供元のページを開く
                             </MenuItem>
-                            {group_key && (
+                            {has_group_page ? (
                               <MenuItem icon={<People />}
-                                        onClick={() => window.open(buildGroupPagePath(group_key), '_self')}
+                                        onClick={() => window.open(buildGroupPagePath(group_key!), '_self')}
                                         >
                                 コミュニティページを見る
                               </MenuItem>
-                            )}
+                            ) : group_url ? (
+                              <MenuItem icon={<FiExternalLink />}
+                                        onClick={() => window.open(group_url)}
+                                        >
+                                コミュニティのページを見る
+                              </MenuItem>
+                            ) : null}
                             <MenuItem icon={<FaXTwitter />}
                                       onClick={() => window.open(event_x_search_url)}
                                       >
@@ -746,17 +766,27 @@ export function EventBody(data: EventBodyProps) {
                       >
                 情報提供元のページを開く
               </Button>
-              {group_key && (
+              {has_group_page ? (
                 <Button w="full"
                         leftIcon={<People />}
                         onClick={() => {
-                          window.open(buildGroupPagePath(group_key), '_self');
+                          window.open(buildGroupPagePath(group_key!), '_self');
                           onClose();
                         }}
                         >
                   コミュニティページを見る
                 </Button>
-              )}
+              ) : group_url ? (
+                <Button w="full"
+                        leftIcon={<FiExternalLink />}
+                        onClick={() => {
+                          window.open(group_url);
+                          onClose();
+                        }}
+                        >
+                  コミュニティのページを見る
+                </Button>
+              ) : null}
               {address_array.length > 0 && (
                 <Button w="full"
                         leftIcon={<FiMap />}
