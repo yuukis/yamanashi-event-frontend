@@ -27,7 +27,8 @@ import {
   Spacer
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
-import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
+import { CalendarIcon, ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
+import { People } from '@chakra-icons/bootstrap';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -274,7 +275,7 @@ function Root({startYear}: {startYear: number}) {
                      direction={{base: 'column', sm: 'row'}}
                      spacing={'3'}
                      >
-                <Button size={'sm'}
+                <Button size={{base: 'sm', md: 'md'}}
                         colorScheme={'secondary'}
                         bg={'secondary.700'}
                         color={'white'}
@@ -285,19 +286,13 @@ function Root({startYear}: {startYear: number}) {
                         >
                   はじめての方へ
                 </Button>
-                <Button size={'sm'}
-                        variant={'outline'}
-                        colorScheme={'impact'}
-                        onClick={() => { window.open('/groups', '_self') }}
-                        >
-                  コミュニティ一覧
-                </Button>
-                <Button size={'sm'}
+                <Button size={{base: 'sm', md: 'md'}}
                         variant={'outline'}
                         colorScheme={'primary'}
+                        leftIcon={<CalendarIcon />}
                         onClick={() => { window.open('/events', '_self') }}
                         >
-                  イベントアーカイブ
+                  イベントアーカイブを見る
                 </Button>
               </Stack>
             </Stack>
