@@ -499,6 +499,11 @@ export function EventScrollGutter() {
          onPointerMove={handleTrackPointerMove}
          onPointerUp={handleTrackPointerUp}
          onPointerCancel={handleTrackPointerUp}
+         // ブラウザが何らかの理由でpointer captureを横取り/解放した場合
+         // (lostpointercapture)もドラッグ終了として扱う。ここを拾わないと
+         // isDraggingRefがtrueのまま残り、ボタンを押していないpointermove
+         // でも意図せずスクロールしてしまう。
+         onLostPointerCapture={handleTrackPointerUp}
          // ページ本体は擬似スクロールバーが無くてもネイティブスクロール・
          // キーボードだけで完全に操作できる補助的なミニマップなので、
          // 支援技術には存在しないものとして扱う(クリックジャンプ/ドラッグ
