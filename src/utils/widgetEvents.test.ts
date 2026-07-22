@@ -58,15 +58,21 @@ describe('useWidgetEvents', () => {
     // slice of events (one community, one page). Merging that slice into the
     // same tracking store the main site's notification feature reads/writes
     // would prune away tracking data for every event outside that slice.
+    // Spying on the actual persistence call (rather than polling the in-memory
+    // snapshot with waitFor, which resolves on the first passing check and
+    // would not notice a write landing in a later effect tick) is what makes
+    // this a reliable "never writes" assertion.
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
     const future = makeEvent({ uid: 'future-1', started_at: '2099-01-01T00:00:00+09:00', open_status: 'open' });
     const fetcher = vi.fn().mockResolvedValue({ events: [future] });
 
     const { result } = renderHook(() => useWidgetEvents(fetcher, []));
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    // Wrapped in waitFor (rather than a one-shot check) so a write that lands
-    // in a later effect tick still fails this test instead of racing past it.
-    await waitFor(() => expect(getTrackingDataSnapshot()).toEqual(EMPTY_TRACKING_DATA));
+    expect(getTrackingDataSnapshot()).toEqual(EMPTY_TRACKING_DATA);
+    expect(setItemSpy).not.toHaveBeenCalled();
+
+    setItemSpy.mockRestore();
   });
 
   it('does not prune unrelated tracking data (e.g. from the main site) when fetching a narrow event slice', async () => {
@@ -77,6 +83,9 @@ describe('useWidgetEvents', () => {
       acknowledgedDotUids: [],
     }));
 
+    // Spy starts after the seeding write above, so it only observes writes
+    // triggered by the hook itself.
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
     const future = makeEvent({ uid: 'future-1', started_at: '2099-01-01T00:00:00+09:00', open_status: 'open' });
     const fetcher = vi.fn().mockResolvedValue({ events: [future] });
 
@@ -85,6 +94,9 @@ describe('useWidgetEvents', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(getTrackingDataSnapshot().records).toEqual({ 'other-event': { firstSeenAt: FIXED_NOW.toISOString() } });
     expect(getTrackingDataSnapshot().dismissedUids).toEqual(['dismissed-event']);
+    expect(setItemSpy).not.toHaveBeenCalled();
+
+    setItemSpy.mockRestore();
   });
 
   it('refetches when the deps array changes', async () => {
