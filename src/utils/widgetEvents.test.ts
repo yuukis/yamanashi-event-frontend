@@ -54,14 +54,9 @@ describe('useWidgetEvents', () => {
   });
 
   it('does not write fetched events into the shared new-event tracking store', async () => {
-    // Widgets (e.g. /widget/groups/:groupKey/events) only ever see a narrow
-    // slice of events (one community, one page). Merging that slice into the
-    // same tracking store the main site's notification feature reads/writes
-    // would prune away tracking data for every event outside that slice.
-    // Spying on the actual persistence call (rather than polling the in-memory
-    // snapshot with waitFor, which resolves on the first passing check and
-    // would not notice a write landing in a later effect tick) is what makes
-    // this a reliable "never writes" assertion.
+    // Widgets only ever see a narrow slice of events (one community, one
+    // page), so merging that into the tracking store the main site reads/
+    // writes would prune away every event outside that slice.
     const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
     const future = makeEvent({ uid: 'future-1', started_at: '2099-01-01T00:00:00+09:00', open_status: 'open' });
     const fetcher = vi.fn().mockResolvedValue({ events: [future] });
