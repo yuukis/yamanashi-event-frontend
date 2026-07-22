@@ -146,6 +146,7 @@ function List({ startYear} : {startYear: number}) {
                       />
       <ActiveFilterBadge selectedKeyword={selectedKeyword}
                          selectedGroupName={selectedGroupName}
+                         selectedGroupKey={selectedGroup}
                          onClearKeyword={() => handleKeywordSelect(null)}
                          onClearGroup={() => handleGroupSelect(null)}
                          />

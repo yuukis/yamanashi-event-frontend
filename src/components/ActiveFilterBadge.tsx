@@ -1,12 +1,13 @@
-import { useState, useSyncExternalStore } from 'react';
-import { Box, Container, HStack, IconButton, Text } from '@chakra-ui/react';
-import { SmallCloseIcon } from '@chakra-ui/icons';
+import { useSyncExternalStore } from 'react';
+import { Box, Container, HStack, IconButton, Link, Text } from '@chakra-ui/react';
+import { ChevronRightIcon, SmallCloseIcon } from '@chakra-ui/icons';
 import { subscribeHeaderVisibility, getHeaderAreaOccupied, HEADER_HEIGHT } from '../utils/headerVisibility';
-import '../style.css';
+import { buildGroupPagePath } from '../utils/groupPage';
 
 type ActiveFilterBadgeProps = {
   selectedKeyword: string | null;
   selectedGroupName: string | null;
+  selectedGroupKey?: string | null;
   onClearKeyword: () => void;
   onClearGroup: () => void;
 };
@@ -17,29 +18,20 @@ type ActiveFilterBadgeProps = {
 export function ActiveFilterBadge({
   selectedKeyword,
   selectedGroupName,
+  selectedGroupKey,
   onClearKeyword,
   onClearGroup,
 }: ActiveFilterBadgeProps) {
   const isHeaderAreaOccupied = useSyncExternalStore(subscribeHeaderVisibility, getHeaderAreaOccupied);
-  const [isPressed, setIsPressed] = useState(false);
 
   if (!selectedKeyword && !selectedGroupName) {
     return null;
   }
 
-  const highlightedText = selectedGroupName ?? selectedKeyword;
+  const label = selectedGroupName
+    ? `コミュニティ「${selectedGroupName}」で絞り込み中`
+    : `キーワード「${selectedKeyword}」で絞り込み中`;
   const onClear = selectedGroupName ? onClearGroup : onClearKeyword;
-  const colors = selectedGroupName
-    ? { bg: '#f9f1e8', border: 'impact.500', text: 'impact.700', hoverBg: 'impact.100' }
-    : { bg: '#eaf6fb', border: 'primary.500', text: 'primary.800', hoverBg: 'primary.100' };
-
-  // クリックすると同時にバッジ自体が消えるため、押した瞬間のアニメーションが
-  // 描画される間もなく unmount してしまう。アニメーションが目に見える分だけ
-  // 実際のクリア処理を遅らせる。
-  const handlePress = () => {
-    setIsPressed(true);
-    window.setTimeout(onClear, 180);
-  };
 
   return (
     <Box position={'fixed'}
@@ -52,39 +44,45 @@ export function ActiveFilterBadge({
       <Container maxW={'980px'} px={{base: '4', md: '4'}}>
         <HStack w={'fit-content'}
                 maxW={'100%'}
-                mx={'auto'}
                 mt={'2'}
-                px={'4'} py={'2'}
+                px={'3'} py={'1'}
                 spacing={'2'}
-                bg={colors.bg}
+                bg={'#f9f1e8'}
                 border={'1px solid'}
-                borderColor={colors.border}
+                borderColor={'impact.500'}
                 borderRadius={'full'}
                 boxShadow={'sm'}
                 pointerEvents={'auto'}
-                cursor={'pointer'}
-                transition={'box-shadow 100ms ease-out'}
-                _hover={{boxShadow: 'md'}}
-                className={isPressed ? 'active-filter-badge-pulse' : undefined}
-                onAnimationEnd={() => setIsPressed(false)}
-                onClick={handlePress}
                 >
-          <Text fontSize={'sm'}
-                color={colors.text}
+          <Text fontSize={'xs'}
+                fontWeight={'bold'}
+                color={'impact.700'}
                 noOfLines={1}
                 >
-            <Text as={'span'} fontWeight={'bold'}>{highlightedText}</Text>
-            <Text as={'span'} fontWeight={'normal'}> で絞り込み中</Text>
+            {label}
           </Text>
+          {selectedGroupName && selectedGroupKey && (
+            <Link href={buildGroupPagePath(selectedGroupKey)}
+                  fontSize={'xs'}
+                  fontWeight={'bold'}
+                  color={'impact.700'}
+                  whiteSpace={'nowrap'}
+                  display={'inline-flex'}
+                  alignItems={'center'}
+                  >
+              コミュニティページ<ChevronRightIcon />
+            </Link>
+          )}
           <IconButton aria-label={'絞り込みを解除'}
                       icon={<SmallCloseIcon />}
-                      size={'sm'}
+                      size={'xs'}
                       variant={'ghost'}
-                      color={colors.text}
+                      color={'impact.700'}
                       minW={'auto'}
                       h={'auto'}
                       p={'0.5'}
-                      _hover={{bg: colors.hoverBg}}
+                      _hover={{bg: 'impact.100'}}
+                      onClick={onClear}
                       />
         </HStack>
       </Container>
