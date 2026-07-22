@@ -344,9 +344,7 @@ describe('EventScrollGutter', () => {
       expect(screen.queryByText('2月')).not.toBeInTheDocument();
       expect(fakeResizeObserverInstances.some((o) => o.observed.includes(document.body))).toBe(true);
 
-      // ページ下部の埋め込みウィジェットiframeが遅延読み込み後に高さを変える
-      // ケースを模す。[data-event-start]の増減もEVENT_CARD_LAYOUT_SETTLEDの
-      // dispatchも起きないが、document.bodyのボックスサイズは変わる。
+      // [data-event-start]を増減させずにdocHeightだけを変える(iframeウィジェットの遅延読み込みを模す)。
       docHeight = 5000;
       fakeResizeObserverInstances.forEach((o) => o.callback([], o as unknown as ResizeObserver));
 
