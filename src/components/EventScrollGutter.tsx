@@ -367,19 +367,69 @@ export function EventScrollGutter() {
   }, [updateGutterVisibility]);
 
   const hasScrollableContent = docHeight > viewportHeight && viewportHeight > 0;
+  const isDraggingRef = useRef(false);
 
-  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  // クリックした/触れた位置が画面の縦中央に来るようにジャンプする
+  // (トラック上の位置はtoTrackYと同じ座標系なので、逆算するとdocHeight/
+  // viewportHeightの比率になる)。
+  const ratioFromClientY = (clientY: number): number | null => {
     const rect = trackRef.current?.getBoundingClientRect();
     if (!rect || rect.height === 0) {
-      return;
+      return null;
     }
-    // クリックした位置が画面の縦中央に来るようにジャンプする(トラック
-    // 上の位置はtoTrackYと同じ座標系なので、逆算するとdocHeight/
-    // viewportHeightの比率になる)。
-    const ratio = Math.min(Math.max((e.clientY - rect.top) / rect.height, 0), 1);
+    return Math.min(Math.max((clientY - rect.top) / rect.height, 0), 1);
+  };
+
+  const scrollToRatio = (ratio: number, smooth: boolean) => {
     const targetCenterDocumentY = ratio * docHeight;
     const targetScrollY = Math.min(Math.max(targetCenterDocumentY - viewportHeight / 2, 0), maxScroll);
-    window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
+    window.scrollTo({ top: targetScrollY, behavior: smooth ? 'smooth' : 'auto' });
+  };
+
+  // xl以上: クリックでその場へ1回だけジャンプする。
+  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDesktopScreenSize) {
+      return;
+    }
+    const ratio = ratioFromClientY(e.clientY);
+    if (ratio !== null) {
+      scrollToRatio(ratio, true);
+    }
+  };
+
+  // xl未満: 指でなぞった位置に追従してスクロールする、よくあるスクラバー
+  // 操作にする(smoothだと指の動きに遅れて見えるため即時反映にする)。
+  const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDesktopScreenSize) {
+      return;
+    }
+    const ratio = ratioFromClientY(e.clientY);
+    if (ratio === null) {
+      return;
+    }
+    isDraggingRef.current = true;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    scrollToRatio(ratio, false);
+  };
+
+  const handleTrackPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) {
+      return;
+    }
+    const ratio = ratioFromClientY(e.clientY);
+    if (ratio !== null) {
+      scrollToRatio(ratio, false);
+    }
+  };
+
+  const handleTrackPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) {
+      return;
+    }
+    isDraggingRef.current = false;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
   };
 
   if (rawMarkers.length === 0 || !hasScrollableContent) {
@@ -411,16 +461,26 @@ export function EventScrollGutter() {
          opacity={0}
          pointerEvents={'none'}
          data-testid={'event-scroll-gutter'}
+         // xl未満はトラック(10px)だけでなく、ラベル込みの表示領域全体を
+         // 指でなぞれるようにする(タップしやすくするため)。ブラウザの
+         // 既定のタッチスクロールと競合しないようtouchActionを切る。
+         onPointerDown={handleTrackPointerDown}
+         onPointerMove={handleTrackPointerMove}
+         onPointerUp={handleTrackPointerUp}
+         onPointerCancel={handleTrackPointerUp}
          // ページ本体は擬似スクロールバーが無くてもネイティブスクロール・
          // キーボードだけで完全に操作できる補助的なミニマップなので、
-         // 支援技術には存在しないものとして扱う(クリックジャンプはマウス
-         // 向けのショートカットに限定する)。
+         // 支援技術には存在しないものとして扱う(クリックジャンプ/ドラッグ
+         // はマウス・タッチ向けのショートカットに限定する)。
          aria-hidden={true}
          sx={{
            transition: 'opacity 180ms ease-out',
            '@media (prefers-reduced-motion: reduce)': {
              transition: 'none',
            },
+           // xl未満のドラッグ操作がブラウザの既定のタッチスクロールと
+           // 競合しないようにする。
+           touchAction: { base: 'none', xl: 'auto' },
          }}
          >
       <Box ref={trackRef}
