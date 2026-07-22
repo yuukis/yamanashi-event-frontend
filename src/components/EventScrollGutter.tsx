@@ -364,7 +364,9 @@ export function EventScrollGutter() {
          top={0}
          right={'14px'}
          h={`${viewportHeight}px`}
-         zIndex={'docked'}
+         // ヘッダー(zIndex: sticky/banner)より前面に表示する。ポップオーバー
+         // やメニュー(zIndex: popover)より上にはしない。
+         zIndex={'overlay'}
          opacity={0}
          pointerEvents={'none'}
          data-testid={'event-scroll-gutter'}
