@@ -56,33 +56,32 @@ describe('withMarkerFlags', () => {
   });
 });
 
-// trackHeight = viewportHeight - 128 (TRACK_TOP_OFFSET + TRACK_BOTTOM_OFFSET).
-// Pick round numbers so toTrackY(x) = x / 10 for x in [0, 10000], which keeps
-// the expected pixel math easy to verify by hand.
-const VIEWPORT_HEIGHT = 1128; // -> trackHeight = 1000
-const DOC_HEIGHT = 11128; // -> maxScroll = 10000
+// The track spans the full viewport height. Pick round numbers so
+// toTrackY(x) = x / 10 for x in [0, 10000], which keeps the expected pixel
+// math easy to verify by hand.
+const VIEWPORT_HEIGHT = 1000;
+const DOC_HEIGHT = 10000; // -> maxScroll = 9000
 
 describe('buildGutterLayout', () => {
-  it('returns empty layout (but still computes trackHeight/maxScroll) when there are no markers', () => {
+  it('returns empty layout (but still computes maxScroll) when there are no markers', () => {
     const layout = buildGutterLayout([], [], DOC_HEIGHT, VIEWPORT_HEIGHT);
 
     expect(layout.lineRanges).toEqual([]);
     expect(layout.labeledMarkers).toEqual([]);
-    expect(layout.trackHeight).toBe(1000);
-    expect(layout.maxScroll).toBe(10000);
+    expect(layout.maxScroll).toBe(9000);
   });
 
-  it('maps documentY to track pixels using maxScroll, not docHeight, and clamps beyond maxScroll', () => {
+  it('maps documentY to track pixels proportionally to docHeight, matching where a native scrollbar thumb would sit', () => {
     const rawMarkers: RawMarker[] = [
       marker({ top: 1000, month: '01' }), // -> y = 100
-      marker({ top: 12000, month: '02' }), // beyond maxScroll -> clamped to trackHeight
+      marker({ top: 9000, month: '09' }), // -> y = 900, near the very end of the page
     ];
-    const extents: SectionExtent[] = [{ section: 'all', startTop: 1000, endBottom: 12000 }];
+    const extents: SectionExtent[] = [{ section: 'all', startTop: 1000, endBottom: 9000 }];
 
     const { labeledMarkers } = buildGutterLayout(rawMarkers, extents, DOC_HEIGHT, VIEWPORT_HEIGHT);
 
     expect(labeledMarkers[0].y).toBe(100);
-    expect(labeledMarkers[1].y).toBe(1000);
+    expect(labeledMarkers[1].y).toBe(900);
   });
 
   it('shows the full year+month label on the first marker of a year when another month in that year is also visible', () => {

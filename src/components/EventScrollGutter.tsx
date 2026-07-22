@@ -25,7 +25,7 @@ type Segment = {
 };
 
 // 実際に描画される縦線の1本分の範囲(区分の隙間・パディングを反映済み)。
-// つまみがこの範囲にかかっている間だけガターを表示する判定にも使う。
+// 現在位置がこの範囲にある間だけガターを表示する判定にも使う。
 export type LineRange = {
   section: string;
   top: number;
@@ -56,16 +56,11 @@ type Pass1Entry = {
   monthVisible: boolean;
 };
 
-// 固定ヘッダーの下に収まる位置から開始し、フッター手前で終わる縦の軌道。
-const TRACK_TOP_OFFSET = 96;
-const TRACK_BOTTOM_OFFSET = 32;
 // ラベル同士が重ならないよう間引く際の最小間隔(px)。fontSize xs の行高
 // 目安。
 const MIN_LABEL_GAP = 14;
 const SECTION_GAP = 16;
 const LINE_PAD = 6;
-// つまみ(丸みを帯びたピル)の高さ(px)。下の描画(h={'26px'})と揃える。
-const THUMB_HEIGHT = 26;
 
 function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } {
   const elements = document.querySelectorAll<HTMLElement>('[data-event-start]');
@@ -123,10 +118,21 @@ function formatMonth(month: string): string {
 export type GutterLayout = {
   lineRanges: LineRange[];
   labeledMarkers: LabeledMarker[];
-  trackHeight: number;
-  // つまみ・クリックジャンプが基準にしているスクロール可能範囲。
+  // クリックジャンプが基準にしているスクロール可能範囲。
   maxScroll: number;
 };
+
+// documentY(ページ先頭からのpx)を軌道上のY座標に変換する。軌道は
+// ブラウザのネイティブスクロールバー(0〜viewportHeightいっぱいに動く)
+// と同じ座標系に合わせてあり、documentY/docHeightの比率をそのまま
+// viewportHeightに引き伸ばすだけでよい(スクロールバーのつまみの高さが
+// viewportHeight/docHeightに比例するモデルで計算すると、つまみの上端の
+// 位置がちょうどこの式に一致する)。この対応関係により、目盛りの位置を
+// 見ればブラウザ本来のスクロールバーが今どのあたりにあるか分かるため、
+// 別途つまみを描画する必要がない。
+function toTrackY(documentY: number, docHeight: number, viewportHeight: number): number {
+  return (documentY / docHeight) * viewportHeight;
+}
 
 // DOM/Reactに依存しない純粋関数なので、実際のスクロール位置(scrollY)
 // には関係なく、DOM構成が変わったときだけ呼び直せばよい。
@@ -136,29 +142,21 @@ export function buildGutterLayout(
   docHeight: number,
   viewportHeight: number,
 ): GutterLayout {
-  const trackHeight = Math.max(viewportHeight - TRACK_TOP_OFFSET - TRACK_BOTTOM_OFFSET, 0);
   const maxScroll = Math.max(docHeight - viewportHeight, 1);
 
   if (docHeight === 0 || rawMarkers.length === 0) {
-    return { lineRanges: [], labeledMarkers: [], trackHeight, maxScroll };
+    return { lineRanges: [], labeledMarkers: [], maxScroll };
   }
 
-  // documentY(ページ先頭からのpx)を軌道上のY座標に変換する。つまみは
-  // scrollY(0〜maxScroll)を軌道全体に引き伸ばして動くため、目盛り側も
-  // documentYをmaxScroll基準で正規化しないと、同じ絶対位置でもつまみと
-  // 目盛りがズレる(docHeightで割ると、ページ末尾に近い目盛りほどつまみ
-  // より手前に表示されてしまう)。maxScrollを超える位置(ページ最下部
-  // 付近、スクロールしても先頭がそこまで届かない範囲)はmaxScrollに
-  // 丸める。
-  const toTrackY = (documentY: number) => (Math.min(documentY, maxScroll) / maxScroll) * trackHeight;
+  const toTrackYWithin = (documentY: number) => toTrackY(documentY, docHeight, viewportHeight);
 
   const segments: Segment[] = extents.map((extent) => ({
     section: extent.section,
-    startY: toTrackY(extent.startTop),
-    endY: toTrackY(extent.endBottom),
+    startY: toTrackYWithin(extent.startTop),
+    endY: toTrackYWithin(extent.endBottom),
   }));
 
-  // 区分が変わる箇所には隙間を空けて描画する(つまみの表示判定にも使う)。
+  // 区分が変わる箇所には隙間を空けて描画する(現在位置の表示判定にも使う)。
   const lineRanges: LineRange[] = segments.map((segment, index) => {
     const previous = segments[index - 1];
     const next = segments[index + 1];
@@ -167,7 +165,7 @@ export function buildGutterLayout(
       : Math.max(segment.startY - LINE_PAD, 0);
     const bottom = next
       ? Math.min(segment.endY + LINE_PAD, next.startY - SECTION_GAP / 2)
-      : Math.min(segment.endY + LINE_PAD, trackHeight);
+      : Math.min(segment.endY + LINE_PAD, viewportHeight);
     return { section: segment.section, top, bottom: Math.max(bottom, top + 2) };
   });
 
@@ -178,7 +176,7 @@ export function buildGutterLayout(
   // 決める。年を表示する目盛りは(このパスでは)常に表示扱いにする。
   let lastLabelY = -Infinity;
   const pass1: Pass1Entry[] = markersWithFlags.map((marker) => {
-    const y = toTrackY(marker.top);
+    const y = toTrackYWithin(marker.top);
     const isCramped = (y - lastLabelY) < MIN_LABEL_GAP;
     const monthVisible = marker.showYear || !isCramped;
     if (monthVisible) {
@@ -227,22 +225,22 @@ export function buildGutterLayout(
     };
   });
 
-  return { lineRanges, labeledMarkers, trackHeight, maxScroll };
+  return { lineRanges, labeledMarkers, maxScroll };
 }
 
 // スクロールハンドラから毎フレーム読むための ref に保持する値。
 type ScrollLayout = {
-  trackHeight: number;
   docHeight: number;
   viewportHeight: number;
   lineRanges: LineRange[];
 };
 
 // 十分に横幅のあるデスクトップ画面でのみ、イベントカード列の右側に
-// 位置と年月を示す擬似スクロールバーを表示する。クリックで該当位置へ
-// ジャンプできる。年月ラベルはDOM構成が変わったときだけ組み立て直し、
-// つまみの位置・ガターの表示/非表示はスクロールのたびにref経由で
-// DOMを直接書き換える(どちらもReactの再レンダーを挟まない)。
+// 年月ラベルを示す擬似スクロールバーを表示する。軌道の座標系がブラウザ
+// のネイティブスクロールバーと一致するため、現在位置はそちらに任せて
+// おり、独自のつまみは描画しない(表示/非表示の切り替えだけスクロール
+// のたびにref経由でDOMを直接書き換える。年月ラベルはDOM構成が変わった
+// ときだけ組み立て直す)。クリックで該当位置へジャンプできる。
 export function EventScrollGutter() {
   // xl未満ではガター自体をマウントせず、DOM監視・スクロール監視も張らない。
   const [isDesktopScreenSize] = useMediaQuery('(min-width: 80em)');
@@ -252,8 +250,7 @@ export function EventScrollGutter() {
   const [viewportHeight, setViewportHeight] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const gutterElRef = useRef<HTMLDivElement>(null);
-  const thumbElRef = useRef<HTMLDivElement>(null);
-  const scrollLayoutRef = useRef<ScrollLayout>({ trackHeight: 0, docHeight: 0, viewportHeight: 0, lineRanges: [] });
+  const scrollLayoutRef = useRef<ScrollLayout>({ docHeight: 0, viewportHeight: 0, lineRanges: [] });
 
   const recomputeMarkers = useCallback(() => {
     const { markers, extents } = collectEventData();
@@ -289,48 +286,39 @@ export function EventScrollGutter() {
     };
   }, [recomputeMarkers, isDesktopScreenSize]);
 
-  const { lineRanges, labeledMarkers, trackHeight, maxScroll } = useMemo(
+  const { lineRanges, labeledMarkers, maxScroll } = useMemo(
     () => buildGutterLayout(rawMarkers, extents, docHeight, viewportHeight),
     [rawMarkers, extents, docHeight, viewportHeight],
   );
 
-  // つまみの位置とガターの表示/非表示を直接DOMに反映する(Reactの
-  // stateを介さないので、スクロール中は再レンダーが発生しない)。
-  const applyThumbPosition = useCallback(() => {
-    const { trackHeight, docHeight, viewportHeight, lineRanges } = scrollLayoutRef.current;
-    const thumbEl = thumbElRef.current;
+  // ガターの表示/非表示を直接DOMに反映する(Reactのstateを介さないので、
+  // スクロール中は再レンダーが発生しない)。
+  const updateGutterVisibility = useCallback(() => {
+    const { docHeight, viewportHeight, lineRanges } = scrollLayoutRef.current;
     const gutterEl = gutterElRef.current;
-    if (!thumbEl || !gutterEl || trackHeight <= 0 || docHeight <= viewportHeight) {
+    if (!gutterEl || viewportHeight <= 0 || docHeight <= viewportHeight) {
       return;
     }
 
-    const maxScroll = Math.max(docHeight - viewportHeight, 1);
-    // つまみは「画面の縦中央にある位置」を指す。目盛り(toTrackY)と同じ
-    // 考え方(documentYをmaxScroll基準で正規化し、はみ出す分はmaxScrollに
-    // 丸める)で、scrollYではなくビューポート中央のdocumentYを変換する。
+    // ビューポート中央にある位置が、実際に描画されている縦線と重なって
+    // いる間だけガターを表示する。
     const viewportCenterDocumentY = window.scrollY + viewportHeight / 2;
-    const thumbY = (Math.min(viewportCenterDocumentY, maxScroll) / maxScroll) * trackHeight;
-    thumbEl.style.top = `${thumbY}px`;
-
-    // つまみ(ピル)が実際に描画されている縦線と視覚的に重なっている間
-    // だけガターを表示する。
-    const thumbTop = thumbY - THUMB_HEIGHT / 2;
-    const thumbBottom = thumbY + THUMB_HEIGHT / 2;
-    const isThumbOnLine = lineRanges.some((range) => thumbBottom >= range.top && thumbTop <= range.bottom);
-    gutterEl.style.opacity = isThumbOnLine ? '1' : '0';
-    gutterEl.style.pointerEvents = isThumbOnLine ? 'auto' : 'none';
+    const centerY = toTrackY(viewportCenterDocumentY, docHeight, viewportHeight);
+    const isNearContent = lineRanges.some((range) => centerY >= range.top && centerY <= range.bottom);
+    gutterEl.style.opacity = isNearContent ? '1' : '0';
+    gutterEl.style.pointerEvents = isNearContent ? 'auto' : 'none';
   }, []);
 
   // レイアウトに影響する値(データ読み込み・絞り込み・リサイズ等)が
-  // 変わるたびに ref を最新化し、つまみの位置も即座に補正する。描画後・
+  // 変わるたびに ref を最新化し、表示/非表示も即座に補正する。描画後・
   // ペイント前に同期させるため useLayoutEffect を使う。
   useLayoutEffect(() => {
-    scrollLayoutRef.current = { trackHeight, docHeight, viewportHeight, lineRanges };
-    applyThumbPosition();
-  }, [trackHeight, docHeight, viewportHeight, lineRanges, applyThumbPosition]);
+    scrollLayoutRef.current = { docHeight, viewportHeight, lineRanges };
+    updateGutterVisibility();
+  }, [docHeight, viewportHeight, lineRanges, updateGutterVisibility]);
 
   // モバイル/タブレットではガターが見えないため、スクロールのたびに
-  // つまみ位置を計算するだけでも無駄になる。ここもスキップする。
+  // 表示判定を計算するだけでも無駄になる。ここもスキップする。
   useEffect(() => {
     if (!isDesktopScreenSize) {
       return;
@@ -339,7 +327,7 @@ export function EventScrollGutter() {
     let rafId = 0;
     const onScroll = () => {
       cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(applyThumbPosition);
+      rafId = requestAnimationFrame(updateGutterVisibility);
     };
 
     onScroll();
@@ -348,7 +336,7 @@ export function EventScrollGutter() {
       cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', onScroll);
     };
-  }, [applyThumbPosition, isDesktopScreenSize]);
+  }, [updateGutterVisibility, isDesktopScreenSize]);
 
   const hasScrollableContent = docHeight > viewportHeight && viewportHeight > 0;
 
@@ -357,10 +345,11 @@ export function EventScrollGutter() {
     if (!rect || rect.height === 0) {
       return;
     }
+    // クリックした位置が画面の縦中央に来るようにジャンプする(トラック
+    // 上の位置はtoTrackYと同じ座標系なので、逆算するとdocHeight/
+    // viewportHeightの比率になる)。
     const ratio = Math.min(Math.max((e.clientY - rect.top) / rect.height, 0), 1);
-    // つまみと同じく、クリックした位置が画面の縦中央に来るようにジャンプ
-    // する(トラック上の位置はビューポート中央のdocumentYを表しているため)。
-    const targetCenterDocumentY = ratio * maxScroll;
+    const targetCenterDocumentY = ratio * docHeight;
     const targetScrollY = Math.min(Math.max(targetCenterDocumentY - viewportHeight / 2, 0), maxScroll);
     window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
   };
@@ -372,9 +361,9 @@ export function EventScrollGutter() {
   return (
     <Box ref={gutterElRef}
          position={'fixed'}
-         top={`${TRACK_TOP_OFFSET}px`}
+         top={0}
          right={'28px'}
-         h={`${trackHeight}px`}
+         h={`${viewportHeight}px`}
          zIndex={'docked'}
          opacity={0}
          pointerEvents={'none'}
@@ -451,24 +440,6 @@ export function EventScrollGutter() {
             )}
           </Box>
         ))}
-        <Box ref={thumbElRef}
-             position={'absolute'}
-             top={'0px'}
-             left={'50%'}
-             transform={'translate(-50%, -50%)'}
-             w={'10px'}
-             h={`${THUMB_HEIGHT}px`}
-             borderRadius={'full'}
-             bg={'primary.500'}
-             boxShadow={'0 1px 3px rgba(0,0,0,0.35)'}
-             pointerEvents={'none'}
-             sx={{
-               transition: 'top 60ms linear',
-               '@media (prefers-reduced-motion: reduce)': {
-                 transition: 'none',
-               },
-             }}
-             />
       </Box>
     </Box>
   );
