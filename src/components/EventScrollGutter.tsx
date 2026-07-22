@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Box, Text } from '@chakra-ui/react';
+import { Box, Text, useMediaQuery } from '@chakra-ui/react';
 
 type RawMarker = {
   // ドキュメント先頭からのY座標(px)
@@ -148,6 +148,10 @@ type ScrollLayout = {
 // ref経由でDOMを直接書き換えて反映する(60fps級で動くスクロールに
 // Reactの差分計算を毎回挟むと重いため)。
 export function EventScrollGutter() {
+  // display={{base:'none', xl:'block'}} でCSS上は隠れていても、ガター
+  // 自体は常にマウントされてしまうため、非表示幅ではDOM監視・スクロール
+  // 監視を張らない(=何もしない)ようにこのフラグで早期returnする。
+  const [isDesktopScreenSize] = useMediaQuery('(min-width: 80em)');
   const [rawMarkers, setRawMarkers] = useState<RawMarker[]>([]);
   const [extents, setExtents] = useState<SectionExtent[]>([]);
   const [docHeight, setDocHeight] = useState(0);
@@ -166,8 +170,15 @@ export function EventScrollGutter() {
   }, []);
 
   // イベント一覧は非同期取得・「もっと見る」・キーワード/コミュニティ絞り込み
-  // で高さが変わるため、DOM変化を監視して目盛りを都度作り直す。
+  // で高さが変わるため、DOM変化を監視して目盛りを都度作り直す。ガターが
+  // 見えない画面幅(モバイル/タブレット)では登録自体をスキップする。
+  // document.body をsubtree監視するため、登録したままだとヘッダーの
+  // ポップオーバー開閉など無関係な変化のたびに全カードを走査してしまう。
   useEffect(() => {
+    if (!isDesktopScreenSize) {
+      return;
+    }
+
     let rafId = 0;
     const scheduleRecompute = () => {
       cancelAnimationFrame(rafId);
@@ -184,7 +195,7 @@ export function EventScrollGutter() {
       window.removeEventListener('resize', scheduleRecompute);
       observer.disconnect();
     };
-  }, [recomputeMarkers]);
+  }, [recomputeMarkers, isDesktopScreenSize]);
 
   const trackHeight = Math.max(viewportHeight - TRACK_TOP_OFFSET - TRACK_BOTTOM_OFFSET, 0);
   // つまみ・クリックジャンプが基準にしているスクロール可能範囲。目盛りの
@@ -321,7 +332,13 @@ export function EventScrollGutter() {
     applyThumbPosition();
   }, [trackHeight, docHeight, viewportHeight, lineRanges, applyThumbPosition]);
 
+  // モバイル/タブレットではガターが見えないため、スクロールのたびに
+  // つまみ位置を計算するだけでも無駄になる。ここもスキップする。
   useEffect(() => {
+    if (!isDesktopScreenSize) {
+      return;
+    }
+
     let rafId = 0;
     const onScroll = () => {
       cancelAnimationFrame(rafId);
@@ -334,7 +351,7 @@ export function EventScrollGutter() {
       cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', onScroll);
     };
-  }, [applyThumbPosition]);
+  }, [applyThumbPosition, isDesktopScreenSize]);
 
   const hasScrollableContent = docHeight > viewportHeight && viewportHeight > 0;
 
@@ -347,7 +364,7 @@ export function EventScrollGutter() {
     window.scrollTo({ top: ratio * maxScroll, behavior: 'smooth' });
   };
 
-  if (rawMarkers.length === 0 || !hasScrollableContent) {
+  if (!isDesktopScreenSize || rawMarkers.length === 0 || !hasScrollableContent) {
     return null;
   }
 
@@ -357,7 +374,6 @@ export function EventScrollGutter() {
          top={`${TRACK_TOP_OFFSET}px`}
          right={'28px'}
          h={`${trackHeight}px`}
-         display={{base: 'none', xl: 'block'}}
          zIndex={'docked'}
          opacity={0}
          pointerEvents={'none'}
