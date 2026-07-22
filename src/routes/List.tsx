@@ -153,12 +153,7 @@ function List({ startYear} : {startYear: number}) {
                  mt={'4'}
                  p={{base: '0', md: '4'}}
                  >
-        <Stack>
-          <GroupSelector groups={groupSelectorItems}
-                          selected={selectedGroup}
-                          onSelect={handleGroupSelect}
-                          isLoading={data.isLoading}
-                          />
+        <Stack spacing={'0'}>
           {/* sticky 化した見出しバーは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
           <Stack>
@@ -169,8 +164,6 @@ function List({ startYear} : {startYear: number}) {
                    zIndex={'docked'}
                    bg={'gray.100'}
                    px={{base: '4', md: '0'}}
-                   mt={'4'}
-                   mb={'2'}
                    py={'2'}
                    scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
                    display={'flex'} alignItems={'flex-end'}
@@ -183,6 +176,11 @@ function List({ startYear} : {startYear: number}) {
               <Spacer />
               <YearSwitcher startYear={startYear} selectedYear={year} />
             </Stack>
+            <GroupSelector groups={groupSelectorItems}
+                            selected={selectedGroup}
+                            onSelect={handleGroupSelect}
+                            isLoading={data.isLoading}
+                            />
             {!data.isLoading && !data.errorMessage && (
               <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
                        selected={selectedKeyword}
