@@ -257,10 +257,8 @@ describe('EventScrollGutter', () => {
     vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(1000);
     vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(10000);
 
-    // framer motionのlayoutアニメーション(FLIP)による再配置はtransformの
-    // style変更でしかなく、MutationObserverのchildList監視には映らない。
-    // ここではDOMノードを増減させずにgetBoundingClientRect()の返り値だけを
-    // 変えることで、その状況を再現する。
+    // DOMノードを増減させずにgetBoundingClientRect()の返り値だけを変えることで、
+    // MutationObserverのchildList監視に映らないtransformでの再配置を再現する。
     const topByCard = new Map<Element, number>();
     vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
       const top = topByCard.get(this) ?? 0;

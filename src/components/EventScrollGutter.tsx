@@ -294,14 +294,10 @@ type ScrollLayout = {
 // までの遅延(ms)。
 const SCROLL_IDLE_HIDE_DELAY = 800;
 
-// AnimatedEventItemがframer motionのlayoutアニメーション(FLIPによる
-// transformでの再配置)を終えたときにdispatchするイベント名。この
-// transformでの移動はstyle属性の変更でしかなく、MutationObserverの
-// childList監視には引っかからない。そのため対象ノードの追加/削除だけを
-// 見ていると、他の生き残ったカードがアニメーション中の位置のまま
-// getBoundingClientRect()で計測されてしまい、アニメーション終了後も
-// 再計測されずにズレが残る。これを避けるため、アニメーション完了を
-// 明示的にイベントで受け取る。
+// AnimatedEventItemのframer motion layoutアニメーション(FLIP)完了時に
+// dispatchするイベント名。transformでの再配置はstyle属性の変更でしか
+// なくMutationObserverのchildList監視に映らないため、完了を明示的に
+// 受け取って再計測する。
 export const EVENT_CARD_LAYOUT_SETTLED = 'event-card-layout-settled';
 
 // イベントカード列の右側に、ブラウザのネイティブスクロールバーと同じ
