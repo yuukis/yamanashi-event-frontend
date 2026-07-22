@@ -25,7 +25,7 @@ type Segment = {
 };
 
 // 実際に描画される縦線の1本分の範囲(区分の隙間・パディングを反映済み)。
-// つまみがこの範囲にかかっている間だけガターを表示する判定にも使う。
+// 現在位置がこの範囲にある間だけガターを表示する判定にも使う。
 export type LineRange = {
   section: string;
   top: number;
@@ -56,16 +56,11 @@ type Pass1Entry = {
   monthVisible: boolean;
 };
 
-// 固定ヘッダーの下に収まる位置から開始し、フッター手前で終わる縦の軌道。
-const TRACK_TOP_OFFSET = 96;
-const TRACK_BOTTOM_OFFSET = 32;
 // ラベル同士が重ならないよう間引く際の最小間隔(px)。fontSize xs の行高
 // 目安。
 const MIN_LABEL_GAP = 14;
 const SECTION_GAP = 16;
 const LINE_PAD = 6;
-// つまみ(丸みを帯びたピル)の高さ(px)。下の描画(h={'26px'})と揃える。
-const THUMB_HEIGHT = 26;
 
 function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } {
   const elements = document.querySelectorAll<HTMLElement>('[data-event-start]');
@@ -103,6 +98,30 @@ function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } 
   return { markers, extents };
 }
 
+function nodeHasEventCard(node: Node): boolean {
+  if (node instanceof Element && node.hasAttribute('data-event-start')) {
+    return true;
+  }
+  // DocumentFragmentは挿入時に子要素だけがツリーへ移動しfragment自体は
+  // MutationRecordのaddedNodes/removedNodesには現れないはずだが、念のため
+  // (ParentNodeを実装しておりquerySelectorが使える)対応しておく。
+  if (node instanceof Element || node instanceof DocumentFragment) {
+    return node.querySelector('[data-event-start]') !== null;
+  }
+  return false;
+}
+
+// document.body をsubtree監視していると、ヘッダーのポップオーバー開閉
+// など無関係なDOM変化でも呼ばれてしまう。実際にイベントカード
+// ([data-event-start])の追加/削除を伴う変化かどうかを見て絞り込む。
+function mutationsInvolveEventCards(mutations: MutationRecord[]): boolean {
+  return mutations.some(
+    (mutation) =>
+      Array.from(mutation.addedNodes).some(nodeHasEventCard) ||
+      Array.from(mutation.removedNodes).some(nodeHasEventCard),
+  );
+}
+
 export function withMarkerFlags(rawMarkers: RawMarker[]): (RawMarker & MarkerFlags)[] {
   let previousSection: string | null = null;
   let previousYear: string | null = null;
@@ -120,13 +139,37 @@ function formatMonth(month: string): string {
   return `${parseInt(month, 10)}月`;
 }
 
+// Root/Groupの「今後の開催予定」区分(section名がページによって違う)。
+// この区分の目盛りは緑系の配色にする。
+const UPCOMING_SECTIONS = new Set(['future', 'upcoming']);
+function isUpcomingSection(section: string): boolean {
+  return UPCOMING_SECTIONS.has(section);
+}
+
 export type GutterLayout = {
   lineRanges: LineRange[];
   labeledMarkers: LabeledMarker[];
-  trackHeight: number;
-  // つまみ・クリックジャンプが基準にしているスクロール可能範囲。
+  // scrollToRatioが目標位置を計算する際に使うスクロール可能範囲。
   maxScroll: number;
 };
+
+// documentY(ページ先頭からのpx)を軌道上のY座標に変換する。軌道は
+// ブラウザのネイティブスクロールバー(0〜viewportHeightいっぱいに動く)
+// と同じ座標系に合わせてあり、documentY/docHeightの比率をそのまま
+// viewportHeightに引き伸ばすだけでよい(スクロールバーのつまみの高さが
+// viewportHeight/docHeightに比例するモデルで計算すると、つまみの上端の
+// 位置がちょうどこの式に一致する)。この対応関係により、目盛りの位置を
+// 見ればブラウザ本来のスクロールバーが今どのあたりにあるか分かるため、
+// 別途つまみを描画する必要がない。
+function toTrackY(documentY: number, docHeight: number, viewportHeight: number): number {
+  // getBoundingClientRect()はサブピクセル精度の小数を返すが、docHeight
+  // (document.documentElement.scrollHeight)は整数に丸められているため、
+  // ページ最下部付近の要素ではdocumentYがdocHeightをわずかに上回ることが
+  // ある。クランプしないとyがviewportHeightをわずかに超え、トラック外に
+  // はみ出して描画されてしまう。
+  const clampedDocumentY = Math.min(Math.max(documentY, 0), docHeight);
+  return (clampedDocumentY / docHeight) * viewportHeight;
+}
 
 // DOM/Reactに依存しない純粋関数なので、実際のスクロール位置(scrollY)
 // には関係なく、DOM構成が変わったときだけ呼び直せばよい。
@@ -136,29 +179,21 @@ export function buildGutterLayout(
   docHeight: number,
   viewportHeight: number,
 ): GutterLayout {
-  const trackHeight = Math.max(viewportHeight - TRACK_TOP_OFFSET - TRACK_BOTTOM_OFFSET, 0);
   const maxScroll = Math.max(docHeight - viewportHeight, 1);
 
   if (docHeight === 0 || rawMarkers.length === 0) {
-    return { lineRanges: [], labeledMarkers: [], trackHeight, maxScroll };
+    return { lineRanges: [], labeledMarkers: [], maxScroll };
   }
 
-  // documentY(ページ先頭からのpx)を軌道上のY座標に変換する。つまみは
-  // scrollY(0〜maxScroll)を軌道全体に引き伸ばして動くため、目盛り側も
-  // documentYをmaxScroll基準で正規化しないと、同じ絶対位置でもつまみと
-  // 目盛りがズレる(docHeightで割ると、ページ末尾に近い目盛りほどつまみ
-  // より手前に表示されてしまう)。maxScrollを超える位置(ページ最下部
-  // 付近、スクロールしても先頭がそこまで届かない範囲)はmaxScrollに
-  // 丸める。
-  const toTrackY = (documentY: number) => (Math.min(documentY, maxScroll) / maxScroll) * trackHeight;
+  const toTrackYWithin = (documentY: number) => toTrackY(documentY, docHeight, viewportHeight);
 
   const segments: Segment[] = extents.map((extent) => ({
     section: extent.section,
-    startY: toTrackY(extent.startTop),
-    endY: toTrackY(extent.endBottom),
+    startY: toTrackYWithin(extent.startTop),
+    endY: toTrackYWithin(extent.endBottom),
   }));
 
-  // 区分が変わる箇所には隙間を空けて描画する(つまみの表示判定にも使う)。
+  // 区分が変わる箇所には隙間を空けて描画する(現在位置の表示判定にも使う)。
   const lineRanges: LineRange[] = segments.map((segment, index) => {
     const previous = segments[index - 1];
     const next = segments[index + 1];
@@ -167,7 +202,7 @@ export function buildGutterLayout(
       : Math.max(segment.startY - LINE_PAD, 0);
     const bottom = next
       ? Math.min(segment.endY + LINE_PAD, next.startY - SECTION_GAP / 2)
-      : Math.min(segment.endY + LINE_PAD, trackHeight);
+      : Math.min(segment.endY + LINE_PAD, viewportHeight);
     return { section: segment.section, top, bottom: Math.max(bottom, top + 2) };
   });
 
@@ -178,7 +213,7 @@ export function buildGutterLayout(
   // 決める。年を表示する目盛りは(このパスでは)常に表示扱いにする。
   let lastLabelY = -Infinity;
   const pass1: Pass1Entry[] = markersWithFlags.map((marker) => {
-    const y = toTrackY(marker.top);
+    const y = toTrackYWithin(marker.top);
     const isCramped = (y - lastLabelY) < MIN_LABEL_GAP;
     const monthVisible = marker.showYear || !isCramped;
     if (monthVisible) {
@@ -227,24 +262,42 @@ export function buildGutterLayout(
     };
   });
 
-  return { lineRanges, labeledMarkers, trackHeight, maxScroll };
+  // 4周目: 年月を2行(年月とも表示)にした目盛りは、1行の目盛りより
+  // 縦に場所を取る。2行目(月)が次に表示されるラベルの行と重なる場合は
+  // 月を省略し、年だけの1行に戻す。後ろから1回なぞるだけで「次に表示
+  // されるラベルのY座標」を追える(O(n))。
+  const TWO_LINE_LABEL_GAP = MIN_LABEL_GAP * 2;
+  const adjustedLabeledMarkers = new Array<LabeledMarker>(labeledMarkers.length);
+  let nextVisibleY: number | null = null;
+  for (let i = labeledMarkers.length - 1; i >= 0; i--) {
+    const entry = labeledMarkers[i];
+    const isTwoLine = entry.yearText !== null && entry.monthText !== null;
+    const overlapsNext = isTwoLine && nextVisibleY !== null && (nextVisibleY - entry.y) < TWO_LINE_LABEL_GAP;
+    adjustedLabeledMarkers[i] = overlapsNext ? { ...entry, monthText: null } : entry;
+    if (entry.yearText !== null || entry.monthText !== null) {
+      nextVisibleY = entry.y;
+    }
+  }
+
+  return { lineRanges, labeledMarkers: adjustedLabeledMarkers, maxScroll };
 }
 
 // スクロールハンドラから毎フレーム読むための ref に保持する値。
 type ScrollLayout = {
-  trackHeight: number;
   docHeight: number;
   viewportHeight: number;
   lineRanges: LineRange[];
+  isDesktopScreenSize: boolean;
 };
 
-// 十分に横幅のあるデスクトップ画面でのみ、イベントカード列の右側に
-// 位置と年月を示す擬似スクロールバーを表示する。クリックで該当位置へ
-// ジャンプできる。年月ラベルはDOM構成が変わったときだけ組み立て直し、
-// つまみの位置・ガターの表示/非表示はスクロールのたびにref経由で
-// DOMを直接書き換える(どちらもReactの再レンダーを挟まない)。
+// xl未満(スマホ・タブレット)でスクロールが止まってからガイドを消す
+// までの遅延(ms)。
+const SCROLL_IDLE_HIDE_DELAY = 800;
+
+// イベントカード列の右側に、ブラウザのネイティブスクロールバーと同じ
+// 座標系で年月ラベルを表示する擬似ガター。xl以上は現在位置付近に常時
+// 表示し、xl未満はスクロール中だけ一時的なガイドとして表示する。
 export function EventScrollGutter() {
-  // xl未満ではガター自体をマウントせず、DOM監視・スクロール監視も張らない。
   const [isDesktopScreenSize] = useMediaQuery('(min-width: 80em)');
   const [rawMarkers, setRawMarkers] = useState<RawMarker[]>([]);
   const [extents, setExtents] = useState<SectionExtent[]>([]);
@@ -252,8 +305,9 @@ export function EventScrollGutter() {
   const [viewportHeight, setViewportHeight] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const gutterElRef = useRef<HTMLDivElement>(null);
-  const thumbElRef = useRef<HTMLDivElement>(null);
-  const scrollLayoutRef = useRef<ScrollLayout>({ trackHeight: 0, docHeight: 0, viewportHeight: 0, lineRanges: [] });
+  const scrollLayoutRef = useRef<ScrollLayout>({ docHeight: 0, viewportHeight: 0, lineRanges: [], isDesktopScreenSize: false });
+  // xl未満でのみ参照する、「今スクロール中か」のフラグ。
+  const isScrollingRef = useRef(false);
 
   const recomputeMarkers = useCallback(() => {
     const { markers, extents } = collectEventData();
@@ -263,14 +317,7 @@ export function EventScrollGutter() {
     setViewportHeight(window.innerHeight);
   }, []);
 
-  // document.body をsubtree監視するため、登録したままだとヘッダーの
-  // ポップオーバー開閉など無関係な変化のたびに全カードを走査してしまう。
-  // ガターが見えない画面幅では登録自体をスキップする。
   useEffect(() => {
-    if (!isDesktopScreenSize) {
-      return;
-    }
-
     let rafId = 0;
     const scheduleRecompute = () => {
       cancelAnimationFrame(rafId);
@@ -279,7 +326,11 @@ export function EventScrollGutter() {
 
     scheduleRecompute();
     window.addEventListener('resize', scheduleRecompute);
-    const observer = new MutationObserver(scheduleRecompute);
+    const observer = new MutationObserver((mutations) => {
+      if (mutationsInvolveEventCards(mutations)) {
+        scheduleRecompute();
+      }
+    });
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
@@ -287,108 +338,183 @@ export function EventScrollGutter() {
       window.removeEventListener('resize', scheduleRecompute);
       observer.disconnect();
     };
-  }, [recomputeMarkers, isDesktopScreenSize]);
+  }, [recomputeMarkers]);
 
-  const { lineRanges, labeledMarkers, trackHeight, maxScroll } = useMemo(
+  const { lineRanges, labeledMarkers, maxScroll } = useMemo(
     () => buildGutterLayout(rawMarkers, extents, docHeight, viewportHeight),
     [rawMarkers, extents, docHeight, viewportHeight],
   );
 
-  // つまみの位置とガターの表示/非表示を直接DOMに反映する(Reactの
-  // stateを介さないので、スクロール中は再レンダーが発生しない)。
-  const applyThumbPosition = useCallback(() => {
-    const { trackHeight, docHeight, viewportHeight, lineRanges } = scrollLayoutRef.current;
-    const thumbEl = thumbElRef.current;
+  // ガターの表示/非表示を直接DOMに反映する(Reactのstateを介さないので、
+  // スクロール中は再レンダーが発生しない)。
+  const updateGutterVisibility = useCallback(() => {
+    const { docHeight, viewportHeight, lineRanges, isDesktopScreenSize } = scrollLayoutRef.current;
     const gutterEl = gutterElRef.current;
-    if (!thumbEl || !gutterEl || trackHeight <= 0 || docHeight <= viewportHeight) {
+    if (!gutterEl || viewportHeight <= 0 || docHeight <= viewportHeight) {
       return;
     }
 
-    const maxScroll = Math.max(docHeight - viewportHeight, 1);
-    // つまみは「画面の縦中央にある位置」を指す。目盛り(toTrackY)と同じ
-    // 考え方(documentYをmaxScroll基準で正規化し、はみ出す分はmaxScrollに
-    // 丸める)で、scrollYではなくビューポート中央のdocumentYを変換する。
     const viewportCenterDocumentY = window.scrollY + viewportHeight / 2;
-    const thumbY = (Math.min(viewportCenterDocumentY, maxScroll) / maxScroll) * trackHeight;
-    thumbEl.style.top = `${thumbY}px`;
-
-    // つまみ(ピル)が実際に描画されている縦線と視覚的に重なっている間
-    // だけガターを表示する。
-    const thumbTop = thumbY - THUMB_HEIGHT / 2;
-    const thumbBottom = thumbY + THUMB_HEIGHT / 2;
-    const isThumbOnLine = lineRanges.some((range) => thumbBottom >= range.top && thumbTop <= range.bottom);
-    gutterEl.style.opacity = isThumbOnLine ? '1' : '0';
-    gutterEl.style.pointerEvents = isThumbOnLine ? 'auto' : 'none';
+    const centerY = toTrackY(viewportCenterDocumentY, docHeight, viewportHeight);
+    const isNearContent = lineRanges.some((range) => centerY >= range.top && centerY <= range.bottom);
+    // xl以上は現在位置付近であれば表示し続けるが、xl未満はさらに
+    // スクロール中であることも条件にする(常時表示だと本文を隠すため)。
+    const isVisible = isDesktopScreenSize ? isNearContent : isNearContent && isScrollingRef.current;
+    gutterEl.style.opacity = isVisible ? '1' : '0';
+    gutterEl.style.pointerEvents = isVisible ? 'auto' : 'none';
   }, []);
 
-  // レイアウトに影響する値(データ読み込み・絞り込み・リサイズ等)が
-  // 変わるたびに ref を最新化し、つまみの位置も即座に補正する。描画後・
-  // ペイント前に同期させるため useLayoutEffect を使う。
+  // 描画後・ペイント前に ref と表示/非表示を同期させるため useLayoutEffect を使う。
   useLayoutEffect(() => {
-    scrollLayoutRef.current = { trackHeight, docHeight, viewportHeight, lineRanges };
-    applyThumbPosition();
-  }, [trackHeight, docHeight, viewportHeight, lineRanges, applyThumbPosition]);
+    scrollLayoutRef.current = { docHeight, viewportHeight, lineRanges, isDesktopScreenSize };
+    updateGutterVisibility();
+  }, [docHeight, viewportHeight, lineRanges, isDesktopScreenSize, updateGutterVisibility]);
 
-  // モバイル/タブレットではガターが見えないため、スクロールのたびに
-  // つまみ位置を計算するだけでも無駄になる。ここもスキップする。
   useEffect(() => {
-    if (!isDesktopScreenSize) {
-      return;
-    }
-
     let rafId = 0;
-    const onScroll = () => {
+    let idleTimeoutId = 0;
+
+    const scheduleVisibilityUpdate = () => {
       cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(applyThumbPosition);
+      rafId = requestAnimationFrame(updateGutterVisibility);
     };
 
-    onScroll();
+    const onScroll = () => {
+      if (!scrollLayoutRef.current.isDesktopScreenSize) {
+        isScrollingRef.current = true;
+        window.clearTimeout(idleTimeoutId);
+        idleTimeoutId = window.setTimeout(() => {
+          isScrollingRef.current = false;
+          updateGutterVisibility();
+        }, SCROLL_IDLE_HIDE_DELAY);
+      }
+      scheduleVisibilityUpdate();
+    };
+
+    scheduleVisibilityUpdate();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       cancelAnimationFrame(rafId);
+      window.clearTimeout(idleTimeoutId);
       window.removeEventListener('scroll', onScroll);
     };
-  }, [applyThumbPosition, isDesktopScreenSize]);
+  }, [updateGutterVisibility]);
 
   const hasScrollableContent = docHeight > viewportHeight && viewportHeight > 0;
+  const isDraggingRef = useRef(false);
 
-  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  // クリックした/触れた位置が画面の縦中央に来るようにジャンプする
+  // (トラック上の位置はtoTrackYと同じ座標系なので、逆算するとdocHeight/
+  // viewportHeightの比率になる)。
+  const ratioFromClientY = (clientY: number): number | null => {
     const rect = trackRef.current?.getBoundingClientRect();
     if (!rect || rect.height === 0) {
-      return;
+      return null;
     }
-    const ratio = Math.min(Math.max((e.clientY - rect.top) / rect.height, 0), 1);
-    // つまみと同じく、クリックした位置が画面の縦中央に来るようにジャンプ
-    // する(トラック上の位置はビューポート中央のdocumentYを表しているため)。
-    const targetCenterDocumentY = ratio * maxScroll;
-    const targetScrollY = Math.min(Math.max(targetCenterDocumentY - viewportHeight / 2, 0), maxScroll);
-    window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
+    return Math.min(Math.max((clientY - rect.top) / rect.height, 0), 1);
   };
 
-  if (!isDesktopScreenSize || rawMarkers.length === 0 || !hasScrollableContent) {
+  const scrollToRatio = (ratio: number, smooth: boolean) => {
+    const targetCenterDocumentY = ratio * docHeight;
+    const targetScrollY = Math.min(Math.max(targetCenterDocumentY - viewportHeight / 2, 0), maxScroll);
+    window.scrollTo({ top: targetScrollY, behavior: smooth ? 'smooth' : 'auto' });
+  };
+
+  // xl以上: クリックでその場へ1回だけジャンプする。
+  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDesktopScreenSize) {
+      return;
+    }
+    const ratio = ratioFromClientY(e.clientY);
+    if (ratio !== null) {
+      scrollToRatio(ratio, true);
+    }
+  };
+
+  // xl未満: 指でなぞった位置に追従してスクロールする、よくあるスクラバー
+  // 操作にする(smoothだと指の動きに遅れて見えるため即時反映にする)。
+  const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDesktopScreenSize) {
+      return;
+    }
+    const ratio = ratioFromClientY(e.clientY);
+    if (ratio === null) {
+      return;
+    }
+    isDraggingRef.current = true;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    scrollToRatio(ratio, false);
+  };
+
+  const handleTrackPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) {
+      return;
+    }
+    const ratio = ratioFromClientY(e.clientY);
+    if (ratio !== null) {
+      scrollToRatio(ratio, false);
+    }
+  };
+
+  const handleTrackPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) {
+      return;
+    }
+    isDraggingRef.current = false;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  };
+
+  if (rawMarkers.length === 0 || !hasScrollableContent) {
     return null;
   }
 
   return (
     <Box ref={gutterElRef}
          position={'fixed'}
-         top={`${TRACK_TOP_OFFSET}px`}
-         right={'28px'}
-         h={`${trackHeight}px`}
-         zIndex={'docked'}
+         top={0}
+         // xl未満は一時的なガイド表示なので、縦線が画面右端に来るまで
+         // 寄せる(トラック自体は10px幅で、縦線はその中央にあるため
+         // right:0で右端から5px の位置になる)。
+         right={{base: 0, xl: '14px'}}
+         // xl未満は年月ラベルが本文に重なるため、視認性のために背景を敷く。
+         // 右(トラック側)を濃く、左(ラベル側)へ透過を強くするグラデーションにする。
+         w={{base: '90px', xl: 'auto'}}
+         display={'flex'}
+         justifyContent={'flex-end'}
+         bgGradient={{base: 'linear(to-r, transparent, whiteAlpha.800)', xl: 'none'}}
+         h={`${viewportHeight}px`}
+         // ヘッダー(zIndex: sticky/banner)より前面に表示する。ポップオーバー
+         // やメニュー(zIndex: popover)より上にはしない。
+         zIndex={'overlay'}
          opacity={0}
          pointerEvents={'none'}
          data-testid={'event-scroll-gutter'}
+         // xl未満はトラック(10px)だけでなく、ラベル込みの表示領域全体を
+         // 指でなぞれるようにする(タップしやすくするため)。
+         onPointerDown={handleTrackPointerDown}
+         onPointerMove={handleTrackPointerMove}
+         onPointerUp={handleTrackPointerUp}
+         onPointerCancel={handleTrackPointerUp}
+         // ブラウザが何らかの理由でpointer captureを横取り/解放した場合
+         // (lostpointercapture)もドラッグ終了として扱う。ここを拾わないと
+         // isDraggingRefがtrueのまま残り、ボタンを押していないpointermove
+         // でも意図せずスクロールしてしまう。
+         onLostPointerCapture={handleTrackPointerUp}
          // ページ本体は擬似スクロールバーが無くてもネイティブスクロール・
          // キーボードだけで完全に操作できる補助的なミニマップなので、
-         // 支援技術には存在しないものとして扱う(クリックジャンプはマウス
-         // 向けのショートカットに限定する)。
+         // 支援技術には存在しないものとして扱う(クリックジャンプ/ドラッグ
+         // はマウス・タッチ向けのショートカットに限定する)。
          aria-hidden={true}
          sx={{
            transition: 'opacity 180ms ease-out',
            '@media (prefers-reduced-motion: reduce)': {
              transition: 'none',
            },
+           // xl未満のドラッグ操作がブラウザの既定のタッチスクロールと
+           // 競合しないようにする。
+           touchAction: { base: 'none', xl: 'auto' },
          }}
          >
       <Box ref={trackRef}
@@ -406,7 +532,7 @@ export function EventScrollGutter() {
                left={'50%'}
                transform={'translateX(-50%)'}
                w={'2px'}
-               bg={'blackAlpha.200'}
+               bg={isUpcomingSection(range.section) ? 'secondary.400' : 'blackAlpha.200'}
                borderRadius={'full'}
                pointerEvents={'none'}
                />
@@ -421,7 +547,7 @@ export function EventScrollGutter() {
                >
             <Box boxSize={'4px'}
                  borderRadius={'full'}
-                 bg={'blackAlpha.400'}
+                 bg={isUpcomingSection(marker.section) ? 'secondary.600' : 'blackAlpha.400'}
                  />
             {marker.isSectionStart && (
               // 区分(直近開催/終了 等)の先頭であることを示す小さな横線。
@@ -432,43 +558,44 @@ export function EventScrollGutter() {
                    transform={'translateY(-50%)'}
                    w={'8px'}
                    h={'2px'}
-                   bg={'blackAlpha.400'}
+                   bg={isUpcomingSection(marker.section) ? 'secondary.600' : 'blackAlpha.400'}
                    pointerEvents={'none'}
                    />
             )}
-            {(yearText || monthText) && (
+            {/* 年と月を横に並べると幅を取るため、年を上・月を下の2行に分けて
+                ガター全体の横幅を抑える。両方ある場合はドットの中心を年の
+                行に合わせ、月はその下に続ける(2行分をまとめて中央寄せ
+                にはしない)。*/}
+            {yearText && (
               <Text position={'absolute'}
                     top={'50%'}
                     right={'calc(100% + 8px)'}
                     transform={'translateY(-50%)'}
-                    whiteSpace={'nowrap'}
                     fontSize={'xs'}
-                    color={'gray.500'}
+                    lineHeight={'1'}
+                    fontWeight={'bold'}
+                    color={isUpcomingSection(marker.section) ? 'secondary.800' : 'gray.500'}
+                    whiteSpace={'nowrap'}
                     >
-                {yearText && <Text as={'span'} fontWeight={'bold'}>{yearText}</Text>}
-                {monthText && <Text as={'span'} fontWeight={'normal'}>{monthText}</Text>}
+                {yearText}
+              </Text>
+            )}
+            {monthText && (
+              <Text position={'absolute'}
+                    top={yearText ? 'calc(50% + 6px)' : '50%'}
+                    right={'calc(100% + 8px)'}
+                    transform={yearText ? undefined : 'translateY(-50%)'}
+                    fontSize={'xs'}
+                    lineHeight={'1'}
+                    fontWeight={'normal'}
+                    color={isUpcomingSection(marker.section) ? 'secondary.800' : 'gray.500'}
+                    whiteSpace={'nowrap'}
+                    >
+                {monthText}
               </Text>
             )}
           </Box>
         ))}
-        <Box ref={thumbElRef}
-             position={'absolute'}
-             top={'0px'}
-             left={'50%'}
-             transform={'translate(-50%, -50%)'}
-             w={'10px'}
-             h={`${THUMB_HEIGHT}px`}
-             borderRadius={'full'}
-             bg={'primary.500'}
-             boxShadow={'0 1px 3px rgba(0,0,0,0.35)'}
-             pointerEvents={'none'}
-             sx={{
-               transition: 'top 60ms linear',
-               '@media (prefers-reduced-motion: reduce)': {
-                 transition: 'none',
-               },
-             }}
-             />
       </Box>
     </Box>
   );

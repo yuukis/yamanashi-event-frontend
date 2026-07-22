@@ -56,33 +56,45 @@ describe('withMarkerFlags', () => {
   });
 });
 
-// trackHeight = viewportHeight - 128 (TRACK_TOP_OFFSET + TRACK_BOTTOM_OFFSET).
-// Pick round numbers so toTrackY(x) = x / 10 for x in [0, 10000], which keeps
-// the expected pixel math easy to verify by hand.
-const VIEWPORT_HEIGHT = 1128; // -> trackHeight = 1000
-const DOC_HEIGHT = 11128; // -> maxScroll = 10000
+// The track spans the full viewport height. Pick round numbers so
+// toTrackY(x) = x / 10 for x in [0, 10000], which keeps the expected pixel
+// math easy to verify by hand.
+const VIEWPORT_HEIGHT = 1000;
+const DOC_HEIGHT = 10000; // -> maxScroll = 9000
 
 describe('buildGutterLayout', () => {
-  it('returns empty layout (but still computes trackHeight/maxScroll) when there are no markers', () => {
+  it('returns empty layout (but still computes maxScroll) when there are no markers', () => {
     const layout = buildGutterLayout([], [], DOC_HEIGHT, VIEWPORT_HEIGHT);
 
     expect(layout.lineRanges).toEqual([]);
     expect(layout.labeledMarkers).toEqual([]);
-    expect(layout.trackHeight).toBe(1000);
-    expect(layout.maxScroll).toBe(10000);
+    expect(layout.maxScroll).toBe(9000);
   });
 
-  it('maps documentY to track pixels using maxScroll, not docHeight, and clamps beyond maxScroll', () => {
+  it('maps documentY to track pixels proportionally to docHeight, matching where a native scrollbar thumb would sit', () => {
     const rawMarkers: RawMarker[] = [
       marker({ top: 1000, month: '01' }), // -> y = 100
-      marker({ top: 12000, month: '02' }), // beyond maxScroll -> clamped to trackHeight
+      marker({ top: 9000, month: '09' }), // -> y = 900, near the very end of the page
     ];
-    const extents: SectionExtent[] = [{ section: 'all', startTop: 1000, endBottom: 12000 }];
+    const extents: SectionExtent[] = [{ section: 'all', startTop: 1000, endBottom: 9000 }];
 
     const { labeledMarkers } = buildGutterLayout(rawMarkers, extents, DOC_HEIGHT, VIEWPORT_HEIGHT);
 
     expect(labeledMarkers[0].y).toBe(100);
-    expect(labeledMarkers[1].y).toBe(1000);
+    expect(labeledMarkers[1].y).toBe(900);
+  });
+
+  it('clamps a documentY that slightly exceeds docHeight instead of overshooting the track', () => {
+    // getBoundingClientRect() returns sub-pixel floats while docHeight
+    // (scrollHeight) is an integer, so a marker/extent right at the bottom
+    // of the page can end up marginally past docHeight in practice.
+    const rawMarkers: RawMarker[] = [marker({ top: DOC_HEIGHT + 0.6, month: '12' })];
+    const extents: SectionExtent[] = [{ section: 'all', startTop: DOC_HEIGHT + 0.6, endBottom: DOC_HEIGHT + 0.6 }];
+
+    const { labeledMarkers, lineRanges } = buildGutterLayout(rawMarkers, extents, DOC_HEIGHT, VIEWPORT_HEIGHT);
+
+    expect(labeledMarkers[0].y).toBe(VIEWPORT_HEIGHT);
+    expect(lineRanges[0].bottom).toBeLessThanOrEqual(VIEWPORT_HEIGHT);
   });
 
   it('shows the full year+month label on the first marker of a year when another month in that year is also visible', () => {
@@ -191,5 +203,50 @@ describe('buildGutterLayout', () => {
     ]);
     expect(labeledMarkers[0].marker.isSectionStart).toBe(true);
     expect(labeledMarkers[1].marker.isSectionStart).toBe(true);
+  });
+
+  it('drops the month from a two-line label when its second row would overlap the next shown label', () => {
+    const rawMarkers: RawMarker[] = [
+      marker({ top: 1000, year: '2025', month: '01' }), // y = 100, shows both lines (2025年 / 1月)...
+      marker({ top: 1200, month: '06' }), // y = 120, only 20px below (<28) -> collides with the month row
+    ];
+    const extents: SectionExtent[] = [{ section: 'all', startTop: 1000, endBottom: 1300 }];
+
+    const { labeledMarkers } = buildGutterLayout(rawMarkers, extents, DOC_HEIGHT, VIEWPORT_HEIGHT);
+
+    // ...so the month is dropped, leaving the first marker as a year-only line.
+    expect(labeledMarkers[0]).toEqual(expect.objectContaining({ yearText: '2025年', monthText: null }));
+    // the marker that caused the collision is untouched.
+    expect(labeledMarkers[1]).toEqual(expect.objectContaining({ yearText: null, monthText: '6月' }));
+  });
+
+  it('keeps the month on a two-line label when the next shown label is exactly at the two-line gap threshold', () => {
+    const rawMarkers: RawMarker[] = [
+      marker({ top: 1000, year: '2025', month: '01' }), // y = 100
+      marker({ top: 1280, month: '06' }), // y = 128, exactly 28px below (the threshold is a strict "<")
+    ];
+    const extents: SectionExtent[] = [{ section: 'all', startTop: 1000, endBottom: 1380 }];
+
+    const { labeledMarkers } = buildGutterLayout(rawMarkers, extents, DOC_HEIGHT, VIEWPORT_HEIGHT);
+
+    expect(labeledMarkers[0]).toEqual(expect.objectContaining({ yearText: '2025年', monthText: '1月' }));
+  });
+
+  it('skips over markers with no visible label when checking the two-line label for overlap', () => {
+    const rawMarkers: RawMarker[] = [
+      marker({ top: 1000, year: '2025', month: '01' }), // y = 100, two-line candidate
+      marker({ top: 1010, month: '02' }), // y = 101, cramped against marker 1 -> no visible label of its own
+      marker({ top: 1200, month: '06' }), // y = 120, visible; also what makes marker 1 show its month at all
+    ];
+    const extents: SectionExtent[] = [{ section: 'all', startTop: 1000, endBottom: 1300 }];
+
+    const { labeledMarkers } = buildGutterLayout(rawMarkers, extents, DOC_HEIGHT, VIEWPORT_HEIGHT);
+
+    // the invisible middle marker is not what the overlap check should compare
+    // against; the visible marker at y=120 is, and it's close enough (20px) to
+    // still trigger the suppression.
+    expect(labeledMarkers[1]).toEqual(expect.objectContaining({ yearText: null, monthText: null }));
+    expect(labeledMarkers[0]).toEqual(expect.objectContaining({ yearText: '2025年', monthText: null }));
+    expect(labeledMarkers[2]).toEqual(expect.objectContaining({ yearText: null, monthText: '6月' }));
   });
 });
