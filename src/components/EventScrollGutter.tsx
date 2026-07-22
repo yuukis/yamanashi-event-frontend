@@ -234,18 +234,20 @@ export function buildGutterLayout(
 
   // 4周目: 年月を2行(年月とも表示)にした目盛りは、1行の目盛りより
   // 縦に場所を取る。2行目(月)が次に表示されるラベルの行と重なる場合は
-  // 月を省略し、年だけの1行に戻す。
+  // 月を省略し、年だけの1行に戻す。後ろから1回なぞるだけで「次に表示
+  // されるラベルのY座標」を追える(O(n))。
   const TWO_LINE_LABEL_GAP = MIN_LABEL_GAP * 2;
-  const adjustedLabeledMarkers: LabeledMarker[] = labeledMarkers.map((entry, index) => {
-    if (!entry.yearText || !entry.monthText) {
-      return entry;
+  const adjustedLabeledMarkers = new Array<LabeledMarker>(labeledMarkers.length);
+  let nextVisibleY: number | null = null;
+  for (let i = labeledMarkers.length - 1; i >= 0; i--) {
+    const entry = labeledMarkers[i];
+    const isTwoLine = entry.yearText !== null && entry.monthText !== null;
+    const overlapsNext = isTwoLine && nextVisibleY !== null && (nextVisibleY - entry.y) < TWO_LINE_LABEL_GAP;
+    adjustedLabeledMarkers[i] = overlapsNext ? { ...entry, monthText: null } : entry;
+    if (entry.yearText !== null || entry.monthText !== null) {
+      nextVisibleY = entry.y;
     }
-    const next = labeledMarkers.slice(index + 1).find((other) => other.yearText || other.monthText);
-    if (next && (next.y - entry.y) < TWO_LINE_LABEL_GAP) {
-      return { ...entry, monthText: null };
-    }
-    return entry;
-  });
+  }
 
   return { lineRanges, labeledMarkers: adjustedLabeledMarkers, maxScroll };
 }
