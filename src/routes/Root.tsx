@@ -310,11 +310,73 @@ function Root({startYear}: {startYear: number}) {
                           onSelect={handleGroupSelect}
                           isLoading={data.isLoading}
                           />
+          <Box display={'flex'} justifyContent={'flex-start'} px={{base: '4', md: '0'}} mt={'-2'}>
+            <Button as={'a'}
+                    href={'/groups'}
+                    variant={'link'}
+                    size={'sm'}
+                    fontWeight={'normal'}
+                    color={'gray.600'}
+                    leftIcon={<People />}
+                    >
+              コミュニティ一覧からイベントを探す
+            </Button>
+          </Box>
           {/* sticky 化した見出しは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
-          <Stack>
-            <Stack id={FUTURE_EVENTS_ANCHOR_ID}
-                   direction={'row'} spacing={'2'}
+          <Stack id={FUTURE_EVENTS_ANCHOR_ID}
+                 direction={'row'} spacing={'2'}
+                 position={'sticky'}
+                 top={STICKY_HEADING_TOP}
+                 zIndex={'docked'}
+                 bg={'gray.100'}
+                 px={{base: '4', md: '0'}}
+                 mt={'8'}
+                 py={'2'}
+                 scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
+                 display={'flex'} alignItems={'flex-end'}
+                 >
+            <Heading size={{base: 'sm', md: 'md'}}
+                     color={'gray.600'}
+                     >
+              直近開催イベント
+            </Heading>
+            <Spacer />
+            <YearSwitcher startYear={startYear} selectedYear={null} showChevrons={false} />
+          </Stack>
+          {!data.isLoading && !data.errorMessage && (
+            <ChipBar items={futureKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                     selected={selectedKeyword}
+                     onSelect={handleKeywordSelect}
+                     expandAriaLabel={'すべてのキーワードを表示'}
+                     collapseAriaLabel={'キーワードを折りたたむ'}
+                     />
+          )}
+          <Card variant={{base: 'unstyled', md: 'outline'}}
+                size={{base: 'sm', md: 'md'}}
+                p={'0'}
+                >
+            <CardBody>
+              <Stack spacing={EVENT_LIST_SPACING}>
+                {data.isLoading ? (
+                  <SkeletonEventBody />
+                ) : data.errorMessage ? (
+                  <ErrorEventBody message={ data.errorMessage } />
+                ) : futureEvents.length === 0 ? (
+                  <EmptyEventBody />
+                ) : (
+                  <AnimatePresence initial={false}>
+                    {renderEventBodies(futureEvents, anchoredDateKeys, 'future')}
+                  </AnimatePresence>
+                )}
+              </Stack>
+            </CardBody>
+          </Card>
+          {data.lastModified &&
+            <FooterLastModified lastModified={ data.lastModified } />
+          }
+
+          <Heading size={{base: 'sm', md: 'md'}}
                    position={'sticky'}
                    top={STICKY_HEADING_TOP}
                    zIndex={'docked'}
@@ -322,95 +384,41 @@ function Root({startYear}: {startYear: number}) {
                    px={{base: '4', md: '0'}}
                    mt={'8'}
                    py={'2'}
-                   scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
-                   display={'flex'} alignItems={'flex-end'}
+                   color={'gray.600'}
                    >
-              <Heading size={{base: 'sm', md: 'md'}}
-                       color={'gray.600'}
-                       >
-                直近開催イベント
-              </Heading>
-              <Spacer />
-              <YearSwitcher startYear={startYear} selectedYear={null} showChevrons={false} />
-            </Stack>
-            {!data.isLoading && !data.errorMessage && (
-              <ChipBar items={futureKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
-                       selected={selectedKeyword}
-                       onSelect={handleKeywordSelect}
-                       expandAriaLabel={'すべてのキーワードを表示'}
-                       collapseAriaLabel={'キーワードを折りたたむ'}
-                       />
-            )}
-            <Card variant={{base: 'unstyled', md: 'outline'}}
-                  size={{base: 'sm', md: 'md'}}
-                  p={'0'}
-                  >
-              <CardBody>
-                <Stack spacing={EVENT_LIST_SPACING}>
-                  {data.isLoading ? (
-                    <SkeletonEventBody />
-                  ) : data.errorMessage ? (
-                    <ErrorEventBody message={ data.errorMessage } />
-                  ) : futureEvents.length === 0 ? (
-                    <EmptyEventBody />
-                  ) : (
-                    <AnimatePresence initial={false}>
-                      {renderEventBodies(futureEvents, anchoredDateKeys, 'future')}
-                    </AnimatePresence>
-                  )}
-                </Stack>
-              </CardBody>
-            </Card>
-            {data.lastModified &&
-              <FooterLastModified lastModified={ data.lastModified } />
-            }
-          </Stack>
-
-          <Stack>
-            <Heading size={{base: 'sm', md: 'md'}}
-                     position={'sticky'}
-                     top={STICKY_HEADING_TOP}
-                     zIndex={'docked'}
-                     bg={'gray.100'}
-                     px={{base: '4', md: '0'}}
-                     mt={'8'}
-                     py={'2'}
-                     color={'gray.600'}
-                     >
-              終了したイベント
-            </Heading>
-            {!data.isLoading && !data.errorMessage && (
-              <ChipBar items={pastKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
-                       selected={selectedKeyword}
-                       onSelect={handleKeywordSelect}
-                       expandAriaLabel={'すべてのキーワードを表示'}
-                       collapseAriaLabel={'キーワードを折りたたむ'}
-                       />
-            )}
-            <Card variant={{base: 'unstyled', md: 'outline'}}
-                  size={{base: 'sm', md: 'md'}}
-                  p={'0'}
-                  >
-              <CardBody>
-                <Stack spacing={EVENT_LIST_SPACING}>
-                  {data.isLoading ? (
-                    <SkeletonEventBody />
-                  ) : data.errorMessage ? (
-                    <ErrorEventBody message={ data.errorMessage } />
-                  ) : pastEvents.length === 0 ? (
-                    <EmptyEventBody />
-                  ) : (
-                    <AnimatePresence initial={false}>
-                      {renderEventBodies(pastEvents, anchoredDateKeys, 'past')}
-                    </AnimatePresence>
-                  )}
-                </Stack>
-              </CardBody>
-            </Card>
-            {data.lastModified &&
-              <FooterLastModified lastModified={ data.lastModified } />
-            }
-          </Stack>
+            終了したイベント
+          </Heading>
+          {!data.isLoading && !data.errorMessage && (
+            <ChipBar items={pastKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                     selected={selectedKeyword}
+                     onSelect={handleKeywordSelect}
+                     expandAriaLabel={'すべてのキーワードを表示'}
+                     collapseAriaLabel={'キーワードを折りたたむ'}
+                     />
+          )}
+          <Card variant={{base: 'unstyled', md: 'outline'}}
+                size={{base: 'sm', md: 'md'}}
+                p={'0'}
+                >
+            <CardBody>
+              <Stack spacing={EVENT_LIST_SPACING}>
+                {data.isLoading ? (
+                  <SkeletonEventBody />
+                ) : data.errorMessage ? (
+                  <ErrorEventBody message={ data.errorMessage } />
+                ) : pastEvents.length === 0 ? (
+                  <EmptyEventBody />
+                ) : (
+                  <AnimatePresence initial={false}>
+                    {renderEventBodies(pastEvents, anchoredDateKeys, 'past')}
+                  </AnimatePresence>
+                )}
+              </Stack>
+            </CardBody>
+          </Card>
+          {data.lastModified &&
+            <FooterLastModified lastModified={ data.lastModified } />
+          }
 
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}

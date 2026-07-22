@@ -563,102 +563,98 @@ function Group() {
         </Stack>
         {!data.isLoading && !data.isNotFound && !data.errorMessage && group && (
           <Stack>
-            <Stack>
-              <Heading size={{base: 'sm', md: 'md'}}
-                       position={'sticky'}
-                       top={STICKY_HEADING_TOP}
-                       zIndex={'docked'}
-                       bg={'gray.100'}
-                       px={{base: '4', md: '0'}}
-                       mt={'4'}
-                       py={'2'}
-                       color={'gray.600'}
-                       >
-                今後の開催予定
-              </Heading>
-              <Card variant={{base: 'unstyled', md: 'outline'}}
-                    size={{base: 'sm', md: 'md'}}
-                    p={'0'}
-                    >
-                <CardBody>
-                  <Stack spacing={EVENT_LIST_SPACING}>
-                    {upcomingEvents.length === 0 ? (
-                      <Box px={{base: '4', md: '0'}} py={{base: '2', md: '0'}}>
-                        <Text fontSize={'sm'} color={'gray.600'}>
-                          現在予定されているイベントはありません。
-                        </Text>
-                      </Box>
-                    ) : (
-                      upcomingEvents.map((event) => (
-                        <AnimatedEventItem key={event.uid} date={event.started_at} section={'upcoming'}>
-                          <EventBody event={event}
-                                     enableSummarizer
-                                     summaryDescriptionYear={new Date(event.started_at).getFullYear()}
-                                     />
-                        </AnimatedEventItem>
-                      ))
-                    )}
-                  </Stack>
-                </CardBody>
-              </Card>
-            </Stack>
-
-            <Stack>
-              <Heading size={{base: 'sm', md: 'md'}}
-                       position={'sticky'}
-                       top={STICKY_HEADING_TOP}
-                       zIndex={'docked'}
-                       bg={'gray.100'}
-                       px={{base: '4', md: '0'}}
-                       mt={'4'}
-                       py={'2'}
-                       color={'gray.600'}
-                       >
-                過去のイベント
-              </Heading>
-              <Card variant={{base: 'unstyled', md: 'outline'}}
-                    size={{base: 'sm', md: 'md'}}
-                    p={'0'}
-                    >
-                <CardBody>
-                  <Stack spacing={EVENT_LIST_SPACING}>
-                    {pastEvents.length === 0 ? (
-                      <EmptyEventBody />
-                    ) : (
-                      pastEvents.map((event) => (
-                        <AnimatedEventItem key={event.uid} date={event.started_at} section={'past'}>
-                          <EventBody event={event}
-                                     enableSummarizer
-                                     summaryDescriptionYear={new Date(event.started_at).getFullYear()}
-                                     />
-                        </AnimatedEventItem>
-                      ))
-                    )}
-                  </Stack>
-                </CardBody>
-              </Card>
-              {data.hasMorePastEvents && (
-                <Box px={{base: '4', md: '0'}}>
-                  <Button size={'sm'}
-                          variant={'outline'}
-                          w={'full'}
-                          onClick={handleLoadMorePastEvents}
-                          isLoading={data.isLoadingMorePastEvents}
-                          loadingText={'読み込み中…'}
-                          >
-                    過去のイベントをもっと見る
-                  </Button>
-                  {data.loadMorePastEventsErrorMessage && (
-                    <Text fontSize={'xs'} color={'impact.600'} mt={'2'} textAlign={'center'}>
-                      読み込みに失敗しました({data.loadMorePastEventsErrorMessage})
-                    </Text>
+            <Heading size={{base: 'sm', md: 'md'}}
+                     position={'sticky'}
+                     top={STICKY_HEADING_TOP}
+                     zIndex={'docked'}
+                     bg={'gray.100'}
+                     px={{base: '4', md: '0'}}
+                     mt={'4'}
+                     py={'2'}
+                     color={'gray.600'}
+                     >
+              今後の開催予定
+            </Heading>
+            <Card variant={{base: 'unstyled', md: 'outline'}}
+                  size={{base: 'sm', md: 'md'}}
+                  p={'0'}
+                  >
+              <CardBody>
+                <Stack spacing={EVENT_LIST_SPACING}>
+                  {upcomingEvents.length === 0 ? (
+                    <Box px={{base: '4', md: '0'}} py={{base: '2', md: '0'}}>
+                      <Text fontSize={'sm'} color={'gray.600'}>
+                        現在予定されているイベントはありません。
+                      </Text>
+                    </Box>
+                  ) : (
+                    upcomingEvents.map((event) => (
+                      <AnimatedEventItem key={event.uid} date={event.started_at} section={'upcoming'}>
+                        <EventBody event={event}
+                                   enableSummarizer
+                                   summaryDescriptionYear={new Date(event.started_at).getFullYear()}
+                                   />
+                      </AnimatedEventItem>
+                    ))
                   )}
-                </Box>
-              )}
-              {data.lastModified && (
-                <FooterLastModified lastModified={data.lastModified} />
-              )}
-            </Stack>
+                </Stack>
+              </CardBody>
+            </Card>
+
+            <Heading size={{base: 'sm', md: 'md'}}
+                     position={'sticky'}
+                     top={STICKY_HEADING_TOP}
+                     zIndex={'docked'}
+                     bg={'gray.100'}
+                     px={{base: '4', md: '0'}}
+                     mt={'4'}
+                     py={'2'}
+                     color={'gray.600'}
+                     >
+              過去のイベント
+            </Heading>
+            <Card variant={{base: 'unstyled', md: 'outline'}}
+                  size={{base: 'sm', md: 'md'}}
+                  p={'0'}
+                  >
+              <CardBody>
+                <Stack spacing={EVENT_LIST_SPACING}>
+                  {pastEvents.length === 0 ? (
+                    <EmptyEventBody />
+                  ) : (
+                    pastEvents.map((event) => (
+                      <AnimatedEventItem key={event.uid} date={event.started_at} section={'past'}>
+                        <EventBody event={event}
+                                   enableSummarizer
+                                   summaryDescriptionYear={new Date(event.started_at).getFullYear()}
+                                   />
+                      </AnimatedEventItem>
+                    ))
+                  )}
+                </Stack>
+              </CardBody>
+            </Card>
+            {data.hasMorePastEvents && (
+              <Box px={{base: '4', md: '0'}}>
+                <Button size={'sm'}
+                        variant={'outline'}
+                        w={'full'}
+                        onClick={handleLoadMorePastEvents}
+                        isLoading={data.isLoadingMorePastEvents}
+                        loadingText={'読み込み中…'}
+                        >
+                  過去のイベントをもっと見る
+                </Button>
+                {data.loadMorePastEventsErrorMessage && (
+                  <Text fontSize={'xs'} color={'impact.600'} mt={'2'} textAlign={'center'}>
+                    読み込みに失敗しました({data.loadMorePastEventsErrorMessage})
+                  </Text>
+                )}
+              </Box>
+            )}
+            {data.lastModified && (
+              <FooterLastModified lastModified={data.lastModified} />
+            )}
 
             <Box id={BLOG_PARTS_ANCHOR_ID}
                  px={{base: '4', md: '0'}}

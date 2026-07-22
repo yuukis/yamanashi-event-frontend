@@ -162,69 +162,67 @@ function List({ startYear} : {startYear: number}) {
                           />
           {/* sticky 化した見出しバーは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
-          <Stack>
-            <Stack id={YEAR_HEADING_ANCHOR_ID}
-                   direction={'row'} spacing={'2'}
-                   position={'sticky'}
-                   top={STICKY_HEADING_TOP}
-                   zIndex={'docked'}
-                   bg={'gray.100'}
-                   px={{base: '4', md: '0'}}
-                   mt={'4'}
-                   mb={'2'}
-                   py={'2'}
-                   scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
-                   display={'flex'} alignItems={'flex-end'}
-                   >
-              <Heading size={{base: 'sm', md: 'md'}}
-                       color={'gray.600'}
-                       >
-                { year }年 開催イベント
-              </Heading>
-              <Spacer />
-              <YearSwitcher startYear={startYear} selectedYear={year} />
-            </Stack>
-            {!data.isLoading && !data.errorMessage && (
-              <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
-                       selected={selectedKeyword}
-                       onSelect={handleKeywordSelect}
-                       expandAriaLabel={'すべてのキーワードを表示'}
-                       collapseAriaLabel={'キーワードを折りたたむ'}
-                       />
-            )}
-            <Card variant={{base: 'unstyled', md: 'outline'}}
-                  size={{base: 'sm', md: 'md'}}
-                  p={'0'}
-                  >
-              <CardBody>
-                <Stack spacing={EVENT_LIST_SPACING}>
-                {data.isLoading ? (
-                    <SkeletonEventBody />
-                  ) : data.errorMessage ? (
-                    <ErrorEventBody message={ data.errorMessage } />
-                  ) : events.length === 0 ? (
-                    <EmptyEventBody />
-                  ) : (
-                    <AnimatePresence initial={false}>
-                      {events.map((event) => (
-                        <AnimatedEventItem key={event.uid} date={event.started_at}>
-                          <EventBody event={event}
-                                     selectedKeyword={selectedKeyword}
-                                     onKeywordClick={handleKeywordClick}
-                                     enableSummarizer
-                                     summaryDescriptionYear={year}
-                                     />
-                        </AnimatedEventItem>
-                      ))}
-                    </AnimatePresence>
-                  )}
-                </Stack>
-              </CardBody>
-            </Card>
-            {data.lastModified &&
-              <FooterLastModified lastModified={ data.lastModified } />
-            }
+          <Stack id={YEAR_HEADING_ANCHOR_ID}
+                 direction={'row'} spacing={'2'}
+                 position={'sticky'}
+                 top={STICKY_HEADING_TOP}
+                 zIndex={'docked'}
+                 bg={'gray.100'}
+                 px={{base: '4', md: '0'}}
+                 mt={'4'}
+                 mb={'2'}
+                 py={'2'}
+                 scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
+                 display={'flex'} alignItems={'flex-end'}
+                 >
+            <Heading size={{base: 'sm', md: 'md'}}
+                     color={'gray.600'}
+                     >
+              { year }年 開催イベント
+            </Heading>
+            <Spacer />
+            <YearSwitcher startYear={startYear} selectedYear={year} />
           </Stack>
+          {!data.isLoading && !data.errorMessage && (
+            <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                     selected={selectedKeyword}
+                     onSelect={handleKeywordSelect}
+                     expandAriaLabel={'すべてのキーワードを表示'}
+                     collapseAriaLabel={'キーワードを折りたたむ'}
+                     />
+          )}
+          <Card variant={{base: 'unstyled', md: 'outline'}}
+                size={{base: 'sm', md: 'md'}}
+                p={'0'}
+                >
+            <CardBody>
+              <Stack spacing={EVENT_LIST_SPACING}>
+              {data.isLoading ? (
+                  <SkeletonEventBody />
+                ) : data.errorMessage ? (
+                  <ErrorEventBody message={ data.errorMessage } />
+                ) : events.length === 0 ? (
+                  <EmptyEventBody />
+                ) : (
+                  <AnimatePresence initial={false}>
+                    {events.map((event) => (
+                      <AnimatedEventItem key={event.uid} date={event.started_at}>
+                        <EventBody event={event}
+                                   selectedKeyword={selectedKeyword}
+                                   onKeywordClick={handleKeywordClick}
+                                   enableSummarizer
+                                   summaryDescriptionYear={year}
+                                   />
+                      </AnimatedEventItem>
+                    ))}
+                  </AnimatePresence>
+                )}
+              </Stack>
+            </CardBody>
+          </Card>
+          {data.lastModified &&
+            <FooterLastModified lastModified={ data.lastModified } />
+          }
 
           <Card variant={{base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
