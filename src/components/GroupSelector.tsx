@@ -136,9 +136,9 @@ function GroupBlock({ group, badge, isSelected, onSelect }: GroupBlockProps) {
               p={'2'}
               borderRadius={'md'}
               border={'1px solid'}
-              borderColor={isSelected ? 'gray.600' : 'gray.200'}
-              bg={isSelected ? 'gray.100' : 'white'}
-              _hover={{ bg: isSelected ? 'gray.100' : 'gray.50' }}
+              borderColor={isSelected ? 'gray.600' : 'gray.300'}
+              bg={isSelected ? 'gray.600' : 'white'}
+              _hover={{ bg: isSelected ? 'gray.700' : 'gray.50' }}
               onClick={onSelect}
               >
         {badge && (
@@ -159,7 +159,7 @@ function GroupBlock({ group, badge, isSelected, onSelect }: GroupBlockProps) {
           </Badge>
         )}
         <Box boxSize={IMAGE_SIZE}
-             bg={'gray.100'}
+             bg={'#ffffff'}
              borderRadius={'md'}
              display={'flex'}
              alignItems={'center'}
@@ -181,7 +181,7 @@ function GroupBlock({ group, badge, isSelected, onSelect }: GroupBlockProps) {
               w={'100%'}
               h={NAME_HEIGHT}
               wordBreak={'break-word'}
-              color={isSelected ? 'gray.700' : 'gray.600'}
+              color={isSelected ? 'white' : 'gray.600'}
               >
           {group.name}
         </Text>
