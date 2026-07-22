@@ -7,6 +7,7 @@ import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
+import { EventScrollGutter } from '../components/EventScrollGutter';
 import { StructuredData } from '../components/StructuredData';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
@@ -149,7 +150,7 @@ function Root({startYear}: {startYear: number}) {
   const futureEvents = filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup);
   const pastEvents = filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup);
 
-  const renderEventBodies = (events: EventWithGroup[], anchoredDateKeys: Set<string>) => {
+  const renderEventBodies = (events: EventWithGroup[], anchoredDateKeys: Set<string>, section: 'future' | 'past') => {
     return events.map((event, index) => {
       const eventDateKey = formatEventDateKey(new Date(event.started_at));
       const previousEvent = events[index - 1];
@@ -166,7 +167,7 @@ function Root({startYear}: {startYear: number}) {
         anchoredDateKeys.add(eventDateKey);
       }
 
-      return <AnimatedEventItem key={event.uid}>
+      return <AnimatedEventItem key={event.uid} date={event.started_at} section={section}>
               <EventBody event={event}
                         anchorId={anchorId}
                         selectedKeyword={selectedKeyword}
@@ -187,6 +188,7 @@ function Root({startYear}: {startYear: number}) {
     <Box className={'section-bg-pattern'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-events'} data={structuredData} />
       <SiteHeader />
+      <EventScrollGutter />
       <ActiveFilterBadge selectedKeyword={selectedKeyword}
                          selectedGroupName={selectedGroupName}
                          selectedGroupKey={selectedGroup}
@@ -364,7 +366,7 @@ function Root({startYear}: {startYear: number}) {
                   <EmptyEventBody />
                 ) : (
                   <AnimatePresence initial={false}>
-                    {renderEventBodies(futureEvents, anchoredDateKeys)}
+                    {renderEventBodies(futureEvents, anchoredDateKeys, 'future')}
                   </AnimatePresence>
                 )}
               </Stack>
@@ -408,7 +410,7 @@ function Root({startYear}: {startYear: number}) {
                   <EmptyEventBody />
                 ) : (
                   <AnimatePresence initial={false}>
-                    {renderEventBodies(pastEvents, anchoredDateKeys)}
+                    {renderEventBodies(pastEvents, anchoredDateKeys, 'past')}
                   </AnimatePresence>
                 )}
               </Stack>

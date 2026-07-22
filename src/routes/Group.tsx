@@ -4,6 +4,7 @@ import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary, STI
 import { PageBreadcrumb } from '../components/PageBreadcrumb';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
+import { EventScrollGutter } from '../components/EventScrollGutter';
 import { ShareContextIconRow } from '../components/ShareButtons';
 import { WidgetPreviewCard } from '../components/WidgetPreviewCard';
 import { StructuredData } from '../components/StructuredData';
@@ -370,6 +371,7 @@ function Group() {
     <Box className={'section-bg-pattern'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-group'} data={structuredData} />
       <SiteHeader />
+      <EventScrollGutter />
       <PageBreadcrumb items={
                         group
                           ? [
@@ -587,7 +589,7 @@ function Group() {
                     </Box>
                   ) : (
                     upcomingEvents.map((event) => (
-                      <AnimatedEventItem key={event.uid}>
+                      <AnimatedEventItem key={event.uid} date={event.started_at} section={'upcoming'}>
                         <EventBody event={event}
                                    enableSummarizer
                                    summaryDescriptionYear={new Date(event.started_at).getFullYear()}
@@ -621,7 +623,7 @@ function Group() {
                     <EmptyEventBody />
                   ) : (
                     pastEvents.map((event) => (
-                      <AnimatedEventItem key={event.uid}>
+                      <AnimatedEventItem key={event.uid} date={event.started_at} section={'past'}>
                         <EventBody event={event}
                                    enableSummarizer
                                    summaryDescriptionYear={new Date(event.started_at).getFullYear()}

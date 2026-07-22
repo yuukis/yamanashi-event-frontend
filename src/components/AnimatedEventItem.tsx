@@ -7,7 +7,10 @@ const MotionEventItem = motion(chakra.div);
 // Stack の spacing prop と同じ値にすること
 export const EVENT_LIST_SPACING = { base: '0', md: '0.5em' };
 
-export function AnimatedEventItem({ children }: { children: ReactNode }) {
+// data-event-start/data-event-section は EventScrollGutter 用の目印。
+// EventBody 側の data-event-date(日付ジャンプ用、形式も別)とは別物
+// なので名前を分けている。
+export function AnimatedEventItem({ children, date, section }: { children: ReactNode; date?: string; section?: string }) {
   const shouldReduceMotion = useReducedMotion();
 
   return (
@@ -16,6 +19,8 @@ export function AnimatedEventItem({ children }: { children: ReactNode }) {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+                      data-event-start={date}
+                      data-event-section={section}
                       sx={{
                         '&:not(:last-child)': {
                           paddingBottom: EVENT_LIST_SPACING,
