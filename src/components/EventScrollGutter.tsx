@@ -362,7 +362,7 @@ export function EventScrollGutter() {
     <Box ref={gutterElRef}
          position={'fixed'}
          top={0}
-         right={'28px'}
+         right={'14px'}
          h={`${viewportHeight}px`}
          zIndex={'docked'}
          opacity={0}
