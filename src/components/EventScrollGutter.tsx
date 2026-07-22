@@ -149,7 +149,7 @@ function isUpcomingSection(section: string): boolean {
 export type GutterLayout = {
   lineRanges: LineRange[];
   labeledMarkers: LabeledMarker[];
-  // クリックジャンプが基準にしているスクロール可能範囲。
+  // scrollToRatioが目標位置を計算する際に使うスクロール可能範囲。
   maxScroll: number;
 };
 
@@ -294,14 +294,9 @@ type ScrollLayout = {
 // までの遅延(ms)。
 const SCROLL_IDLE_HIDE_DELAY = 800;
 
-// イベントカード列の右側に年月ラベルを示す擬似スクロールバーを表示する。
-// 軌道の座標系がブラウザのネイティブスクロールバーと一致するため、現在
-// 位置はそちらに任せており、独自のつまみは描画しない(表示/非表示の
-// 切り替えだけスクロールのたびにref経由でDOMを直接書き換える。年月
-// ラベルはDOM構成が変わったときだけ組み立て直す)。クリックで該当位置へ
-// ジャンプできる。xl以上では現在位置付近に表示し続けるが、xl未満は常時
-// 表示すると本文を隠してしまうため、スクロール中だけ一時的なガイドとして
-// 表示し、止まったら消える。
+// イベントカード列の右側に、ブラウザのネイティブスクロールバーと同じ
+// 座標系で年月ラベルを表示する擬似ガター。xl以上は現在位置付近に常時
+// 表示し、xl未満はスクロール中だけ一時的なガイドとして表示する。
 export function EventScrollGutter() {
   const [isDesktopScreenSize] = useMediaQuery('(min-width: 80em)');
   const [rawMarkers, setRawMarkers] = useState<RawMarker[]>([]);
@@ -359,8 +354,6 @@ export function EventScrollGutter() {
       return;
     }
 
-    // ビューポート中央にある位置が、実際に描画されている縦線と重なって
-    // いるか。
     const viewportCenterDocumentY = window.scrollY + viewportHeight / 2;
     const centerY = toTrackY(viewportCenterDocumentY, docHeight, viewportHeight);
     const isNearContent = lineRanges.some((range) => centerY >= range.top && centerY <= range.bottom);
@@ -371,9 +364,7 @@ export function EventScrollGutter() {
     gutterEl.style.pointerEvents = isVisible ? 'auto' : 'none';
   }, []);
 
-  // レイアウトに影響する値(データ読み込み・絞り込み・リサイズ・画面幅等)
-  // が変わるたびに ref を最新化し、表示/非表示も即座に補正する。描画後・
-  // ペイント前に同期させるため useLayoutEffect を使う。
+  // 描画後・ペイント前に ref と表示/非表示を同期させるため useLayoutEffect を使う。
   useLayoutEffect(() => {
     scrollLayoutRef.current = { docHeight, viewportHeight, lineRanges, isDesktopScreenSize };
     updateGutterVisibility();
@@ -487,12 +478,8 @@ export function EventScrollGutter() {
          // 寄せる(トラック自体は10px幅で、縦線はその中央にあるため
          // right:0で右端から5px の位置になる)。
          right={{base: 0, xl: '14px'}}
-         // xl未満は年月ラベルが本文の上に重なるため、視認性のために背景を
-         // 敷く。幅はトラック(10px)+ラベルとの間隔(8px)+ラベル文字(年月を
-         // 2行に分けているので「2026年」程度の幅)を余裕を見て確保している。
-         // トラックは右端に揃える。背景は右(画面端・トラック側)を濃く、
-         // 左(ラベルが本文に重なる側)へ向かって透過を強くするグラデーション
-         // にして、境界が硬く見えないようにする。
+         // xl未満は年月ラベルが本文に重なるため、視認性のために背景を敷く。
+         // 右(トラック側)を濃く、左(ラベル側)へ透過を強くするグラデーションにする。
          w={{base: '90px', xl: 'auto'}}
          display={'flex'}
          justifyContent={'flex-end'}
@@ -505,8 +492,7 @@ export function EventScrollGutter() {
          pointerEvents={'none'}
          data-testid={'event-scroll-gutter'}
          // xl未満はトラック(10px)だけでなく、ラベル込みの表示領域全体を
-         // 指でなぞれるようにする(タップしやすくするため)。ブラウザの
-         // 既定のタッチスクロールと競合しないようtouchActionを切る。
+         // 指でなぞれるようにする(タップしやすくするため)。
          onPointerDown={handleTrackPointerDown}
          onPointerMove={handleTrackPointerMove}
          onPointerUp={handleTrackPointerUp}
