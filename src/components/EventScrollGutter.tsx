@@ -187,6 +187,9 @@ export function EventScrollGutter() {
   }, [recomputeMarkers]);
 
   const trackHeight = Math.max(viewportHeight - TRACK_TOP_OFFSET - TRACK_BOTTOM_OFFSET, 0);
+  // つまみ・クリックジャンプが基準にしているスクロール可能範囲。目盛りの
+  // 座標変換(toTrackY)もこれと同じ基準に揃える(後述)。
+  const maxScroll = Math.max(docHeight - viewportHeight, 1);
 
   // 縦線の区間と、目盛りのラベル文字列。スクロール位置には依存しない
   // ため、スクロール中は再計算されない。
@@ -195,7 +198,14 @@ export function EventScrollGutter() {
       return { lineRanges: [] as LineRange[], labeledMarkers: [] as LabeledMarker[] };
     }
 
-    const toTrackY = (documentY: number) => (documentY / docHeight) * trackHeight;
+    // documentY(ページ先頭からのpx)を軌道上のY座標に変換する。つまみは
+    // scrollY(0〜maxScroll)を軌道全体に引き伸ばして動くため、目盛り側も
+    // documentYをmaxScroll基準で正規化しないと、同じ絶対位置でもつまみと
+    // 目盛りがズレる(docHeightで割ると、ページ末尾に近い目盛りほどつまみ
+    // より手前に表示されてしまう)。maxScrollを超える位置(ページ最下部
+    // 付近、スクロールしても先頭がそこまで届かない範囲)はmaxScrollに
+    // 丸める。
+    const toTrackY = (documentY: number) => (Math.min(documentY, maxScroll) / maxScroll) * trackHeight;
 
     const segments: Segment[] = extents.map((extent) => ({
       section: extent.section,
@@ -275,7 +285,7 @@ export function EventScrollGutter() {
     });
 
     return { lineRanges, labeledMarkers };
-  }, [rawMarkers, extents, docHeight, trackHeight]);
+  }, [rawMarkers, extents, docHeight, trackHeight, maxScroll]);
 
   // つまみの位置と、ガター自体の表示/非表示を計算して直接DOMに反映する。
   // Reactのstateを介さないため、スクロール中もReactの再レンダーは発生
@@ -327,7 +337,6 @@ export function EventScrollGutter() {
   }, [applyThumbPosition]);
 
   const hasScrollableContent = docHeight > viewportHeight && viewportHeight > 0;
-  const maxScroll = Math.max(docHeight - viewportHeight, 1);
 
   const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = trackRef.current?.getBoundingClientRect();
