@@ -142,7 +142,7 @@ function Guide() {
   ];
 
   return (
-    <Box bg={'gray.100'} w={'100vw'} minH={'100vh'}>
+    <Box className={'section-bg-pattern'} w={'100vw'} minH={'100vh'}>
       <SiteHeader />
       <Box bg={'#fffafa'}>
         <PageBreadcrumb items={[{ label: 'はじめての方へ', href: '/guide' }]} />
