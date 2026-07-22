@@ -52,6 +52,28 @@
   }
 }
 
+.active-filter-badge-pulse {
+  animation: active-filter-badge-pulse 220ms ease-out;
+}
+
+@keyframes active-filter-badge-pulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .active-filter-badge-pulse {
+    animation: none;
+  }
+}
+
 .section-bg-pattern {
   --section-bg-pattern-content-width: 980px;
   --section-bg-pattern-gutter: max(0px, calc((100vw - var(--section-bg-pattern-content-width)) / 2));

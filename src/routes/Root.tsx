@@ -191,7 +191,6 @@ function Root({startYear}: {startYear: number}) {
       <EventScrollGutter />
       <ActiveFilterBadge selectedKeyword={selectedKeyword}
                          selectedGroupName={selectedGroupName}
-                         selectedGroupKey={selectedGroup}
                          onClearKeyword={() => handleKeywordSelect(null)}
                          onClearGroup={() => handleGroupSelect(null)}
                          />

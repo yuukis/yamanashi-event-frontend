@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithChakra } from '../test/test-utils';
 import { ActiveFilterBadge } from './ActiveFilterBadge';
+
+function getByBadgeText(text: string) {
+  return screen.getByText((_, element) => element?.tagName === 'P' && element.textContent === text);
+}
 
 describe('ActiveFilterBadge', () => {
   it('renders nothing when no keyword or group is selected', () => {
@@ -25,7 +29,7 @@ describe('ActiveFilterBadge', () => {
                           />,
     );
 
-    expect(screen.getByText('キーワード「React」で絞り込み中')).toBeInTheDocument();
+    expect(getByBadgeText('React で絞り込み中')).toBeInTheDocument();
   });
 
   it('shows the group filter label when a group is selected', () => {
@@ -37,7 +41,7 @@ describe('ActiveFilterBadge', () => {
                           />,
     );
 
-    expect(screen.getByText('コミュニティ「甲府もくもく会」で絞り込み中')).toBeInTheDocument();
+    expect(getByBadgeText('甲府もくもく会 で絞り込み中')).toBeInTheDocument();
   });
 
   it('prefers the group label and clear handler when both are provided', () => {
@@ -51,38 +55,14 @@ describe('ActiveFilterBadge', () => {
                           />,
     );
 
-    expect(screen.getByText('コミュニティ「甲府もくもく会」で絞り込み中')).toBeInTheDocument();
+    expect(getByBadgeText('甲府もくもく会 で絞り込み中')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '絞り込みを解除' }));
 
-    expect(onClearGroup).toHaveBeenCalledTimes(1);
-    expect(onClearKeyword).not.toHaveBeenCalled();
-  });
-
-  it('links to the community page when a group with a key is selected', () => {
-    renderWithChakra(
-      <ActiveFilterBadge selectedKeyword={null}
-                          selectedGroupName={'甲府もくもく会'}
-                          selectedGroupKey={'kofu-mokumoku'}
-                          onClearKeyword={() => {}}
-                          onClearGroup={() => {}}
-                          />,
-    );
-
-    const link = screen.getByRole('link', { name: 'コミュニティページ' });
-    expect(link).toHaveAttribute('href', '/groups/kofu-mokumoku');
-  });
-
-  it('does not show the community page link for keyword filters or when the key is missing', () => {
-    renderWithChakra(
-      <ActiveFilterBadge selectedKeyword={'React'}
-                          selectedGroupName={null}
-                          onClearKeyword={() => {}}
-                          onClearGroup={() => {}}
-                          />,
-    );
-
-    expect(screen.queryByRole('link', { name: 'コミュニティページ' })).not.toBeInTheDocument();
+    return waitFor(() => {
+      expect(onClearGroup).toHaveBeenCalledTimes(1);
+      expect(onClearKeyword).not.toHaveBeenCalled();
+    });
   });
 
   it('calls onClearKeyword when clearing a keyword-only filter', () => {
@@ -97,6 +77,6 @@ describe('ActiveFilterBadge', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '絞り込みを解除' }));
 
-    expect(onClearKeyword).toHaveBeenCalledTimes(1);
+    return waitFor(() => expect(onClearKeyword).toHaveBeenCalledTimes(1));
   });
 });
