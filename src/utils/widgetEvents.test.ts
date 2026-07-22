@@ -8,11 +8,6 @@ import type { NewEventTrackingData } from '../utils/newEventTracking';
 const FIXED_NOW = new Date('2026-01-10T12:00:00+09:00');
 const EMPTY_TRACKING_DATA: NewEventTrackingData = { version: 1, records: {}, dismissedUids: [], acknowledgedDotUids: [] };
 
-vi.mock('./nowTicker', () => ({
-  subscribeNow: () => () => {},
-  getNow: () => FIXED_NOW,
-}));
-
 describe('useWidgetEvents', () => {
   beforeEach(() => {
     updateTrackingData(() => EMPTY_TRACKING_DATA);
@@ -58,14 +53,45 @@ describe('useWidgetEvents', () => {
     expect(result.current.errorMessage).toBe('Network Error');
   });
 
-  it('records a firstSeenAt tracking entry for fetched future events', async () => {
-    const future = makeEvent({ uid: 'future-1', started_at: '2026-02-01T10:00:00+09:00', open_status: 'open' });
+  it('does not write fetched events into the shared new-event tracking store', async () => {
+    // Widgets only ever see a narrow slice of events (one community, one
+    // page), so merging that into the tracking store the main site reads/
+    // writes would prune away every event outside that slice.
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+    const future = makeEvent({ uid: 'future-1', started_at: '2099-01-01T00:00:00+09:00', open_status: 'open' });
     const fetcher = vi.fn().mockResolvedValue({ events: [future] });
 
     const { result } = renderHook(() => useWidgetEvents(fetcher, []));
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await waitFor(() => expect(getTrackingDataSnapshot().records['future-1']).toBeDefined());
+    expect(getTrackingDataSnapshot()).toEqual(EMPTY_TRACKING_DATA);
+    expect(setItemSpy).not.toHaveBeenCalled();
+
+    setItemSpy.mockRestore();
+  });
+
+  it('does not prune unrelated tracking data (e.g. from the main site) when fetching a narrow event slice', async () => {
+    updateTrackingData(() => ({
+      version: 1,
+      records: { 'other-event': { firstSeenAt: FIXED_NOW.toISOString() } },
+      dismissedUids: ['dismissed-event'],
+      acknowledgedDotUids: [],
+    }));
+
+    // Spy starts after the seeding write above, so it only observes writes
+    // triggered by the hook itself.
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+    const future = makeEvent({ uid: 'future-1', started_at: '2099-01-01T00:00:00+09:00', open_status: 'open' });
+    const fetcher = vi.fn().mockResolvedValue({ events: [future] });
+
+    const { result } = renderHook(() => useWidgetEvents(fetcher, []));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(getTrackingDataSnapshot().records).toEqual({ 'other-event': { firstSeenAt: FIXED_NOW.toISOString() } });
+    expect(getTrackingDataSnapshot().dismissedUids).toEqual(['dismissed-event']);
+    expect(setItemSpy).not.toHaveBeenCalled();
+
+    setItemSpy.mockRestore();
   });
 
   it('refetches when the deps array changes', async () => {
