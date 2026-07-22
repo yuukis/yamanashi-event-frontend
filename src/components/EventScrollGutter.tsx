@@ -453,17 +453,36 @@ export function EventScrollGutter() {
                    pointerEvents={'none'}
                    />
             )}
-            {(yearText || monthText) && (
+            {/* 年と月を横に並べると幅を取るため、年を上・月を下の2行に分けて
+                ガター全体の横幅を抑える。両方ある場合はドットの中心を年の
+                行に合わせ、月はその下に続ける(2行分をまとめて中央寄せ
+                にはしない)。*/}
+            {yearText && (
               <Text position={'absolute'}
                     top={'50%'}
                     right={'calc(100% + 8px)'}
                     transform={'translateY(-50%)'}
-                    whiteSpace={'nowrap'}
                     fontSize={'xs'}
+                    lineHeight={'1'}
+                    fontWeight={'bold'}
                     color={'gray.500'}
+                    whiteSpace={'nowrap'}
                     >
-                {yearText && <Text as={'span'} fontWeight={'bold'}>{yearText}</Text>}
-                {monthText && <Text as={'span'} fontWeight={'normal'}>{monthText}</Text>}
+                {yearText}
+              </Text>
+            )}
+            {monthText && (
+              <Text position={'absolute'}
+                    top={yearText ? 'calc(50% + 6px)' : '50%'}
+                    right={'calc(100% + 8px)'}
+                    transform={yearText ? undefined : 'translateY(-50%)'}
+                    fontSize={'xs'}
+                    lineHeight={'1'}
+                    fontWeight={'normal'}
+                    color={'gray.500'}
+                    whiteSpace={'nowrap'}
+                    >
+                {monthText}
               </Text>
             )}
           </Box>
