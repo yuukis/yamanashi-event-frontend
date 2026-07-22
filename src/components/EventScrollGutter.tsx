@@ -233,16 +233,22 @@ type ScrollLayout = {
   docHeight: number;
   viewportHeight: number;
   lineRanges: LineRange[];
+  isDesktopScreenSize: boolean;
 };
 
-// 十分に横幅のあるデスクトップ画面でのみ、イベントカード列の右側に
-// 年月ラベルを示す擬似スクロールバーを表示する。軌道の座標系がブラウザ
-// のネイティブスクロールバーと一致するため、現在位置はそちらに任せて
-// おり、独自のつまみは描画しない(表示/非表示の切り替えだけスクロール
-// のたびにref経由でDOMを直接書き換える。年月ラベルはDOM構成が変わった
-// ときだけ組み立て直す)。クリックで該当位置へジャンプできる。
+// xl未満(スマホ・タブレット)でスクロールが止まってからガイドを消す
+// までの遅延(ms)。
+const SCROLL_IDLE_HIDE_DELAY = 800;
+
+// イベントカード列の右側に年月ラベルを示す擬似スクロールバーを表示する。
+// 軌道の座標系がブラウザのネイティブスクロールバーと一致するため、現在
+// 位置はそちらに任せており、独自のつまみは描画しない(表示/非表示の
+// 切り替えだけスクロールのたびにref経由でDOMを直接書き換える。年月
+// ラベルはDOM構成が変わったときだけ組み立て直す)。クリックで該当位置へ
+// ジャンプできる。xl以上では現在位置付近に表示し続けるが、xl未満は常時
+// 表示すると本文を隠してしまうため、スクロール中だけ一時的なガイドとして
+// 表示し、止まったら消える。
 export function EventScrollGutter() {
-  // xl未満ではガター自体をマウントせず、DOM監視・スクロール監視も張らない。
   const [isDesktopScreenSize] = useMediaQuery('(min-width: 80em)');
   const [rawMarkers, setRawMarkers] = useState<RawMarker[]>([]);
   const [extents, setExtents] = useState<SectionExtent[]>([]);
@@ -250,7 +256,9 @@ export function EventScrollGutter() {
   const [viewportHeight, setViewportHeight] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const gutterElRef = useRef<HTMLDivElement>(null);
-  const scrollLayoutRef = useRef<ScrollLayout>({ docHeight: 0, viewportHeight: 0, lineRanges: [] });
+  const scrollLayoutRef = useRef<ScrollLayout>({ docHeight: 0, viewportHeight: 0, lineRanges: [], isDesktopScreenSize: false });
+  // xl未満でのみ参照する、「今スクロール中か」のフラグ。
+  const isScrollingRef = useRef(false);
 
   const recomputeMarkers = useCallback(() => {
     const { markers, extents } = collectEventData();
@@ -260,14 +268,7 @@ export function EventScrollGutter() {
     setViewportHeight(window.innerHeight);
   }, []);
 
-  // document.body をsubtree監視するため、登録したままだとヘッダーの
-  // ポップオーバー開閉など無関係な変化のたびに全カードを走査してしまう。
-  // ガターが見えない画面幅では登録自体をスキップする。
   useEffect(() => {
-    if (!isDesktopScreenSize) {
-      return;
-    }
-
     let rafId = 0;
     const scheduleRecompute = () => {
       cancelAnimationFrame(rafId);
@@ -284,7 +285,7 @@ export function EventScrollGutter() {
       window.removeEventListener('resize', scheduleRecompute);
       observer.disconnect();
     };
-  }, [recomputeMarkers, isDesktopScreenSize]);
+  }, [recomputeMarkers]);
 
   const { lineRanges, labeledMarkers, maxScroll } = useMemo(
     () => buildGutterLayout(rawMarkers, extents, docHeight, viewportHeight),
@@ -294,49 +295,61 @@ export function EventScrollGutter() {
   // ガターの表示/非表示を直接DOMに反映する(Reactのstateを介さないので、
   // スクロール中は再レンダーが発生しない)。
   const updateGutterVisibility = useCallback(() => {
-    const { docHeight, viewportHeight, lineRanges } = scrollLayoutRef.current;
+    const { docHeight, viewportHeight, lineRanges, isDesktopScreenSize } = scrollLayoutRef.current;
     const gutterEl = gutterElRef.current;
     if (!gutterEl || viewportHeight <= 0 || docHeight <= viewportHeight) {
       return;
     }
 
     // ビューポート中央にある位置が、実際に描画されている縦線と重なって
-    // いる間だけガターを表示する。
+    // いるか。
     const viewportCenterDocumentY = window.scrollY + viewportHeight / 2;
     const centerY = toTrackY(viewportCenterDocumentY, docHeight, viewportHeight);
     const isNearContent = lineRanges.some((range) => centerY >= range.top && centerY <= range.bottom);
-    gutterEl.style.opacity = isNearContent ? '1' : '0';
-    gutterEl.style.pointerEvents = isNearContent ? 'auto' : 'none';
+    // xl以上は現在位置付近であれば表示し続けるが、xl未満はさらに
+    // スクロール中であることも条件にする(常時表示だと本文を隠すため)。
+    const isVisible = isDesktopScreenSize ? isNearContent : isNearContent && isScrollingRef.current;
+    gutterEl.style.opacity = isVisible ? '1' : '0';
+    gutterEl.style.pointerEvents = isVisible ? 'auto' : 'none';
   }, []);
 
-  // レイアウトに影響する値(データ読み込み・絞り込み・リサイズ等)が
-  // 変わるたびに ref を最新化し、表示/非表示も即座に補正する。描画後・
+  // レイアウトに影響する値(データ読み込み・絞り込み・リサイズ・画面幅等)
+  // が変わるたびに ref を最新化し、表示/非表示も即座に補正する。描画後・
   // ペイント前に同期させるため useLayoutEffect を使う。
   useLayoutEffect(() => {
-    scrollLayoutRef.current = { docHeight, viewportHeight, lineRanges };
+    scrollLayoutRef.current = { docHeight, viewportHeight, lineRanges, isDesktopScreenSize };
     updateGutterVisibility();
-  }, [docHeight, viewportHeight, lineRanges, updateGutterVisibility]);
+  }, [docHeight, viewportHeight, lineRanges, isDesktopScreenSize, updateGutterVisibility]);
 
-  // モバイル/タブレットではガターが見えないため、スクロールのたびに
-  // 表示判定を計算するだけでも無駄になる。ここもスキップする。
   useEffect(() => {
-    if (!isDesktopScreenSize) {
-      return;
-    }
-
     let rafId = 0;
-    const onScroll = () => {
+    let idleTimeoutId = 0;
+
+    const scheduleVisibilityUpdate = () => {
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(updateGutterVisibility);
     };
 
-    onScroll();
+    const onScroll = () => {
+      if (!scrollLayoutRef.current.isDesktopScreenSize) {
+        isScrollingRef.current = true;
+        window.clearTimeout(idleTimeoutId);
+        idleTimeoutId = window.setTimeout(() => {
+          isScrollingRef.current = false;
+          updateGutterVisibility();
+        }, SCROLL_IDLE_HIDE_DELAY);
+      }
+      scheduleVisibilityUpdate();
+    };
+
+    scheduleVisibilityUpdate();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       cancelAnimationFrame(rafId);
+      window.clearTimeout(idleTimeoutId);
       window.removeEventListener('scroll', onScroll);
     };
-  }, [updateGutterVisibility, isDesktopScreenSize]);
+  }, [updateGutterVisibility]);
 
   const hasScrollableContent = docHeight > viewportHeight && viewportHeight > 0;
 
@@ -354,7 +367,7 @@ export function EventScrollGutter() {
     window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
   };
 
-  if (!isDesktopScreenSize || rawMarkers.length === 0 || !hasScrollableContent) {
+  if (rawMarkers.length === 0 || !hasScrollableContent) {
     return null;
   }
 
