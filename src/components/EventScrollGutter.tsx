@@ -156,7 +156,13 @@ export type GutterLayout = {
 // 見ればブラウザ本来のスクロールバーが今どのあたりにあるか分かるため、
 // 別途つまみを描画する必要がない。
 function toTrackY(documentY: number, docHeight: number, viewportHeight: number): number {
-  return (documentY / docHeight) * viewportHeight;
+  // getBoundingClientRect()はサブピクセル精度の小数を返すが、docHeight
+  // (document.documentElement.scrollHeight)は整数に丸められているため、
+  // ページ最下部付近の要素ではdocumentYがdocHeightをわずかに上回ることが
+  // ある。クランプしないとyがviewportHeightをわずかに超え、トラック外に
+  // はみ出して描画されてしまう。
+  const clampedDocumentY = Math.min(Math.max(documentY, 0), docHeight);
+  return (clampedDocumentY / docHeight) * viewportHeight;
 }
 
 // DOM/Reactに依存しない純粋関数なので、実際のスクロール位置(scrollY)

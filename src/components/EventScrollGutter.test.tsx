@@ -84,6 +84,19 @@ describe('buildGutterLayout', () => {
     expect(labeledMarkers[1].y).toBe(900);
   });
 
+  it('clamps a documentY that slightly exceeds docHeight instead of overshooting the track', () => {
+    // getBoundingClientRect() returns sub-pixel floats while docHeight
+    // (scrollHeight) is an integer, so a marker/extent right at the bottom
+    // of the page can end up marginally past docHeight in practice.
+    const rawMarkers: RawMarker[] = [marker({ top: DOC_HEIGHT + 0.6, month: '12' })];
+    const extents: SectionExtent[] = [{ section: 'all', startTop: DOC_HEIGHT + 0.6, endBottom: DOC_HEIGHT + 0.6 }];
+
+    const { labeledMarkers, lineRanges } = buildGutterLayout(rawMarkers, extents, DOC_HEIGHT, VIEWPORT_HEIGHT);
+
+    expect(labeledMarkers[0].y).toBe(VIEWPORT_HEIGHT);
+    expect(lineRanges[0].bottom).toBeLessThanOrEqual(VIEWPORT_HEIGHT);
+  });
+
   it('shows the full year+month label on the first marker of a year when another month in that year is also visible', () => {
     const rawMarkers: RawMarker[] = [
       marker({ top: 1000, month: '01' }), // y = 100
