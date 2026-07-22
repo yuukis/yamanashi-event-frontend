@@ -1,4 +1,4 @@
-import { Box, Button, ButtonGroup, IconButton, Menu, MenuButton, MenuList, MenuItem, Portal } from '@chakra-ui/react';
+import { Box, Button, ButtonGroup, IconButton, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from '@chakra-ui/icons';
 
 export const YEAR_HEADING_ANCHOR_ID = 'year-heading';
@@ -37,27 +37,25 @@ export function YearSwitcher({ startYear, selectedYear, showChevrons = true }: Y
                   >
         { selectedYear !== null ? `${selectedYear}年` : '直近' }
       </MenuButton>
-      <Portal>
-        <MenuList fontSize={'sm'} minW={'28'} zIndex={'popover'}>
-          <MenuItem fontWeight={selectedYear === null ? 'bold' : 'normal'}
-                    bg={selectedYear === null ? HIGHLIGHT_BG : undefined}
-                    color={selectedYear === null ? HIGHLIGHT_COLOR : undefined}
-                    onClick={goToRecent}
+      <MenuList fontSize={'sm'} minW={'28'}>
+        <MenuItem fontWeight={selectedYear === null ? 'bold' : 'normal'}
+                  bg={selectedYear === null ? HIGHLIGHT_BG : undefined}
+                  color={selectedYear === null ? HIGHLIGHT_COLOR : undefined}
+                  onClick={goToRecent}
+                  >
+          直近
+        </MenuItem>
+        {yearOptions.map((y) => (
+          <MenuItem key={y}
+                    fontWeight={y === selectedYear ? 'bold' : 'normal'}
+                    bg={y === selectedYear ? HIGHLIGHT_BG : undefined}
+                    color={y === selectedYear ? HIGHLIGHT_COLOR : undefined}
+                    onClick={() => goToYear(y)}
                     >
-            直近
+            { y }年
           </MenuItem>
-          {yearOptions.map((y) => (
-            <MenuItem key={y}
-                      fontWeight={y === selectedYear ? 'bold' : 'normal'}
-                      bg={y === selectedYear ? HIGHLIGHT_BG : undefined}
-                      color={y === selectedYear ? HIGHLIGHT_COLOR : undefined}
-                      onClick={() => goToYear(y)}
-                      >
-              { y }年
-            </MenuItem>
-          ))}
-        </MenuList>
-      </Portal>
+        ))}
+      </MenuList>
     </Menu>
   );
 
