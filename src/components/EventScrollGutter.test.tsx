@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { buildGutterLayout, withMarkerFlags } from './EventScrollGutter';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { buildGutterLayout, withMarkerFlags, EventScrollGutter, EVENT_CARD_LAYOUT_SETTLED } from './EventScrollGutter';
 import type { RawMarker, SectionExtent } from './EventScrollGutter';
 
 function marker(overrides: Partial<RawMarker>): RawMarker {
@@ -248,5 +249,47 @@ describe('buildGutterLayout', () => {
     expect(labeledMarkers[1]).toEqual(expect.objectContaining({ yearText: null, monthText: null }));
     expect(labeledMarkers[0]).toEqual(expect.objectContaining({ yearText: '2025年', monthText: null }));
     expect(labeledMarkers[2]).toEqual(expect.objectContaining({ yearText: null, monthText: '6月' }));
+  });
+});
+
+describe('EventScrollGutter', () => {
+  it('recomputes marker positions on EVENT_CARD_LAYOUT_SETTLED even without a matching DOM childList mutation', async () => {
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(1000);
+    vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(10000);
+
+    // DOMノードを増減させずにgetBoundingClientRect()の返り値だけを変えることで、
+    // MutationObserverのchildList監視に映らないtransformでの再配置を再現する。
+    const topByCard = new Map<Element, number>();
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      const top = topByCard.get(this) ?? 0;
+      return { top, bottom: top, left: 0, right: 0, width: 0, height: 0, x: 0, y: top, toJSON: () => ({}) } as DOMRect;
+    });
+
+    const cardA = document.createElement('div');
+    cardA.dataset.eventStart = '2025-01-15';
+    cardA.dataset.eventSection = 'all';
+    topByCard.set(cardA, 1000);
+
+    const cardB = document.createElement('div');
+    cardB.dataset.eventStart = '2025-02-15';
+    cardB.dataset.eventSection = 'all';
+    topByCard.set(cardB, 1005); // close enough to A to be suppressed as "cramped"
+
+    document.body.append(cardA, cardB);
+
+    try {
+      render(<EventScrollGutter />);
+
+      await waitFor(() => expect(screen.getByText('2025年')).toBeInTheDocument());
+      expect(screen.queryByText('2月')).not.toBeInTheDocument();
+
+      topByCard.set(cardB, 1300); // settled position after the (unobserved) layout animation
+      document.dispatchEvent(new Event(EVENT_CARD_LAYOUT_SETTLED));
+
+      await waitFor(() => expect(screen.getByText('2月')).toBeInTheDocument());
+    } finally {
+      cardA.remove();
+      cardB.remove();
+    }
   });
 });

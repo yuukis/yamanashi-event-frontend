@@ -1,8 +1,13 @@
 import { chakra } from '@chakra-ui/react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { ReactNode } from 'react';
+import { EVENT_CARD_LAYOUT_SETTLED } from './EventScrollGutter';
 
 const MotionEventItem = motion(chakra.div);
+
+function notifyLayoutSettled() {
+  document.dispatchEvent(new Event(EVENT_CARD_LAYOUT_SETTLED));
+}
 
 // Stack の spacing prop と同じ値にすること
 export const EVENT_LIST_SPACING = { base: '0', md: '0.5em' };
@@ -19,6 +24,7 @@ export function AnimatedEventItem({ children, date, section }: { children: React
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+                      onLayoutAnimationComplete={notifyLayoutSettled}
                       data-event-start={date}
                       data-event-section={section}
                       sx={{
