@@ -140,7 +140,7 @@ function formatMonth(month: string): string {
 }
 
 // Root/Groupの「今後の開催予定」区分(section名がページによって違う)。
-// この区分の目盛りは赤系の配色にする。
+// この区分の目盛りは緑系の配色にする。
 const UPCOMING_SECTIONS = new Set(['future', 'upcoming']);
 function isUpcomingSection(section: string): boolean {
   return UPCOMING_SECTIONS.has(section);
@@ -546,7 +546,7 @@ export function EventScrollGutter() {
                left={'50%'}
                transform={'translateX(-50%)'}
                w={'2px'}
-               bg={isUpcomingSection(range.section) ? 'impact.200' : 'blackAlpha.200'}
+               bg={isUpcomingSection(range.section) ? 'secondary.400' : 'blackAlpha.200'}
                borderRadius={'full'}
                pointerEvents={'none'}
                />
@@ -561,7 +561,7 @@ export function EventScrollGutter() {
                >
             <Box boxSize={'4px'}
                  borderRadius={'full'}
-                 bg={isUpcomingSection(marker.section) ? 'impact.500' : 'blackAlpha.400'}
+                 bg={isUpcomingSection(marker.section) ? 'secondary.600' : 'blackAlpha.400'}
                  />
             {marker.isSectionStart && (
               // 区分(直近開催/終了 等)の先頭であることを示す小さな横線。
@@ -572,7 +572,7 @@ export function EventScrollGutter() {
                    transform={'translateY(-50%)'}
                    w={'8px'}
                    h={'2px'}
-                   bg={isUpcomingSection(marker.section) ? 'impact.500' : 'blackAlpha.400'}
+                   bg={isUpcomingSection(marker.section) ? 'secondary.600' : 'blackAlpha.400'}
                    pointerEvents={'none'}
                    />
             )}
@@ -588,7 +588,7 @@ export function EventScrollGutter() {
                     fontSize={'xs'}
                     lineHeight={'1'}
                     fontWeight={'bold'}
-                    color={isUpcomingSection(marker.section) ? 'impact.700' : 'gray.500'}
+                    color={isUpcomingSection(marker.section) ? 'secondary.800' : 'gray.500'}
                     whiteSpace={'nowrap'}
                     >
                 {yearText}
@@ -602,7 +602,7 @@ export function EventScrollGutter() {
                     fontSize={'xs'}
                     lineHeight={'1'}
                     fontWeight={'normal'}
-                    color={isUpcomingSection(marker.section) ? 'impact.700' : 'gray.500'}
+                    color={isUpcomingSection(marker.section) ? 'secondary.800' : 'gray.500'}
                     whiteSpace={'nowrap'}
                     >
                 {monthText}
