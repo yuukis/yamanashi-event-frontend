@@ -378,6 +378,11 @@ export function EventScrollGutter() {
          opacity={0}
          pointerEvents={'none'}
          data-testid={'event-scroll-gutter'}
+         // ページ本体は擬似スクロールバーが無くてもネイティブスクロール・
+         // キーボードだけで完全に操作できる補助的なミニマップなので、
+         // 支援技術には存在しないものとして扱う(クリックジャンプはマウス
+         // 向けのショートカットに限定する)。
+         aria-hidden={true}
          sx={{
            transition: 'opacity 180ms ease-out',
            '@media (prefers-reduced-motion: reduce)': {
@@ -390,7 +395,6 @@ export function EventScrollGutter() {
            h={'100%'}
            w={'10px'}
            cursor={'pointer'}
-           role={'presentation'}
            onClick={handleTrackClick}
            >
         {lineRanges.map((range, index) => (
