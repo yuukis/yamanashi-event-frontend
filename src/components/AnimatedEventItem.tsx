@@ -7,12 +7,9 @@ const MotionEventItem = motion(chakra.div);
 // Stack の spacing prop と同じ値にすること
 export const EVENT_LIST_SPACING = { base: '0', md: '0.5em' };
 
-// date/section は EventScrollGutter が年月の目盛りを組み立てるための
-// 目印(data-event-start / data-event-section)。EventBody 側の
-// data-event-date(YYYYMMDD、日付ジャンプ時のハイライト用)とは別物なので
-// 名前を分けている。section は「直近開催」「終了」のように一覧が複数に
-// 分かれているページで、擬似スクロールバー上にも区切りを表現するために
-// 使う。渡さない呼び出し元(ウィジェット等)では単に付かない。
+// data-event-start/data-event-section は EventScrollGutter 用の目印。
+// EventBody 側の data-event-date(日付ジャンプ用、形式も別)とは別物
+// なので名前を分けている。
 export function AnimatedEventItem({ children, date, section }: { children: ReactNode; date?: string; section?: string }) {
   const shouldReduceMotion = useReducedMotion();
 

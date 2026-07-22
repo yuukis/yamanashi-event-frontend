@@ -11,8 +11,7 @@ export type RawMarker = {
   section: string;
 };
 
-// 区分ごとに、実際にイベントカードが存在する範囲(先頭カードの上端〜
-// 末尾カードの下端)。軌道の縦線はこの範囲まで伸ばす。
+// 軌道の縦線はこの範囲(先頭カードの上端〜末尾カードの下端)まで伸ばす。
 export type SectionExtent = {
   section: string;
   startTop: number;
@@ -33,11 +32,9 @@ export type LineRange = {
   bottom: number;
 };
 
-// showYear: 年月ラベルに年を含めるか(区分が変わる、または年が変わる
-// 先頭の目盛りで true)。isSectionStart: その区分(直近開催/終了 等)の
-// 先頭の目盛りかどうか。区分が変わった場合は showYear も必ず true になる
-// が、showYear は年の表示可否、isSectionStart は区切り線の見た目に使う
-// ためのもので目的が異なる。
+// 区分が変わった場合は showYear も必ず true になるが、showYear は年の
+// 表示可否、isSectionStart は区切り線の見た目に使うためのもので目的が
+// 異なる。
 export type MarkerFlags = { showYear: boolean; isSectionStart: boolean };
 
 export type LabeledMarker = {
@@ -65,16 +62,11 @@ const TRACK_BOTTOM_OFFSET = 32;
 // ラベル同士が重ならないよう間引く際の最小間隔(px)。fontSize xs の行高
 // 目安。
 const MIN_LABEL_GAP = 14;
-// 区分(直近開催/終了 等)が変わる箇所で、軌道の縦線に空ける隙間(px)。
 const SECTION_GAP = 16;
 const LINE_PAD = 6;
 // つまみ(丸みを帯びたピル)の高さ(px)。下の描画(h={'26px'})と揃える。
 const THUMB_HEIGHT = 26;
 
-// イベントカードに付与された data-event-start / data-event-section を
-// 元に、(1)年月ラベル用の目盛り(月が変わるごとに1つ、同じ区分・年月が
-// 離れた場所に複数回現れる場合は別の目盛りとして扱う)と、(2)区分ごとに
-// 実際にカードが存在する範囲、の2つを1回のDOM走査で組み立てる。
 function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } {
   const elements = document.querySelectorAll<HTMLElement>('[data-event-start]');
   const markers: RawMarker[] = [];
@@ -111,8 +103,6 @@ function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } 
   return { markers, extents };
 }
 
-// 区分が変わる、または年が変わる先頭の目盛りにだけ年を付与する。区分が
-// 変わる先頭の目盛りには isSectionStart も付与する。
 export function withMarkerFlags(rawMarkers: RawMarker[]): (RawMarker & MarkerFlags)[] {
   let previousSection: string | null = null;
   let previousYear: string | null = null;
@@ -138,11 +128,8 @@ export type GutterLayout = {
   maxScroll: number;
 };
 
-// 目盛り(rawMarkers/extents)とページのジオメトリ(docHeight/
-// viewportHeight)から、縦線の区間・目盛りのラベル文字列・つまみが動く
-// 範囲を組み立てる。DOMやReactの状態に依存しない純粋関数なので、実際の
-// スクロール位置(scrollY)には関係なく、DOM構成が変わったときだけ
-// 呼び直せばよい。
+// DOM/Reactに依存しない純粋関数なので、実際のスクロール位置(scrollY)
+// には関係なく、DOM構成が変わったときだけ呼び直せばよい。
 export function buildGutterLayout(
   rawMarkers: RawMarker[],
   extents: SectionExtent[],
@@ -150,8 +137,6 @@ export function buildGutterLayout(
   viewportHeight: number,
 ): GutterLayout {
   const trackHeight = Math.max(viewportHeight - TRACK_TOP_OFFSET - TRACK_BOTTOM_OFFSET, 0);
-  // つまみ・クリックジャンプが基準にしているスクロール可能範囲。目盛りの
-  // 座標変換(toTrackY)もこれと同じ基準に揃える(後述)。
   const maxScroll = Math.max(docHeight - viewportHeight, 1);
 
   if (docHeight === 0 || rawMarkers.length === 0) {
@@ -173,9 +158,7 @@ export function buildGutterLayout(
     endY: toTrackY(extent.endBottom),
   }));
 
-  // 区分(直近開催/終了 等)が変わる箇所には隙間を空けて描画する。
-  // つまみがこの範囲にかかっている間だけガターを表示する判定にも
-  // 同じ範囲を使う。
+  // 区分が変わる箇所には隙間を空けて描画する(つまみの表示判定にも使う)。
   const lineRanges: LineRange[] = segments.map((segment, index) => {
     const previous = segments[index - 1];
     const next = segments[index + 1];
@@ -247,8 +230,7 @@ export function buildGutterLayout(
   return { lineRanges, labeledMarkers, trackHeight, maxScroll };
 }
 
-// つまみの位置・可視状態の計算に必要な、スクロールとは独立して決まる値。
-// スクロールハンドラから毎フレーム読むための ref に保持する。
+// スクロールハンドラから毎フレーム読むための ref に保持する値。
 type ScrollLayout = {
   trackHeight: number;
   docHeight: number;
@@ -257,17 +239,12 @@ type ScrollLayout = {
 };
 
 // 十分に横幅のあるデスクトップ画面でのみ、イベントカード列の右側に
-// 位置と年月を示す擬似スクロールバーを表示する。ページ本体のスクロール
-// (window)をそのまま反映するミニマップで、クリックで該当位置へジャンプ
-// できる。年月ラベルはDOM構成が変わったとき(データ読み込み・絞り込み
-// 等)だけ組み立て直し、スクロール自体では再計算しない。つまみの位置・
-// ガターの表示/非表示はスクロールのたびにReactの再レンダーを起こさず、
-// ref経由でDOMを直接書き換えて反映する(60fps級で動くスクロールに
-// Reactの差分計算を毎回挟むと重いため)。
+// 位置と年月を示す擬似スクロールバーを表示する。クリックで該当位置へ
+// ジャンプできる。年月ラベルはDOM構成が変わったときだけ組み立て直し、
+// つまみの位置・ガターの表示/非表示はスクロールのたびにref経由で
+// DOMを直接書き換える(どちらもReactの再レンダーを挟まない)。
 export function EventScrollGutter() {
-  // display={{base:'none', xl:'block'}} でCSS上は隠れていても、ガター
-  // 自体は常にマウントされてしまうため、非表示幅ではDOM監視・スクロール
-  // 監視を張らない(=何もしない)ようにこのフラグで早期returnする。
+  // xl未満ではガター自体をマウントせず、DOM監視・スクロール監視も張らない。
   const [isDesktopScreenSize] = useMediaQuery('(min-width: 80em)');
   const [rawMarkers, setRawMarkers] = useState<RawMarker[]>([]);
   const [extents, setExtents] = useState<SectionExtent[]>([]);
@@ -286,11 +263,9 @@ export function EventScrollGutter() {
     setViewportHeight(window.innerHeight);
   }, []);
 
-  // イベント一覧は非同期取得・「もっと見る」・キーワード/コミュニティ絞り込み
-  // で高さが変わるため、DOM変化を監視して目盛りを都度作り直す。ガターが
-  // 見えない画面幅(モバイル/タブレット)では登録自体をスキップする。
   // document.body をsubtree監視するため、登録したままだとヘッダーの
   // ポップオーバー開閉など無関係な変化のたびに全カードを走査してしまう。
+  // ガターが見えない画面幅では登録自体をスキップする。
   useEffect(() => {
     if (!isDesktopScreenSize) {
       return;
@@ -314,17 +289,13 @@ export function EventScrollGutter() {
     };
   }, [recomputeMarkers, isDesktopScreenSize]);
 
-  // 縦線の区間と、目盛りのラベル文字列。スクロール位置には依存しない
-  // ため、スクロール中は再計算されない。
   const { lineRanges, labeledMarkers, trackHeight, maxScroll } = useMemo(
     () => buildGutterLayout(rawMarkers, extents, docHeight, viewportHeight),
     [rawMarkers, extents, docHeight, viewportHeight],
   );
 
-  // つまみの位置と、ガター自体の表示/非表示を計算して直接DOMに反映する。
-  // Reactのstateを介さないため、スクロール中もReactの再レンダーは発生
-  // しない(つまみが動くたびに目盛り一覧まで差分計算し直すのは無駄が
-  // 大きいため)。
+  // つまみの位置とガターの表示/非表示を直接DOMに反映する(Reactの
+  // stateを介さないので、スクロール中は再レンダーが発生しない)。
   const applyThumbPosition = useCallback(() => {
     const { trackHeight, docHeight, viewportHeight, lineRanges } = scrollLayoutRef.current;
     const thumbEl = thumbElRef.current;
