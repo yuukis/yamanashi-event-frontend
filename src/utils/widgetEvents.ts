@@ -1,11 +1,8 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
 import type { DependencyList } from 'react';
 import type { ApiEvent } from '../types/events';
 import { isFutureEvent, isPastEvent } from './eventGroups';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from './eventSort';
-import { subscribeNow, getNow } from './nowTicker';
-import { mergeTrackingData } from './newEventTracking';
-import { isLocalStorageAvailable, updateTrackingData } from './newEventTrackingStore';
 
 export type WidgetEventsState = {
   isLoading: boolean;
@@ -26,8 +23,6 @@ export function useWidgetEvents(fetcher: () => Promise<{ events: ApiEvent[] }>, 
     futureEvents: [],
     errorMessage: '',
   });
-  const now = useSyncExternalStore(subscribeNow, getNow);
-
   useEffect(() => {
     let cancelled = false;
     setData((previous) => ({ ...previous, isLoading: true, errorMessage: '' }));
@@ -55,14 +50,6 @@ export function useWidgetEvents(fetcher: () => Promise<{ events: ApiEvent[] }>, 
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
-
-  useEffect(() => {
-    if (!isLocalStorageAvailable() || data.futureEvents.length === 0) {
-      return;
-    }
-    updateTrackingData((previous) => mergeTrackingData(previous, data.futureEvents, now));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.futureEvents]);
 
   return data;
 }
