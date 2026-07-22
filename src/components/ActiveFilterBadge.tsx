@@ -37,6 +37,9 @@ export function ActiveFilterBadge({
   // 描画される間もなく unmount してしまう。アニメーションが目に見える分だけ
   // 実際のクリア処理を遅らせる。
   const handlePress = () => {
+    if (isPressed) {
+      return;
+    }
     setIsPressed(true);
     window.setTimeout(onClear, 180);
   };

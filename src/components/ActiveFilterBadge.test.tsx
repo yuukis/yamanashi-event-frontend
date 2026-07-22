@@ -79,4 +79,22 @@ describe('ActiveFilterBadge', () => {
 
     return waitFor(() => expect(onClearKeyword).toHaveBeenCalledTimes(1));
   });
+
+  it('ignores repeated clicks while the clear is already pending, calling onClearKeyword only once', () => {
+    const onClearKeyword = vi.fn();
+    renderWithChakra(
+      <ActiveFilterBadge selectedKeyword={'React'}
+                          selectedGroupName={null}
+                          onClearKeyword={onClearKeyword}
+                          onClearGroup={() => {}}
+                          />,
+    );
+
+    const button = screen.getByRole('button', { name: '絞り込みを解除' });
+    fireEvent.click(button);
+    fireEvent.click(button);
+    fireEvent.click(button);
+
+    return waitFor(() => expect(onClearKeyword).toHaveBeenCalledTimes(1));
+  });
 });
