@@ -1,5 +1,6 @@
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, Container } from '@chakra-ui/react';
 import { ChevronRightIcon } from '@chakra-ui/icons';
+import { House } from '@chakra-icons/bootstrap';
 import { StructuredData } from './StructuredData';
 import { buildBreadcrumbJsonLd } from '../utils/structuredData';
 import { SITE_URL } from '../utils/site';
@@ -25,18 +26,29 @@ export function PageBreadcrumb({ items }: { items: PageBreadcrumbItem[] }) {
                     separator={<ChevronRightIcon color={'gray.400'} />}
                     fontSize={'xs'}
                     >
-          {allItems.map((item, index) => (
-            <BreadcrumbItem key={item.href} isCurrentPage={index === allItems.length - 1}>
-              <BreadcrumbLink href={item.href}
-                              color={index === allItems.length - 1 ? 'gray.600' : 'gray.500'}
-                              fontWeight={index === allItems.length - 1 ? 'medium' : 'normal'}
-                              _hover={{color: 'primary.800'}}
-                              noOfLines={1}
-                              >
-                {item.label}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-          ))}
+          {allItems.map((item, index) => {
+            const isCurrentPage = index === allItems.length - 1;
+            return (
+              <BreadcrumbItem key={item.href} isCurrentPage={isCurrentPage}>
+                <BreadcrumbLink href={item.href}
+                                color={isCurrentPage ? 'gray.600' : 'gray.500'}
+                                fontWeight={isCurrentPage ? 'medium' : 'normal'}
+                                textDecoration={isCurrentPage ? 'none' : 'underline'}
+                                _hover={{color: 'primary.800'}}
+                                noOfLines={1}
+                                >
+                  {index === 0 ? (
+                    <>
+                      <House verticalAlign={'-2px'} mr={'1'} />
+                      {item.label}
+                    </>
+                  ) : (
+                    item.label
+                  )}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+            );
+          })}
         </Breadcrumb>
       </Container>
     </>
