@@ -225,7 +225,22 @@ export function buildGutterLayout(
     };
   });
 
-  return { lineRanges, labeledMarkers, maxScroll };
+  // 4周目: 年月を2行(年月とも表示)にした目盛りは、1行の目盛りより
+  // 縦に場所を取る。2行目(月)が次に表示されるラベルの行と重なる場合は
+  // 月を省略し、年だけの1行に戻す。
+  const TWO_LINE_LABEL_GAP = MIN_LABEL_GAP * 2;
+  const adjustedLabeledMarkers: LabeledMarker[] = labeledMarkers.map((entry, index) => {
+    if (!entry.yearText || !entry.monthText) {
+      return entry;
+    }
+    const next = labeledMarkers.slice(index + 1).find((other) => other.yearText || other.monthText);
+    if (next && (next.y - entry.y) < TWO_LINE_LABEL_GAP) {
+      return { ...entry, monthText: null };
+    }
+    return entry;
+  });
+
+  return { lineRanges, labeledMarkers: adjustedLabeledMarkers, maxScroll };
 }
 
 // スクロールハンドラから毎フレーム読むための ref に保持する値。
