@@ -309,7 +309,7 @@ describe('EventScrollGutter', () => {
     }
   });
 
-  it('recomputes when document.body resizes (e.g. a lazily-loaded iframe widget growing the page height), even without a [data-event-start] mutation', async () => {
+  it('recomputes when document.body resizes (e.g. a lazily-loaded iframe widget changing the page height), even without a [data-event-start] mutation', async () => {
     const originalResizeObserver = window.ResizeObserver;
     fakeResizeObserverInstances = [];
     (window as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver =
