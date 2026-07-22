@@ -4,6 +4,9 @@ import { SmallCloseIcon } from '@chakra-ui/icons';
 import { subscribeHeaderVisibility, getHeaderAreaOccupied, HEADER_HEIGHT } from '../utils/headerVisibility';
 import '../style.css';
 
+// style.css の .active-filter-badge-pulse と揃える。
+const PULSE_ANIMATION_MS = 220;
+
 type ActiveFilterBadgeProps = {
   selectedKeyword: string | null;
   selectedGroupName: string | null;
@@ -35,13 +38,19 @@ export function ActiveFilterBadge({
 
   // クリックすると同時にバッジ自体が消えるため、押した瞬間のアニメーションが
   // 描画される間もなく unmount してしまう。アニメーションが目に見える分だけ
-  // 実際のクリア処理を遅らせる。
+  // 実際のクリア処理を遅らせる。prefers-reduced-motion ではアニメーション
+  // 自体をCSS側で無効化しているため、見えない遅延を残さず即クリアする。
   const handlePress = () => {
     if (isPressed) {
       return;
     }
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      onClear();
+      return;
+    }
     setIsPressed(true);
-    window.setTimeout(onClear, 180);
+    window.setTimeout(onClear, PULSE_ANIMATION_MS);
   };
 
   return (

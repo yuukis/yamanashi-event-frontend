@@ -97,4 +97,23 @@ describe('ActiveFilterBadge', () => {
 
     return waitFor(() => expect(onClearKeyword).toHaveBeenCalledTimes(1));
   });
+
+  it('clears immediately without the pulse delay when prefers-reduced-motion is set', () => {
+    vi.spyOn(window, 'matchMedia').mockReturnValue({
+      matches: true,
+    } as MediaQueryList);
+
+    const onClearKeyword = vi.fn();
+    renderWithChakra(
+      <ActiveFilterBadge selectedKeyword={'React'}
+                          selectedGroupName={null}
+                          onClearKeyword={onClearKeyword}
+                          onClearGroup={() => {}}
+                          />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '絞り込みを解除' }));
+
+    expect(onClearKeyword).toHaveBeenCalledTimes(1);
+  });
 });
