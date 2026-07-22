@@ -191,4 +191,49 @@ describe('buildGutterLayout', () => {
     expect(labeledMarkers[0].marker.isSectionStart).toBe(true);
     expect(labeledMarkers[1].marker.isSectionStart).toBe(true);
   });
+
+  it('drops the month from a two-line label when its second row would overlap the next shown label', () => {
+    const rawMarkers: RawMarker[] = [
+      marker({ top: 1000, year: '2025', month: '01' }), // y = 100, shows both lines (2025年 / 1月)...
+      marker({ top: 1200, month: '06' }), // y = 120, only 20px below (<28) -> collides with the month row
+    ];
+    const extents: SectionExtent[] = [{ section: 'all', startTop: 1000, endBottom: 1300 }];
+
+    const { labeledMarkers } = buildGutterLayout(rawMarkers, extents, DOC_HEIGHT, VIEWPORT_HEIGHT);
+
+    // ...so the month is dropped, leaving the first marker as a year-only line.
+    expect(labeledMarkers[0]).toEqual(expect.objectContaining({ yearText: '2025年', monthText: null }));
+    // the marker that caused the collision is untouched.
+    expect(labeledMarkers[1]).toEqual(expect.objectContaining({ yearText: null, monthText: '6月' }));
+  });
+
+  it('keeps the month on a two-line label when the next shown label is exactly at the two-line gap threshold', () => {
+    const rawMarkers: RawMarker[] = [
+      marker({ top: 1000, year: '2025', month: '01' }), // y = 100
+      marker({ top: 1280, month: '06' }), // y = 128, exactly 28px below (the threshold is a strict "<")
+    ];
+    const extents: SectionExtent[] = [{ section: 'all', startTop: 1000, endBottom: 1380 }];
+
+    const { labeledMarkers } = buildGutterLayout(rawMarkers, extents, DOC_HEIGHT, VIEWPORT_HEIGHT);
+
+    expect(labeledMarkers[0]).toEqual(expect.objectContaining({ yearText: '2025年', monthText: '1月' }));
+  });
+
+  it('skips over markers with no visible label when checking the two-line label for overlap', () => {
+    const rawMarkers: RawMarker[] = [
+      marker({ top: 1000, year: '2025', month: '01' }), // y = 100, two-line candidate
+      marker({ top: 1010, month: '02' }), // y = 101, cramped against marker 1 -> no visible label of its own
+      marker({ top: 1200, month: '06' }), // y = 120, visible; also what makes marker 1 show its month at all
+    ];
+    const extents: SectionExtent[] = [{ section: 'all', startTop: 1000, endBottom: 1300 }];
+
+    const { labeledMarkers } = buildGutterLayout(rawMarkers, extents, DOC_HEIGHT, VIEWPORT_HEIGHT);
+
+    // the invisible middle marker is not what the overlap check should compare
+    // against; the visible marker at y=120 is, and it's close enough (20px) to
+    // still trigger the suppression.
+    expect(labeledMarkers[1]).toEqual(expect.objectContaining({ yearText: null, monthText: null }));
+    expect(labeledMarkers[0]).toEqual(expect.objectContaining({ yearText: '2025年', monthText: null }));
+    expect(labeledMarkers[2]).toEqual(expect.objectContaining({ yearText: null, monthText: '6月' }));
+  });
 });
