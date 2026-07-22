@@ -252,6 +252,22 @@ describe('buildGutterLayout', () => {
   });
 });
 
+class FakeResizeObserver {
+  callback: ResizeObserverCallback;
+  observed: Element[] = [];
+
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback;
+    fakeResizeObserverInstances.push(this);
+  }
+  observe(el: Element) {
+    this.observed.push(el);
+  }
+  unobserve() {}
+  disconnect() {}
+}
+let fakeResizeObserverInstances: FakeResizeObserver[] = [];
+
 describe('EventScrollGutter', () => {
   it('recomputes marker positions on EVENT_CARD_LAYOUT_SETTLED even without a matching DOM childList mutation', async () => {
     vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(1000);
@@ -290,6 +306,53 @@ describe('EventScrollGutter', () => {
     } finally {
       cardA.remove();
       cardB.remove();
+    }
+  });
+
+  it('recomputes when document.body resizes (e.g. a lazily-loaded iframe widget changing the page height), even without a [data-event-start] mutation', async () => {
+    const originalResizeObserver = window.ResizeObserver;
+    fakeResizeObserverInstances = [];
+    (window as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver =
+      FakeResizeObserver as unknown as typeof ResizeObserver;
+
+    let docHeight = 10000;
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(1000);
+    vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockImplementation(() => docHeight);
+
+    const topByCard = new Map<Element, number>();
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      const top = topByCard.get(this) ?? 0;
+      return { top, bottom: top, left: 0, right: 0, width: 0, height: 0, x: 0, y: top, toJSON: () => ({}) } as DOMRect;
+    });
+
+    const cardA = document.createElement('div');
+    cardA.dataset.eventStart = '2025-01-15';
+    cardA.dataset.eventSection = 'all';
+    topByCard.set(cardA, 1000);
+
+    const cardB = document.createElement('div');
+    cardB.dataset.eventStart = '2025-02-15';
+    cardB.dataset.eventSection = 'all';
+    topByCard.set(cardB, 1130); // 13px apart on the track at the initial docHeight -- cramped
+
+    document.body.append(cardA, cardB);
+
+    try {
+      render(<EventScrollGutter />);
+
+      await waitFor(() => expect(screen.getByText('2025年')).toBeInTheDocument());
+      expect(screen.queryByText('2月')).not.toBeInTheDocument();
+      expect(fakeResizeObserverInstances.some((o) => o.observed.includes(document.body))).toBe(true);
+
+      // [data-event-start]を増減させずにdocHeightだけを変える(iframeウィジェットの遅延読み込みを模す)。
+      docHeight = 5000;
+      fakeResizeObserverInstances.forEach((o) => o.callback([], o as unknown as ResizeObserver));
+
+      await waitFor(() => expect(screen.getByText('2月')).toBeInTheDocument());
+    } finally {
+      cardA.remove();
+      cardB.remove();
+      (window as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver = originalResizeObserver;
     }
   });
 });

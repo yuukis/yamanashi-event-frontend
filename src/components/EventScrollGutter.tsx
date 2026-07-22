@@ -333,18 +333,26 @@ export function EventScrollGutter() {
     scheduleRecompute();
     window.addEventListener('resize', scheduleRecompute);
     document.addEventListener(EVENT_CARD_LAYOUT_SETTLED, scheduleRecompute);
-    const observer = new MutationObserver((mutations) => {
+    const mutationObserver = new MutationObserver((mutations) => {
       if (mutationsInvolveEventCards(mutations)) {
         scheduleRecompute();
       }
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
+    // 埋め込みウィジェットのiframeなど、遅延読み込み後にstyle.heightを
+    // 書き換えてページ全体の高さを広げるケースはstyle属性の変更でしかなく、
+    // childList監視にもEVENT_CARD_LAYOUT_SETTLEDにも引っかからない。
+    // document.bodyのボックスサイズそのものを監視して拾う。
+    const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(scheduleRecompute);
+    resizeObserver?.observe(document.body);
 
     return () => {
       cancelAnimationFrame(rafId);
       window.removeEventListener('resize', scheduleRecompute);
       document.removeEventListener(EVENT_CARD_LAYOUT_SETTLED, scheduleRecompute);
-      observer.disconnect();
+      mutationObserver.disconnect();
+      resizeObserver?.disconnect();
     };
   }, [recomputeMarkers]);
 
