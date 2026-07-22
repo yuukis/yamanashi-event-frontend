@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Box, Text, useMediaQuery } from '@chakra-ui/react';
 
-type RawMarker = {
+export type RawMarker = {
   // ドキュメント先頭からのY座標(px)
   top: number;
   year: string;
@@ -13,7 +13,7 @@ type RawMarker = {
 
 // 区分ごとに、実際にイベントカードが存在する範囲(先頭カードの上端〜
 // 末尾カードの下端)。軌道の縦線はこの範囲まで伸ばす。
-type SectionExtent = {
+export type SectionExtent = {
   section: string;
   startTop: number;
   endBottom: number;
@@ -27,7 +27,7 @@ type Segment = {
 
 // 実際に描画される縦線の1本分の範囲(区分の隙間・パディングを反映済み)。
 // つまみがこの範囲にかかっている間だけガターを表示する判定にも使う。
-type LineRange = {
+export type LineRange = {
   section: string;
   top: number;
   bottom: number;
@@ -38,9 +38,9 @@ type LineRange = {
 // 先頭の目盛りかどうか。区分が変わった場合は showYear も必ず true になる
 // が、showYear は年の表示可否、isSectionStart は区切り線の見た目に使う
 // ためのもので目的が異なる。
-type MarkerFlags = { showYear: boolean; isSectionStart: boolean };
+export type MarkerFlags = { showYear: boolean; isSectionStart: boolean };
 
-type LabeledMarker = {
+export type LabeledMarker = {
   marker: RawMarker & MarkerFlags;
   y: number;
   // 間引きの結果、非表示ならどちらも null。年部分は太字、月部分は標準の
@@ -113,7 +113,7 @@ function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } 
 
 // 区分が変わる、または年が変わる先頭の目盛りにだけ年を付与する。区分が
 // 変わる先頭の目盛りには isSectionStart も付与する。
-function withMarkerFlags(rawMarkers: RawMarker[]): (RawMarker & MarkerFlags)[] {
+export function withMarkerFlags(rawMarkers: RawMarker[]): (RawMarker & MarkerFlags)[] {
   let previousSection: string | null = null;
   let previousYear: string | null = null;
 
@@ -128,6 +128,123 @@ function withMarkerFlags(rawMarkers: RawMarker[]): (RawMarker & MarkerFlags)[] {
 
 function formatMonth(month: string): string {
   return `${parseInt(month, 10)}月`;
+}
+
+export type GutterLayout = {
+  lineRanges: LineRange[];
+  labeledMarkers: LabeledMarker[];
+  trackHeight: number;
+  // つまみ・クリックジャンプが基準にしているスクロール可能範囲。
+  maxScroll: number;
+};
+
+// 目盛り(rawMarkers/extents)とページのジオメトリ(docHeight/
+// viewportHeight)から、縦線の区間・目盛りのラベル文字列・つまみが動く
+// 範囲を組み立てる。DOMやReactの状態に依存しない純粋関数なので、実際の
+// スクロール位置(scrollY)には関係なく、DOM構成が変わったときだけ
+// 呼び直せばよい。
+export function buildGutterLayout(
+  rawMarkers: RawMarker[],
+  extents: SectionExtent[],
+  docHeight: number,
+  viewportHeight: number,
+): GutterLayout {
+  const trackHeight = Math.max(viewportHeight - TRACK_TOP_OFFSET - TRACK_BOTTOM_OFFSET, 0);
+  // つまみ・クリックジャンプが基準にしているスクロール可能範囲。目盛りの
+  // 座標変換(toTrackY)もこれと同じ基準に揃える(後述)。
+  const maxScroll = Math.max(docHeight - viewportHeight, 1);
+
+  if (docHeight === 0 || rawMarkers.length === 0) {
+    return { lineRanges: [], labeledMarkers: [], trackHeight, maxScroll };
+  }
+
+  // documentY(ページ先頭からのpx)を軌道上のY座標に変換する。つまみは
+  // scrollY(0〜maxScroll)を軌道全体に引き伸ばして動くため、目盛り側も
+  // documentYをmaxScroll基準で正規化しないと、同じ絶対位置でもつまみと
+  // 目盛りがズレる(docHeightで割ると、ページ末尾に近い目盛りほどつまみ
+  // より手前に表示されてしまう)。maxScrollを超える位置(ページ最下部
+  // 付近、スクロールしても先頭がそこまで届かない範囲)はmaxScrollに
+  // 丸める。
+  const toTrackY = (documentY: number) => (Math.min(documentY, maxScroll) / maxScroll) * trackHeight;
+
+  const segments: Segment[] = extents.map((extent) => ({
+    section: extent.section,
+    startY: toTrackY(extent.startTop),
+    endY: toTrackY(extent.endBottom),
+  }));
+
+  // 区分(直近開催/終了 等)が変わる箇所には隙間を空けて描画する。
+  // つまみがこの範囲にかかっている間だけガターを表示する判定にも
+  // 同じ範囲を使う。
+  const lineRanges: LineRange[] = segments.map((segment, index) => {
+    const previous = segments[index - 1];
+    const next = segments[index + 1];
+    const top = previous
+      ? Math.max(segment.startY - LINE_PAD, previous.endY + SECTION_GAP / 2)
+      : Math.max(segment.startY - LINE_PAD, 0);
+    const bottom = next
+      ? Math.min(segment.endY + LINE_PAD, next.startY - SECTION_GAP / 2)
+      : Math.min(segment.endY + LINE_PAD, trackHeight);
+    return { section: segment.section, top, bottom: Math.max(bottom, top + 2) };
+  });
+
+  const markersWithFlags = withMarkerFlags(rawMarkers);
+
+  // 1周目: 直前に表示したラベルとの間隔が詰まっている(=文字が省略
+  // される密集地帯にいる)かどうかを見て、月のみの目盛りの表示可否を
+  // 決める。年を表示する目盛りは(このパスでは)常に表示扱いにする。
+  let lastLabelY = -Infinity;
+  const pass1: Pass1Entry[] = markersWithFlags.map((marker) => {
+    const y = toTrackY(marker.top);
+    const isCramped = (y - lastLabelY) < MIN_LABEL_GAP;
+    const monthVisible = marker.showYear || !isCramped;
+    if (monthVisible) {
+      lastLabelY = y;
+    }
+    return { marker, y, isCramped, monthVisible };
+  });
+
+  // 2周目: 年を表示する目盛りを先頭に、次に年が変わる目盛りが現れる
+  // までを1つの「年ブロック」としてまとめ、そのブロック内に表示される
+  // 月(年マーカー自身以外)があるかを記録する。
+  type YearBlock = { year: Pass1Entry; hasVisibleOtherMonth: boolean };
+  const yearBlocks: YearBlock[] = [];
+  pass1.forEach((entry) => {
+    if (entry.marker.showYear) {
+      yearBlocks.push({ year: entry, hasVisibleOtherMonth: false });
+    } else if (entry.monthVisible) {
+      yearBlocks[yearBlocks.length - 1].hasVisibleOtherMonth = true;
+    }
+  });
+
+  // 月が1つだけの年(=ブロック内に他の月がない)のうち、どれか1つでも
+  // 詰まって年のみ表示に切り替わるなら、他の年で詰まっていなくても、
+  // 月が1つだけの年は揃って年のみ表示にする(一部だけ「年月」・一部
+  // だけ「年」が混ざるのを避ける)。
+  const anySingleMonthYearCramped = yearBlocks.some(
+    (block) => !block.hasVisibleOtherMonth && block.year.isCramped
+  );
+
+  // 3周目: 上記を踏まえて最終的な表示内容を決める。年ブロックは出現順
+  // のままなので、年マーカーに出会うたびに次のブロックへ進めればよい。
+  let nextYearBlockIndex = 0;
+  const labeledMarkers: LabeledMarker[] = pass1.map(({ marker, y, monthVisible }) => {
+    if (!marker.showYear) {
+      return { marker, y, yearText: null, monthText: monthVisible ? formatMonth(marker.month) : null };
+    }
+
+    const { hasVisibleOtherMonth } = yearBlocks[nextYearBlockIndex];
+    nextYearBlockIndex += 1;
+    const showMonth = hasVisibleOtherMonth || !anySingleMonthYearCramped;
+    return {
+      marker,
+      y,
+      yearText: `${marker.year}年`,
+      monthText: showMonth ? formatMonth(marker.month) : null,
+    };
+  });
+
+  return { lineRanges, labeledMarkers, trackHeight, maxScroll };
 }
 
 // つまみの位置・可視状態の計算に必要な、スクロールとは独立して決まる値。
@@ -197,106 +314,12 @@ export function EventScrollGutter() {
     };
   }, [recomputeMarkers, isDesktopScreenSize]);
 
-  const trackHeight = Math.max(viewportHeight - TRACK_TOP_OFFSET - TRACK_BOTTOM_OFFSET, 0);
-  // つまみ・クリックジャンプが基準にしているスクロール可能範囲。目盛りの
-  // 座標変換(toTrackY)もこれと同じ基準に揃える(後述)。
-  const maxScroll = Math.max(docHeight - viewportHeight, 1);
-
   // 縦線の区間と、目盛りのラベル文字列。スクロール位置には依存しない
   // ため、スクロール中は再計算されない。
-  const { lineRanges, labeledMarkers } = useMemo(() => {
-    if (docHeight === 0 || rawMarkers.length === 0) {
-      return { lineRanges: [] as LineRange[], labeledMarkers: [] as LabeledMarker[] };
-    }
-
-    // documentY(ページ先頭からのpx)を軌道上のY座標に変換する。つまみは
-    // scrollY(0〜maxScroll)を軌道全体に引き伸ばして動くため、目盛り側も
-    // documentYをmaxScroll基準で正規化しないと、同じ絶対位置でもつまみと
-    // 目盛りがズレる(docHeightで割ると、ページ末尾に近い目盛りほどつまみ
-    // より手前に表示されてしまう)。maxScrollを超える位置(ページ最下部
-    // 付近、スクロールしても先頭がそこまで届かない範囲)はmaxScrollに
-    // 丸める。
-    const toTrackY = (documentY: number) => (Math.min(documentY, maxScroll) / maxScroll) * trackHeight;
-
-    const segments: Segment[] = extents.map((extent) => ({
-      section: extent.section,
-      startY: toTrackY(extent.startTop),
-      endY: toTrackY(extent.endBottom),
-    }));
-
-    // 区分(直近開催/終了 等)が変わる箇所には隙間を空けて描画する。
-    // つまみがこの範囲にかかっている間だけガターを表示する判定にも
-    // 同じ範囲を使う。
-    const lineRanges: LineRange[] = segments.map((segment, index) => {
-      const previous = segments[index - 1];
-      const next = segments[index + 1];
-      const top = previous
-        ? Math.max(segment.startY - LINE_PAD, previous.endY + SECTION_GAP / 2)
-        : Math.max(segment.startY - LINE_PAD, 0);
-      const bottom = next
-        ? Math.min(segment.endY + LINE_PAD, next.startY - SECTION_GAP / 2)
-        : Math.min(segment.endY + LINE_PAD, trackHeight);
-      return { section: segment.section, top, bottom: Math.max(bottom, top + 2) };
-    });
-
-    const markersWithFlags = withMarkerFlags(rawMarkers);
-
-    // 1周目: 直前に表示したラベルとの間隔が詰まっている(=文字が省略
-    // される密集地帯にいる)かどうかを見て、月のみの目盛りの表示可否を
-    // 決める。年を表示する目盛りは(このパスでは)常に表示扱いにする。
-    let lastLabelY = -Infinity;
-    const pass1: Pass1Entry[] = markersWithFlags.map((marker) => {
-      const y = toTrackY(marker.top);
-      const isCramped = (y - lastLabelY) < MIN_LABEL_GAP;
-      const monthVisible = marker.showYear || !isCramped;
-      if (monthVisible) {
-        lastLabelY = y;
-      }
-      return { marker, y, isCramped, monthVisible };
-    });
-
-    // 2周目: 年を表示する目盛りを先頭に、次に年が変わる目盛りが現れる
-    // までを1つの「年ブロック」としてまとめ、そのブロック内に表示される
-    // 月(年マーカー自身以外)があるかを記録する。
-    type YearBlock = { year: Pass1Entry; hasVisibleOtherMonth: boolean };
-    const yearBlocks: YearBlock[] = [];
-    pass1.forEach((entry) => {
-      if (entry.marker.showYear) {
-        yearBlocks.push({ year: entry, hasVisibleOtherMonth: false });
-      } else if (entry.monthVisible) {
-        yearBlocks[yearBlocks.length - 1].hasVisibleOtherMonth = true;
-      }
-    });
-
-    // 月が1つだけの年(=ブロック内に他の月がない)のうち、どれか1つでも
-    // 詰まって年のみ表示に切り替わるなら、他の年で詰まっていなくても、
-    // 月が1つだけの年は揃って年のみ表示にする(一部だけ「年月」・一部
-    // だけ「年」が混ざるのを避ける)。
-    const anySingleMonthYearCramped = yearBlocks.some(
-      (block) => !block.hasVisibleOtherMonth && block.year.isCramped
-    );
-
-    // 3周目: 上記を踏まえて最終的な表示内容を決める。年ブロックは出現順
-    // のままなので、年マーカーに出会うたびに次のブロックへ進めればよい。
-    let nextYearBlockIndex = 0;
-    const labeledMarkers: LabeledMarker[] = pass1.map(({ marker, y, monthVisible }) => {
-      if (!marker.showYear) {
-        return { marker, y, yearText: null, monthText: monthVisible ? formatMonth(marker.month) : null };
-      }
-
-      const { hasVisibleOtherMonth } = yearBlocks[nextYearBlockIndex];
-      nextYearBlockIndex += 1;
-      const showMonth = hasVisibleOtherMonth || !anySingleMonthYearCramped;
-      return {
-        marker,
-        y,
-        yearText: `${marker.year}年`,
-        monthText: showMonth ? formatMonth(marker.month) : null,
-      };
-    });
-
-    return { lineRanges, labeledMarkers };
-  }, [rawMarkers, extents, docHeight, trackHeight, maxScroll]);
+  const { lineRanges, labeledMarkers, trackHeight, maxScroll } = useMemo(
+    () => buildGutterLayout(rawMarkers, extents, docHeight, viewportHeight),
+    [rawMarkers, extents, docHeight, viewportHeight],
+  );
 
   // つまみの位置と、ガター自体の表示/非表示を計算して直接DOMに反映する。
   // Reactのstateを介さないため、スクロール中もReactの再レンダーは発生
