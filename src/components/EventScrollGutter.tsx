@@ -375,7 +375,20 @@ export function EventScrollGutter() {
     <Box ref={gutterElRef}
          position={'fixed'}
          top={0}
-         right={'14px'}
+         // xl未満は一時的なガイド表示なので、縦線が画面右端に来るまで
+         // 寄せる(トラック自体は10px幅で、縦線はその中央にあるため
+         // right:0で右端から5px の位置になる)。
+         right={{base: 0, xl: '14px'}}
+         // xl未満は年月ラベルが本文の上に重なるため、視認性のために背景を
+         // 敷く。幅はトラック(10px)+ラベルとの間隔(8px)+ラベル文字(年月を
+         // 2行に分けているので「2026年」程度の幅)を余裕を見て確保している。
+         // トラックは右端に揃える。背景は右(画面端・トラック側)を濃く、
+         // 左(ラベルが本文に重なる側)へ向かって透過を強くするグラデーション
+         // にして、境界が硬く見えないようにする。
+         w={{base: '90px', xl: 'auto'}}
+         display={'flex'}
+         justifyContent={'flex-end'}
+         bgGradient={{base: 'linear(to-r, transparent, whiteAlpha.800)', xl: 'none'}}
          h={`${viewportHeight}px`}
          // ヘッダー(zIndex: sticky/banner)より前面に表示する。ポップオーバー
          // やメニュー(zIndex: popover)より上にはしない。
