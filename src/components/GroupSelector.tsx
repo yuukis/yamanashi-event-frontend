@@ -159,7 +159,7 @@ function GroupBlock({ group, badge, isSelected, onSelect }: GroupBlockProps) {
           </Badge>
         )}
         <Box boxSize={IMAGE_SIZE}
-             bg={'gray.100'}
+             bg={'#ffffff'}
              borderRadius={'md'}
              display={'flex'}
              alignItems={'center'}
