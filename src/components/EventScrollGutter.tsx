@@ -99,10 +99,16 @@ function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } 
 }
 
 function nodeHasEventCard(node: Node): boolean {
-  if (!(node instanceof Element)) {
-    return false;
+  if (node instanceof Element && node.hasAttribute('data-event-start')) {
+    return true;
   }
-  return node.hasAttribute('data-event-start') || node.querySelector('[data-event-start]') !== null;
+  // DocumentFragmentは挿入時に子要素だけがツリーへ移動しfragment自体は
+  // MutationRecordのaddedNodes/removedNodesには現れないはずだが、念のため
+  // (ParentNodeを実装しておりquerySelectorが使える)対応しておく。
+  if (node instanceof Element || node instanceof DocumentFragment) {
+    return node.querySelector('[data-event-start]') !== null;
+  }
+  return false;
 }
 
 // document.body をsubtree監視していると、ヘッダーのポップオーバー開閉
