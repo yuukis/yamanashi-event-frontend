@@ -76,7 +76,7 @@ function SiteHeaderContent() {
       <Stack maxW={'980px'}
              m={'auto'}
              px={'4'}
-             py={{base: '2', md: '3'}}
+             py={{base: '1', md: '3'}}
              direction={'row'}
              alignItems={'center'}
              bg={'white'}
