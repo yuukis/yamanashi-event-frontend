@@ -8,6 +8,7 @@ import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
+import { EventScrollGutter } from '../components/EventScrollGutter';
 import { StructuredData } from '../components/StructuredData';
 import '../style.css';
 import {
@@ -137,6 +138,7 @@ function List({ startYear} : {startYear: number}) {
     <Box className={'section-bg-pattern'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-events'} data={structuredData} />
       <SiteHeader />
+      <EventScrollGutter />
       <PageBreadcrumb items={[
                         { label: 'イベントアーカイブ', href: '/events' },
                         { label: `${year}年`, href: `/events/${year}` },
@@ -204,7 +206,7 @@ function List({ startYear} : {startYear: number}) {
                 ) : (
                   <AnimatePresence initial={false}>
                     {events.map((event) => (
-                      <AnimatedEventItem key={event.uid}>
+                      <AnimatedEventItem key={event.uid} date={event.started_at}>
                         <EventBody event={event}
                                    selectedKeyword={selectedKeyword}
                                    onKeywordClick={handleKeywordClick}
