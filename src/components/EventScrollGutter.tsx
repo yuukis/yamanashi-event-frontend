@@ -334,8 +334,11 @@ export function EventScrollGutter() {
     }
 
     const maxScroll = Math.max(docHeight - viewportHeight, 1);
-    const scrollProgress = Math.min(Math.max(window.scrollY / maxScroll, 0), 1);
-    const thumbY = scrollProgress * trackHeight;
+    // つまみは「画面の縦中央にある位置」を指す。目盛り(toTrackY)と同じ
+    // 考え方(documentYをmaxScroll基準で正規化し、はみ出す分はmaxScrollに
+    // 丸める)で、scrollYではなくビューポート中央のdocumentYを変換する。
+    const viewportCenterDocumentY = window.scrollY + viewportHeight / 2;
+    const thumbY = (Math.min(viewportCenterDocumentY, maxScroll) / maxScroll) * trackHeight;
     thumbEl.style.top = `${thumbY}px`;
 
     // つまみ(ピル)が実際に描画されている縦線と視覚的に重なっている間
@@ -384,7 +387,11 @@ export function EventScrollGutter() {
       return;
     }
     const ratio = Math.min(Math.max((e.clientY - rect.top) / rect.height, 0), 1);
-    window.scrollTo({ top: ratio * maxScroll, behavior: 'smooth' });
+    // つまみと同じく、クリックした位置が画面の縦中央に来るようにジャンプ
+    // する(トラック上の位置はビューポート中央のdocumentYを表しているため)。
+    const targetCenterDocumentY = ratio * maxScroll;
+    const targetScrollY = Math.min(Math.max(targetCenterDocumentY - viewportHeight / 2, 0), maxScroll);
+    window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
   };
 
   if (!isDesktopScreenSize || rawMarkers.length === 0 || !hasScrollableContent) {
