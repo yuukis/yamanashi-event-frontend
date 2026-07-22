@@ -98,6 +98,24 @@ function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } 
   return { markers, extents };
 }
 
+function nodeHasEventCard(node: Node): boolean {
+  if (!(node instanceof Element)) {
+    return false;
+  }
+  return node.hasAttribute('data-event-start') || node.querySelector('[data-event-start]') !== null;
+}
+
+// document.body をsubtree監視していると、ヘッダーのポップオーバー開閉
+// など無関係なDOM変化でも呼ばれてしまう。実際にイベントカード
+// ([data-event-start])の追加/削除を伴う変化かどうかを見て絞り込む。
+function mutationsInvolveEventCards(mutations: MutationRecord[]): boolean {
+  return mutations.some(
+    (mutation) =>
+      Array.from(mutation.addedNodes).some(nodeHasEventCard) ||
+      Array.from(mutation.removedNodes).some(nodeHasEventCard),
+  );
+}
+
 export function withMarkerFlags(rawMarkers: RawMarker[]): (RawMarker & MarkerFlags)[] {
   let previousSection: string | null = null;
   let previousYear: string | null = null;
@@ -301,7 +319,11 @@ export function EventScrollGutter() {
 
     scheduleRecompute();
     window.addEventListener('resize', scheduleRecompute);
-    const observer = new MutationObserver(scheduleRecompute);
+    const observer = new MutationObserver((mutations) => {
+      if (mutationsInvolveEventCards(mutations)) {
+        scheduleRecompute();
+      }
+    });
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
