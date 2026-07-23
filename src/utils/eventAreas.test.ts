@@ -11,6 +11,18 @@ describe('getEventArea', () => {
     expect(getEventArea(makeEvent({ address: '山梨県北杜市高根町村山北割３２８８' }))).toBe('kyohoku-kyosai');
   });
 
+  it('classifies an address in 甲斐市 as kofu-kyoto', () => {
+    expect(getEventArea(makeEvent({ address: '山梨県甲斐市竜王新町300' }))).toBe('kofu-kyoto');
+  });
+
+  it('classifies an address in 中央市 as kofu-kyoto', () => {
+    expect(getEventArea(makeEvent({ address: '山梨県中央市山之神1163' }))).toBe('kofu-kyoto');
+  });
+
+  it('classifies an address in 昭和町 as kofu-kyoto', () => {
+    expect(getEventArea(makeEvent({ address: '山梨県中巨摩郡昭和町清水新居2' }))).toBe('kofu-kyoto');
+  });
+
   it('classifies an address with a 郡 prefix (南都留郡山中湖村) as tobu-fujigoko', () => {
     expect(getEventArea(makeEvent({ address: '山梨県南都留郡山中湖村1234' }))).toBe('tobu-fujigoko');
   });
