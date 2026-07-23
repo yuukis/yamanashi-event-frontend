@@ -1,9 +1,9 @@
 import type { ApiEvent } from '../types/events';
 
-export type AreaKey = 'kofu-kyoto' | 'kyohoku-kyosai' | 'kyonan' | 'tobu-fujigoko' | 'online' | 'other';
+export type AreaKey = 'kofu' | 'kyohoku-kyosai' | 'kyonan' | 'tobu-fujigoko' | 'online' | 'other';
 
 export const AREA_LABELS: Record<AreaKey, string> = {
-  'kofu-kyoto': '甲府・峡東',
+  kofu: '甲府・峡中・峡東',
   'kyohoku-kyosai': '峡北・峡西',
   kyonan: '峡南',
   'tobu-fujigoko': '東部・富士五湖',
@@ -11,16 +11,16 @@ export const AREA_LABELS: Record<AreaKey, string> = {
   other: 'その他',
 };
 
-export const AREA_ORDER: AreaKey[] = ['kofu-kyoto', 'kyohoku-kyosai', 'kyonan', 'tobu-fujigoko', 'online', 'other'];
+export const AREA_ORDER: AreaKey[] = ['kofu', 'kyohoku-kyosai', 'kyonan', 'tobu-fujigoko', 'online', 'other'];
 
 const MUNICIPALITY_AREA: Record<string, AreaKey> = {
-  甲府市: 'kofu-kyoto',
-  山梨市: 'kofu-kyoto',
-  笛吹市: 'kofu-kyoto',
-  甲州市: 'kofu-kyoto',
-  甲斐市: 'kofu-kyoto',
-  中央市: 'kofu-kyoto',
-  昭和町: 'kofu-kyoto',
+  甲府市: 'kofu',
+  山梨市: 'kofu',
+  笛吹市: 'kofu',
+  甲州市: 'kofu',
+  甲斐市: 'kofu',
+  中央市: 'kofu',
+  昭和町: 'kofu',
   韮崎市: 'kyohoku-kyosai',
   北杜市: 'kyohoku-kyosai',
   南アルプス市: 'kyohoku-kyosai',
@@ -47,12 +47,12 @@ const MUNICIPALITY_AREA: Record<string, AreaKey> = {
 // Yamanashi")で登録されているため、末尾の「, <市区町村> Yamanashi」からも
 // 判定できるようにする。
 const ROMAJI_MUNICIPALITY_AREA: Record<string, AreaKey> = {
-  kofu: 'kofu-kyoto',
-  fuefuki: 'kofu-kyoto',
-  koshu: 'kofu-kyoto',
-  kai: 'kofu-kyoto',
-  chuo: 'kofu-kyoto',
-  showa: 'kofu-kyoto',
+  kofu: 'kofu',
+  fuefuki: 'kofu',
+  koshu: 'kofu',
+  kai: 'kofu',
+  chuo: 'kofu',
+  showa: 'kofu',
   nirasaki: 'kyohoku-kyosai',
   hokuto: 'kyohoku-kyosai',
   'minami-alps': 'kyohoku-kyosai',
