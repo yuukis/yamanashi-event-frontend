@@ -3,8 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { YearSwitcher, FUTURE_EVENTS_ANCHOR_ID } from '../components/YearSwitcher';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
-import { ChipBar } from '../components/ChipBar';
-import { GroupSelector } from '../components/GroupSelector';
+import { EventFilterTabs } from '../components/EventFilterTabs';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import { GroupMoreEventsLink } from '../components/GroupMoreEventsLink';
 import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
@@ -26,16 +25,9 @@ import {
   Link,
   Button,
   Spacer,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
-  Icon
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
 import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
-import { FiUsers, FiTag, FiMapPin } from 'react-icons/fi';
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -360,55 +352,19 @@ function Root({startYear}: {startYear: number}) {
                  pt={{base: '6', md: '6'}}
                  >
         <Stack>
-          <Tabs key={selectedArea ? 'area' : selectedKeyword ? 'keyword' : 'community'}
-                variant={'line'} size={'sm'}
-                defaultIndex={selectedArea ? 2 : selectedKeyword ? 1 : 0}
-                >
-            <TabList px={{base: '4', md: '0'}}>
-              <Tab _selected={{ color: 'impact.700', borderColor: 'impact.500' }}>
-                <Icon as={FiUsers} display={{base: 'none', md: 'inline'}} mr={'2'} />
-                コミュニティで絞る
-              </Tab>
-              <Tab _selected={{ color: 'primary.800', borderColor: 'primary.500' }}>
-                <Icon as={FiTag} display={{base: 'none', md: 'inline'}} mr={'2'} />
-                キーワードで絞る
-              </Tab>
-              <Tab _selected={{ color: 'secondary.900', borderColor: 'secondary.700' }}>
-                <Icon as={FiMapPin} display={{base: 'none', md: 'inline'}} mr={'2'} />
-                エリアで絞る
-              </Tab>
-            </TabList>
-            <TabPanels>
-              <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
-                <GroupSelector groups={groupSelectorItems}
-                                selected={selectedGroup}
-                                onSelect={handleGroupSelect}
-                                isLoading={data.isLoading}
-                                showBadges
-                                />
-              </TabPanel>
-              <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
-                {!data.isLoading && !data.errorMessage && (
-                  <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
-                           selected={selectedKeyword}
-                           onSelect={handleKeywordSelect}
+          <EventFilterTabs selectedGroup={selectedGroup}
+                           selectedKeyword={selectedKeyword}
+                           selectedArea={selectedArea}
+                           onGroupSelect={handleGroupSelect}
+                           onKeywordSelect={handleKeywordSelect}
+                           onAreaSelect={handleAreaSelect}
+                           groupSelectorItems={groupSelectorItems}
+                           keywordCounts={keywordCounts}
+                           areaCounts={areaCounts}
+                           isLoading={data.isLoading}
+                           errorMessage={data.errorMessage}
+                           showGroupBadges
                            />
-                )}
-              </TabPanel>
-              <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
-                {!data.isLoading && !data.errorMessage && (
-                  <ChipBar items={areaCounts.map(([area, count]) => ({
-                                    value: area,
-                                    label: `${AREA_LABELS[area]} (${count})`,
-                                    disabled: count === 0 && selectedArea !== area,
-                                  }))}
-                           selected={selectedArea}
-                           onSelect={handleAreaSelect}
-                           />
-                )}
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
           {/* sticky 化した見出しは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
           <Stack>
