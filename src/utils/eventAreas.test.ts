@@ -31,8 +31,8 @@ describe('getEventArea', () => {
     expect(getEventArea(makeEvent({ address: 'オンライン', place: 'オンライン (山梨)' }))).toBe('online');
   });
 
-  it('classifies a null address with no place as online (treated as a remote fallback)', () => {
-    expect(getEventArea(makeEvent({ address: null, place: null }))).toBe('online');
+  it('classifies a null address with no place as other (no signal to estimate a location)', () => {
+    expect(getEventArea(makeEvent({ address: null, place: null }))).toBe('other');
   });
 
   it('classifies an out-of-prefecture address as other', () => {

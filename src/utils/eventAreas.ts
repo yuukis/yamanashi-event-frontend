@@ -104,7 +104,7 @@ export function getEventArea(event: ApiEvent): AreaKey {
   }
 
   const place = event.place?.trim();
-  if (ONLINE_PATTERN.test(address ?? '') || (!address && (!place || ONLINE_PATTERN.test(place)))) {
+  if (ONLINE_PATTERN.test(address ?? '') || (!address && place && ONLINE_PATTERN.test(place))) {
     return 'online';
   }
 
