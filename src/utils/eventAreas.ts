@@ -11,10 +11,8 @@ export const AREA_LABELS: Record<AreaKey, string> = {
   other: 'その他',
 };
 
-// 表示順。件数の多寡に関わらずこの並びを維持する。
 export const AREA_ORDER: AreaKey[] = ['kofu-kyoto', 'kyohoku-kyosai', 'kyonan', 'tobu-fujigoko', 'online', 'other'];
 
-// 住所から抽出した市区町村名(郡は除く)からエリアへのマッピング。
 const MUNICIPALITY_AREA: Record<string, AreaKey> = {
   甲府市: 'kofu-kyoto',
   山梨市: 'kofu-kyoto',
@@ -82,8 +80,6 @@ const MUNICIPALITY_PATTERN = /(?:[^\s0-9〒\-,、県]+郡)?([^\s0-9〒\-,、県]
 const ROMAJI_PATTERN = /,\s*([A-Za-zĀ-ſ\- ]+?)\s+Yamanashi\b/i;
 const ONLINE_PATTERN = /オンライン|リモート|zoom|discord|teams|meet|chatwork|cluster/i;
 
-// 住所や場所から市区町村を特定できないイベント(県外の合同イベント、
-// 場所名しかない一部アーカイブイベント等)は 'other' に分類する。
 export function getEventArea(event: ApiEvent): AreaKey {
   const address = event.address?.trim();
   if (address) {
