@@ -4,8 +4,7 @@ import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixed
 import { PageBreadcrumb } from '../components/PageBreadcrumb';
 import { YearSwitcher, YEAR_HEADING_ANCHOR_ID } from '../components/YearSwitcher';
 import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
-import { ChipBar } from '../components/ChipBar';
-import { GroupSelector } from '../components/GroupSelector';
+import { EventFilterTabs } from '../components/EventFilterTabs';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
 import { EventScrollGutter } from '../components/EventScrollGutter';
@@ -19,11 +18,6 @@ import {
   CardBody,
   Heading,
   Spacer,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
 import { sortByStartedAtAsc } from '../utils/eventSort';
@@ -198,46 +192,19 @@ function List({ startYear} : {startYear: number}) {
               <Spacer />
               <YearSwitcher startYear={startYear} selectedYear={year} />
             </Stack>
-            <Tabs key={selectedArea ? 'area' : selectedKeyword ? 'keyword' : 'community'}
-                  variant={'line'} size={'sm'}
-                  defaultIndex={selectedArea ? 2 : selectedKeyword ? 1 : 0}
-                  >
-              <TabList px={{base: '4', md: '0'}}>
-                <Tab _selected={{ color: 'impact.700', borderColor: 'impact.500' }}>コミュニティで絞る</Tab>
-                <Tab _selected={{ color: 'primary.800', borderColor: 'primary.500' }}>キーワードで絞る</Tab>
-                <Tab _selected={{ color: 'secondary.900', borderColor: 'secondary.700' }}>エリアで絞る</Tab>
-              </TabList>
-              <TabPanels>
-                <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
-                  <GroupSelector groups={groupSelectorItems}
-                                  selected={selectedGroup}
-                                  onSelect={handleGroupSelect}
-                                  isLoading={data.isLoading}
-                                  showBadges={false}
-                                  />
-                </TabPanel>
-                <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
-                  {!data.isLoading && !data.errorMessage && (
-                    <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
-                             selected={selectedKeyword}
-                             onSelect={handleKeywordSelect}
+            <EventFilterTabs selectedGroup={selectedGroup}
+                             selectedKeyword={selectedKeyword}
+                             selectedArea={selectedArea}
+                             onGroupSelect={handleGroupSelect}
+                             onKeywordSelect={handleKeywordSelect}
+                             onAreaSelect={handleAreaSelect}
+                             groupSelectorItems={groupSelectorItems}
+                             keywordCounts={keywordCounts}
+                             areaCounts={areaCounts}
+                             isLoading={data.isLoading}
+                             errorMessage={data.errorMessage}
+                             showGroupBadges={false}
                              />
-                  )}
-                </TabPanel>
-                <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
-                  {!data.isLoading && !data.errorMessage && (
-                    <ChipBar items={areaCounts.map(([area, count]) => ({
-                                      value: area,
-                                      label: `${AREA_LABELS[area]} (${count})`,
-                                      disabled: count === 0 && selectedArea !== area,
-                                    }))}
-                             selected={selectedArea}
-                             onSelect={handleAreaSelect}
-                             />
-                  )}
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
             <Card variant={{base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}

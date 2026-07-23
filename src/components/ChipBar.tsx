@@ -83,9 +83,9 @@ export function ChipBar({ items, selected, onSelect }: ChipBarProps) {
       <Box className={'chip-bar'}
            position={'relative'}
            mb={'2'}
-           bg={'#f6f9fb'}
            >
         <Flex ref={rowRef}
+              className={'scroll-row-bg-pattern'}
               gap={'2'}
               pl={'4'} pr={'4'}
               pt={'5'} pb={'5'}
@@ -103,7 +103,7 @@ export function ChipBar({ items, selected, onSelect }: ChipBarProps) {
                top={'0'} bottom={'0'} left={'0'}
                w={'10'}
                pointerEvents={'none'}
-               bgGradient={'linear(to-l, rgba(246, 249, 251, 0), #f6f9fb)'}
+               bgGradient={'linear(to-l, rgba(255, 255, 255, 0), #ffffff)'}
                />
         )}
         {hasOverflow && !isScrolledToEnd && (
@@ -111,7 +111,7 @@ export function ChipBar({ items, selected, onSelect }: ChipBarProps) {
                top={'0'} bottom={'0'} right={'0'}
                w={'10'}
                pointerEvents={'none'}
-               bgGradient={'linear(to-r, rgba(246, 249, 251, 0), #f6f9fb)'}
+               bgGradient={'linear(to-r, rgba(255, 255, 255, 0), #ffffff)'}
                />
         )}
       </Box>
