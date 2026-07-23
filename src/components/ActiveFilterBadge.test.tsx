@@ -12,8 +12,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={null}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={() => {}}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -24,8 +26,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={() => {}}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -36,8 +40,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={() => {}}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -50,8 +56,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={null}
                           selectedGroupName={'甲府もくもく会'}
+                          selectedAreaName={null}
                           onClearKeyword={() => {}}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -95,8 +103,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={'甲府もくもく会'}
+                          selectedAreaName={null}
                           onClearKeyword={onClearKeyword}
                           onClearGroup={onClearGroup}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -115,8 +125,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={onClearKeyword}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -130,8 +142,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={onClearKeyword}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -152,8 +166,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={onClearKeyword}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 

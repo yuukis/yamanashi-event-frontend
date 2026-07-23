@@ -8,10 +8,10 @@ const PULSE_ANIMATION_MS = 220;
 type ActiveFilterBadgeProps = {
   selectedKeyword: string | null;
   selectedGroupName: string | null;
-  selectedAreaName?: string | null;
+  selectedAreaName: string | null;
   onClearKeyword: () => void;
   onClearGroup: () => void;
-  onClearArea?: () => void;
+  onClearArea: () => void;
 };
 
 export function ActiveFilterBadge({
@@ -29,7 +29,7 @@ export function ActiveFilterBadge({
   }
 
   const highlightedText = selectedGroupName ?? selectedAreaName ?? selectedKeyword;
-  const onClear = selectedGroupName ? onClearGroup : selectedAreaName ? onClearArea! : onClearKeyword;
+  const onClear = selectedGroupName ? onClearGroup : selectedAreaName ? onClearArea : onClearKeyword;
   const colors = selectedGroupName
     ? { bg: '#f9f1e8', border: 'impact.500', text: 'impact.700', hoverBg: 'impact.100' }
     : selectedAreaName
