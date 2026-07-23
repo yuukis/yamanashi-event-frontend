@@ -8,26 +8,32 @@ const PULSE_ANIMATION_MS = 220;
 type ActiveFilterBadgeProps = {
   selectedKeyword: string | null;
   selectedGroupName: string | null;
+  selectedAreaName: string | null;
   onClearKeyword: () => void;
   onClearGroup: () => void;
+  onClearArea: () => void;
 };
 
 export function ActiveFilterBadge({
   selectedKeyword,
   selectedGroupName,
+  selectedAreaName,
   onClearKeyword,
   onClearGroup,
+  onClearArea,
 }: ActiveFilterBadgeProps) {
   const [isPressed, setIsPressed] = useState(false);
 
-  if (!selectedKeyword && !selectedGroupName) {
+  if (!selectedKeyword && !selectedGroupName && !selectedAreaName) {
     return null;
   }
 
-  const highlightedText = selectedGroupName ?? selectedKeyword;
-  const onClear = selectedGroupName ? onClearGroup : onClearKeyword;
+  const highlightedText = selectedGroupName ?? selectedAreaName ?? selectedKeyword;
+  const onClear = selectedGroupName ? onClearGroup : selectedAreaName ? onClearArea : onClearKeyword;
   const colors = selectedGroupName
     ? { bg: '#f9f1e8', border: 'impact.500', text: 'impact.700', hoverBg: 'impact.100' }
+    : selectedAreaName
+    ? { bg: '#eefaea', border: 'secondary.700', text: 'secondary.900', hoverBg: 'secondary.100' }
     : { bg: '#eaf6fb', border: 'primary.500', text: 'primary.800', hoverBg: 'primary.100' };
 
   const handlePress = () => {

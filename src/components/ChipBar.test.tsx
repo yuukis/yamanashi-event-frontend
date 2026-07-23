@@ -71,4 +71,21 @@ describe('ChipBar', () => {
 
     expect(screen.getByRole('button', { name: 'react' })).toBeInTheDocument();
   });
+
+  it('renders a disabled chip and does not call onSelect when it is clicked', () => {
+    const onSelect = vi.fn();
+    renderWithChakra(
+      <ChipBar items={[{ value: 'react', label: 'React', disabled: true }]}
+               selected={null}
+               onSelect={onSelect}
+               />,
+    );
+
+    const button = screen.getByRole('button', { name: 'React' });
+    expect(button).toBeDisabled();
+
+    fireEvent.click(button);
+
+    expect(onSelect).not.toHaveBeenCalled();
+  });
 });

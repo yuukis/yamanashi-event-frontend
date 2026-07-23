@@ -12,8 +12,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={null}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={() => {}}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -24,8 +26,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={() => {}}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -36,8 +40,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={() => {}}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -50,12 +56,45 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={null}
                           selectedGroupName={'甲府もくもく会'}
+                          selectedAreaName={null}
                           onClearKeyword={() => {}}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
     expect(getByBadgeText('甲府もくもく会 で絞り込み中')).toBeInTheDocument();
+  });
+
+  it('shows the area filter label when an area is selected', () => {
+    renderWithChakra(
+      <ActiveFilterBadge selectedKeyword={null}
+                          selectedGroupName={null}
+                          selectedAreaName={'甲府・峡東'}
+                          onClearKeyword={() => {}}
+                          onClearGroup={() => {}}
+                          onClearArea={() => {}}
+                          />,
+    );
+
+    expect(getByBadgeText('甲府・峡東 で絞り込み中')).toBeInTheDocument();
+  });
+
+  it('calls onClearArea when clearing an area-only filter', () => {
+    const onClearArea = vi.fn();
+    renderWithChakra(
+      <ActiveFilterBadge selectedKeyword={null}
+                          selectedGroupName={null}
+                          selectedAreaName={'甲府・峡東'}
+                          onClearKeyword={() => {}}
+                          onClearGroup={() => {}}
+                          onClearArea={onClearArea}
+                          />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '絞り込みを解除' }));
+
+    return waitFor(() => expect(onClearArea).toHaveBeenCalledTimes(1));
   });
 
   it('prefers the group label and clear handler when both are provided', () => {
@@ -64,8 +103,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={'甲府もくもく会'}
+                          selectedAreaName={null}
                           onClearKeyword={onClearKeyword}
                           onClearGroup={onClearGroup}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -84,8 +125,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={onClearKeyword}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -99,8 +142,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={onClearKeyword}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 
@@ -121,8 +166,10 @@ describe('ActiveFilterBadge', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={'React'}
                           selectedGroupName={null}
+                          selectedAreaName={null}
                           onClearKeyword={onClearKeyword}
                           onClearGroup={() => {}}
+                          onClearArea={() => {}}
                           />,
     );
 

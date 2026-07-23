@@ -4,6 +4,7 @@ import { Box, Flex, Button, useMediaQuery } from '@chakra-ui/react';
 export type ChipItem = {
   value: string;
   label: string;
+  disabled?: boolean;
 };
 
 type ChipBarProps = {
@@ -60,6 +61,7 @@ export function ChipBar({ items, selected, onSelect }: ChipBarProps) {
             rounded={'full'}
             fontWeight={'normal'}
             flexShrink={0}
+            isDisabled={item.disabled}
             {...(selected === item.value ? {
               bg: 'gray.600',
               color: 'white',
