@@ -27,6 +27,7 @@ export function ChipBar({ items, selected, onSelect, expandAriaLabel, collapseAr
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
   const [isExpanded, setIsExpanded] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
+  const [isScrolledToStart, setIsScrolledToStart] = useState(true);
   const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
 
@@ -43,6 +44,7 @@ export function ChipBar({ items, selected, onSelect, expandAriaLabel, collapseAr
           ? el.scrollHeight > el.clientHeight + 1
           : el.scrollWidth > el.clientWidth + 1
       );
+      setIsScrolledToStart(el.scrollLeft <= 0);
       setIsScrolledToEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
     };
     check();
@@ -87,6 +89,7 @@ export function ChipBar({ items, selected, onSelect, expandAriaLabel, collapseAr
               overflowX={'auto'}
               onScroll={(e) => {
                 const el = e.currentTarget;
+                setIsScrolledToStart(el.scrollLeft <= 0);
                 setIsScrolledToEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
               }}
               sx={{
@@ -96,6 +99,14 @@ export function ChipBar({ items, selected, onSelect, expandAriaLabel, collapseAr
               >
           {chipButtons}
         </Flex>
+        {hasOverflow && !isScrolledToStart && (
+          <Box position={'absolute'}
+               top={'0'} bottom={'0'} left={'0'}
+               w={'10'}
+               pointerEvents={'none'}
+               bgGradient={'linear(to-l, rgba(237, 242, 247, 0), gray.100)'}
+               />
+        )}
         {hasOverflow && !isScrolledToEnd && (
           <Box position={'absolute'}
                top={'0'} bottom={'0'} right={'0'}
