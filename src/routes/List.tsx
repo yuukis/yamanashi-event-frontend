@@ -144,11 +144,6 @@ function List({ startYear} : {startYear: number}) {
                         { label: `${year}年`, href: `/events/${year}` },
                       ]}
                       />
-      <ActiveFilterBadge selectedKeyword={selectedKeyword}
-                         selectedGroupName={selectedGroupName}
-                         onClearKeyword={() => handleKeywordSelect(null)}
-                         onClearGroup={() => handleGroupSelect(null)}
-                         />
       <Container maxW={'980px'} w={'100%'}
                  mt={'4'}
                  p={{base: '0', md: '4'}}
@@ -166,13 +161,20 @@ function List({ startYear} : {startYear: number}) {
                    px={{base: '4', md: '0'}}
                    py={'2'}
                    scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
-                   display={'flex'} alignItems={'flex-end'}
+                   display={'flex'} alignItems={'center'}
+                   minH={'2.75rem'}
                    >
               <Heading size={{base: 'sm', md: 'md'}}
                        color={'gray.600'}
+                       flexShrink={0}
                        >
                 { year }年 開催イベント
               </Heading>
+              <ActiveFilterBadge selectedKeyword={selectedKeyword}
+                                 selectedGroupName={selectedGroupName}
+                                 onClearKeyword={() => handleKeywordSelect(null)}
+                                 onClearGroup={() => handleGroupSelect(null)}
+                                 />
               <Spacer />
               <YearSwitcher startYear={startYear} selectedYear={year} />
             </Stack>
@@ -180,6 +182,7 @@ function List({ startYear} : {startYear: number}) {
                             selected={selectedGroup}
                             onSelect={handleGroupSelect}
                             isLoading={data.isLoading}
+                            showBadges={false}
                             />
             {!data.isLoading && !data.errorMessage && (
               <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
