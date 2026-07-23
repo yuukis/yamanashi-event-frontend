@@ -343,7 +343,8 @@ function Root({startYear}: {startYear: number}) {
                  pt={{base: '6', md: '6'}}
                  >
         <Stack>
-          <Tabs variant={'line'} size={'sm'}
+          <Tabs key={selectedKeyword ? 'keyword' : 'community'}
+                variant={'line'} size={'sm'}
                 defaultIndex={selectedKeyword ? 1 : 0}
                 >
             <TabList px={{base: '4', md: '0'}}>
