@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Box, Flex, Button, Image, Text, Skeleton, Tooltip, Badge, useMediaQuery } from '@chakra-ui/react';
-import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { Box, Flex, Grid, Button, Image, Text, Skeleton, Tooltip, Badge, useMediaQuery } from '@chakra-ui/react';
 import { People } from '@chakra-icons/bootstrap';
 import { formatEventDateKey } from '../utils/eventAnchors';
 import { subscribeNow, getNow } from '../utils/nowTicker';
@@ -26,49 +25,34 @@ type GroupSelectorProps = {
   selected: string | null;
   onSelect: (key: string | null) => void;
   isLoading: boolean;
+  // true の場合、バッジ対象のコミュニティを先頭に寄せる(モバイルの
+  // 横スクロール一覧はファーストビューに収まらないと意味がないため)。
+  showBadges: boolean;
 };
 
 type GroupBadgeType = 'ongoing' | 'today' | 'new';
 
-const BLOCK_WIDTH = { base: '84px', md: '104px' };
-// 画像(IMAGE_SIZE) + gap + 2行分のコミュニティ名 + 上下padding を積み上げた高さ。
-// 1行のコミュニティ名でも2行のものと枠の高さが揃うよう、名前欄は常にこの高さを確保する。
-const BLOCK_HEIGHT = { base: '92px', md: '104px' };
-const EXPAND_BUTTON_WIDTH = { base: '36px', md: '44px' };
-const IMAGE_SIZE = { base: '44px', md: '56px' };
-const NAME_HEIGHT = '2.4em';
+// モバイルは固定幅の横スクロール。デスクトップは768px幅で1行5個に収まる
+// 値を下限として列数を実測算出し、各列を 1fr で均等ストレッチしてメイン
+// エリア幅を余白なく埋める(モバイルの固定幅もこの下限値を流用する)。
+const DESKTOP_GRID_GAP_PX = 8;
+const DESKTOP_BLOCK_MIN_WIDTH_PX = 140;
+const MOBILE_BLOCK_WIDTH = `${DESKTOP_BLOCK_MIN_WIDTH_PX}px`;
+const BLOCK_HEIGHT = { base: '56px', md: '64px' };
+const IMAGE_SIZE = { base: '40px', md: '48px' };
 const SKELETON_COUNT = 8;
-// バッジの上半分がブロック上端からはみ出す分の余白。デスクトップの1段
-// 表示は overflow: hidden で折りたたむため、はみ出し分だけ行の高さと
-// 上パディングを広げてバッジが切れないようにする。
+// バッジの上半分がブロック上端からはみ出す分の余白。
 const BADGE_OVERLAP = '10px';
-const ROW_HEIGHT_WITH_BADGE_OVERLAP = {
-  base: `calc(${BLOCK_HEIGHT.base} + ${BADGE_OVERLAP})`,
-  md: `calc(${BLOCK_HEIGHT.md} + ${BADGE_OVERLAP})`,
-};
-
-function shuffle<T>(items: T[]): T[] {
-  const result = [...items];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
 
 // コミュニティが持つイベントの中に「開催中」「本日開催」「新着あり」に
-// 該当するものがあるかどうかと、優先表示のための並び替えキー(該当
-// イベントの開始日時のうち最も早いもの)を求める。優先順位は
-// ongoing > today > new。
+// 該当するものがあるかどうかを判定する。優先順位は ongoing > today > new。
 function getGroupBadge(
   events: GroupSelectorEvent[],
   now: Date,
   trackingData: NewEventTrackingData,
-): { type: GroupBadgeType | null; sortTime: number } {
+): GroupBadgeType | null {
   let type: GroupBadgeType | null = null;
-  let sortTime = Infinity;
   let hasNew = false;
-  let newSortTime = Infinity;
   const todayKey = formatEventDateKey(now);
 
   for (const event of events) {
@@ -77,9 +61,6 @@ function getGroupBadge(
 
     if (isEventNew(trackingData, event, now)) {
       hasNew = true;
-      if (start.getTime() < newSortTime) {
-        newSortTime = start.getTime();
-      }
     }
 
     const hasEnded = now.getTime() > end.getTime();
@@ -98,19 +79,15 @@ function getGroupBadge(
     } else if (type !== 'ongoing') {
       type = 'today';
     }
-
-    if (start.getTime() < sortTime) {
-      sortTime = start.getTime();
-    }
   }
 
   if (type) {
-    return { type, sortTime };
+    return type;
   }
   if (hasNew) {
-    return { type: 'new', sortTime: newSortTime };
+    return 'new';
   }
-  return { type: null, sortTime: Infinity };
+  return null;
 }
 
 type GroupBlockProps = {
@@ -118,22 +95,23 @@ type GroupBlockProps = {
   badge: GroupBadgeType | null;
   isSelected: boolean;
   onSelect: () => void;
+  width: string;
 };
 
-function GroupBlock({ group, badge, isSelected, onSelect }: GroupBlockProps) {
+function GroupBlock({ group, badge, isSelected, onSelect, width }: GroupBlockProps) {
   return (
     <Tooltip label={group.name} hasArrow fontSize={'xs'}>
       <Button variant={'unstyled'}
               position={'relative'}
-              w={BLOCK_WIDTH}
+              w={width}
               h={BLOCK_HEIGHT}
               flexShrink={0}
               display={'flex'}
-              flexDirection={'column'}
+              flexDirection={'row'}
               alignItems={'center'}
               justifyContent={'flex-start'}
-              gap={'1'}
-              p={'2'}
+              gap={'2'}
+              px={'2'}
               borderRadius={'md'}
               border={'1px solid'}
               borderColor={isSelected ? 'gray.600' : 'gray.300'}
@@ -144,8 +122,8 @@ function GroupBlock({ group, badge, isSelected, onSelect }: GroupBlockProps) {
         {badge && (
           <Badge position={'absolute'}
                  top={'0'}
-                 left={'50%'}
-                 transform={'translate(-50%, -50%)'}
+                 left={'2'}
+                 transform={'translate(0, -50%)'}
                  bg={badge === 'new' ? '#f3e8fb' : '#f9f1e8'}
                  color={badge === 'new' ? 'purple.700' : 'impact.700'}
                  border={'1px solid'}
@@ -175,11 +153,11 @@ function GroupBlock({ group, badge, isSelected, onSelect }: GroupBlockProps) {
         <Text fontSize={'xs'}
               fontWeight={'normal'}
               lineHeight={'1.2'}
-              textAlign={'center'}
+              textAlign={'left'}
               whiteSpace={'normal'}
               noOfLines={2}
-              w={'100%'}
-              h={NAME_HEIGHT}
+              flex={'1'}
+              minW={0}
               wordBreak={'break-word'}
               color={isSelected ? 'white' : 'gray.600'}
               >
@@ -190,24 +168,23 @@ function GroupBlock({ group, badge, isSelected, onSelect }: GroupBlockProps) {
   );
 }
 
-export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSelectorProps) {
+export function GroupSelector({ groups, selected, onSelect, isLoading, showBadges }: GroupSelectorProps) {
   const groupsKey = groups.map((group) => group.key).sort().join('|');
-  // ランダムな並び順は、コミュニティの集合が変わらない限り毎回の再描画で
-  // 変わらないよう固定する(バッジによる優先表示の判定とは独立させる)。
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const shuffledKeys = useMemo(() => shuffle(groups.map((group) => group.key)), [groupsKey]);
 
   const now = useSyncExternalStore(subscribeNow, getNow);
   const trackingData = useSyncExternalStore(subscribeTrackingData, getTrackingDataSnapshot);
 
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
-  const [isExpanded, setIsExpanded] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
+  const [isScrolledToStart, setIsScrolledToStart] = useState(true);
   const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
+  const [desktopColumnCount, setDesktopColumnCount] = useState(1);
   const rowRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
-  // モバイル: 横スクロール行自体のオーバーフロー判定(フェード表示・展開ボタンとは無関係)
+  // 非表示のタブパネルで幅0のまま実測した後、表示に戻って幅が確定した
+  // 際にも再計算されるよう ResizeObserver で監視する(window の resize
+  // だけではタブ切り替えを検知できない)。
   useEffect(() => {
     if (isDesktopScreenSize) {
       return;
@@ -218,74 +195,85 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
     }
     const check = () => {
       setHasOverflow(el.scrollWidth > el.clientWidth + 1);
+      setIsScrolledToStart(el.scrollLeft <= 0);
       setIsScrolledToEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
     };
     check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [groupsKey, isDesktopScreenSize, isLoading]);
 
-  // デスクトップ: 「もっとみる」ボタンの有無で行の幅が変わってしまうと、
-  // ボタン表示の要否がボタン自身の表示状態に依存する堂々巡りになるため、
-  // ボタンを含めない全幅の非表示コピーで折り返しの要否だけを判定する。
-  useEffect(() => {
+  // 列数は自前で算出して repeat(N, 1fr) に反映する。CSS の auto-fill に
+  // minmax の上限を固定値で渡すと、列数の算出にもその上限値が使われて
+  // しまい、下限(768px 幅で5列)通りの列数にならないため。ResizeObserver
+  // で監視する理由は上のモバイル側と同様。
+  useLayoutEffect(() => {
     if (!isDesktopScreenSize) {
       return;
     }
-    const el = measureRef.current;
+    const el = gridRef.current;
     if (!el) {
       return;
     }
-    const check = () => setHasOverflow(el.scrollHeight > el.clientHeight + 1);
+    const check = () => {
+      const count = Math.floor((el.clientWidth + DESKTOP_GRID_GAP_PX) / (DESKTOP_BLOCK_MIN_WIDTH_PX + DESKTOP_GRID_GAP_PX));
+      setDesktopColumnCount(Math.max(1, count));
+    };
     check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [groupsKey, isDesktopScreenSize, isLoading]);
 
   if (!isLoading && groups.length === 0) {
     return null;
   }
 
-  const groupsByKey = new Map(groups.map((group) => [group.key, group]));
-  const badgeByKey = new Map(groups.map((group) => [group.key, getGroupBadge(group.events, now, trackingData)]));
+  const badgeByKey = showBadges
+    ? new Map(groups.map((group) => [group.key, getGroupBadge(group.events, now, trackingData)]))
+    : new Map<string, GroupBadgeType | null>();
 
-  const badgedGroups = groups
-    .filter((group) => badgeByKey.get(group.key)!.type !== null)
-    .sort((a, b) => badgeByKey.get(a.key)!.sortTime - badgeByKey.get(b.key)!.sortTime);
-  const badgedKeys = new Set(badgedGroups.map((group) => group.key));
-  const otherGroups = shuffledKeys
-    .filter((key) => !badgedKeys.has(key))
-    .map((key) => groupsByKey.get(key)!);
-  const orderedGroups = [...badgedGroups, ...otherGroups];
+  // バッジ対象のコミュニティを先頭に寄せる。各グループ内の相対順は
+  // 呼び出し側が渡した順序(例: Root は直近開催日時順)をそのまま保つ。
+  const orderedGroups = showBadges
+    ? [
+        ...groups.filter((group) => badgeByKey.get(group.key)),
+        ...groups.filter((group) => !badgeByKey.get(group.key)),
+      ]
+    : groups;
 
-  const blockCount = isLoading ? SKELETON_COUNT : orderedGroups.length;
+  const cardWidth = isDesktopScreenSize ? '100%' : MOBILE_BLOCK_WIDTH;
 
   const blocks = isLoading
     ? Array.from({length: SKELETON_COUNT}).map((_, i) => (
         <Box key={i}
-             w={BLOCK_WIDTH}
+             w={cardWidth}
              h={BLOCK_HEIGHT}
              flexShrink={0}
              display={'flex'}
-             flexDirection={'column'}
+             flexDirection={'row'}
              alignItems={'center'}
-             gap={'1'}
-             p={'2'}
+             gap={'2'}
+             px={'2'}
              borderRadius={'md'}
              border={'1px solid'}
              borderColor={'gray.100'}
              >
-          <Skeleton boxSize={IMAGE_SIZE} />
-          <Skeleton h={'0.75rem'} w={'90%'} />
-          <Skeleton h={'0.75rem'} w={'60%'} />
+          <Skeleton boxSize={IMAGE_SIZE} flexShrink={0} />
+          <Box flex={'1'}>
+            <Skeleton h={'0.75rem'} w={'90%'} mb={'1'} />
+            <Skeleton h={'0.75rem'} w={'60%'} />
+          </Box>
         </Box>
       ))
     : orderedGroups.map((group) => (
         <GroupBlock key={group.key}
                     group={group}
-                    badge={badgeByKey.get(group.key)!.type}
+                    badge={badgeByKey.get(group.key) ?? null}
                     isSelected={selected === group.key}
                     onSelect={() => onSelect(selected === group.key ? null : group.key)}
+                    width={cardWidth}
                     />
       ));
 
@@ -293,29 +281,36 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
     return (
       <Box className={'group-selector'}
            position={'relative'}
-           ml={'4'} mr={'4'} mb={'2'}
+           mb={'2'}
+           bg={'#f6f9fb'}
            >
         <Flex ref={rowRef}
               gap={'2'}
-              pt={BADGE_OVERLAP}
+              pl={'4'} pr={'4'}
+              pt={'30px'} pb={'5'}
               overflowX={'auto'}
               onScroll={(e) => {
                 const el = e.currentTarget;
+                setIsScrolledToStart(el.scrollLeft <= 0);
                 setIsScrolledToEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
-              }}
-              sx={{
-                scrollbarWidth: 'none',
-                '::-webkit-scrollbar': { display: 'none' },
               }}
               >
           {blocks}
         </Flex>
+        {hasOverflow && !isScrolledToStart && (
+          <Box position={'absolute'}
+               top={'0'} bottom={'0'} left={'0'}
+               w={'10'}
+               pointerEvents={'none'}
+               bgGradient={'linear(to-l, rgba(246, 249, 251, 0), #f6f9fb)'}
+               />
+        )}
         {hasOverflow && !isScrolledToEnd && (
           <Box position={'absolute'}
                top={'0'} bottom={'0'} right={'0'}
                w={'10'}
                pointerEvents={'none'}
-               bgGradient={'linear(to-r, rgba(237, 242, 247, 0), gray.100)'}
+               bgGradient={'linear(to-r, rgba(246, 249, 251, 0), #f6f9fb)'}
                />
         )}
       </Box>
@@ -324,52 +319,13 @@ export function GroupSelector({ groups, selected, onSelect, isLoading }: GroupSe
 
   return (
     <Box className={'group-selector'} position={'relative'} mb={'2'}>
-      <Flex ref={measureRef}
-            position={'absolute'}
-            left={'0'} right={'0'} top={'0'}
-            visibility={'hidden'}
-            pointerEvents={'none'}
-            aria-hidden={'true'}
+      <Grid ref={gridRef}
             gap={'2'}
-            wrap={'wrap'}
-            maxH={BLOCK_HEIGHT}
-            overflow={'hidden'}
+            pt={BADGE_OVERLAP}
+            templateColumns={`repeat(${desktopColumnCount}, 1fr)`}
             >
-        {Array.from({length: blockCount}).map((_, i) => (
-          <Box key={i} w={BLOCK_WIDTH} h={BLOCK_HEIGHT} flexShrink={0} />
-        ))}
-      </Flex>
-      <Flex gap={'2'} alignItems={'flex-start'}>
-        <Flex gap={'2'}
-              wrap={'wrap'}
-              flex={'1'} minW={'0'}
-              pt={BADGE_OVERLAP}
-              maxH={isExpanded ? undefined : ROW_HEIGHT_WITH_BADGE_OVERLAP}
-              overflow={'hidden'}
-              >
-          {blocks}
-        </Flex>
-        {(hasOverflow || isExpanded) && (
-          <Button variant={'unstyled'}
-                  aria-label={isExpanded ? '閉じる' : 'もっとみる'}
-                  w={EXPAND_BUTTON_WIDTH}
-                  h={BLOCK_HEIGHT}
-                  mt={BADGE_OVERLAP}
-                  flexShrink={0}
-                  display={'flex'}
-                  alignItems={'center'}
-                  justifyContent={'center'}
-                  borderRadius={'md'}
-                  border={'1px solid'}
-                  borderColor={'gray.200'}
-                  bg={'white'}
-                  _hover={{ bg: 'gray.50' }}
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  >
-            {isExpanded ? <ChevronUpIcon boxSize={5} color={'gray.600'} /> : <ChevronDownIcon boxSize={5} color={'gray.600'} />}
-          </Button>
-        )}
-      </Flex>
+        {blocks}
+      </Grid>
     </Box>
   );
 }

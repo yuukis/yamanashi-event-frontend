@@ -24,7 +24,12 @@ import {
   Image,
   Link,
   Button,
-  Spacer
+  Spacer,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
 import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
@@ -45,6 +50,39 @@ const STARFIELD_BLEED = 120;
 // 星空タイル(root_top_bg.png)は幅:高さ = 1:2 なので、帯の高さは
 // bgSize で指定する幅の2倍になる。
 const STARFIELD_HEIGHT = 200;
+
+// コミュニティの並び順は、「直近開催イベント」にイベントがあるコミュニティを
+// 直近の開催日時が近い順に並べ、続けて「終了したイベント」にしかイベントが
+// ないコミュニティを直近の開催日時が新しい順に並べる。
+function orderGroupsForRoot(
+  futureGroups: ReturnType<typeof countGroups>,
+  pastGroups: ReturnType<typeof countGroups>,
+) {
+  const pastByKey = new Map(pastGroups.map((group) => [group.key, group]));
+  const withFuture = futureGroups
+    .map((group) => ({
+      key: group.key,
+      name: group.name,
+      imageUrl: group.imageUrl,
+      events: [...group.events, ...(pastByKey.get(group.key)?.events ?? [])],
+      sortTime: Math.min(...group.events.map((event) => new Date(event.started_at).getTime())),
+    }))
+    .sort((a, b) => a.sortTime - b.sortTime);
+
+  const futureKeys = new Set(futureGroups.map((group) => group.key));
+  const withoutFuture = pastGroups
+    .filter((group) => !futureKeys.has(group.key))
+    .map((group) => ({
+      key: group.key,
+      name: group.name,
+      imageUrl: group.imageUrl,
+      events: group.events,
+      sortTime: Math.max(...group.events.map((event) => new Date(event.started_at).getTime())),
+    }))
+    .sort((a, b) => b.sortTime - a.sortTime);
+
+  return [...withFuture, ...withoutFuture];
+}
 
 type RootState = {
   isLoading: boolean;
@@ -139,10 +177,11 @@ function Root({startYear}: {startYear: number}) {
     setSearchParams(group ? { group } : {}, { replace: true });
   };
 
-  const futureKeywordCounts = countKeywords(data.futureEvents);
-  const pastKeywordCounts = countKeywords(data.pastEvents);
-  const groupCounts = countGroups([...data.futureEvents, ...data.pastEvents], data.groups);
-  const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl, events: group.events }));
+  const keywordCounts = countKeywords([...data.futureEvents, ...data.pastEvents]);
+  const groupSelectorItems = orderGroupsForRoot(
+    countGroups(data.futureEvents, data.groups),
+    countGroups(data.pastEvents, data.groups),
+  );
   const selectedGroupName = selectedGroup
     ? (data.groups.find((group) => group.key === selectedGroup)?.title ?? selectedGroup)
     : null;
@@ -188,11 +227,6 @@ function Root({startYear}: {startYear: number}) {
       <StructuredData id={'structured-data-events'} data={structuredData} />
       <SiteHeader />
       <EventScrollGutter />
-      <ActiveFilterBadge selectedKeyword={selectedKeyword}
-                         selectedGroupName={selectedGroupName}
-                         onClearKeyword={() => handleKeywordSelect(null)}
-                         onClearGroup={() => handleGroupSelect(null)}
-                         />
       <Box bg={'#fffafa'}
            p={0}
            position={'relative'}
@@ -309,11 +343,33 @@ function Root({startYear}: {startYear: number}) {
                  pt={{base: '6', md: '6'}}
                  >
         <Stack>
-          <GroupSelector groups={groupSelectorItems}
-                          selected={selectedGroup}
-                          onSelect={handleGroupSelect}
-                          isLoading={data.isLoading}
-                          />
+          <Tabs key={selectedKeyword ? 'keyword' : 'community'}
+                variant={'line'} size={'sm'}
+                defaultIndex={selectedKeyword ? 1 : 0}
+                >
+            <TabList px={{base: '4', md: '0'}}>
+              <Tab _selected={{ color: 'impact.700', borderColor: 'impact.500' }}>コミュニティで絞る</Tab>
+              <Tab _selected={{ color: 'primary.800', borderColor: 'primary.500' }}>キーワードで絞る</Tab>
+            </TabList>
+            <TabPanels>
+              <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
+                <GroupSelector groups={groupSelectorItems}
+                                selected={selectedGroup}
+                                onSelect={handleGroupSelect}
+                                isLoading={data.isLoading}
+                                showBadges
+                                />
+              </TabPanel>
+              <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
+                {!data.isLoading && !data.errorMessage && (
+                  <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                           selected={selectedKeyword}
+                           onSelect={handleKeywordSelect}
+                           />
+                )}
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
           {/* sticky 化した見出しは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
           <Stack>
@@ -327,24 +383,23 @@ function Root({startYear}: {startYear: number}) {
                    mt={'8'}
                    py={'2'}
                    scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
-                   display={'flex'} alignItems={'flex-end'}
+                   display={'flex'} alignItems={'center'}
+                   minH={'2.75rem'}
                    >
               <Heading size={{base: 'sm', md: 'md'}}
                        color={'gray.600'}
+                       flexShrink={0}
                        >
                 直近開催イベント
               </Heading>
+              <ActiveFilterBadge selectedKeyword={selectedKeyword}
+                                 selectedGroupName={selectedGroupName}
+                                 onClearKeyword={() => handleKeywordSelect(null)}
+                                 onClearGroup={() => handleGroupSelect(null)}
+                                 />
               <Spacer />
               <YearSwitcher startYear={startYear} selectedYear={null} showChevrons={false} />
             </Stack>
-            {!data.isLoading && !data.errorMessage && (
-              <ChipBar items={futureKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
-                       selected={selectedKeyword}
-                       onSelect={handleKeywordSelect}
-                       expandAriaLabel={'すべてのキーワードを表示'}
-                       collapseAriaLabel={'キーワードを折りたたむ'}
-                       />
-            )}
             <Card variant={{base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
@@ -371,26 +426,29 @@ function Root({startYear}: {startYear: number}) {
           </Stack>
 
           <Stack>
-            <Heading size={{base: 'sm', md: 'md'}}
-                     position={'sticky'}
-                     top={STICKY_HEADING_TOP}
-                     zIndex={'docked'}
-                     bg={'gray.100'}
-                     px={{base: '4', md: '0'}}
-                     mt={'8'}
-                     py={'2'}
-                     color={'gray.600'}
-                     >
-              終了したイベント
-            </Heading>
-            {!data.isLoading && !data.errorMessage && (
-              <ChipBar items={pastKeywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
-                       selected={selectedKeyword}
-                       onSelect={handleKeywordSelect}
-                       expandAriaLabel={'すべてのキーワードを表示'}
-                       collapseAriaLabel={'キーワードを折りたたむ'}
-                       />
-            )}
+            <Stack direction={'row'} spacing={'2'}
+                   position={'sticky'}
+                   top={STICKY_HEADING_TOP}
+                   zIndex={'docked'}
+                   bg={'gray.100'}
+                   px={{base: '4', md: '0'}}
+                   mt={'8'}
+                   py={'2'}
+                   display={'flex'} alignItems={'center'}
+                   minH={'2.75rem'}
+                   >
+              <Heading size={{base: 'sm', md: 'md'}}
+                       color={'gray.600'}
+                       flexShrink={0}
+                       >
+                終了したイベント
+              </Heading>
+              <ActiveFilterBadge selectedKeyword={selectedKeyword}
+                                 selectedGroupName={selectedGroupName}
+                                 onClearKeyword={() => handleKeywordSelect(null)}
+                                 onClearGroup={() => handleGroupSelect(null)}
+                                 />
+            </Stack>
             <Card variant={{base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}

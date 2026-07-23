@@ -32,6 +32,20 @@ describe('ActiveFilterBadge', () => {
     expect(getByBadgeText('React で絞り込み中')).toBeInTheDocument();
   });
 
+  it('renders inline alongside surrounding content instead of as a fixed overlay', () => {
+    renderWithChakra(
+      <ActiveFilterBadge selectedKeyword={'React'}
+                          selectedGroupName={null}
+                          onClearKeyword={() => {}}
+                          onClearGroup={() => {}}
+                          />,
+    );
+
+    const pill = screen.getByRole('button', { name: '絞り込みを解除' }).closest('div');
+    expect(pill).not.toBeNull();
+    expect(getComputedStyle(pill as HTMLElement).position).not.toBe('fixed');
+  });
+
   it('shows the group filter label when a group is selected', () => {
     renderWithChakra(
       <ActiveFilterBadge selectedKeyword={null}

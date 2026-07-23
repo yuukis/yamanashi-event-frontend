@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, Flex, Button, IconButton, useMediaQuery } from '@chakra-ui/react';
-import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
+import { Box, Flex, Button, useMediaQuery } from '@chakra-ui/react';
 
 export type ChipItem = {
   value: string;
@@ -11,44 +10,43 @@ type ChipBarProps = {
   items: ChipItem[];
   selected: string | null;
   onSelect: (value: string | null) => void;
-  expandAriaLabel: string;
-  collapseAriaLabel: string;
 };
 
-// size=xs のボタン高 (1.5rem) に合わせて、折りたたみ時は1行分だけ見せる
-const COLLAPSED_ROW_HEIGHT = '1.5rem';
-
-export function ChipBar({ items, selected, onSelect, expandAriaLabel, collapseAriaLabel }: ChipBarProps) {
+export function ChipBar({ items, selected, onSelect }: ChipBarProps) {
   const chips = [...items];
   if (selected && !chips.some((item) => item.value === selected)) {
     chips.push({ value: selected, label: selected });
   }
 
   const [isDesktopScreenSize] = useMediaQuery("(min-width: 768px)");
-  const [isExpanded, setIsExpanded] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
+  const [isScrolledToStart, setIsScrolledToStart] = useState(true);
   const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
 
   const chipsKey = chips.map((item) => item.value).join('|');
 
+  // 非表示のタブパネルで幅0のまま実測した後、表示に戻って幅が確定した
+  // 際にも再計算されるよう ResizeObserver で監視する(window の resize
+  // だけではタブ切り替えを検知できない)。
   useEffect(() => {
+    if (isDesktopScreenSize) {
+      return;
+    }
     const el = rowRef.current;
     if (!el) {
       return;
     }
     const check = () => {
-      setHasOverflow(
-        isDesktopScreenSize
-          ? el.scrollHeight > el.clientHeight + 1
-          : el.scrollWidth > el.clientWidth + 1
-      );
+      setHasOverflow(el.scrollWidth > el.clientWidth + 1);
+      setIsScrolledToStart(el.scrollLeft <= 0);
       setIsScrolledToEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
     };
     check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, [chipsKey, isDesktopScreenSize, isExpanded]);
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [chipsKey, isDesktopScreenSize]);
 
   if (chips.length === 0) {
     return null;
@@ -57,6 +55,8 @@ export function ChipBar({ items, selected, onSelect, expandAriaLabel, collapseAr
   const chipButtons = chips.map((item) => (
     <Button key={item.value}
             size={'xs'}
+            h={'7'}
+            px={'3'}
             rounded={'full'}
             fontWeight={'normal'}
             flexShrink={0}
@@ -80,28 +80,36 @@ export function ChipBar({ items, selected, onSelect, expandAriaLabel, collapseAr
     return (
       <Box className={'chip-bar'}
            position={'relative'}
-           ml={'4'} mr={'4'} mb={'2'}
+           mb={'2'}
+           bg={'#f6f9fb'}
            >
         <Flex ref={rowRef}
               gap={'2'}
+              pl={'4'} pr={'4'}
+              pt={'5'} pb={'5'}
               overflowX={'auto'}
               onScroll={(e) => {
                 const el = e.currentTarget;
+                setIsScrolledToStart(el.scrollLeft <= 0);
                 setIsScrolledToEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
-              }}
-              sx={{
-                scrollbarWidth: 'none',
-                '::-webkit-scrollbar': { display: 'none' },
               }}
               >
           {chipButtons}
         </Flex>
+        {hasOverflow && !isScrolledToStart && (
+          <Box position={'absolute'}
+               top={'0'} bottom={'0'} left={'0'}
+               w={'10'}
+               pointerEvents={'none'}
+               bgGradient={'linear(to-l, rgba(246, 249, 251, 0), #f6f9fb)'}
+               />
+        )}
         {hasOverflow && !isScrolledToEnd && (
           <Box position={'absolute'}
                top={'0'} bottom={'0'} right={'0'}
                w={'10'}
                pointerEvents={'none'}
-               bgGradient={'linear(to-r, rgba(237, 242, 247, 0), gray.100)'}
+               bgGradient={'linear(to-r, rgba(246, 249, 251, 0), #f6f9fb)'}
                />
         )}
       </Box>
@@ -111,28 +119,9 @@ export function ChipBar({ items, selected, onSelect, expandAriaLabel, collapseAr
   return (
     <Flex className={'chip-bar'}
           mb={'2'} gap={'2'}
-          alignItems={'flex-start'}
+          wrap={'wrap'}
           >
-      <Flex ref={rowRef}
-            gap={'2'}
-            wrap={'wrap'}
-            flex={'1'} minW={'0'}
-            maxH={isExpanded ? undefined : COLLAPSED_ROW_HEIGHT}
-            overflow={'hidden'}
-            >
-        {chipButtons}
-      </Flex>
-      {(hasOverflow || isExpanded) && (
-        <IconButton aria-label={isExpanded ? collapseAriaLabel : expandAriaLabel}
-                    icon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                    size={'xs'}
-                    rounded={'full'}
-                    variant={'ghost'}
-                    color={'gray.600'}
-                    flexShrink={0}
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    />
-      )}
+      {chipButtons}
     </Flex>
   );
 }

@@ -33,6 +33,17 @@ if (!window.matchMedia) {
   }) as unknown as MediaQueryList;
 }
 
+// jsdom does not implement ResizeObserver; GroupSelector/ChipBar use it to
+// re-measure their scroll row when it becomes visible again (e.g. switching
+// back to a tab whose panel was previously hidden with a width of 0).
+if (!window.ResizeObserver) {
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+}
+
 if (!navigator.clipboard) {
   Object.defineProperty(navigator, 'clipboard', {
     value: { writeText: () => Promise.resolve() },
