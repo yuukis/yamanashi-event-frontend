@@ -3,12 +3,24 @@ import { getEventArea, countAreas, filterEventsByArea } from './eventAreas';
 import { makeEvent } from '../test/fixtures';
 
 describe('getEventArea', () => {
-  it('classifies an address in 甲府市 as kofu-kyoto', () => {
-    expect(getEventArea(makeEvent({ address: '山梨県甲府市丸の内1-15-2 第5丸銀ビル3F' }))).toBe('kofu-kyoto');
+  it('classifies an address in 甲府市 as kofu', () => {
+    expect(getEventArea(makeEvent({ address: '山梨県甲府市丸の内1-15-2 第5丸銀ビル3F' }))).toBe('kofu');
   });
 
   it('classifies an address in 北杜市 as kyohoku-kyosai', () => {
     expect(getEventArea(makeEvent({ address: '山梨県北杜市高根町村山北割３２８８' }))).toBe('kyohoku-kyosai');
+  });
+
+  it('classifies an address in 甲斐市 as kofu', () => {
+    expect(getEventArea(makeEvent({ address: '山梨県甲斐市竜王新町300' }))).toBe('kofu');
+  });
+
+  it('classifies an address in 中央市 as kofu', () => {
+    expect(getEventArea(makeEvent({ address: '山梨県中央市山之神1163' }))).toBe('kofu');
+  });
+
+  it('classifies an address in 昭和町 as kofu', () => {
+    expect(getEventArea(makeEvent({ address: '山梨県中巨摩郡昭和町清水新居2' }))).toBe('kofu');
   });
 
   it('classifies an address with a 郡 prefix (南都留郡山中湖村) as tobu-fujigoko', () => {
@@ -20,7 +32,7 @@ describe('getEventArea', () => {
   });
 
   it('classifies a romaji address ending in "<City> Yamanashi" using the city name', () => {
-    expect(getEventArea(makeEvent({ address: '2-chōme-35-1 Marunouchi, Kofu Yamanashi' }))).toBe('kofu-kyoto');
+    expect(getEventArea(makeEvent({ address: '2-chōme-35-1 Marunouchi, Kofu Yamanashi' }))).toBe('kofu');
   });
 
   it('classifies place "オンライン" with empty address as online', () => {
@@ -55,7 +67,7 @@ describe('countAreas', () => {
     ];
 
     expect(countAreas(events)).toEqual([
-      ['kofu-kyoto', 2],
+      ['kofu', 2],
       ['kyohoku-kyosai', 1],
       ['kyonan', 0],
       ['tobu-fujigoko', 0],
@@ -76,13 +88,13 @@ describe('filterEventsByArea', () => {
     const match = makeEvent({ uid: 'match', address: '山梨県甲府市' });
     const other = makeEvent({ uid: 'other', address: '山梨県北杜市' });
 
-    expect(filterEventsByArea([match, other], 'kofu-kyoto')).toEqual([match]);
+    expect(filterEventsByArea([match, other], 'kofu')).toEqual([match]);
   });
 
   it('excludes events classified as other when filtering by a different area', () => {
     const event = makeEvent({ address: '東京都墨田区' });
 
-    expect(filterEventsByArea([event], 'kofu-kyoto')).toEqual([]);
+    expect(filterEventsByArea([event], 'kofu')).toEqual([]);
   });
 
   it('returns events classified as other when filtering by "other"', () => {
