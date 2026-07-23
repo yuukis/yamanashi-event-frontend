@@ -25,9 +25,8 @@ type GroupSelectorProps = {
   selected: string | null;
   onSelect: (key: string | null) => void;
   isLoading: boolean;
-  // 「開催中」等のバッジを表示し、該当コミュニティを先頭に寄せるか。
-  // モバイルの横スクロール一覧はファーストビューに収まらないと意味が
-  // ないため、バッジを使うページ(Root)ではここで最優先表示に寄せる。
+  // true の場合、バッジ対象のコミュニティを先頭に寄せる(モバイルの
+  // 横スクロール一覧はファーストビューに収まらないと意味がないため)。
   showBadges: boolean;
 };
 
@@ -183,10 +182,9 @@ export function GroupSelector({ groups, selected, onSelect, isLoading, showBadge
   const rowRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
-  // モバイル: 横スクロール行自体のオーバーフロー判定(フェード表示の要否)。
-  // ResizeObserver を使うのは、window の resize だけでなく、非表示の
-  // タブパネル内で幅0のまま実測してしまった後に表示側へ切り替わって
-  // 幅が確定した場合にも再計算されるようにするため。
+  // 非表示のタブパネルで幅0のまま実測した後、表示に戻って幅が確定した
+  // 際にも再計算されるよう ResizeObserver で監視する(window の resize
+  // だけではタブ切り替えを検知できない)。
   useEffect(() => {
     if (isDesktopScreenSize) {
       return;
@@ -206,14 +204,10 @@ export function GroupSelector({ groups, selected, onSelect, isLoading, showBadge
     return () => observer.disconnect();
   }, [groupsKey, isDesktopScreenSize, isLoading]);
 
-  // デスクトップ: メインエリア幅いっぱいに均一サイズでストレッチさせる
-  // ため列数を実測して repeat(N, 1fr) に反映する。CSS の auto-fill に
+  // 列数は自前で算出して repeat(N, 1fr) に反映する。CSS の auto-fill に
   // minmax の上限を固定値で渡すと、列数の算出にもその上限値が使われて
-  // しまい、下限(768px 幅で5列)通りの列数にならないため、列数だけ
-  // 自前で算出し 1fr で均等配分させている。ResizeObserver を使うのは、
-  // 非表示のタブパネル内で幅0のまま実測してしまった後、表示側へ切り替わって
-  // 幅が確定した際にも再計算されるようにするため(window の resize だけでは
-  // タブ切り替えのような表示状態の変化を検知できない)。
+  // しまい、下限(768px 幅で5列)通りの列数にならないため。ResizeObserver
+  // で監視する理由は上のモバイル側と同様。
   useLayoutEffect(() => {
     if (!isDesktopScreenSize) {
       return;
@@ -249,8 +243,6 @@ export function GroupSelector({ groups, selected, onSelect, isLoading, showBadge
       ]
     : groups;
 
-  // デスクトップは Grid 側の repeat(N, 1fr) が列幅を均一にストレッチする
-  // ため '100%' で列いっぱいに広げる。モバイルは横スクロール行なので固定幅。
   const cardWidth = isDesktopScreenSize ? '100%' : MOBILE_BLOCK_WIDTH;
 
   const blocks = isLoading

@@ -26,10 +26,9 @@ export function ChipBar({ items, selected, onSelect }: ChipBarProps) {
 
   const chipsKey = chips.map((item) => item.value).join('|');
 
-  // モバイル: 横スクロール行自体のオーバーフロー判定(フェード表示の要否)。
-  // ResizeObserver を使うのは、window の resize だけでなく、非表示の
-  // タブパネル内で幅0のまま実測してしまった後に表示側へ切り替わって
-  // 幅が確定した場合にも再計算されるようにするため。
+  // 非表示のタブパネルで幅0のまま実測した後、表示に戻って幅が確定した
+  // 際にも再計算されるよう ResizeObserver で監視する(window の resize
+  // だけではタブ切り替えを検知できない)。
   useEffect(() => {
     if (isDesktopScreenSize) {
       return;
