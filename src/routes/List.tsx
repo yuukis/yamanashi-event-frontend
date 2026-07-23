@@ -23,9 +23,11 @@ import {
   TabList,
   Tab,
   TabPanels,
-  TabPanel
+  TabPanel,
+  Icon
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
+import { FiUsers, FiTag, FiMapPin } from 'react-icons/fi';
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -203,9 +205,18 @@ function List({ startYear} : {startYear: number}) {
                   defaultIndex={selectedArea ? 2 : selectedKeyword ? 1 : 0}
                   >
               <TabList px={{base: '4', md: '0'}}>
-                <Tab _selected={{ color: 'impact.700', borderColor: 'impact.500' }}>コミュニティで絞る</Tab>
-                <Tab _selected={{ color: 'primary.800', borderColor: 'primary.500' }}>キーワードで絞る</Tab>
-                <Tab _selected={{ color: 'secondary.900', borderColor: 'secondary.700' }}>エリアで絞る</Tab>
+                <Tab _selected={{ color: 'impact.700', borderColor: 'impact.500' }}>
+                  <Icon as={FiUsers} display={{base: 'none', md: 'inline'}} mr={'2'} />
+                  コミュニティで絞る
+                </Tab>
+                <Tab _selected={{ color: 'primary.800', borderColor: 'primary.500' }}>
+                  <Icon as={FiTag} display={{base: 'none', md: 'inline'}} mr={'2'} />
+                  キーワードで絞る
+                </Tab>
+                <Tab _selected={{ color: 'secondary.900', borderColor: 'secondary.700' }}>
+                  <Icon as={FiMapPin} display={{base: 'none', md: 'inline'}} mr={'2'} />
+                  エリアで絞る
+                </Tab>
               </TabList>
               <TabPanels>
                 <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
