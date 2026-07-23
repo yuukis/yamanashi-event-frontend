@@ -6,6 +6,7 @@ import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '..
 import { ChipBar } from '../components/ChipBar';
 import { GroupSelector } from '../components/GroupSelector';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
+import { GroupMoreEventsLink } from '../components/GroupMoreEventsLink';
 import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
 import { EventScrollGutter } from '../components/EventScrollGutter';
 import { StructuredData } from '../components/StructuredData';
@@ -196,9 +197,10 @@ function Root({startYear}: {startYear: number}) {
     countGroups(data.futureEvents, data.groups),
     countGroups(data.pastEvents, data.groups),
   );
-  const selectedGroupName = selectedGroup
-    ? (data.groups.find((group) => group.key === selectedGroup)?.title ?? selectedGroup)
+  const selectedGroupDetail = selectedGroup
+    ? data.groups.find((group) => group.key === selectedGroup)
     : null;
+  const selectedGroupName = selectedGroup ? (selectedGroupDetail?.title ?? selectedGroup) : null;
   const selectedAreaName = selectedArea ? (AREA_LABELS[selectedArea] ?? selectedArea) : null;
   const futureEvents = filterEventsByArea(filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup), selectedArea);
   const pastEvents = filterEventsByArea(filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup), selectedArea);
@@ -506,6 +508,12 @@ function Root({startYear}: {startYear: number}) {
                     <AnimatePresence initial={false}>
                       {renderEventBodies(pastEvents, anchoredDateKeys, 'past')}
                     </AnimatePresence>
+                  )}
+                  {!data.isLoading && !data.errorMessage && selectedGroup && (
+                    <GroupMoreEventsLink groupKey={selectedGroup}
+                                         groupName={selectedGroupName ?? selectedGroup}
+                                         imageUrl={selectedGroupDetail?.image_url}
+                                         />
                   )}
                 </Stack>
               </CardBody>
