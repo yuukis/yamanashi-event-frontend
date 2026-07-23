@@ -183,7 +183,10 @@ export function GroupSelector({ groups, selected, onSelect, isLoading, showBadge
   const rowRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
-  // モバイル: 横スクロール行自体のオーバーフロー判定(フェード表示の要否)
+  // モバイル: 横スクロール行自体のオーバーフロー判定(フェード表示の要否)。
+  // ResizeObserver を使うのは、window の resize だけでなく、非表示の
+  // タブパネル内で幅0のまま実測してしまった後に表示側へ切り替わって
+  // 幅が確定した場合にも再計算されるようにするため。
   useEffect(() => {
     if (isDesktopScreenSize) {
       return;
@@ -198,14 +201,19 @@ export function GroupSelector({ groups, selected, onSelect, isLoading, showBadge
       setIsScrolledToEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
     };
     check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [groupsKey, isDesktopScreenSize, isLoading]);
 
   // デスクトップ: メインエリア幅いっぱいに均一サイズでストレッチさせる
-  // ため列数を実測して repeat(N, minmax(...)) に反映する。CSS の
-  // auto-fill は minmax の上限が固定値だと列数の算出にも上限値を使って
-  // しまい、下限(768px 幅で5列)通りの列数にならないため使えない。
+  // ため列数を実測して repeat(N, 1fr) に反映する。CSS の auto-fill に
+  // minmax の上限を固定値で渡すと、列数の算出にもその上限値が使われて
+  // しまい、下限(768px 幅で5列)通りの列数にならないため、列数だけ
+  // 自前で算出し 1fr で均等配分させている。ResizeObserver を使うのは、
+  // 非表示のタブパネル内で幅0のまま実測してしまった後、表示側へ切り替わって
+  // 幅が確定した際にも再計算されるようにするため(window の resize だけでは
+  // タブ切り替えのような表示状態の変化を検知できない)。
   useLayoutEffect(() => {
     if (!isDesktopScreenSize) {
       return;
@@ -219,8 +227,9 @@ export function GroupSelector({ groups, selected, onSelect, isLoading, showBadge
       setDesktopColumnCount(Math.max(1, count));
     };
     check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [groupsKey, isDesktopScreenSize, isLoading]);
 
   if (!isLoading && groups.length === 0) {
@@ -240,8 +249,8 @@ export function GroupSelector({ groups, selected, onSelect, isLoading, showBadge
       ]
     : groups;
 
-  // デスクトップは Grid の auto-fill が列幅を均一にストレッチするため
-  // '100%' で列いっぱいに広げる。モバイルは横スクロール行なので固定幅。
+  // デスクトップは Grid 側の repeat(N, 1fr) が列幅を均一にストレッチする
+  // ため '100%' で列いっぱいに広げる。モバイルは横スクロール行なので固定幅。
   const cardWidth = isDesktopScreenSize ? '100%' : MOBILE_BLOCK_WIDTH;
 
   const blocks = isLoading

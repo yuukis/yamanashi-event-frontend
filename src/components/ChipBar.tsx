@@ -26,7 +26,10 @@ export function ChipBar({ items, selected, onSelect }: ChipBarProps) {
 
   const chipsKey = chips.map((item) => item.value).join('|');
 
-  // モバイル: 横スクロール行自体のオーバーフロー判定(フェード表示の要否)
+  // モバイル: 横スクロール行自体のオーバーフロー判定(フェード表示の要否)。
+  // ResizeObserver を使うのは、window の resize だけでなく、非表示の
+  // タブパネル内で幅0のまま実測してしまった後に表示側へ切り替わって
+  // 幅が確定した場合にも再計算されるようにするため。
   useEffect(() => {
     if (isDesktopScreenSize) {
       return;
@@ -41,8 +44,9 @@ export function ChipBar({ items, selected, onSelect }: ChipBarProps) {
       setIsScrolledToEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
     };
     check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [chipsKey, isDesktopScreenSize]);
 
   if (chips.length === 0) {
