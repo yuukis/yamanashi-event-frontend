@@ -29,6 +29,7 @@ import { AnimatePresence } from 'framer-motion';
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
+import { countAreas, filterEventsByArea, AREA_LABELS, type AreaKey } from '../utils/eventAreas';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import { fetchEventsByYear, fetchGroups } from '../utils/api';
 import { buildEventListJsonLd } from '../utils/structuredData';
@@ -49,9 +50,11 @@ function List({ startYear} : {startYear: number}) {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedGroup = searchParams.get('group');
-  // keyword と group は排他。手入力やブックマークなど、両方のクエリが
-  // 同時に付いた URL が渡された場合は group を優先する。
+  // keyword と group と area は排他。手入力やブックマークなど、複数の
+  // クエリが同時に付いた URL が渡された場合は group > keyword > area の
+  // 優先順で扱う。
   const selectedKeyword = selectedGroup ? null : searchParams.get('keyword');
+  const selectedArea = (selectedGroup || selectedKeyword) ? null : (searchParams.get('area') as AreaKey | null);
   const [data, setData] = useState<ListState>({
     isLoading: true,
     events: [],
@@ -61,8 +64,11 @@ function List({ startYear} : {startYear: number}) {
   });
 
   useEffect(() => {
-    if (searchParams.get('keyword') && searchParams.get('group')) {
-      setSearchParams({ group: searchParams.get('group')! }, { replace: true });
+    const group = searchParams.get('group');
+    const keyword = searchParams.get('keyword');
+    const area = searchParams.get('area');
+    if ([group, keyword, area].filter(Boolean).length > 1) {
+      setSearchParams(group ? { group } : keyword ? { keyword } : { area: area! }, { replace: true });
     }
   }, [searchParams, setSearchParams]);
 
@@ -79,13 +85,20 @@ function List({ startYear} : {startYear: number}) {
     setSearchParams(group ? { group } : {}, { replace: true });
   };
 
+  const handleAreaSelect = (area: string | null) => {
+    window.dispatchEvent(new Event('site-header-hold'));
+    setSearchParams(area ? { area } : {}, { replace: true });
+  };
+
   const keywordCounts = countKeywords(data.events);
+  const areaCounts = countAreas(data.events);
   const groupCounts = countGroups(data.events, data.groups);
   const groupSelectorItems = groupCounts.map((group) => ({ key: group.key, name: group.name, imageUrl: group.imageUrl, events: group.events }));
   const selectedGroupName = selectedGroup
     ? (data.groups.find((group) => group.key === selectedGroup)?.title ?? selectedGroup)
     : null;
-  const events = filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup);
+  const selectedAreaName = selectedArea ? (AREA_LABELS[selectedArea] ?? selectedArea) : null;
+  const events = filterEventsByArea(filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup), selectedArea);
 
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLDivElement>();
 
@@ -177,19 +190,22 @@ function List({ startYear} : {startYear: number}) {
               </Heading>
               <ActiveFilterBadge selectedKeyword={selectedKeyword}
                                  selectedGroupName={selectedGroupName}
+                                 selectedAreaName={selectedAreaName}
                                  onClearKeyword={() => handleKeywordSelect(null)}
                                  onClearGroup={() => handleGroupSelect(null)}
+                                 onClearArea={() => handleAreaSelect(null)}
                                  />
               <Spacer />
               <YearSwitcher startYear={startYear} selectedYear={year} />
             </Stack>
-            <Tabs key={selectedKeyword ? 'keyword' : 'community'}
+            <Tabs key={selectedArea ? 'area' : selectedKeyword ? 'keyword' : 'community'}
                   variant={'line'} size={'sm'}
-                  defaultIndex={selectedKeyword ? 1 : 0}
+                  defaultIndex={selectedArea ? 2 : selectedKeyword ? 1 : 0}
                   >
               <TabList px={{base: '4', md: '0'}}>
                 <Tab _selected={{ color: 'impact.700', borderColor: 'impact.500' }}>コミュニティで絞る</Tab>
                 <Tab _selected={{ color: 'primary.800', borderColor: 'primary.500' }}>キーワードで絞る</Tab>
+                <Tab _selected={{ color: 'secondary.900', borderColor: 'secondary.700' }}>エリアで絞る</Tab>
               </TabList>
               <TabPanels>
                 <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
@@ -205,6 +221,18 @@ function List({ startYear} : {startYear: number}) {
                     <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
                              selected={selectedKeyword}
                              onSelect={handleKeywordSelect}
+                             />
+                  )}
+                </TabPanel>
+                <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
+                  {!data.isLoading && !data.errorMessage && (
+                    <ChipBar items={areaCounts.map(([area, count]) => ({
+                                      value: area,
+                                      label: `${AREA_LABELS[area]} (${count})`,
+                                      disabled: count === 0 && selectedArea !== area,
+                                    }))}
+                             selected={selectedArea}
+                             onSelect={handleAreaSelect}
                              />
                   )}
                 </TabPanel>
