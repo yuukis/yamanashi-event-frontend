@@ -3,16 +3,10 @@ import { screen, fireEvent } from '@testing-library/react';
 import { renderWithChakra } from '../test/test-utils';
 import { ChipBar } from './ChipBar';
 
-const baseProps = {
-  expandAriaLabel: 'すべてのキーワードを表示',
-  collapseAriaLabel: 'キーワードを折りたたむ',
-};
-
 describe('ChipBar', () => {
   it('renders a chip button for each item', () => {
     renderWithChakra(
-      <ChipBar {...baseProps}
-               items={[{ value: 'react', label: 'React' }, { value: 'vue', label: 'Vue' }]}
+      <ChipBar items={[{ value: 'react', label: 'React' }, { value: 'vue', label: 'Vue' }]}
                selected={null}
                onSelect={() => {}}
                />,
@@ -25,8 +19,7 @@ describe('ChipBar', () => {
   it('calls onSelect with the item value when an unselected chip is clicked', () => {
     const onSelect = vi.fn();
     renderWithChakra(
-      <ChipBar {...baseProps}
-               items={[{ value: 'react', label: 'React' }]}
+      <ChipBar items={[{ value: 'react', label: 'React' }]}
                selected={null}
                onSelect={onSelect}
                />,
@@ -40,8 +33,7 @@ describe('ChipBar', () => {
   it('calls onSelect with null when the already-selected chip is clicked', () => {
     const onSelect = vi.fn();
     renderWithChakra(
-      <ChipBar {...baseProps}
-               items={[{ value: 'react', label: 'React' }]}
+      <ChipBar items={[{ value: 'react', label: 'React' }]}
                selected={'react'}
                onSelect={onSelect}
                />,
@@ -54,8 +46,7 @@ describe('ChipBar', () => {
 
   it('appends the selected value as an extra chip when it is missing from items', () => {
     renderWithChakra(
-      <ChipBar {...baseProps}
-               items={[{ value: 'react', label: 'React' }]}
+      <ChipBar items={[{ value: 'react', label: 'React' }]}
                selected={'vue'}
                onSelect={() => {}}
                />,
@@ -67,7 +58,7 @@ describe('ChipBar', () => {
 
   it('renders nothing when there are no items and nothing selected', () => {
     const { container } = renderWithChakra(
-      <ChipBar {...baseProps} items={[]} selected={null} onSelect={() => {}} />,
+      <ChipBar items={[]} selected={null} onSelect={() => {}} />,
     );
 
     expect(container.querySelector('.chip-bar')).toBeNull();
@@ -75,7 +66,7 @@ describe('ChipBar', () => {
 
   it('still renders a single chip for the selected value when items is empty', () => {
     renderWithChakra(
-      <ChipBar {...baseProps} items={[]} selected={'react'} onSelect={() => {}} />,
+      <ChipBar items={[]} selected={'react'} onSelect={() => {}} />,
     );
 
     expect(screen.getByRole('button', { name: 'react' })).toBeInTheDocument();

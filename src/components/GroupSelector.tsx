@@ -280,20 +280,18 @@ export function GroupSelector({ groups, selected, onSelect, isLoading, showBadge
     return (
       <Box className={'group-selector'}
            position={'relative'}
-           ml={'4'} mr={'4'} mb={'2'}
+           mb={'2'}
+           bg={'#f6f9fb'}
            >
         <Flex ref={rowRef}
               gap={'2'}
-              pt={BADGE_OVERLAP}
+              pl={'4'} pr={'4'}
+              pt={'30px'} pb={'5'}
               overflowX={'auto'}
               onScroll={(e) => {
                 const el = e.currentTarget;
                 setIsScrolledToStart(el.scrollLeft <= 0);
                 setIsScrolledToEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
-              }}
-              sx={{
-                scrollbarWidth: 'none',
-                '::-webkit-scrollbar': { display: 'none' },
               }}
               >
           {blocks}
@@ -303,7 +301,7 @@ export function GroupSelector({ groups, selected, onSelect, isLoading, showBadge
                top={'0'} bottom={'0'} left={'0'}
                w={'10'}
                pointerEvents={'none'}
-               bgGradient={'linear(to-l, rgba(237, 242, 247, 0), gray.100)'}
+               bgGradient={'linear(to-l, rgba(246, 249, 251, 0), #f6f9fb)'}
                />
         )}
         {hasOverflow && !isScrolledToEnd && (
@@ -311,7 +309,7 @@ export function GroupSelector({ groups, selected, onSelect, isLoading, showBadge
                top={'0'} bottom={'0'} right={'0'}
                w={'10'}
                pointerEvents={'none'}
-               bgGradient={'linear(to-r, rgba(237, 242, 247, 0), gray.100)'}
+               bgGradient={'linear(to-r, rgba(246, 249, 251, 0), #f6f9fb)'}
                />
         )}
       </Box>

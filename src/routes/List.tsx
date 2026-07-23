@@ -18,7 +18,12 @@ import {
   Card,
   CardBody,
   Heading,
-  Spacer
+  Spacer,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel
 } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
 import { sortByStartedAtAsc } from '../utils/eventSort';
@@ -178,20 +183,32 @@ function List({ startYear} : {startYear: number}) {
               <Spacer />
               <YearSwitcher startYear={startYear} selectedYear={year} />
             </Stack>
-            <GroupSelector groups={groupSelectorItems}
-                            selected={selectedGroup}
-                            onSelect={handleGroupSelect}
-                            isLoading={data.isLoading}
-                            showBadges={false}
-                            />
-            {!data.isLoading && !data.errorMessage && (
-              <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
-                       selected={selectedKeyword}
-                       onSelect={handleKeywordSelect}
-                       expandAriaLabel={'すべてのキーワードを表示'}
-                       collapseAriaLabel={'キーワードを折りたたむ'}
-                       />
-            )}
+            <Tabs variant={'line'} size={'sm'}
+                  defaultIndex={selectedKeyword ? 1 : 0}
+                  >
+              <TabList px={{base: '4', md: '0'}}>
+                <Tab _selected={{ color: 'impact.700', borderColor: 'impact.500' }}>コミュニティで絞る</Tab>
+                <Tab _selected={{ color: 'primary.800', borderColor: 'primary.500' }}>キーワードで絞る</Tab>
+              </TabList>
+              <TabPanels>
+                <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
+                  <GroupSelector groups={groupSelectorItems}
+                                  selected={selectedGroup}
+                                  onSelect={handleGroupSelect}
+                                  isLoading={data.isLoading}
+                                  showBadges={false}
+                                  />
+                </TabPanel>
+                <TabPanel px={0} pt={{base: '0', md: '3'}} pb={0}>
+                  {!data.isLoading && !data.errorMessage && (
+                    <ChipBar items={keywordCounts.map(([keyword]) => ({ value: keyword, label: keyword }))}
+                             selected={selectedKeyword}
+                             onSelect={handleKeywordSelect}
+                             />
+                  )}
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
             <Card variant={{base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
