@@ -63,7 +63,7 @@ export function YearSwitcher({ startYear, selectedYear, showChevrons = true }: Y
 
   if (!showChevrons || selectedYear === null) {
     return (
-      <ButtonGroup size={'xs'} colorScheme={'primary'}>
+      <ButtonGroup size={{base: 'xs', md: 'sm'}} colorScheme={'primary'}>
         { menu }
       </ButtonGroup>
     );
@@ -73,7 +73,7 @@ export function YearSwitcher({ startYear, selectedYear, showChevrons = true }: Y
   const nextYear = selectedYear + 1;
 
   return (
-    <ButtonGroup size={'xs'} colorScheme={'primary'} isAttached>
+    <ButtonGroup size={{base: 'xs', md: 'sm'}} colorScheme={'primary'} isAttached>
       <IconButton aria-label={`${prevYear}年のイベントを表示`}
                   icon={<ChevronLeftIcon />}
                   variant={'solid'}
