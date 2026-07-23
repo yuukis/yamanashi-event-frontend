@@ -1,7 +1,6 @@
-import { useState, useSyncExternalStore } from 'react';
-import { Box, Container, HStack, IconButton, Text } from '@chakra-ui/react';
+import { useState } from 'react';
+import { HStack, IconButton, Text } from '@chakra-ui/react';
 import { SmallCloseIcon } from '@chakra-ui/icons';
-import { subscribeHeaderVisibility, getHeaderAreaOccupied, HEADER_HEIGHT } from '../utils/headerVisibility';
 import '../style.css';
 
 const PULSE_ANIMATION_MS = 220;
@@ -13,16 +12,12 @@ type ActiveFilterBadgeProps = {
   onClearGroup: () => void;
 };
 
-// 画面上端がヘッダー(最上部 or 固定)に覆われている間はその下に退避し、
-// ヘッダーがない間は画面上端まで詰めて、絞り込み中であることに常に気づける
-// よう画面内に留める。
 export function ActiveFilterBadge({
   selectedKeyword,
   selectedGroupName,
   onClearKeyword,
   onClearGroup,
 }: ActiveFilterBadgeProps) {
-  const isHeaderAreaOccupied = useSyncExternalStore(subscribeHeaderVisibility, getHeaderAreaOccupied);
   const [isPressed, setIsPressed] = useState(false);
 
   if (!selectedKeyword && !selectedGroupName) {
@@ -49,52 +44,41 @@ export function ActiveFilterBadge({
   };
 
   return (
-    <Box position={'fixed'}
-         top={isHeaderAreaOccupied ? HEADER_HEIGHT : '0'}
-         left={'0'} right={'0'}
-         zIndex={'banner'}
-         pointerEvents={'none'}
-         transition={'top 180ms ease-out'}
-         >
-      <Container maxW={'980px'} px={{base: '4', md: '4'}}>
-        <HStack w={'fit-content'}
-                maxW={'100%'}
-                mx={'auto'}
-                mt={'2'}
-                px={'4'} py={'2'}
-                spacing={'2'}
-                bg={colors.bg}
-                border={'1px solid'}
-                borderColor={colors.border}
-                borderRadius={'full'}
-                boxShadow={'sm'}
-                pointerEvents={'auto'}
-                cursor={'pointer'}
-                transition={'box-shadow 100ms ease-out'}
-                _hover={{boxShadow: 'md'}}
-                className={isPressed ? 'active-filter-badge-pulse' : undefined}
-                onAnimationEnd={() => setIsPressed(false)}
-                onClick={handlePress}
-                >
-          <Text fontSize={'sm'}
-                color={colors.text}
-                noOfLines={1}
-                >
-            <Text as={'span'} fontWeight={'bold'}>{highlightedText}</Text>
-            <Text as={'span'} fontWeight={'normal'}> で絞り込み中</Text>
-          </Text>
-          <IconButton aria-label={'絞り込みを解除'}
-                      icon={<SmallCloseIcon />}
-                      size={'sm'}
-                      variant={'ghost'}
-                      color={colors.text}
-                      minW={'auto'}
-                      h={'auto'}
-                      p={'0.5'}
-                      _hover={{bg: colors.hoverBg}}
-                      />
-        </HStack>
-      </Container>
-    </Box>
+    <HStack maxW={{base: '40%', md: '260px'}}
+            flexShrink={1}
+            minW={0}
+            px={'3'} py={'1'}
+            spacing={'1'}
+            bg={colors.bg}
+            border={'1px solid'}
+            borderColor={colors.border}
+            borderRadius={'full'}
+            cursor={'pointer'}
+            transition={'box-shadow 100ms ease-out'}
+            _hover={{boxShadow: 'sm'}}
+            className={isPressed ? 'active-filter-badge-pulse' : undefined}
+            onAnimationEnd={() => setIsPressed(false)}
+            onClick={handlePress}
+            >
+      <Text fontSize={'xs'}
+            color={colors.text}
+            noOfLines={1}
+            minW={0}
+            >
+        <Text as={'span'} fontWeight={'bold'}>{highlightedText}</Text>
+        <Text as={'span'} fontWeight={'normal'}> で絞り込み中</Text>
+      </Text>
+      <IconButton aria-label={'絞り込みを解除'}
+                  icon={<SmallCloseIcon />}
+                  size={'xs'}
+                  variant={'ghost'}
+                  color={colors.text}
+                  minW={'auto'}
+                  h={'auto'}
+                  p={'0.5'}
+                  flexShrink={0}
+                  _hover={{bg: colors.hoverBg}}
+                  />
+    </HStack>
   );
 }
