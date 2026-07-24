@@ -582,9 +582,10 @@ function Group() {
                        >
                 今後の開催予定
               </Heading>
-              <Card variant={{base: 'unstyled', md: 'outline'}}
+              <Card variant={viewMode === 'grid' ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                     size={{base: 'sm', md: 'md'}}
                     p={'0'}
+                    bg={viewMode === 'grid' ? 'gray.100' : undefined}
                     >
                 <CardBody>
                   {upcomingEvents.length === 0 ? (
@@ -620,9 +621,10 @@ function Group() {
                        >
                 過去のイベント
               </Heading>
-              <Card variant={{base: 'unstyled', md: 'outline'}}
+              <Card variant={viewMode === 'grid' ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                     size={{base: 'sm', md: 'md'}}
                     p={'0'}
+                    bg={viewMode === 'grid' ? 'gray.100' : undefined}
                     >
                 <CardBody>
                   {pastEvents.length === 0 ? (

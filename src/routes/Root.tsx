@@ -398,9 +398,10 @@ function Root({startYear}: {startYear: number}) {
               <Spacer />
               <YearSwitcher startYear={startYear} selectedYear={null} showChevrons={false} />
             </Stack>
-            <Card variant={{base: 'unstyled', md: 'outline'}}
+            <Card variant={viewMode === 'grid' ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
+                  bg={viewMode === 'grid' ? 'gray.100' : undefined}
                   >
               <CardBody>
                 {data.isLoading ? (
@@ -451,9 +452,10 @@ function Root({startYear}: {startYear: number}) {
                                  onClearArea={() => handleAreaSelect(null)}
                                  />
             </Stack>
-            <Card variant={{base: 'unstyled', md: 'outline'}}
+            <Card variant={viewMode === 'grid' ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
+                  bg={viewMode === 'grid' ? 'gray.100' : undefined}
                   >
               <CardBody>
                 <Stack spacing={EVENT_LIST_SPACING}>
