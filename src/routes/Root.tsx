@@ -2,21 +2,25 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { YearSwitcher, FUTURE_EVENTS_ANCHOR_ID } from '../components/YearSwitcher';
-import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
+import { SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { EventFilterTabs } from '../components/EventFilterTabs';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import { GroupMoreEventsLink } from '../components/GroupMoreEventsLink';
-import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
+import { EventListView, type EventListItem } from '../components/EventListView';
+import { ViewModeToggle } from '../components/ViewModeToggle';
+import { EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
 import { EventScrollGutter } from '../components/EventScrollGutter';
 import { StructuredData } from '../components/StructuredData';
 import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
 import root_bg from "../assets/images/root_bg.png";
 import root_top_bg from "../assets/images/root_top_bg.png";
+import { useSyncExternalStore } from 'react';
 import {
   Container,
   Box,
   Stack,
+  HStack,
   Card,
   CardBody,
   Heading,
@@ -26,7 +30,6 @@ import {
   Button,
   Spacer,
 } from '@chakra-ui/react';
-import { AnimatePresence } from 'framer-motion';
 import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
@@ -37,6 +40,7 @@ import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors'
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import { buildEventListJsonLd } from '../utils/structuredData';
 import { SITE_URL } from '../utils/site';
+import { subscribeViewMode, getViewModeSnapshot } from '../utils/viewModeStore';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
 // 星空レイヤーを上へはみ出させる量(px)。下へ追随したときに生じる領域を
@@ -197,7 +201,7 @@ function Root({startYear}: {startYear: number}) {
   const futureEvents = filterEventsByArea(filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup), selectedArea);
   const pastEvents = filterEventsByArea(filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup), selectedArea);
 
-  const renderEventBodies = (events: EventWithGroup[], anchoredDateKeys: Set<string>, section: 'future' | 'past') => {
+  const buildEventListItems = (events: EventWithGroup[], anchoredDateKeys: Set<string>): EventListItem[] => {
     return events.map((event, index) => {
       const eventDateKey = formatEventDateKey(new Date(event.started_at));
       const previousEvent = events[index - 1];
@@ -214,18 +218,12 @@ function Root({startYear}: {startYear: number}) {
         anchoredDateKeys.add(eventDateKey);
       }
 
-      return <AnimatedEventItem key={event.uid} date={event.started_at} section={section}>
-              <EventBody event={event}
-                        anchorId={anchorId}
-                        selectedKeyword={selectedKeyword}
-                        onKeywordClick={handleKeywordClick}
-                        enableSummarizer
-                        />
-            </AnimatedEventItem>;
+      return { event, anchorId };
     });
   };
 
   const anchoredDateKeys = new Set<string>();
+  const viewMode = useSyncExternalStore(subscribeViewMode, getViewModeSnapshot);
 
   const structuredData = !data.isLoading && !data.errorMessage
     ? buildEventListJsonLd([...futureEvents, ...pastEvents], `${SITE_URL}/`)
@@ -365,6 +363,9 @@ function Root({startYear}: {startYear: number}) {
                            errorMessage={data.errorMessage}
                            showGroupBadges
                            />
+          <HStack justifyContent={'flex-end'} px={{base: '4', md: '0'}}>
+            <ViewModeToggle />
+          </HStack>
           {/* sticky 化した見出しは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
           <Stack>
@@ -402,19 +403,21 @@ function Root({startYear}: {startYear: number}) {
                   p={'0'}
                   >
               <CardBody>
-                <Stack spacing={EVENT_LIST_SPACING}>
-                  {data.isLoading ? (
-                    <SkeletonEventBody />
-                  ) : data.errorMessage ? (
-                    <ErrorEventBody message={ data.errorMessage } />
-                  ) : futureEvents.length === 0 ? (
-                    <EmptyEventBody />
-                  ) : (
-                    <AnimatePresence initial={false}>
-                      {renderEventBodies(futureEvents, anchoredDateKeys, 'future')}
-                    </AnimatePresence>
-                  )}
-                </Stack>
+                {data.isLoading ? (
+                  <SkeletonEventBody />
+                ) : data.errorMessage ? (
+                  <ErrorEventBody message={ data.errorMessage } />
+                ) : futureEvents.length === 0 ? (
+                  <EmptyEventBody />
+                ) : (
+                  <EventListView items={buildEventListItems(futureEvents, anchoredDateKeys)}
+                                 viewMode={viewMode}
+                                 section={'future'}
+                                 selectedKeyword={selectedKeyword}
+                                 onKeywordClick={handleKeywordClick}
+                                 enableSummarizer
+                                 />
+                )}
               </CardBody>
             </Card>
             {data.lastModified &&
@@ -461,9 +464,13 @@ function Root({startYear}: {startYear: number}) {
                   ) : pastEvents.length === 0 ? (
                     <EmptyEventBody />
                   ) : (
-                    <AnimatePresence initial={false}>
-                      {renderEventBodies(pastEvents, anchoredDateKeys, 'past')}
-                    </AnimatePresence>
+                    <EventListView items={buildEventListItems(pastEvents, anchoredDateKeys)}
+                                   viewMode={viewMode}
+                                   section={'past'}
+                                   selectedKeyword={selectedKeyword}
+                                   onKeywordClick={handleKeywordClick}
+                                   enableSummarizer
+                                   />
                   )}
                   {!data.isLoading && !data.errorMessage && selectedGroup && (
                     <GroupMoreEventsLink groupKey={selectedGroup}

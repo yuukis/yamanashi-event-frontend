@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useParams } from "react-router-dom";
 import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { PageBreadcrumb } from '../components/PageBreadcrumb';
-import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
-import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
+import { SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
+import { EventListView } from '../components/EventListView';
+import { ViewModeToggle } from '../components/ViewModeToggle';
 import { EventScrollGutter } from '../components/EventScrollGutter';
 import { ShareContextIconRow } from '../components/ShareButtons';
 import { WidgetPreviewCard } from '../components/WidgetPreviewCard';
@@ -39,6 +40,7 @@ import { buildGroupPageJsonLd } from '../utils/structuredData';
 import { buildListWidgetPath } from '../utils/widgetPaths';
 import { sanitizeDescriptionHtml } from '../utils/descriptionHtml';
 import { scrollToCurrentHash } from '../utils/hashScroll';
+import { subscribeViewMode, getViewModeSnapshot } from '../utils/viewModeStore';
 import type { ApiGroupDetail, EventWithGroup } from '../types/events';
 
 // 過去のイベントは新しい順(order=desc)にこの件数ずつAPIから取得する。
@@ -338,6 +340,7 @@ function Group() {
     };
   }, [group]);
 
+  const viewMode = useSyncExternalStore(subscribeViewMode, getViewModeSnapshot);
   const upcomingEvents = data.events.filter(isFutureEvent).sort(sortByStartedAtAsc);
   const pastEvents = data.events.filter(isPastEvent).sort(sortByStartedAtDesc);
   // 開催イベント数はAPIの総件数ヘッダーが取得できればそれを、できなければ
@@ -563,6 +566,9 @@ function Group() {
         </Stack>
         {!data.isLoading && !data.isNotFound && !data.errorMessage && group && (
           <Stack>
+            <HStack justifyContent={'flex-end'} px={{base: '4', md: '0'}}>
+              <ViewModeToggle />
+            </HStack>
             <Stack>
               <Heading size={{base: 'sm', md: 'md'}}
                        position={'sticky'}
@@ -581,24 +587,22 @@ function Group() {
                     p={'0'}
                     >
                 <CardBody>
-                  <Stack spacing={EVENT_LIST_SPACING}>
-                    {upcomingEvents.length === 0 ? (
-                      <Box px={{base: '4', md: '0'}} py={{base: '2', md: '0'}}>
-                        <Text fontSize={'sm'} color={'gray.600'}>
-                          現在予定されているイベントはありません。
-                        </Text>
-                      </Box>
-                    ) : (
-                      upcomingEvents.map((event) => (
-                        <AnimatedEventItem key={event.uid} date={event.started_at} section={'upcoming'}>
-                          <EventBody event={event}
-                                     enableSummarizer
-                                     summaryDescriptionYear={new Date(event.started_at).getFullYear()}
-                                     />
-                        </AnimatedEventItem>
-                      ))
-                    )}
-                  </Stack>
+                  {upcomingEvents.length === 0 ? (
+                    <Box px={{base: '4', md: '0'}} py={{base: '2', md: '0'}}>
+                      <Text fontSize={'sm'} color={'gray.600'}>
+                        現在予定されているイベントはありません。
+                      </Text>
+                    </Box>
+                  ) : (
+                    <EventListView items={upcomingEvents.map((event) => ({
+                                     event,
+                                     summaryDescriptionYear: new Date(event.started_at).getFullYear(),
+                                   }))}
+                                   viewMode={viewMode}
+                                   section={'upcoming'}
+                                   enableSummarizer
+                                   />
+                  )}
                 </CardBody>
               </Card>
             </Stack>
@@ -621,20 +625,18 @@ function Group() {
                     p={'0'}
                     >
                 <CardBody>
-                  <Stack spacing={EVENT_LIST_SPACING}>
-                    {pastEvents.length === 0 ? (
-                      <EmptyEventBody />
-                    ) : (
-                      pastEvents.map((event) => (
-                        <AnimatedEventItem key={event.uid} date={event.started_at} section={'past'}>
-                          <EventBody event={event}
-                                     enableSummarizer
-                                     summaryDescriptionYear={new Date(event.started_at).getFullYear()}
-                                     />
-                        </AnimatedEventItem>
-                      ))
-                    )}
-                  </Stack>
+                  {pastEvents.length === 0 ? (
+                    <EmptyEventBody />
+                  ) : (
+                    <EventListView items={pastEvents.map((event) => ({
+                                     event,
+                                     summaryDescriptionYear: new Date(event.started_at).getFullYear(),
+                                   }))}
+                                   viewMode={viewMode}
+                                   section={'past'}
+                                   enableSummarizer
+                                   />
+                  )}
                 </CardBody>
               </Card>
               {data.hasMorePastEvents && (
