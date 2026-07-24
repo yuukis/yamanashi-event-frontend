@@ -212,10 +212,10 @@ function List({ startYear} : {startYear: number}) {
             <HStack justifyContent={'flex-end'} px={{base: '4', md: '0'}}>
               <ViewModeToggle />
             </HStack>
-            <Card variant={viewMode === 'grid' ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
+            <Card variant={viewMode === 'grid' && !data.isLoading && !data.errorMessage && events.length > 0 ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
-                  bg={viewMode === 'grid' ? 'gray.100' : undefined}
+                  bg={viewMode === 'grid' && !data.isLoading && !data.errorMessage && events.length > 0 ? 'gray.100' : undefined}
                   >
               <CardBody>
                 {data.isLoading ? (

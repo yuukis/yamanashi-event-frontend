@@ -1,15 +1,45 @@
-import { useSyncExternalStore } from 'react';
-import { Badge, Box, HStack, Heading, IconButton, Image, LinkBox, LinkOverlay, Stack, Text } from '@chakra-ui/react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { AspectRatio, Badge, Box, Button, HStack, Heading, IconButton, Image, Link, Stack, Text } from '@chakra-ui/react';
 import { GeoAlt, People, Person, Star, StarFill } from '@chakra-icons/bootstrap';
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
+import { EVENT_CARD_HIGHLIGHT_EVENT } from '../utils/hashScroll';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { isEventNew } from '../utils/newEventTracking';
 import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEventTrackingStore';
 import { isEventMarked, markEvent, unmarkEvent } from '../utils/markedEvents';
 import { subscribeMarkedEvents, getMarkedEventsSnapshot, updateMarkedEventsData } from '../utils/markedEventsStore';
+import { buildGroupPagePath } from '../utils/groupPage';
 import type { EventWithGroup } from '../types/events';
 
 const DAY_OF_WEEK = ['日', '月', '火', '水', '木', '金', '土'];
+
+const GROUP_BADGE_STYLE = {
+  position: 'absolute',
+  bottom: '0',
+  right: '3',
+  transform: 'translateY(50%)',
+  w: '48px',
+  h: '48px',
+  borderRadius: 'lg',
+  overflow: 'hidden',
+  border: '1px solid',
+  borderColor: 'gray.200',
+  boxShadow: 'sm',
+  zIndex: 1,
+} as const;
+
+const STATUS_BADGE_STYLE = {
+  position: 'absolute',
+  top: '0',
+  left: '3',
+  transform: 'translateY(-50%)',
+  boxShadow: 'sm',
+  zIndex: 1,
+  fontWeight: 'bold',
+  fontSize: { base: 'xs', sm: 'sm', md: 'md', lg: 'lg' },
+  borderStyle: 'solid',
+  borderWidth: { base: '1px', sm: '1px', md: '1.5px', lg: '2px' },
+} as const;
 
 type EventCardProps = {
   event: EventWithGroup;
@@ -34,8 +64,38 @@ export function EventCard({ event, anchorId }: EventCardProps) {
   const is_today = formatEventDateKey(start_date) === formatEventDateKey(now);
   const is_ongoing = now.getTime() >= start_date.getTime() && !has_ended;
   const is_new = isEventNew(trackingData, event, now);
+  const has_group_page = Boolean(event.group_key) && event.is_registered_group !== false;
+  const group_page_aria_label = `${event.group_name ?? 'コミュニティ'}のページを見る`;
+  const show_ongoing_badge = (is_today || is_ongoing) && !has_ended;
+  const show_new_badge = !show_ongoing_badge && is_new;
+  const card_border_color = show_ongoing_badge ? 'impact.500' : show_new_badge ? 'purple.500' : 'gray.200';
 
   const address = [event.address, event.place].filter(Boolean)[0];
+  const event_map_url = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(address || '');
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isHighlighted, setIsHighlighted] = useState(false);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) {
+      return;
+    }
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const handleHighlight = () => {
+      setIsHighlighted(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setIsHighlighted(false), 2000);
+    };
+
+    card.addEventListener(EVENT_CARD_HIGHLIGHT_EVENT, handleHighlight);
+    return () => {
+      card.removeEventListener(EVENT_CARD_HIGHLIGHT_EVENT, handleHighlight);
+      clearTimeout(timer);
+    };
+  }, []);
 
   const markLabel = has_ended
     ? (isMarked ? '気になる解除' : '気になる')
@@ -49,89 +109,139 @@ export function EventCard({ event, anchorId }: EventCardProps) {
     );
   };
 
+  const handleGroupLogoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (event.group_key) {
+      window.open(buildGroupPagePath(event.group_key), '_self');
+    }
+  };
+
   return (
-    <LinkBox as={'article'}
-             id={anchorId}
-             data-event-card
-             data-event-date={formatEventDateKey(start_date).replace(/-/g, '')}
-             position={'relative'}
-             display={'flex'}
-             flexDirection={'column'}
-             h={'100%'}
-             borderRadius={'md'}
-             border={'1px solid'}
-             borderColor={'gray.200'}
-             bg={'white'}
-             p={'3'}
-             _hover={{ borderColor: 'gray.300', shadow: 'sm' }}
-             transition={'box-shadow 120ms ease-out, border-color 120ms ease-out'}
-             >
+    <Box as={'article'}
+         ref={cardRef}
+         id={anchorId}
+         data-event-card
+         data-event-date={formatEventDateKey(start_date).replace(/-/g, '')}
+         className={isHighlighted ? 'event-card-ring-pulse' : undefined}
+         scrollMarginTop={{ base: '4.5rem', md: '5.5rem' }}
+         position={'relative'}
+         display={'flex'}
+         flexDirection={'column'}
+         h={'100%'}
+         borderRadius={'md'}
+         borderStyle={'solid'}
+         borderWidth={show_ongoing_badge || show_new_badge ? STATUS_BADGE_STYLE.borderWidth : '1px'}
+         borderColor={card_border_color}
+         bg={'white'}
+         p={'3'}
+         _hover={{
+           borderColor: show_ongoing_badge ? 'impact.600' : show_new_badge ? 'purple.600' : 'gray.300',
+           shadow: 'sm',
+         }}
+         transition={'box-shadow 120ms ease-out, border-color 120ms ease-out'}
+         >
       <Box id={getEventAnchorId(event.uid)}
            position={'absolute'}
            top={'0'} left={'0'}
            w={'0'} h={'0'}
            overflow={'hidden'}
+           scrollMarginTop={{ base: '4.5rem', md: '5.5rem' }}
            aria-hidden
            />
-      <HStack justify={'space-between'} align={'flex-start'} mb={'1'} pr={event.group_image_url ? '52px' : '0'}>
-        <Stack spacing={'0'} color={'gray.600'} fontSize={'sm'} flexShrink={0}>
-          {now_year !== start_year && (
-            <Text fontSize={'xs'} fontWeight={'light'} lineHeight={'1'}>{start_year}</Text>
-          )}
-          <HStack spacing={'1'} align={'baseline'} mt={now_year !== start_year ? '-1' : '0'}>
-            <HStack spacing={'0'} fontSize={{ base: 'sm', sm: 'lg', md: 'xl', lg: '2xl' }}>
-              <Text as={'span'} fontWeight={'bold'}>{start_month}</Text>
-              <Text as={'span'} fontWeight={'light'}>/{start_day}</Text>
-            </HStack>
-            <Text whiteSpace={'nowrap'}>({start_dow}) {start_time}-</Text>
-          </HStack>
-        </Stack>
-        {(is_today || is_ongoing) && !has_ended ? (
+      <Box position={'relative'} mt={'-3'} mx={'-3'} mb={'3'}>
+        <Box borderTopRadius={'md'} overflow={'hidden'}>
+          <Link href={event.event_url} isExternal display={'block'}>
+            <AspectRatio ratio={16 / 9} borderBottom={'1px solid'} borderColor={'gray.200'}>
+              {event.image_url ? (
+                <Image src={event.image_url} alt={''} fit={'cover'} />
+              ) : (
+                <Box className={'scroll-row-bg-pattern'} />
+              )}
+            </AspectRatio>
+          </Link>
+        </Box>
+        {show_ongoing_badge ? (
           <Badge bg={'#f9f1e8'}
                  color={'impact.700'}
-                 border={'1px solid'}
                  borderColor={'impact.500'}
-                 fontSize={'xs'}
-                 fontWeight={'bold'}
-                 flexShrink={0}
+                 {...STATUS_BADGE_STYLE}
                  >
             {is_ongoing ? '開催中' : '本日開催'}
           </Badge>
-        ) : is_new ? (
+        ) : show_new_badge ? (
           <Badge bg={'#f3e8fb'}
                  color={'purple.700'}
-                 border={'1px solid'}
                  borderColor={'purple.500'}
-                 fontSize={'xs'}
-                 fontWeight={'bold'}
-                 flexShrink={0}
+                 {...STATUS_BADGE_STYLE}
                  >
             NEW
           </Badge>
         ) : null}
-      </HStack>
+        {event.group_image_url ? (
+          event.group_key ? (
+            <Button variant={'unstyled'}
+                    aria-label={group_page_aria_label}
+                    onClick={handleGroupLogoClick}
+                    minW={'auto'}
+                    p={'0'}
+                    bg={'#ffffff'}
+                    {...GROUP_BADGE_STYLE}
+                    >
+              <Image src={event.group_image_url}
+                     alt={''}
+                     w={'100%'} h={'100%'}
+                     fit={'contain'}
+                     pointerEvents={'none'}
+                     />
+            </Button>
+          ) : (
+            <Box bg={'#ffffff'} pointerEvents={'none'} {...GROUP_BADGE_STYLE}>
+              <Image src={event.group_image_url}
+                     alt={''}
+                     w={'100%'} h={'100%'}
+                     fit={'contain'}
+                     />
+            </Box>
+          )
+        ) : has_group_page && (
+          <Button variant={'unstyled'}
+                  aria-label={group_page_aria_label}
+                  onClick={handleGroupLogoClick}
+                  minW={'auto'}
+                  p={'0'}
+                  display={'flex'}
+                  alignItems={'center'}
+                  justifyContent={'center'}
+                  bg={'gray.50'}
+                  {...GROUP_BADGE_STYLE}
+                  >
+            <People color={'gray.400'} />
+          </Button>
+        )}
+      </Box>
+      <Stack spacing={'0'} color={'gray.600'} fontSize={'sm'} mb={'1'}>
+        {now_year !== start_year && (
+          <Text fontSize={'xs'} fontWeight={'light'} lineHeight={'1'}>{start_year}</Text>
+        )}
+        <HStack spacing={'1'} align={'baseline'} mt={now_year !== start_year ? '-1' : '0'}>
+          <HStack spacing={'0'} fontSize={{ base: 'sm', sm: 'lg', md: 'xl', lg: '2xl' }}>
+            <Text as={'span'} fontWeight={'bold'}>{start_month}</Text>
+            <Text as={'span'} fontWeight={'light'}>/{start_day}</Text>
+          </HStack>
+          <Text whiteSpace={'nowrap'}>({start_dow}) {start_time}-</Text>
+        </HStack>
+      </Stack>
       <Heading size={'sm'}
                 color={'primary.800'}
                 noOfLines={2}
-                pr={event.group_image_url ? '52px' : '0'}
                 >
-        <LinkOverlay href={event.event_url} isExternal>{ event.title }</LinkOverlay>
+        <Link href={event.event_url} isExternal>{ event.title }</Link>
       </Heading>
-      {event.group_image_url && (
-        <Image src={event.group_image_url}
-               alt={''}
-               w={'44px'} h={'30px'}
-               fit={'contain'}
-               position={'absolute'}
-               top={'3'} right={'3'}
-               pointerEvents={'none'}
-               />
-      )}
       <Stack spacing={'0.5'} mt={'auto'} pt={'2'} pr={'6'} fontSize={'xs'} color={'gray.500'}>
         {address && (
           <HStack spacing={'1'}>
             <GeoAlt />
-            <Text noOfLines={1}>{ address }</Text>
+            <Text noOfLines={1}><Link href={event_map_url} isExternal>{ address }</Link></Text>
           </HStack>
         )}
         {event.group_name ? (
@@ -156,23 +266,7 @@ export function EventCard({ event, anchorId }: EventCardProps) {
                   zIndex={1}
                   onClick={handleMarkClick}
                   />
-    </LinkBox>
+    </Box>
   );
 }
 
-export function EventCardSkeleton() {
-  return (
-    <Stack spacing={'2'}
-           borderRadius={'md'}
-           border={'1px solid'}
-           borderColor={'gray.200'}
-           bg={'white'}
-           p={'3'}
-           h={'100%'}
-           >
-      <Box h={'0.875rem'} w={'40%'} bg={'white'} borderRadius={'sm'} />
-      <Box h={'1rem'} w={'80%'} bg={'white'} borderRadius={'sm'} />
-      <Box h={'0.75rem'} w={'60%'} bg={'white'} borderRadius={'sm'} />
-    </Stack>
-  );
-}

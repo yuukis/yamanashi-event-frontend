@@ -37,7 +37,12 @@ export function EventListView({
 }: EventListViewProps) {
   if (viewMode === 'grid') {
     return (
-      <SimpleGrid columns={{ base: 2, md: 3 }} spacing={{ base: '2', md: '4' }} px={{ base: '4', md: '0' }}>
+      <SimpleGrid columns={{ base: 2, md: 3 }}
+                  spacingX={{ base: '2', md: '4' }}
+                  spacingY={{ base: '6', md: '8' }}
+                  px={{ base: '4', md: '0' }}
+                  pt={'5'}
+                  >
         <AnimatePresence initial={false}>
           {items.map(({ event, anchorId }) => (
             <AnimatedEventItem key={event.uid} date={event.started_at} section={section} variant={'grid'}>
