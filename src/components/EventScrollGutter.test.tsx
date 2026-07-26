@@ -355,4 +355,69 @@ describe('EventScrollGutter', () => {
       (window as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver = originalResizeObserver;
     }
   });
+
+  it('xl未満: a plain tap on the drag track does not scroll, but dragging past the threshold does', async () => {
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(1000);
+    vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(10000);
+
+    const topByCard = new Map<Element, number>();
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      if (topByCard.has(this)) {
+        const top = topByCard.get(this)!;
+        return { top, bottom: top, left: 0, right: 0, width: 0, height: 0, x: 0, y: top, toJSON: () => ({}) } as DOMRect;
+      }
+      // トラック要素向け: 実際のガターと同様、ビューポート全体に張られた矩形を返す。
+      return { top: 0, bottom: 1000, left: 380, right: 390, width: 10, height: 1000, x: 380, y: 0, toJSON: () => ({}) } as DOMRect;
+    });
+
+    const cardA = document.createElement('div');
+    cardA.dataset.eventStart = '2025-01-15';
+    cardA.dataset.eventSection = 'all';
+    topByCard.set(cardA, 100);
+
+    const cardB = document.createElement('div');
+    cardB.dataset.eventStart = '2025-12-15';
+    cardB.dataset.eventSection = 'all';
+    topByCard.set(cardB, 9900);
+
+    document.body.append(cardA, cardB);
+
+    const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+    try {
+      const { container } = render(<EventScrollGutter />);
+      const gutterEl = () => container.querySelector('[data-testid="event-scroll-gutter"]') as HTMLElement;
+      await waitFor(() => expect(gutterEl()).toBeTruthy());
+
+      // xl未満はスクロール中だけ表示されるガイドなので、scrollイベントで
+      // isScrollingRef相当の内部状態を立ててからガター可視化を待つ。
+      window.dispatchEvent(new Event('scroll'));
+      await waitFor(() => expect(gutterEl().style.opacity).toBe('1'));
+
+      const trackEl = gutterEl().firstElementChild as HTMLElement;
+      // jsdomはPointer Capture APIを実装していないため、trackElインスタンス
+      // だけにno-opを補う(Element.prototypeを書き換えると他のテストに
+      // 影響が残ってしまう)。
+      if (!trackEl.setPointerCapture) {
+        trackEl.setPointerCapture = () => {};
+        trackEl.releasePointerCapture = () => {};
+        trackEl.hasPointerCapture = () => true;
+      }
+      const dispatch = (type: string, clientY: number, pointerId: number) => {
+        trackEl.dispatchEvent(new PointerEvent(type, { clientX: 380, clientY, pointerId, bubbles: true, cancelable: true }));
+      };
+
+      dispatch('pointerdown', 300, 1);
+      dispatch('pointerup', 300, 1);
+      expect(scrollToSpy).not.toHaveBeenCalled();
+
+      dispatch('pointerdown', 300, 2);
+      dispatch('pointermove', 320, 2);
+      expect(scrollToSpy).toHaveBeenCalled();
+      dispatch('pointerup', 320, 2);
+    } finally {
+      cardA.remove();
+      cardB.remove();
+    }
+  });
 });
