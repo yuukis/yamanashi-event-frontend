@@ -90,15 +90,14 @@ export function useIsHeadingStuck<T extends HTMLElement>() {
       return;
     }
 
-    let isTicking = false;
+    let rafId: number | null = null;
     const checkStuck = () => {
-      isTicking = false;
+      rafId = null;
       setIsStuck(el.getBoundingClientRect().top <= 0);
     };
     const onScroll = () => {
-      if (!isTicking) {
-        isTicking = true;
-        window.requestAnimationFrame(checkStuck);
+      if (rafId === null) {
+        rafId = window.requestAnimationFrame(checkStuck);
       }
     };
 
@@ -108,6 +107,9 @@ export function useIsHeadingStuck<T extends HTMLElement>() {
     cleanupRef.current = () => {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
     };
   }, []);
 
