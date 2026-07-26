@@ -288,11 +288,20 @@ type ScrollLayout = {
   viewportHeight: number;
   lineRanges: LineRange[];
   isDesktopScreenSize: boolean;
+  maxScroll: number;
 };
 
 // xl未満(スマホ・タブレット)でスクロールが止まってからガイドを消す
 // までの遅延(ms)。
 const SCROLL_IDLE_HIDE_DELAY = 800;
+
+// xl未満のガター(トラック+ラベル)の表示幅。ドラッグ検知の対象範囲
+// (画面右端からのX距離)にも同じ値を使う。
+const MOBILE_GUTTER_WIDTH = 90;
+
+// xl未満で、タップ(その場では何もしない)とドラッグ(その位置へスクロール)
+// を区別するための最小移動量(px)。
+const DRAG_START_THRESHOLD = 8;
 
 // AnimatedEventItemのframer motion layoutアニメーション(FLIP)完了時に
 // dispatchするイベント名。transformでの再配置はstyle属性の変更でしか
@@ -311,9 +320,11 @@ export function EventScrollGutter() {
   const [viewportHeight, setViewportHeight] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const gutterElRef = useRef<HTMLDivElement>(null);
-  const scrollLayoutRef = useRef<ScrollLayout>({ docHeight: 0, viewportHeight: 0, lineRanges: [], isDesktopScreenSize: false });
+  const scrollLayoutRef = useRef<ScrollLayout>({ docHeight: 0, viewportHeight: 0, lineRanges: [], isDesktopScreenSize: false, maxScroll: 1 });
   // xl未満でのみ参照する、「今スクロール中か」のフラグ。
   const isScrollingRef = useRef(false);
+  // xl未満のドラッグ検知が「ガターが今見えている間だけ」有効になるようにする。
+  const isGutterVisibleRef = useRef(false);
 
   const recomputeMarkers = useCallback(() => {
     const { markers, extents } = collectEventData();
@@ -376,15 +387,18 @@ export function EventScrollGutter() {
     // xl以上は現在位置付近であれば表示し続けるが、xl未満はさらに
     // スクロール中であることも条件にする(常時表示だと本文を隠すため)。
     const isVisible = isDesktopScreenSize ? isNearContent : isNearContent && isScrollingRef.current;
+    isGutterVisibleRef.current = isVisible;
     gutterEl.style.opacity = isVisible ? '1' : '0';
-    gutterEl.style.pointerEvents = isVisible ? 'auto' : 'none';
+    // xl未満はガターの下にあるコンテンツへタップを素通りさせたいので、
+    // 常にpointerEvents:noneにする(ドラッグの検知はdocument側で行う)。
+    gutterEl.style.pointerEvents = isDesktopScreenSize && isVisible ? 'auto' : 'none';
   }, []);
 
   // 描画後・ペイント前に ref と表示/非表示を同期させるため useLayoutEffect を使う。
   useLayoutEffect(() => {
-    scrollLayoutRef.current = { docHeight, viewportHeight, lineRanges, isDesktopScreenSize };
+    scrollLayoutRef.current = { docHeight, viewportHeight, lineRanges, isDesktopScreenSize, maxScroll };
     updateGutterVisibility();
-  }, [docHeight, viewportHeight, lineRanges, isDesktopScreenSize, updateGutterVisibility]);
+  }, [docHeight, viewportHeight, lineRanges, isDesktopScreenSize, maxScroll, updateGutterVisibility]);
 
   useEffect(() => {
     let rafId = 0;
@@ -417,7 +431,6 @@ export function EventScrollGutter() {
   }, [updateGutterVisibility]);
 
   const hasScrollableContent = docHeight > viewportHeight && viewportHeight > 0;
-  const isDraggingRef = useRef(false);
 
   // クリックした/触れた位置が画面の縦中央に来るようにジャンプする
   // (トラック上の位置はtoTrackYと同じ座標系なので、逆算するとdocHeight/
@@ -447,40 +460,79 @@ export function EventScrollGutter() {
     }
   };
 
-  // xl未満: 指でなぞった位置に追従してスクロールする、よくあるスクラバー
-  // 操作にする(smoothだと指の動きに遅れて見えるため即時反映にする)。
-  const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+  // xl未満: ガターにpointerEvents:autoを付けてしまうと、下にあるカードへの
+  // タップが一切届かなくなる。それを避けるため、ガターは常にpointerEvents:
+  // noneのままにし、代わりにdocument全体でポインタを監視して「画面右端から
+  // MOBILE_GUTTER_WIDTHの範囲で始まったジェスチャーか」を見る。指を動かさず
+  // 離せばタップとして下のコンテンツにそのまま伝わり、DRAG_START_THRESHOLD
+  // を超えて動かして初めてその位置へのスクロールとして扱う。
+  useEffect(() => {
     if (isDesktopScreenSize) {
       return;
     }
-    const ratio = ratioFromClientY(e.clientY);
-    if (ratio === null) {
-      return;
-    }
-    isDraggingRef.current = true;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    scrollToRatio(ratio, false);
-  };
 
-  const handleTrackPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current) {
-      return;
-    }
-    const ratio = ratioFromClientY(e.clientY);
-    if (ratio !== null) {
-      scrollToRatio(ratio, false);
-    }
-  };
+    let activePointerId: number | null = null;
+    let startX = 0;
+    let startY = 0;
+    let isDragging = false;
 
-  const handleTrackPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current) {
-      return;
-    }
-    isDraggingRef.current = false;
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    }
-  };
+    const onPointerDown = (e: PointerEvent) => {
+      if (activePointerId !== null || !isGutterVisibleRef.current) {
+        return;
+      }
+      if (window.innerWidth - e.clientX > MOBILE_GUTTER_WIDTH) {
+        return;
+      }
+      activePointerId = e.pointerId;
+      startX = e.clientX;
+      startY = e.clientY;
+      isDragging = false;
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerId !== activePointerId) {
+        return;
+      }
+      if (!isDragging) {
+        if (Math.hypot(e.clientX - startX, e.clientY - startY) < DRAG_START_THRESHOLD) {
+          return;
+        }
+        isDragging = true;
+      }
+      // ドラッグと確定してから初めて既定のタッチスクロールを止める。
+      // タップだけなら一切邪魔をせず下のコンテンツへそのまま伝わる。
+      e.preventDefault();
+      const rect = trackRef.current?.getBoundingClientRect();
+      if (!rect || rect.height === 0) {
+        return;
+      }
+      const ratio = Math.min(Math.max((e.clientY - rect.top) / rect.height, 0), 1);
+      const { docHeight: currentDocHeight, viewportHeight: currentViewportHeight, maxScroll: currentMaxScroll } =
+        scrollLayoutRef.current;
+      const targetCenterDocumentY = ratio * currentDocHeight;
+      const targetScrollY = Math.min(Math.max(targetCenterDocumentY - currentViewportHeight / 2, 0), currentMaxScroll);
+      window.scrollTo({ top: targetScrollY, behavior: 'auto' });
+    };
+
+    const onPointerEnd = (e: PointerEvent) => {
+      if (e.pointerId !== activePointerId) {
+        return;
+      }
+      activePointerId = null;
+      isDragging = false;
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('pointermove', onPointerMove, { passive: false });
+    document.addEventListener('pointerup', onPointerEnd);
+    document.addEventListener('pointercancel', onPointerEnd);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerup', onPointerEnd);
+      document.removeEventListener('pointercancel', onPointerEnd);
+    };
+  }, [isDesktopScreenSize]);
 
   if (rawMarkers.length === 0 || !hasScrollableContent) {
     return null;
@@ -496,7 +548,7 @@ export function EventScrollGutter() {
          right={{base: 0, xl: '14px'}}
          // xl未満は年月ラベルが本文に重なるため、視認性のために背景を敷く。
          // 右(トラック側)を濃く、左(ラベル側)へ透過を強くするグラデーションにする。
-         w={{base: '90px', xl: 'auto'}}
+         w={{base: `${MOBILE_GUTTER_WIDTH}px`, xl: 'auto'}}
          display={'flex'}
          justifyContent={'flex-end'}
          bgGradient={{base: 'linear(to-r, transparent, whiteAlpha.800)', xl: 'none'}}
@@ -507,17 +559,6 @@ export function EventScrollGutter() {
          opacity={0}
          pointerEvents={'none'}
          data-testid={'event-scroll-gutter'}
-         // xl未満はトラック(10px)だけでなく、ラベル込みの表示領域全体を
-         // 指でなぞれるようにする(タップしやすくするため)。
-         onPointerDown={handleTrackPointerDown}
-         onPointerMove={handleTrackPointerMove}
-         onPointerUp={handleTrackPointerUp}
-         onPointerCancel={handleTrackPointerUp}
-         // ブラウザが何らかの理由でpointer captureを横取り/解放した場合
-         // (lostpointercapture)もドラッグ終了として扱う。ここを拾わないと
-         // isDraggingRefがtrueのまま残り、ボタンを押していないpointermove
-         // でも意図せずスクロールしてしまう。
-         onLostPointerCapture={handleTrackPointerUp}
          // ページ本体は擬似スクロールバーが無くてもネイティブスクロール・
          // キーボードだけで完全に操作できる補助的なミニマップなので、
          // 支援技術には存在しないものとして扱う(クリックジャンプ/ドラッグ
@@ -528,9 +569,6 @@ export function EventScrollGutter() {
            '@media (prefers-reduced-motion: reduce)': {
              transition: 'none',
            },
-           // xl未満のドラッグ操作がブラウザの既定のタッチスクロールと
-           // 競合しないようにする。
-           touchAction: { base: 'none', xl: 'auto' },
          }}
          >
       <Box ref={trackRef}

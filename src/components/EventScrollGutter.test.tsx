@@ -355,4 +355,68 @@ describe('EventScrollGutter', () => {
       (window as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver = originalResizeObserver;
     }
   });
+
+  it('xl未満: passes a plain tap through to the content under the gutter, but scrolls once dragged past the threshold', async () => {
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(1000);
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390);
+    vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(10000);
+
+    const topByCard = new Map<Element, number>();
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      if (topByCard.has(this)) {
+        const top = topByCard.get(this)!;
+        return { top, bottom: top, left: 0, right: 0, width: 0, height: 0, x: 0, y: top, toJSON: () => ({}) } as DOMRect;
+      }
+      // トラック要素向け: 実際のガターと同様、ビューポート全体に張られた矩形を返す。
+      return { top: 0, bottom: 1000, left: 380, right: 390, width: 10, height: 1000, x: 380, y: 0, toJSON: () => ({}) } as DOMRect;
+    });
+
+    const cardA = document.createElement('div');
+    cardA.dataset.eventStart = '2025-01-15';
+    cardA.dataset.eventSection = 'all';
+    topByCard.set(cardA, 100);
+
+    const cardB = document.createElement('div');
+    cardB.dataset.eventStart = '2025-12-15';
+    cardB.dataset.eventSection = 'all';
+    topByCard.set(cardB, 9900);
+
+    document.body.append(cardA, cardB);
+
+    const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+    try {
+      const { container } = render(<EventScrollGutter />);
+      const gutterEl = () => container.querySelector('[data-testid="event-scroll-gutter"]') as HTMLElement;
+      await waitFor(() => expect(gutterEl()).toBeTruthy());
+
+      // xl未満はスクロール中だけ表示されるガイドなので、scrollイベントで
+      // isScrollingRef相当の内部状態を立ててからガター可視化を待つ。
+      window.dispatchEvent(new Event('scroll'));
+      await waitFor(() => expect(gutterEl().style.opacity).toBe('1'));
+
+      const edgeX = 390 - 10; // MOBILE_GUTTER_WIDTH(90px)の内側
+      const dispatch = (type: string, opts: { clientX: number; clientY: number; pointerId: number }) => {
+        document.dispatchEvent(new PointerEvent(type, { ...opts, bubbles: true, cancelable: true }));
+      };
+
+      dispatch('pointerdown', { clientX: edgeX, clientY: 300, pointerId: 1 });
+      dispatch('pointerup', { clientX: edgeX, clientY: 300, pointerId: 1 });
+      expect(scrollToSpy).not.toHaveBeenCalled();
+
+      dispatch('pointerdown', { clientX: edgeX, clientY: 300, pointerId: 2 });
+      dispatch('pointermove', { clientX: edgeX, clientY: 320, pointerId: 2 });
+      expect(scrollToSpy).toHaveBeenCalled();
+      dispatch('pointerup', { clientX: edgeX, clientY: 320, pointerId: 2 });
+
+      scrollToSpy.mockClear();
+      dispatch('pointerdown', { clientX: 50, clientY: 300, pointerId: 3 });
+      dispatch('pointermove', { clientX: 50, clientY: 340, pointerId: 3 });
+      dispatch('pointerup', { clientX: 50, clientY: 340, pointerId: 3 });
+      expect(scrollToSpy).not.toHaveBeenCalled();
+    } finally {
+      cardA.remove();
+      cardB.remove();
+    }
+  });
 });
