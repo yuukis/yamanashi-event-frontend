@@ -384,13 +384,6 @@ describe('EventScrollGutter', () => {
 
     const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
 
-    // jsdomはPointer Capture APIを実装していないため、簡易なno-opを補う。
-    if (!Element.prototype.setPointerCapture) {
-      Element.prototype.setPointerCapture = () => {};
-      Element.prototype.releasePointerCapture = () => {};
-      Element.prototype.hasPointerCapture = () => true;
-    }
-
     try {
       const { container } = render(<EventScrollGutter />);
       const gutterEl = () => container.querySelector('[data-testid="event-scroll-gutter"]') as HTMLElement;
@@ -402,6 +395,14 @@ describe('EventScrollGutter', () => {
       await waitFor(() => expect(gutterEl().style.opacity).toBe('1'));
 
       const trackEl = gutterEl().firstElementChild as HTMLElement;
+      // jsdomはPointer Capture APIを実装していないため、trackElインスタンス
+      // だけにno-opを補う(Element.prototypeを書き換えると他のテストに
+      // 影響が残ってしまう)。
+      if (!trackEl.setPointerCapture) {
+        trackEl.setPointerCapture = () => {};
+        trackEl.releasePointerCapture = () => {};
+        trackEl.hasPointerCapture = () => true;
+      }
       const dispatch = (type: string, clientY: number, pointerId: number) => {
         trackEl.dispatchEvent(new PointerEvent(type, { clientX: 380, clientY, pointerId, bubbles: true, cancelable: true }));
       };

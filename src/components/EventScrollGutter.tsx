@@ -472,9 +472,10 @@ export function EventScrollGutter() {
   // xl未満: touch-actionはジェスチャー開始前にCSSで宣言しておかないと、
   // 既にネイティブスクロールが確定した後のpreventDefault()では止められない
   // ことがある(実機で確認済み)。そのためドラッグを受け付けるトラック部分は
-  // 常時pointerEvents:auto+touchAction:noneにしておき、代わりにタップと
-  // ドラッグの区別はJS側で行う(動かさずに離せば何もしない=タップとして
-  // 埋もれる。DRAG_START_THRESHOLDを超えて動いて初めてスクロールする)。
+  // touchAction:noneを常時宣言しておき(pointerEvents:autoは表示中のみ、
+  // updateGutterVisibility側で切り替える)、タップとドラッグの区別はJS側で
+  // 行う(動かさずに離せば何もしない=タップとして埋もれる。
+  // DRAG_START_THRESHOLDを超えて動いて初めてスクロールする)。
   const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isDesktopScreenSize) {
       return;
