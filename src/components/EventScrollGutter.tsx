@@ -547,8 +547,6 @@ export function EventScrollGutter() {
       <Box ref={trackRef}
            position={'relative'}
            h={'100%'}
-           // xl未満はタップしやすいよう、実際の縦線(2px)より広い帯を
-           // ドラッグ受付エリアにする(MOBILE_DRAG_ZONE_WIDTH参照)。
            w={{base: `${MOBILE_DRAG_ZONE_WIDTH}px`, xl: '10px'}}
            cursor={'pointer'}
            onClick={handleTrackClick}
