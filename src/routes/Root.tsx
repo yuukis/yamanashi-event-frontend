@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { YearSwitcher, FUTURE_EVENTS_ANCHOR_ID } from '../components/YearSwitcher';
-import { SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
+import { EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { EventFilterTabs } from '../components/EventFilterTabs';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import { GroupMoreEventsLink } from '../components/GroupMoreEventsLink';
-import { EventListView, type EventListItem } from '../components/EventListView';
+import { EventListView, SkeletonEventListView, type EventListItem } from '../components/EventListView';
 import { ViewModeToggle } from '../components/ViewModeToggle';
 import { EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
 import { EventScrollGutter } from '../components/EventScrollGutter';
@@ -20,7 +20,6 @@ import {
   Container,
   Box,
   Stack,
-  HStack,
   Card,
   CardBody,
   Heading,
@@ -198,6 +197,7 @@ function Root({startYear}: {startYear: number}) {
     : null;
   const selectedGroupName = selectedGroup ? (selectedGroupDetail?.title ?? selectedGroup) : null;
   const selectedAreaName = selectedArea ? (AREA_LABELS[selectedArea] ?? selectedArea) : null;
+  const hasActiveFilter = Boolean(selectedGroup || selectedKeyword || selectedArea);
   const futureEvents = filterEventsByArea(filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup), selectedArea);
   const pastEvents = filterEventsByArea(filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup), selectedArea);
 
@@ -363,9 +363,6 @@ function Root({startYear}: {startYear: number}) {
                            errorMessage={data.errorMessage}
                            showGroupBadges
                            />
-          <HStack justifyContent={'flex-end'} px={{base: '4', md: '0'}}>
-            <ViewModeToggle />
-          </HStack>
           {/* sticky 化した見出しは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
           <Stack>
@@ -396,16 +393,21 @@ function Root({startYear}: {startYear: number}) {
                                  onClearArea={() => handleAreaSelect(null)}
                                  />
               <Spacer />
-              <YearSwitcher startYear={startYear} selectedYear={null} showChevrons={false} />
+              <Box display={hasActiveFilter ? { base: 'none', md: 'block' } : 'block'} flexShrink={0}>
+                <YearSwitcher startYear={startYear} selectedYear={null} />
+              </Box>
+              <Box flexShrink={0}>
+                <ViewModeToggle />
+              </Box>
             </Stack>
-            <Card variant={viewMode === 'grid' && !data.isLoading && !data.errorMessage && futureEvents.length > 0 ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
+            <Card variant={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && futureEvents.length > 0)) ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
-                  bg={viewMode === 'grid' && !data.isLoading && !data.errorMessage && futureEvents.length > 0 ? 'gray.100' : undefined}
+                  bg={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && futureEvents.length > 0)) ? 'gray.100' : undefined}
                   >
               <CardBody>
                 {data.isLoading ? (
-                  <SkeletonEventBody />
+                  <SkeletonEventListView viewMode={viewMode} />
                 ) : data.errorMessage ? (
                   <ErrorEventBody message={ data.errorMessage } />
                 ) : futureEvents.length === 0 ? (
@@ -451,16 +453,20 @@ function Root({startYear}: {startYear: number}) {
                                  onClearGroup={() => handleGroupSelect(null)}
                                  onClearArea={() => handleAreaSelect(null)}
                                  />
+              <Spacer />
+              <Box flexShrink={0}>
+                <ViewModeToggle />
+              </Box>
             </Stack>
-            <Card variant={viewMode === 'grid' && !data.isLoading && !data.errorMessage && pastEvents.length > 0 ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
+            <Card variant={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && pastEvents.length > 0)) ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
-                  bg={viewMode === 'grid' && !data.isLoading && !data.errorMessage && pastEvents.length > 0 ? 'gray.100' : undefined}
+                  bg={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && pastEvents.length > 0)) ? 'gray.100' : undefined}
                   >
               <CardBody>
                 <Stack spacing={EVENT_LIST_SPACING}>
                   {data.isLoading ? (
-                    <SkeletonEventBody />
+                    <SkeletonEventListView viewMode={viewMode} />
                   ) : data.errorMessage ? (
                     <ErrorEventBody message={ data.errorMessage } />
                   ) : pastEvents.length === 0 ? (

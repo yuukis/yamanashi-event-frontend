@@ -1,11 +1,13 @@
 import { Stack, SimpleGrid } from '@chakra-ui/react';
 import { AnimatePresence } from 'framer-motion';
 import { AnimatedEventItem, EVENT_LIST_SPACING, EVENT_LIST_SPACING_COMPACT } from './AnimatedEventItem';
-import { EventBody } from './EventBody';
-import { EventBodyCompact } from './EventBodyCompact';
-import { EventCard } from './EventCard';
+import { EventBody, SkeletonEventBody } from './EventBody';
+import { EventBodyCompact, SkeletonEventBodyCompact } from './EventBodyCompact';
+import { EventCard, SkeletonEventCard } from './EventCard';
 import type { ViewMode } from '../utils/viewMode';
 import type { EventWithGroup } from '../types/events';
+
+const GRID_SKELETON_COUNT = 6;
 
 export type EventListItem = {
   event: EventWithGroup;
@@ -80,4 +82,29 @@ export function EventListView({
       </AnimatePresence>
     </Stack>
   );
+}
+
+// 読み込み中プレースホルダーも表示形式(標準/コンパクト/グリッド)に
+// 合わせた見た目にする。グリッドは1件だけだと寂しいため複数件並べる。
+export function SkeletonEventListView({ viewMode }: { viewMode: ViewMode }) {
+  if (viewMode === 'grid') {
+    return (
+      <SimpleGrid columns={{ base: 2, md: 3 }}
+                  spacingX={{ base: '2', md: '4' }}
+                  spacingY={{ base: '6', md: '8' }}
+                  px={{ base: '4', md: '0' }}
+                  pt={'5'}
+                  >
+        {Array.from({ length: GRID_SKELETON_COUNT }).map((_, i) => (
+          <SkeletonEventCard key={i} />
+        ))}
+      </SimpleGrid>
+    );
+  }
+
+  if (viewMode === 'compact') {
+    return <SkeletonEventBodyCompact />;
+  }
+
+  return <SkeletonEventBody />;
 }

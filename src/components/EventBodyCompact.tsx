@@ -2,7 +2,6 @@ import {
   Box,
   Stack,
   HStack,
-  VStack,
   Spacer,
   Heading,
   Text,
@@ -10,30 +9,29 @@ import {
   Badge,
   Button,
   IconButton,
-  Drawer,
-  DrawerOverlay,
-  DrawerContent,
-  DrawerHeader,
-  DrawerBody,
   Link,
   Flex,
   Show,
   Hide,
   Tooltip,
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverArrow,
+  PopoverBody,
+  Skeleton,
+  SkeletonCircle,
 } from '@chakra-ui/react';
-import { FaXTwitter } from "react-icons/fa6";
-import { FiArchive, FiExternalLink, FiMap } from "react-icons/fi";
 import {
   GeoAlt,
   Person,
   People,
-  ChevronRight,
   Star,
   StarFill,
 } from '@chakra-icons/bootstrap';
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
-import { ShareButton } from './ShareButtons';
-import { buildGroupPagePath } from '../utils/groupPage';
+import { ShareButton, XShareButton } from './ShareButtons';
+import { EventActionsDrawer } from './EventActionsDrawer';
 import { useEventBodyData, type EventBodyProps } from './useEventBodyData';
 
 // コミュニティロゴ(top/right起点の絶対配置)の実サイズ。標準表示より
@@ -41,21 +39,18 @@ import { useEventBodyData, type EventBodyProps } from './useEventBodyData';
 // モバイル/デスクトップ共通(スター・ロゴとも縦中央揃え・横並びに統一)。
 const GROUP_LOGO_SIZE = { w: '44px', h: '30px' };
 // 見出し・住所/コミュニティ行の右側予約幅。
-// デスクトップ: ロゴ(または汎用アイコン/空きスペース)とスター単体ボタン
-// ぶんを常に確保し、カード間でスター位置が縦に揃うようにする。
-// モバイル: スターは左側に移動済みのため、右側はロゴ(あれば)+シェブロン
-// ぶんのみでよい。ロゴがない行は汎用アイコンも出さないため、シェブロン分の
-// 最小限の余白にする。
+// デスクトップ・モバイル共通: ロゴ(または汎用アイコン/空きスペース)と
+// スター単体ボタンぶんを常に確保し、カード間でスター位置が縦に揃うように
+// する(モバイルはシェブロン廃止によりスターがカード右端に移動したため、
+// デスクトップと同じ考え方で予約幅を決められるようになった)。
 const RIGHT_RESERVE_PR_DESKTOP = '108px';
-// ロゴ/汎用アイコンの右オフセット。モバイルはスターが左に移動済みなので
-// カード右端(シェブロン)に寄せ、デスクトップはスター(right:'2')の
-// さらに左に置く。
-const GROUP_LOGO_RIGHT_OFFSET = { base: '24px', md: '56px' };
+// ロゴ/汎用アイコンの右オフセット。スター(right:'2')のさらに左に置く。
+const GROUP_LOGO_RIGHT_OFFSET = { base: '40px', md: '56px' };
 
 export function EventBodyCompact(data: EventBodyProps) {
   const d = useEventBodyData(data);
   const right_reserve_pr = {
-    base: d.group_image_url ? '68px' : '24px',
+    base: d.group_image_url ? '88px' : '40px',
     md: RIGHT_RESERVE_PR_DESKTOP,
   };
 
@@ -91,25 +86,6 @@ export function EventBodyCompact(data: EventBodyProps) {
               flexDirection={'row'}
               alignItems={'stretch'}
               >
-          {/* モバイル: スターを日付より左、カードの最も左に置く
-              (シェブロンと近すぎて不自然だったため)。通常フローの
-              先頭要素にすることで、絶対配置による重なりを避ける。 */}
-          <Hide above='md'>
-            <Flex alignItems={'center'} mr={'1'} flexShrink={0}>
-              <Tooltip label={d.attendanceMarkLabel} hasArrow fontSize={'xs'}>
-                <IconButton aria-label={d.attendanceMarkLabel}
-                            icon={d.isMarked ? <StarFill /> : <Star />}
-                            size={'xs'}
-                            variant={d.isMarked ? 'solid' : 'ghost'}
-                            colorScheme={d.isMarked ? 'yellow' : 'gray'}
-                            onClick={d.handleCardMarkClick}
-                            onTouchStart={d.handleMarkButtonTouch}
-                            onTouchMove={d.handleMarkButtonTouch}
-                            onTouchEnd={d.handleMarkButtonTouch}
-                            />
-              </Tooltip>
-            </Flex>
-          </Hide>
           <Stack w={{base: 'auto', md: '25%'}}
                 flexShrink={{base: 0, md: 1}}
                 direction={'column'}
@@ -339,129 +315,118 @@ export function EventBodyCompact(data: EventBodyProps) {
                 スター単体ボタンに置き換える。デスクトップのみ(モバイルは
                 タイトル左のスターを使う。シェブロンとの距離を取るため)。 */}
             <Show above='md'>
-              <Tooltip label={d.attendanceMarkLabel} hasArrow fontSize={'xs'}>
-                <IconButton aria-label={d.attendanceMarkLabel}
-                            icon={d.isMarked ? <StarFill /> : <Star />}
-                            size={'sm'}
-                            variant={d.isMarked ? 'solid' : 'ghost'}
-                            colorScheme={d.isMarked ? 'yellow' : 'gray'}
-                            position={'absolute'}
-                            top={'50%'}
-                            transform={'translateY(-50%)'}
-                            right={'2'}
-                            zIndex={1}
-                            onClick={d.handleCardMarkClick}
-                            onTouchStart={d.handleMarkButtonTouch}
-                            onTouchMove={d.handleMarkButtonTouch}
-                            onTouchEnd={d.handleMarkButtonTouch}
-                            />
-              </Tooltip>
+              <Popover isOpen={d.isMarkPopoverOpen} onClose={d.onMarkPopoverClose} placement='top-end' isLazy>
+                {/* Tooltipを外側に置く理由は標準表示(EventBody.tsx)と同じ。
+                    PopoverAnchorに直接Tooltipを渡すとrefが競合する。 */}
+                <Tooltip label={d.attendanceMarkLabel} hasArrow fontSize={'xs'} shouldWrapChildren>
+                  <PopoverAnchor>
+                    <IconButton aria-label={d.attendanceMarkLabel}
+                                icon={d.isMarked ? <StarFill /> : <Star />}
+                                size={'sm'}
+                                variant={d.isMarked ? 'solid' : 'ghost'}
+                                colorScheme={d.isMarked ? 'yellow' : 'gray'}
+                                position={'absolute'}
+                                top={'50%'}
+                                transform={'translateY(-50%)'}
+                                right={'2'}
+                                zIndex={1}
+                                onClick={d.handleCardMarkClick}
+                                onTouchStart={d.handleMarkButtonTouch}
+                                onTouchMove={d.handleMarkButtonTouch}
+                                onTouchEnd={d.handleMarkButtonTouch}
+                                />
+                  </PopoverAnchor>
+                </Tooltip>
+                <PopoverContent w={'auto'}>
+                  <PopoverArrow />
+                  <PopoverBody>
+                    <Stack spacing={'2'}>
+                      <Stack spacing={'0'}>
+                        <Text fontSize={'sm'} fontWeight={'bold'}>{ d.attendanceMarkConfirmationText }</Text>
+                        <Text fontSize={'xs'} color={'gray.500'}>{ d.attendanceInviteSubtext }</Text>
+                      </Stack>
+                      <XShareButton event={d.event} />
+                      <ShareButton event={d.event} label={d.nativeShareLabel} />
+                    </Stack>
+                  </PopoverBody>
+                </PopoverContent>
+              </Popover>
             </Show>
           </Flex>
         </Flex>
-        {/* シェブロンも画像・スターと同じく絶対配置にする。通常フロー
-            (Spacer併用)のままだと、HStack内でシェブロン分の幅が常に
-            確保されてしまい、画像なし行でコンテンツ側の右端をシェブロン
-            際まで広げられなかったため。デスクトップはSpacerを維持
-            (削除すると縦線位置がわずかにズレるため)。 */}
+        {/* デスクトップはSpacerを維持(削除すると縦線位置がわずかにズレるため)。
+            モバイルは元々あったシェブロンを廃止し、同じカード右端の位置に
+            スターを置く(デスクトップと同じ配置)。 */}
         <Show above='md'>
           <Spacer />
         </Show>
         <Hide above='md'>
-          <Box position={'absolute'} top={'50%'} transform={'translateY(-50%)'} right={'2'} aria-hidden>
-            <ChevronRight />
-          </Box>
+          <Tooltip label={d.attendanceMarkLabel} hasArrow fontSize={'xs'}>
+            <IconButton aria-label={d.attendanceMarkLabel}
+                        icon={d.isMarked ? <StarFill /> : <Star />}
+                        size={'xs'}
+                        variant={d.isMarked ? 'solid' : 'ghost'}
+                        colorScheme={d.isMarked ? 'yellow' : 'gray'}
+                        position={'absolute'}
+                        top={'50%'}
+                        transform={'translateY(-50%)'}
+                        right={'2'}
+                        zIndex={1}
+                        onClick={d.handleCardMarkClick}
+                        onTouchStart={d.handleMarkButtonTouch}
+                        onTouchMove={d.handleMarkButtonTouch}
+                        onTouchEnd={d.handleMarkButtonTouch}
+                        />
+          </Tooltip>
         </Hide>
       </HStack>
 
-      <Drawer placement="bottom"
-              isOpen={d.isOpen}
-              onClose={() => {
-                d.resetState();
-                d.onClose();
-              }}
-              >
-        <DrawerOverlay />
-        <DrawerContent pb={6}
-                       borderTopRadius="xl"
-                       animation="slide-up"
-                       >
-          <DrawerHeader textAlign="center"
-                        borderBottomWidth="1px"
-                        >
-            { d.title }
-          </DrawerHeader>
-          <DrawerBody>
-            <VStack spacing={2}>
-              <Button w="full"
-                      leftIcon={d.isMarked ? <StarFill /> : <Star />}
-                      colorScheme={d.isMarked ? 'yellow' : 'gray'}
-                      onClick={d.handleDrawerMarkClick}
-                      >
-                { d.attendanceMarkLabel }
-              </Button>
-              <ShareButton event={d.event} onAfterAction={d.onClose} label={d.nativeShareLabel} />
-              <Button w="full"
-                      leftIcon={<FiExternalLink />}
-                      onClick={() => {
-                        window.open(d.event.event_url);
-                        d.onClose();
-                      }}
-                      >
-                情報提供元のページを開く
-              </Button>
-              {d.has_group_page && (
-                <Button w="full"
-                        leftIcon={<People />}
-                        onClick={() => {
-                          window.open(buildGroupPagePath(d.group_key!), '_self');
-                          d.onClose();
-                        }}
-                        >
-                  コミュニティページを見る
-                </Button>
-              )}
-              {d.address_array.length > 0 && (
-                <Button w="full"
-                        leftIcon={<FiMap />}
-                        onClick={() => {
-                          window.open(d.event_map_url);
-                          d.onClose();
-                        }}
-                        >
-                  マップで会場を見る
-                </Button>
-              )}
-              <Button w="full"
-                      leftIcon={<FaXTwitter />}
-                      onClick={() => {
-                        window.open(d.event_x_search_url);
-                        d.onClose();
-                      }}
-                      >
-                { d.x_search_label }
-              </Button>
-              {d.is_archive_event && d.archive_url && (
-                <Button w="full"
-                        leftIcon={<FiArchive />}
-                        onClick={() => {
-                          window.open(d.archive_url!);
-                          d.onClose();
-                        }}
-                        >
-                  アーカイブ元を開く
-                </Button>
-              )}
-              <Button w="full"
-                      colorScheme="red"
-                      onClick={d.onClose}
-                      >
-                キャンセル
-              </Button>
-            </VStack>
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
+      <EventActionsDrawer event={d.event}
+                          isOpen={d.isOpen}
+                          onClose={d.onClose}
+                          resetState={d.resetState}
+                          isMarked={d.isMarked}
+                          attendanceMarkLabel={d.attendanceMarkLabel}
+                          onMarkClick={d.handleDrawerMarkClick}
+                          nativeShareLabel={d.nativeShareLabel}
+                          hasGroupPage={d.has_group_page}
+                          hasAddress={d.address_array.length > 0}
+                          eventMapUrl={d.event_map_url}
+                          eventXSearchUrl={d.event_x_search_url}
+                          xSearchLabel={d.x_search_label}
+                          isArchiveEvent={d.is_archive_event}
+                          />
     </>
   )
+}
+
+export function SkeletonEventBodyCompact() {
+  return (
+    <HStack p={'1'} spacing={{base: '3', md: '4'}}>
+      <Stack w={{base: 'auto', md: '25%'}}
+             flexShrink={{base: 0, md: 1}}
+             spacing={'1'}
+             >
+        <Skeleton height={{base: '1.2rem', md: '1.8rem'}} width={'3.5rem'} />
+        <Skeleton height={'0.75rem'} width={'5rem'} />
+      </Stack>
+      <Show above='md'>
+        <Stack spacing={'2px'} direction={'row'} mr={'2'}>
+          <Box w={'1px'} bg={'gray.200'} />
+          <Box w={'1px'} bg={'gray.200'} />
+          <Box w={'1px'} bg={'gray.200'} />
+        </Stack>
+      </Show>
+      <Stack flex={'1'} spacing={'1'} minW={'0'}>
+        <Skeleton height={'0.875rem'} width={{base: '70%', md: '40%'}} />
+        <Skeleton height={'0.75rem'} width={{base: '50%', md: '25%'}} />
+      </Stack>
+      {/* デスクトップのみ表示されるコミュニティロゴぶんの領域。
+          モバイルはスターアイコン単体しかないため、その分は小さめの円で表現する。 */}
+      <Show above='md'>
+        <Skeleton w={'44px'} h={'30px'} borderRadius={'md'} flexShrink={0} />
+      </Show>
+      <SkeletonCircle size={'6'} flexShrink={0} />
+    </HStack>
+  );
 }

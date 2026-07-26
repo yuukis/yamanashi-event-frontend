@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useParams } from "react-router-dom";
 import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { PageBreadcrumb } from '../components/PageBreadcrumb';
-import { SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
-import { EventListView } from '../components/EventListView';
+import { EmptyEventBody, ErrorEventBody } from '../components/EventBody';
+import { EventListView, SkeletonEventListView } from '../components/EventListView';
 import { ViewModeToggle } from '../components/ViewModeToggle';
 import { EventScrollGutter } from '../components/EventScrollGutter';
 import { ShareContextIconRow } from '../components/ShareButtons';
@@ -15,6 +15,7 @@ import {
   Box,
   Stack,
   HStack,
+  Spacer,
   Wrap,
   WrapItem,
   Card,
@@ -566,22 +567,27 @@ function Group() {
         </Stack>
         {!data.isLoading && !data.isNotFound && !data.errorMessage && group && (
           <Stack>
-            <HStack justifyContent={'flex-end'} px={{base: '4', md: '0'}}>
-              <ViewModeToggle />
-            </HStack>
             <Stack>
-              <Heading size={{base: 'sm', md: 'md'}}
-                       position={'sticky'}
-                       top={STICKY_HEADING_TOP}
-                       zIndex={'docked'}
-                       bg={'gray.100'}
-                       px={{base: '4', md: '0'}}
-                       mt={'4'}
-                       py={'2'}
-                       color={'gray.600'}
-                       >
-                今後の開催予定
-              </Heading>
+              <Stack direction={'row'} spacing={'2'}
+                     position={'sticky'}
+                     top={STICKY_HEADING_TOP}
+                     zIndex={'docked'}
+                     bg={'gray.100'}
+                     px={{base: '4', md: '0'}}
+                     mt={'4'}
+                     py={'2'}
+                     display={'flex'} alignItems={'center'}
+                     minH={'2.75rem'}
+                     >
+                <Heading size={{base: 'sm', md: 'md'}}
+                         color={'gray.600'}
+                         flexShrink={0}
+                         >
+                  今後の開催予定
+                </Heading>
+                <Spacer />
+                <ViewModeToggle />
+              </Stack>
               <Card variant={viewMode === 'grid' && upcomingEvents.length > 0 ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                     size={{base: 'sm', md: 'md'}}
                     p={'0'}
@@ -609,18 +615,26 @@ function Group() {
             </Stack>
 
             <Stack>
-              <Heading size={{base: 'sm', md: 'md'}}
-                       position={'sticky'}
-                       top={STICKY_HEADING_TOP}
-                       zIndex={'docked'}
-                       bg={'gray.100'}
-                       px={{base: '4', md: '0'}}
-                       mt={'4'}
-                       py={'2'}
-                       color={'gray.600'}
-                       >
-                過去のイベント
-              </Heading>
+              <Stack direction={'row'} spacing={'2'}
+                     position={'sticky'}
+                     top={STICKY_HEADING_TOP}
+                     zIndex={'docked'}
+                     bg={'gray.100'}
+                     px={{base: '4', md: '0'}}
+                     mt={'4'}
+                     py={'2'}
+                     display={'flex'} alignItems={'center'}
+                     minH={'2.75rem'}
+                     >
+                <Heading size={{base: 'sm', md: 'md'}}
+                         color={'gray.600'}
+                         flexShrink={0}
+                         >
+                  過去のイベント
+                </Heading>
+                <Spacer />
+                <ViewModeToggle />
+              </Stack>
               <Card variant={viewMode === 'grid' && pastEvents.length > 0 ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                     size={{base: 'sm', md: 'md'}}
                     p={'0'}
@@ -684,13 +698,14 @@ function Group() {
           </Stack>
         )}
         {data.isLoading && (
-          <Card variant={{base: 'unstyled', md: 'outline'}}
+          <Card variant={viewMode === 'grid' ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                 size={{base: 'sm', md: 'md'}}
                 p={'0'}
                 mt={'4'}
+                bg={viewMode === 'grid' ? 'gray.100' : undefined}
                 >
             <CardBody>
-              <SkeletonEventBody />
+              <SkeletonEventListView viewMode={viewMode} />
             </CardBody>
           </Card>
         )}

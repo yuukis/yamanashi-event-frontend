@@ -1,5 +1,6 @@
 import { chakra } from '@chakra-ui/react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { EVENT_CARD_LAYOUT_SETTLED } from './EventScrollGutter';
 
@@ -32,6 +33,17 @@ export function AnimatedEventItem({
 }) {
   const shouldReduceMotion = useReducedMotion();
 
+  // 標準⇔コンパクトの切り替え(variant変化)ではカードの位置・サイズが
+  // 大きく変わるが、この移動をアニメーションさせるとその間だけ旧サイズの
+  // カードがDOM上に残り続け、ページ高さが一時的に膨らんでスクロール位置の
+  // 補正がずれる。切り替え発生時の1レンダーだけlayoutアニメーションを止め、
+  // 即座に新しい位置・サイズへスナップさせる。
+  const prevVariantRef = useRef(variant);
+  const variantJustChanged = prevVariantRef.current !== variant;
+  useEffect(() => {
+    prevVariantRef.current = variant;
+  }, [variant]);
+
   // grid はカード同士の間隔を SimpleGrid の spacing に任せるため、
   // list/compact のような下端ボーダー・paddingBottom を付けない。
   const listSx = variant === 'grid'
@@ -45,7 +57,7 @@ export function AnimatedEventItem({
       };
 
   return (
-    <MotionEventItem layout={!shouldReduceMotion}
+    <MotionEventItem layout={!shouldReduceMotion && !variantJustChanged}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}

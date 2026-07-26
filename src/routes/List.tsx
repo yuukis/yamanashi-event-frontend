@@ -3,10 +3,10 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { PageBreadcrumb } from '../components/PageBreadcrumb';
 import { YearSwitcher, YEAR_HEADING_ANCHOR_ID } from '../components/YearSwitcher';
-import { SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
+import { EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { EventFilterTabs } from '../components/EventFilterTabs';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
-import { EventListView } from '../components/EventListView';
+import { EventListView, SkeletonEventListView } from '../components/EventListView';
 import { ViewModeToggle } from '../components/ViewModeToggle';
 import { EventScrollGutter } from '../components/EventScrollGutter';
 import { StructuredData } from '../components/StructuredData';
@@ -16,7 +16,6 @@ import {
   Container,
   Box,
   Stack,
-  HStack,
   Card,
   CardBody,
   Heading,
@@ -95,6 +94,7 @@ function List({ startYear} : {startYear: number}) {
     ? (data.groups.find((group) => group.key === selectedGroup)?.title ?? selectedGroup)
     : null;
   const selectedAreaName = selectedArea ? (AREA_LABELS[selectedArea] ?? selectedArea) : null;
+  const hasActiveFilter = Boolean(selectedGroup || selectedKeyword || selectedArea);
   const events = filterEventsByArea(filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup), selectedArea);
   const viewMode = useSyncExternalStore(subscribeViewMode, getViewModeSnapshot);
 
@@ -194,7 +194,12 @@ function List({ startYear} : {startYear: number}) {
                                  onClearArea={() => handleAreaSelect(null)}
                                  />
               <Spacer />
-              <YearSwitcher startYear={startYear} selectedYear={year} />
+              <Box display={hasActiveFilter ? { base: 'none', md: 'block' } : 'block'} flexShrink={0}>
+                <YearSwitcher startYear={startYear} selectedYear={year} />
+              </Box>
+              <Box flexShrink={0}>
+                <ViewModeToggle />
+              </Box>
             </Stack>
             <EventFilterTabs selectedGroup={selectedGroup}
                              selectedKeyword={selectedKeyword}
@@ -209,17 +214,14 @@ function List({ startYear} : {startYear: number}) {
                              errorMessage={data.errorMessage}
                              showGroupBadges={false}
                              />
-            <HStack justifyContent={'flex-end'} px={{base: '4', md: '0'}}>
-              <ViewModeToggle />
-            </HStack>
-            <Card variant={viewMode === 'grid' && !data.isLoading && !data.errorMessage && events.length > 0 ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
+            <Card variant={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && events.length > 0)) ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
-                  bg={viewMode === 'grid' && !data.isLoading && !data.errorMessage && events.length > 0 ? 'gray.100' : undefined}
+                  bg={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && events.length > 0)) ? 'gray.100' : undefined}
                   >
               <CardBody>
                 {data.isLoading ? (
-                  <SkeletonEventBody />
+                  <SkeletonEventListView viewMode={viewMode} />
                 ) : data.errorMessage ? (
                   <ErrorEventBody message={ data.errorMessage } />
                 ) : events.length === 0 ? (

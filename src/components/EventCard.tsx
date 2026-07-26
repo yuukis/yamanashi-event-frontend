@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { AspectRatio, Badge, Box, Button, HStack, Heading, IconButton, Image, Link, Stack, Text } from '@chakra-ui/react';
+import {
+  AspectRatio, Badge, Box, Button, HStack, Heading, IconButton, Image, Link, Skeleton, SkeletonCircle, SkeletonText, Stack, Text,
+  Popover, PopoverAnchor, PopoverContent, PopoverArrow, PopoverBody,
+  Menu, MenuButton, MenuList, MenuItem,
+  useDisclosure, useMediaQuery, useToast,
+} from '@chakra-ui/react';
 import { GeoAlt, People, Person, Star, StarFill } from '@chakra-icons/bootstrap';
+import { FaXTwitter } from 'react-icons/fa6';
+import { FiArchive, FiExternalLink, FiMoreVertical } from 'react-icons/fi';
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
 import { EVENT_CARD_HIGHLIGHT_EVENT } from '../utils/hashScroll';
 import { subscribeNow, getNow } from '../utils/nowTicker';
@@ -9,6 +16,11 @@ import { subscribeTrackingData, getTrackingDataSnapshot } from '../utils/newEven
 import { isEventMarked, markEvent, unmarkEvent } from '../utils/markedEvents';
 import { subscribeMarkedEvents, getMarkedEventsSnapshot, updateMarkedEventsData } from '../utils/markedEventsStore';
 import { buildGroupPagePath } from '../utils/groupPage';
+import { isArchiveEvent } from '../utils/eventGroups';
+import { buildEventXSearchUrl, getEventXSearchLabel } from '../utils/eventXSearch';
+import { NATIVE_SHARE_LABEL, ShareButton, XShareButton } from './ShareButtons';
+import { isNativeShareSupported, shareEventViaNativeShare } from '../utils/share';
+import { EventActionsDrawer } from './EventActionsDrawer';
 import type { EventWithGroup } from '../types/events';
 
 const DAY_OF_WEEK = ['日', '月', '火', '水', '木', '金', '土'];
@@ -41,6 +53,19 @@ const STATUS_BADGE_STYLE = {
   borderWidth: { base: '1px', sm: '1px', md: '1.5px', lg: '2px' },
 } as const;
 
+const MENU_BUTTON_STYLE = {
+  position: 'absolute',
+  top: '2',
+  right: '2',
+  zIndex: 1,
+} as const;
+
+// 長押し判定のしきい値。この間に指が動いたりページがスクロールしたり
+// した場合は長押しとみなさない(EventBodyCompact等の長押しメニューと
+// 同じ考え方)。
+const LONG_PRESS_DURATION_MS = 600;
+const LONG_PRESS_MOVE_TOLERANCE_PX = 8;
+
 type EventCardProps = {
   event: EventWithGroup;
   anchorId?: string;
@@ -72,6 +97,9 @@ export function EventCard({ event, anchorId }: EventCardProps) {
 
   const address = [event.address, event.place].filter(Boolean)[0];
   const event_map_url = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(address || '');
+  const is_archive_event = isArchiveEvent(event);
+  const event_x_search_url = buildEventXSearchUrl(event, start_date, has_ended);
+  const x_search_label = getEventXSearchLabel(has_ended);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHighlighted, setIsHighlighted] = useState(false);
@@ -100,13 +128,128 @@ export function EventCard({ event, anchorId }: EventCardProps) {
   const markLabel = has_ended
     ? (isMarked ? '気になる解除' : '気になる')
     : (isMarked ? '行きたいから外す' : '行きたいに追加');
+  const attendanceMarkConfirmationText = has_ended ? '気になるに追加しました' : '行きたいに追加しました';
+  const attendanceInviteSubtext = has_ended ? '友達にシェアしてみませんか?' : '一緒に行く友達を誘ってみませんか?';
+  const nativeShareLabel = has_ended ? '友達にシェア' : NATIVE_SHARE_LABEL;
+
+  const [isDesktopScreenSize] = useMediaQuery('(min-width: 768px)');
+  const { isOpen: isMarkPopoverOpen, onOpen: onMarkPopoverOpen, onClose: onMarkPopoverClose } = useDisclosure();
+  const { isOpen: isMenuOpen, onOpen: onMenuOpen, onClose: onMenuClose } = useDisclosure();
+  const toast = useToast();
+
+  // カード右上の「その他」メニューはクリックに加え、モバイルではカード
+  // 全体の長押しでも開けるようにする(EventBody/EventBodyCompactの長押し
+  // メニューと同じ考え方)。スクロール中の指の動きで誤って開かないよう、
+  // ページスクロール中は長押し判定そのものを行わない。
+  const [isScrolling, setIsScrolling] = useState(false);
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let scrollTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (Math.abs(currentScrollY - lastScrollY) > 5) {
+        setIsScrolling(true);
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => setIsScrolling(false), 150);
+      }
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimer);
+    };
+  }, []);
+
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const movedRef = useRef(false);
+
+  const clearPressTimer = () => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  };
+
+  const handleCardTouchStart = (e: React.TouchEvent) => {
+    if (isScrolling) {
+      return;
+    }
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    movedRef.current = false;
+    clearPressTimer();
+    pressTimerRef.current = setTimeout(() => {
+      if (!movedRef.current && !isScrolling) {
+        onMenuOpen();
+      }
+    }, LONG_PRESS_DURATION_MS);
+  };
+  const handleCardTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPosRef.current || isScrolling) {
+      return;
+    }
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
+    if (dx > LONG_PRESS_MOVE_TOLERANCE_PX || dy > LONG_PRESS_MOVE_TOLERANCE_PX) {
+      movedRef.current = true;
+      clearPressTimer();
+    }
+  };
+  const handleCardTouchEnd = () => {
+    clearPressTimer();
+    touchStartPosRef.current = null;
+    movedRef.current = false;
+  };
+
+  const handleMenuButtonTouch = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
+  const toggleAttendanceMark = (): boolean => {
+    const nowMarked = !isMarked;
+    updateMarkedEventsData((previous) =>
+      nowMarked ? markEvent(previous, event.uid, new Date()) : unmarkEvent(previous, event.uid)
+    );
+    return nowMarked;
+  };
 
   const handleMarkClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    updateMarkedEventsData((previous) =>
-      isMarked ? unmarkEvent(previous, event.uid) : markEvent(previous, event.uid, new Date())
-    );
+    const nowMarked = toggleAttendanceMark();
+    if (!nowMarked) {
+      onMarkPopoverClose();
+      return;
+    }
+    if (isDesktopScreenSize) {
+      onMarkPopoverOpen();
+    } else {
+      toast({
+        position: 'bottom',
+        duration: 4000,
+        isClosable: true,
+        render: ({ onClose: onToastClose }) => (
+          <HStack bg={'gray.700'} color={'white'} borderRadius={'md'} px={'4'} py={'3'} boxShadow={'lg'} spacing={'3'}>
+            <Text fontSize={'sm'} flex={'1'}>{ attendanceMarkConfirmationText }</Text>
+            <Button size={'xs'} onClick={() => {
+              if (isNativeShareSupported()) {
+                shareEventViaNativeShare(event, toast, onToastClose);
+              } else {
+                onMarkPopoverOpen();
+                onToastClose();
+              }
+            }}>
+              { nativeShareLabel }
+            </Button>
+          </HStack>
+        ),
+      });
+    }
   };
 
   const handleGroupLogoClick = (e: React.MouseEvent) => {
@@ -139,6 +282,9 @@ export function EventCard({ event, anchorId }: EventCardProps) {
            shadow: 'sm',
          }}
          transition={'box-shadow 120ms ease-out, border-color 120ms ease-out'}
+         onTouchStart={handleCardTouchStart}
+         onTouchMove={handleCardTouchMove}
+         onTouchEnd={handleCardTouchEnd}
          >
       <Box id={getEventAnchorId(event.uid)}
            position={'absolute'}
@@ -153,7 +299,11 @@ export function EventCard({ event, anchorId }: EventCardProps) {
           <Link href={event.event_url} isExternal display={'block'}>
             <AspectRatio ratio={16 / 9} borderBottom={'1px solid'} borderColor={'gray.200'}>
               {event.image_url ? (
-                <Image src={event.image_url} alt={''} fit={'cover'} />
+                <Image src={event.image_url}
+                       alt={''}
+                       fit={'cover'}
+                       fallback={<Skeleton w={'100%'} h={'100%'} />}
+                       />
               ) : (
                 <Box className={'scroll-row-bg-pattern'} />
               )}
@@ -182,6 +332,9 @@ export function EventCard({ event, anchorId }: EventCardProps) {
             <Button variant={'unstyled'}
                     aria-label={group_page_aria_label}
                     onClick={handleGroupLogoClick}
+                    onTouchStart={handleMenuButtonTouch}
+                    onTouchMove={handleMenuButtonTouch}
+                    onTouchEnd={handleMenuButtonTouch}
                     minW={'auto'}
                     p={'0'}
                     bg={'#ffffff'}
@@ -207,6 +360,9 @@ export function EventCard({ event, anchorId }: EventCardProps) {
           <Button variant={'unstyled'}
                   aria-label={group_page_aria_label}
                   onClick={handleGroupLogoClick}
+                  onTouchStart={handleMenuButtonTouch}
+                  onTouchMove={handleMenuButtonTouch}
+                  onTouchEnd={handleMenuButtonTouch}
                   minW={'auto'}
                   p={'0'}
                   display={'flex'}
@@ -217,6 +373,67 @@ export function EventCard({ event, anchorId }: EventCardProps) {
                   >
             <People color={'gray.400'} />
           </Button>
+        )}
+        {isDesktopScreenSize ? (
+          <Menu isOpen={isMenuOpen} onOpen={onMenuOpen} onClose={onMenuClose} placement={'bottom-end'} isLazy>
+            <MenuButton as={IconButton}
+                        aria-label={'イベントのメニュー'}
+                        icon={<FiMoreVertical />}
+                        size={'sm'}
+                        bg={'whiteAlpha.900'}
+                        color={'gray.700'}
+                        borderRadius={'full'}
+                        boxShadow={'sm'}
+                        _hover={{ bg: 'white' }}
+                        {...MENU_BUTTON_STYLE}
+                        />
+            <MenuList fontSize={'sm'} onClick={(e) => e.stopPropagation()}>
+              <MenuItem icon={<FiExternalLink />}
+                        onClick={() => window.open(event.event_url)}
+                        >
+                情報提供元のページを開く
+              </MenuItem>
+              {has_group_page && (
+                <MenuItem icon={<People />}
+                          onClick={() => window.open(buildGroupPagePath(event.group_key!), '_self')}
+                          >
+                  コミュニティページを見る
+                </MenuItem>
+              )}
+              <MenuItem icon={<FaXTwitter />}
+                        onClick={() => window.open(event_x_search_url)}
+                        >
+                { x_search_label }
+              </MenuItem>
+              {is_archive_event && event.archive_url && (
+                <MenuItem icon={<FiArchive />}
+                          onClick={() => window.open(event.archive_url!)}
+                          >
+                  アーカイブ元を開く
+                </MenuItem>
+              )}
+            </MenuList>
+          </Menu>
+        ) : (
+          // モバイルは標準表示と同じ下から出てくるメニュー(EventActionsDrawer)を
+          // 開く。3点リーダーのタップに加え、カード全体の長押しでも開ける。
+          <IconButton aria-label={'イベントのメニュー'}
+                      icon={<FiMoreVertical />}
+                      size={'sm'}
+                      bg={'whiteAlpha.900'}
+                      color={'gray.700'}
+                      borderRadius={'full'}
+                      boxShadow={'sm'}
+                      _hover={{ bg: 'white' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMenuOpen();
+                      }}
+                      onTouchStart={handleMenuButtonTouch}
+                      onTouchMove={handleMenuButtonTouch}
+                      onTouchEnd={handleMenuButtonTouch}
+                      {...MENU_BUTTON_STYLE}
+                      />
         )}
       </Box>
       <Stack spacing={'0'} color={'gray.600'} fontSize={'sm'} mb={'1'}>
@@ -256,16 +473,79 @@ export function EventCard({ event, anchorId }: EventCardProps) {
           </HStack>
         ) : null}
       </Stack>
-      <IconButton aria-label={markLabel}
-                  icon={isMarked ? <StarFill /> : <Star />}
-                  size={'xs'}
-                  variant={isMarked ? 'solid' : 'ghost'}
-                  colorScheme={isMarked ? 'yellow' : 'gray'}
-                  position={'absolute'}
-                  bottom={'2'} right={'2'}
-                  zIndex={1}
-                  onClick={handleMarkClick}
-                  />
+      <Popover isOpen={isMarkPopoverOpen} onClose={onMarkPopoverClose} placement={'top-end'} isLazy>
+        <PopoverAnchor>
+          <IconButton aria-label={markLabel}
+                      icon={isMarked ? <StarFill /> : <Star />}
+                      size={'xs'}
+                      variant={isMarked ? 'solid' : 'ghost'}
+                      colorScheme={isMarked ? 'yellow' : 'gray'}
+                      position={'absolute'}
+                      bottom={'2'} right={'2'}
+                      zIndex={1}
+                      onClick={handleMarkClick}
+                      onTouchStart={handleMenuButtonTouch}
+                      onTouchMove={handleMenuButtonTouch}
+                      onTouchEnd={handleMenuButtonTouch}
+                      />
+        </PopoverAnchor>
+        <PopoverContent w={'auto'}>
+          <PopoverArrow />
+          <PopoverBody>
+            <Stack spacing={'2'}>
+              <Stack spacing={'0'}>
+                <Text fontSize={'sm'} fontWeight={'bold'}>{ attendanceMarkConfirmationText }</Text>
+                <Text fontSize={'xs'} color={'gray.500'}>{ attendanceInviteSubtext }</Text>
+              </Stack>
+              <XShareButton event={event} />
+              <ShareButton event={event} label={nativeShareLabel} />
+            </Stack>
+          </PopoverBody>
+        </PopoverContent>
+      </Popover>
+      {!isDesktopScreenSize && (
+        <EventActionsDrawer event={event}
+                            isOpen={isMenuOpen}
+                            onClose={onMenuClose}
+                            resetState={handleCardTouchEnd}
+                            isMarked={isMarked}
+                            attendanceMarkLabel={markLabel}
+                            onMarkClick={() => toggleAttendanceMark()}
+                            nativeShareLabel={nativeShareLabel}
+                            hasGroupPage={has_group_page}
+                            hasAddress={Boolean(address)}
+                            eventMapUrl={event_map_url}
+                            eventXSearchUrl={event_x_search_url}
+                            xSearchLabel={x_search_label}
+                            isArchiveEvent={is_archive_event}
+                            />
+      )}
+    </Box>
+  );
+}
+
+export function SkeletonEventCard() {
+  return (
+    <Box borderRadius={'md'}
+         borderWidth={'1px'}
+         borderColor={'gray.200'}
+         bg={'white'}
+         overflow={'hidden'}
+         >
+      <AspectRatio ratio={16 / 9}>
+        <Skeleton />
+      </AspectRatio>
+      <Stack spacing={'2'} p={'3'}>
+        <HStack spacing={'1'}>
+          <Skeleton height={{ base: '1.2rem', md: '1.5rem' }} width={'3rem'} />
+          <Skeleton height={'0.875rem'} width={'5rem'} />
+        </HStack>
+        <SkeletonText noOfLines={2} spacing={'2'} skeletonHeight={'0.75rem'} />
+        <HStack spacing={'2'} pt={'2'}>
+          <SkeletonCircle size={'0.875rem'} />
+          <Skeleton height={'0.75rem'} width={'60%'} />
+        </HStack>
+      </Stack>
     </Box>
   );
 }

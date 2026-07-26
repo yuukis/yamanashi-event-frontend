@@ -2,7 +2,6 @@ import {
   Box,
   Stack,
   HStack,
-  VStack,
   Spacer,
   Heading,
   Text,
@@ -15,11 +14,6 @@ import {
   MenuButton,
   MenuItem,
   IconButton,
-  Drawer,
-  DrawerOverlay,
-  DrawerContent,
-  DrawerHeader,
-  DrawerBody,
   Link,
   Flex,
   Tag,
@@ -37,7 +31,7 @@ import {
   PopoverBody,
 } from '@chakra-ui/react';
 import { FaXTwitter } from "react-icons/fa6";
-import { FiArchive, FiExternalLink, FiMap, FiMoreVertical } from "react-icons/fi";
+import { FiArchive, FiExternalLink, FiMoreVertical } from "react-icons/fi";
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Hash,
@@ -53,6 +47,7 @@ import {
 import { formatEventDateKey, getEventAnchorId } from '../utils/eventAnchors';
 import { ShareIconRow, ShareButton, XShareButton } from './ShareButtons';
 import { EventDescriptionSummary } from './EventDescriptionSummary';
+import { EventActionsDrawer } from './EventActionsDrawer';
 import { buildGroupPagePath } from '../utils/groupPage';
 import { useEventBodyData, type EventBodyProps } from './useEventBodyData';
 
@@ -431,94 +426,21 @@ export function EventBody(data: EventBodyProps) {
         <Hide above='md'><ChevronRight /></Hide>
       </HStack>
 
-      <Drawer placement="bottom"
-              isOpen={d.isOpen}
-              onClose={() => {
-                d.resetState();
-                d.onClose();
-              }}
-              >
-        <DrawerOverlay />
-        <DrawerContent pb={6}
-                       borderTopRadius="xl"
-                       animation="slide-up"
-                       >
-          <DrawerHeader textAlign="center"
-                        borderBottomWidth="1px"
-                        >
-            { d.title }
-          </DrawerHeader>
-          <DrawerBody>
-            <VStack spacing={2}>
-              <Button w="full"
-                      leftIcon={d.isMarked ? <StarFill /> : <Star />}
-                      colorScheme={d.isMarked ? 'yellow' : 'gray'}
-                      onClick={d.handleDrawerMarkClick}
-                      >
-                { d.attendanceMarkLabel }
-              </Button>
-              <ShareButton event={d.event} onAfterAction={d.onClose} label={d.nativeShareLabel} />
-              <Button w="full"
-                      leftIcon={<FiExternalLink />}
-                      onClick={() => {
-                        window.open(d.event.event_url);
-                        d.onClose();
-                      }}
-                      >
-                情報提供元のページを開く
-              </Button>
-              {d.has_group_page && (
-                <Button w="full"
-                        leftIcon={<People />}
-                        onClick={() => {
-                          window.open(buildGroupPagePath(d.group_key!), '_self');
-                          d.onClose();
-                        }}
-                        >
-                  コミュニティページを見る
-                </Button>
-              )}
-              {d.address_array.length > 0 && (
-                <Button w="full"
-                        leftIcon={<FiMap />}
-                        onClick={() => {
-                          window.open(d.event_map_url);
-                          d.onClose();
-                        }}
-                        >
-                  マップで会場を見る
-                </Button>
-              )}
-              <Button w="full"
-                      leftIcon={<FaXTwitter />}
-                      onClick={() => {
-                        window.open(d.event_x_search_url);
-                        d.onClose();
-                      }}
-                      >
-                { d.x_search_label }
-              </Button>
-              {d.is_archive_event && d.archive_url && (
-                <Button w="full"
-                        leftIcon={<FiArchive />}
-                        onClick={() => {
-                          window.open(d.archive_url!);
-                          d.onClose();
-                        }}
-                        >
-                  アーカイブ元を開く
-                </Button>
-              )}
-              <Button w="full"
-                      colorScheme="red"
-                      onClick={d.onClose}
-                      >
-                キャンセル
-              </Button>
-            </VStack>
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
+      <EventActionsDrawer event={d.event}
+                          isOpen={d.isOpen}
+                          onClose={d.onClose}
+                          resetState={d.resetState}
+                          isMarked={d.isMarked}
+                          attendanceMarkLabel={d.attendanceMarkLabel}
+                          onMarkClick={d.handleDrawerMarkClick}
+                          nativeShareLabel={d.nativeShareLabel}
+                          hasGroupPage={d.has_group_page}
+                          hasAddress={d.address_array.length > 0}
+                          eventMapUrl={d.event_map_url}
+                          eventXSearchUrl={d.event_x_search_url}
+                          xSearchLabel={d.x_search_label}
+                          isArchiveEvent={d.is_archive_event}
+                          />
     </>
   )
 }
