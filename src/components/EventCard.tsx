@@ -293,6 +293,15 @@ export function EventCard({ event, anchorId }: EventCardProps) {
          onTouchStart={handleCardTouchStart}
          onTouchMove={handleCardTouchMove}
          onTouchEnd={handleCardTouchEnd}
+         onContextMenu={(e) => {
+           // モバイルの長押しは独自メニュー(ドロワー)を開く用途なので、
+           // 画像やリンクに対するブラウザ標準のコンテキストメニューが
+           // 同時に出ないよう抑止する(デスクトップの右クリックは妨げない)。
+           if (!isDesktopScreenSize) {
+             e.preventDefault();
+           }
+         }}
+         sx={!isDesktopScreenSize ? { WebkitTouchCallout: 'none' } : undefined}
          >
       <Box id={getEventAnchorId(event.uid)}
            position={'absolute'}
