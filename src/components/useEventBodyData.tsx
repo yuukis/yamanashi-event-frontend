@@ -25,9 +25,6 @@ export type EventBodyProps = {
   summaryDescriptionYear?: number;
 };
 
-// EventBody(標準表示)とEventBodyCompact(コンパクト表示)で共通の
-// 日付計算・ラベル・状態・イベントハンドラをまとめたフック。
-// 見た目(JSX)は呼び出し側の各コンポーネントがそれぞれ持つ。
 export function useEventBodyData(data: EventBodyProps) {
   const event = data.event;
   const now = useSyncExternalStore(subscribeNow, getNow);
@@ -61,7 +58,6 @@ export function useEventBodyData(data: EventBodyProps) {
   const group_image_url = event.group_image_url;
   const is_registered_group = event.is_registered_group;
   const archive_url = event.archive_url;
-  // 後方互換: is_registered_group未設定の呼び出し元を壊さないため
   const has_group_page = Boolean(group_key) && is_registered_group !== false;
   const is_archive_event = isArchiveEvent(event);
   const keywords = event.keywords ?? [];
@@ -98,9 +94,6 @@ export function useEventBodyData(data: EventBodyProps) {
     };
   }, []);
 
-  // 長押し判定用の内部状態はレンダリングに影響しないため、すべてrefで
-  // 保持する(useStateだとタイマーのコールバック内で古い値を参照してしまい、
-  // 直後のtouchmoveでタイマーを止め損ねたり、moved判定が効かなかったりする)。
   const isLongPressRef = useRef(false);
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
@@ -184,9 +177,6 @@ export function useEventBodyData(data: EventBodyProps) {
   };
 
   const [isScrolling, setIsScrolling] = useState(false);
-  // setTimeoutのコールバック(600ms後)から読む用に、常に最新値を持つrefも
-  // 並行して更新する。useStateの値をそのままコールバック内で読むと、
-  // タイマー開始時点の古い値を参照し続けてしまう(stale closure)ため。
   const isScrollingRef = useRef(false);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -207,7 +197,7 @@ export function useEventBodyData(data: EventBodyProps) {
         scrollTimerRef.current = setTimeout(() => {
           setIsScrolling(false);
           isScrollingRef.current = false;
-        }, 150); // judge scrolling stopped after 150ms of no scroll events
+        }, 150);
       }
 
       lastScrollY = currentScrollY;

@@ -19,8 +19,7 @@ function saveToStorage(value: ViewMode): void {
   try {
     window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, value);
   } catch {
-    // 容量超過・プライベートブラウジング等での書き込み失敗は無視する
-    // (メモリ上のcurrentはこのセッション内では引き続き正しい値を保つ)
+    // ignore
   }
 }
 
@@ -39,10 +38,6 @@ export function subscribeViewMode(listener: () => void): () => void {
   };
 }
 
-// 表示形式の切り替えでレイアウト高さが変わり、それまで見ていたイベントが
-// 画面外に流れてしまう問題への対処。切り替え直前に画面内で最も上にある
-// イベントカードを記録し、DOM更新が落ち着いた頃合いで同じイベントへ
-// スクロールし直す。
 function getHeaderOffset(): number {
   if (typeof window === 'undefined') {
     return 0;
@@ -50,8 +45,6 @@ function getHeaderOffset(): number {
   return window.matchMedia('(min-width: 48em)').matches ? 88 : 72;
 }
 
-// Root/Group にある「直近開催イベント」等のセクション見出し(sticky)を、
-// 対象カードの祖先を遡って直前の兄弟要素から探す。
 function findPrecedingSticky(card: HTMLElement): HTMLElement | null {
   if (typeof window === 'undefined') {
     return null;
@@ -72,10 +65,6 @@ function findPrecedingSticky(card: HTMLElement): HTMLElement | null {
 
 type ScrollAnchor = {
   eventAnchorId: string;
-  // 見出しがstickyとして固定されているかどうかに関わらず、切り替え前の
-  // 「見出し自身の画面上のY座標」をそのまま維持する方針にする。固定済みか
-  // どうかを毎フレーム判定して切り替え後の位置を計算し直すと、判定が
-  // 行ったり来たりして画面が振動することがあったため。
   headingScreenYBefore: number | null;
 };
 
@@ -102,9 +91,6 @@ function captureScrollAnchor(): ScrollAnchor | null {
   return null;
 }
 
-// 切り替え直後は画像の読み込み等で対象カードの位置がもう一度ずれることが
-// あるため、一定時間は毎フレーム位置を確認し、ずれていたら補正し続ける。
-// ユーザーが自分でスクロールしたら即座に補正をやめる。
 function keepAnchorInView(anchor: ScrollAnchor): void {
   if (typeof window === 'undefined') {
     return;
@@ -128,10 +114,6 @@ function keepAnchorInView(anchor: ScrollAnchor): void {
     window.removeEventListener('keydown', abort);
   };
 
-  // どちらの方針でスクロール量を計算するかは最初の1回だけ判定し、以後は
-  // 固定する。毎フレーム判定し直すと、2つの方針の計算結果が僅差で
-  // 拮抗している場合にフレームごとに行ったり来たりして画面が振動する
-  // ことがあるため。
   let useHeadingBased: boolean | null = null;
 
   const tick = () => {
@@ -148,11 +130,6 @@ function keepAnchorInView(anchor: ScrollAnchor): void {
 
       if (sticky && anchor.headingScreenYBefore !== null) {
         if (useHeadingBased === null) {
-          // 見出し(固定されていてもいなくても)自体の画面上の位置を切り替え前と
-          // 同じに保つ方針にすると、肝心のイベント自体が画面外に出てしまう
-          // 場合(モードによる行の高さの差が大きいとき)がある。その場合は
-          // 本来の目的(見ていたイベントを画面外に逃さない)を優先し、
-          // カードを固定ヘッダー分の位置に揃える方針に切り替える。
           const headingBasedScroll = sticky.getBoundingClientRect().top - anchor.headingScreenYBefore;
           const projectedCardTop = el.getBoundingClientRect().top - headingBasedScroll;
           const viewportH = window.innerHeight;
@@ -162,7 +139,6 @@ function keepAnchorInView(anchor: ScrollAnchor): void {
           ? sticky.getBoundingClientRect().top - anchor.headingScreenYBefore
           : el.getBoundingClientRect().top - getHeaderOffset();
       } else {
-        // 見出しが見つからない場合はカード自体を固定ヘッダー分の位置に揃える。
         neededScroll = el.getBoundingClientRect().top - getHeaderOffset();
       }
 
@@ -186,14 +162,9 @@ export function setViewMode(value: ViewMode): void {
     return;
   }
 
-  // ページ上端付近(ヒーローや絞り込みタブがまだ見えている状態)では、
-  // そもそも「見ていたイベントが画面外に流れる」問題は起こらないため、
-  // 補正自体を行わない。
   const nearTop = typeof window !== 'undefined' && window.scrollY < getHeaderOffset() + 200;
   const anchor = nearTop ? null : captureScrollAnchor();
 
-  // スクロール補正で固定ヘッダーの表示切り替えロジックが誤反応しないよう
-  // 抑止する(handleKeywordSelect等、他のレイアウト変更時と同じパターン)。
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event('site-header-hold'));
   }

@@ -34,17 +34,8 @@ import { ShareButton, XShareButton } from './ShareButtons';
 import { EventActionsDrawer } from './EventActionsDrawer';
 import { useEventBodyData, type EventBodyProps } from './useEventBodyData';
 
-// コミュニティロゴ(top/right起点の絶対配置)の実サイズ。標準表示より
-// 縮小している(標準はEventBody.tsxのGROUP_LOGO_SIZEを参照)。
-// モバイル/デスクトップ共通(スター・ロゴとも縦中央揃え・横並びに統一)。
 const GROUP_LOGO_SIZE = { w: '44px', h: '30px' };
-// 見出し・住所/コミュニティ行の右側予約幅。
-// デスクトップ・モバイル共通: ロゴ(または汎用アイコン/空きスペース)と
-// スター単体ボタンぶんを常に確保し、カード間でスター位置が縦に揃うように
-// する(モバイルはシェブロン廃止によりスターがカード右端に移動したため、
-// デスクトップと同じ考え方で予約幅を決められるようになった)。
 const RIGHT_RESERVE_PR_DESKTOP = '108px';
-// ロゴ/汎用アイコンの右オフセット。スター(right:'2')のさらに左に置く。
 const GROUP_LOGO_RIGHT_OFFSET = { base: '40px', md: '56px' };
 
 export function EventBodyCompact(data: EventBodyProps) {
@@ -207,10 +198,6 @@ export function EventBodyCompact(data: EventBodyProps) {
                      minW={'0'}
                      >
                 {d.address_array.length > 0 && (
-                  // モバイルはコミュニティ名を非表示にした関係で住所が
-                  // Stack内の唯一の子要素になるため、flexShrinkを許可して
-                  // 画像/シェブロンの手前でnoOfLinesの省略が効くようにする
-                  // (flexShrink:0のままだと自然幅のまま画像に重なっていた)。
                   <HStack color={'gray.500'} flexShrink={{base: 1, md: 0}} minW={'0'}>
                     <GeoAlt />
                     <Show above='md'><Text fontSize={'xs'} noOfLines={1}><Link href={d.event_map_url} isExternal>{ d.address_array[0] }</Link></Text></Show>
@@ -273,10 +260,6 @@ export function EventBodyCompact(data: EventBodyProps) {
                       />
               )
             ) : (
-              // 画像のない登録コミュニティ: デスクトップは実画像の代わりに
-              // 汎用アイコンを同じ枠に表示し、位置を揃える。モバイルは
-              // 汎用アイコンを出さず、その分イベント名等の表示エリアを
-              // シェブロン近くまで広げる(right_reserve_prのbase側で対応)。
               d.has_group_page && (
                 <Show above='md'>
                   <Button variant={'unstyled'}

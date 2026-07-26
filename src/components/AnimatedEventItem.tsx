@@ -12,7 +12,6 @@ function notifyLayoutSettled() {
 
 // Stack の spacing prop と同じ値にすること
 export const EVENT_LIST_SPACING = { base: '0', md: '0.5em' };
-// コンパクト表示用。EVENT_LIST_SPACING より詰めた値にすること
 export const EVENT_LIST_SPACING_COMPACT = { base: '0', md: '0.15em' };
 
 type AnimatedEventItemVariant = 'list' | 'compact' | 'grid';
@@ -33,19 +32,12 @@ export function AnimatedEventItem({
 }) {
   const shouldReduceMotion = useReducedMotion();
 
-  // 標準⇔コンパクトの切り替え(variant変化)ではカードの位置・サイズが
-  // 大きく変わるが、この移動をアニメーションさせるとその間だけ旧サイズの
-  // カードがDOM上に残り続け、ページ高さが一時的に膨らんでスクロール位置の
-  // 補正がずれる。切り替え発生時の1レンダーだけlayoutアニメーションを止め、
-  // 即座に新しい位置・サイズへスナップさせる。
   const prevVariantRef = useRef(variant);
   const variantJustChanged = prevVariantRef.current !== variant;
   useEffect(() => {
     prevVariantRef.current = variant;
   }, [variant]);
 
-  // grid はカード同士の間隔を SimpleGrid の spacing に任せるため、
-  // list/compact のような下端ボーダー・paddingBottom を付けない。
   const listSx = variant === 'grid'
     ? { h: '100%' }
     : {

@@ -31,7 +31,6 @@ type EventActionsDrawerProps = {
   isArchiveEvent: boolean;
 };
 
-// モバイルの「その他」下から出てくるメニュー(標準/コンパクト/グリッド共通)。
 export function EventActionsDrawer({
   event,
   isOpen,
@@ -48,9 +47,6 @@ export function EventActionsDrawer({
   xSearchLabel,
   isArchiveEvent,
 }: EventActionsDrawerProps) {
-  // オーバーレイ/ESCで閉じた場合だけでなく、ボタンでの操作で閉じた場合も
-  // 一貫して内部状態(長押し判定など)がリセットされるよう、閉じる経路は
-  // すべてこの関数を経由させる。
   const handleClose = () => {
     resetState();
     onClose();

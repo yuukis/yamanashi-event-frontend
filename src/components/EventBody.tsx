@@ -51,11 +51,7 @@ import { EventActionsDrawer } from './EventActionsDrawer';
 import { buildGroupPagePath } from '../utils/groupPage';
 import { useEventBodyData, type EventBodyProps } from './useEventBodyData';
 
-// コミュニティロゴ(top/right起点の絶対配置)の実サイズ。この下に本文が
-// 回り込まないよう、pr({@link RIGHT_RESERVE_PR})をこのサイズに揃えること。
 const GROUP_LOGO_SIZE = { w: '80px', h: '54px' };
-// 見出し・住所/コミュニティ行の右側予約幅。ロゴ(GROUP_LOGO_SIZE)と、
-// デスクトップ右下の「詳細」ボタン+ドロップダウンメニューぶんを確保する。
 const RIGHT_RESERVE_PR = { base: '60px', md: '140px' };
 const RIGHT_RESERVE_PR_NO_LOGO = { base: '0px', md: '140px' };
 

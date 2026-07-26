@@ -60,9 +60,6 @@ const MENU_BUTTON_STYLE = {
   zIndex: 1,
 } as const;
 
-// 長押し判定のしきい値。この間に指が動いたりページがスクロールしたり
-// した場合は長押しとみなさない(EventBodyCompact等の長押しメニューと
-// 同じ考え方)。
 const LONG_PRESS_DURATION_MS = 600;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 8;
 
@@ -137,14 +134,7 @@ export function EventCard({ event, anchorId }: EventCardProps) {
   const { isOpen: isMenuOpen, onOpen: onMenuOpen, onClose: onMenuClose } = useDisclosure();
   const toast = useToast();
 
-  // カード右上の「その他」メニューはクリックに加え、モバイルではカード
-  // 全体の長押しでも開けるようにする(EventBody/EventBodyCompactの長押し
-  // メニューと同じ考え方)。スクロール中の指の動きで誤って開かないよう、
-  // ページスクロール中は長押し判定そのものを行わない。
   const [isScrolling, setIsScrolling] = useState(false);
-  // 長押し判定のsetTimeoutコールバック(600ms後)から読む用に、常に最新値を
-  // 持つrefも並行して更新する。useStateの値をそのままコールバック内で
-  // 読むと、タイマー開始時点の古い値を参照し続けてしまうため。
   const isScrollingRef = useRef(false);
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -294,9 +284,6 @@ export function EventCard({ event, anchorId }: EventCardProps) {
          onTouchMove={handleCardTouchMove}
          onTouchEnd={handleCardTouchEnd}
          onContextMenu={(e) => {
-           // モバイルの長押しは独自メニュー(ドロワー)を開く用途なので、
-           // 画像やリンクに対するブラウザ標準のコンテキストメニューが
-           // 同時に出ないよう抑止する(デスクトップの右クリックは妨げない)。
            if (!isDesktopScreenSize) {
              e.preventDefault();
            }
@@ -432,8 +419,6 @@ export function EventCard({ event, anchorId }: EventCardProps) {
             </MenuList>
           </Menu>
         ) : (
-          // モバイルは標準表示と同じ下から出てくるメニュー(EventActionsDrawer)を
-          // 開く。3点リーダーのタップに加え、カード全体の長押しでも開ける。
           <IconButton aria-label={'イベントのメニュー'}
                       icon={<FiMoreVertical />}
                       size={'sm'}

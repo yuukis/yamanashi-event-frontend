@@ -12,9 +12,6 @@ const GRID_SKELETON_COUNT = 6;
 export type EventListItem = {
   event: EventWithGroup;
   anchorId?: string;
-  // 個々のイベントの開催年でAI要約キャッシュを分ける必要がある場合
-  // (例: コミュニティページの過去イベントは年をまたぐ)に指定する。
-  // 省略時は summaryDescriptionYear (呼び出し元全体の既定値) を使う。
   summaryDescriptionYear?: number;
 };
 
@@ -61,9 +58,6 @@ export function EventListView({
 
   return (
     <Stack spacing={compact ? EVENT_LIST_SPACING_COMPACT : EVENT_LIST_SPACING}
-           // コンパクト表示は行間が詰まっているぶん、CardBodyの固定padding
-           // (デスクトップのみ)が先頭行の上・末尾行の下だけ相対的に広く
-           // 見えてしまう。行間と揃うよう見た目上の余白を打ち消す。
            mt={compact ? { base: '0', md: '-14px' } : '0'}
            mb={compact ? { base: '0', md: '-14px' } : '0'}
            >
@@ -84,8 +78,6 @@ export function EventListView({
   );
 }
 
-// 読み込み中プレースホルダーも表示形式(標準/コンパクト/グリッド)に
-// 合わせた見た目にする。グリッドは1件だけだと寂しいため複数件並べる。
 export function SkeletonEventListView({ viewMode }: { viewMode: ViewMode }) {
   if (viewMode === 'grid') {
     return (
