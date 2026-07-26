@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { YearSwitcher, FUTURE_EVENTS_ANCHOR_ID } from '../components/YearSwitcher';
-import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
+import { EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { EventFilterTabs } from '../components/EventFilterTabs';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
 import { GroupMoreEventsLink } from '../components/GroupMoreEventsLink';
-import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
+import { EventListView, SkeletonEventListView, type EventListItem } from '../components/EventListView';
+import { ViewModeToggle } from '../components/ViewModeToggle';
+import { EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
 import { EventScrollGutter } from '../components/EventScrollGutter';
 import { StructuredData } from '../components/StructuredData';
 import '../style.css';
@@ -26,7 +28,6 @@ import {
   Button,
   Spacer,
 } from '@chakra-ui/react';
-import { AnimatePresence } from 'framer-motion';
 import { ExternalLinkIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 import { sortByStartedAtAsc, sortByStartedAtDesc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isFutureEvent, isPastEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
@@ -37,6 +38,7 @@ import { formatEventDateKey, getEventDateAnchorId } from '../utils/eventAnchors'
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import { buildEventListJsonLd } from '../utils/structuredData';
 import { SITE_URL } from '../utils/site';
+import { subscribeViewMode, getViewModeSnapshot } from '../utils/viewModeStore';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
 // 星空レイヤーを上へはみ出させる量(px)。下へ追随したときに生じる領域を
@@ -194,10 +196,11 @@ function Root({startYear}: {startYear: number}) {
     : null;
   const selectedGroupName = selectedGroup ? (selectedGroupDetail?.title ?? selectedGroup) : null;
   const selectedAreaName = selectedArea ? (AREA_LABELS[selectedArea] ?? selectedArea) : null;
+  const hasActiveFilter = Boolean(selectedGroup || selectedKeyword || selectedArea);
   const futureEvents = filterEventsByArea(filterEventsByGroup(filterEventsByKeyword(data.futureEvents, selectedKeyword), selectedGroup), selectedArea);
   const pastEvents = filterEventsByArea(filterEventsByGroup(filterEventsByKeyword(data.pastEvents, selectedKeyword), selectedGroup), selectedArea);
 
-  const renderEventBodies = (events: EventWithGroup[], anchoredDateKeys: Set<string>, section: 'future' | 'past') => {
+  const buildEventListItems = (events: EventWithGroup[], anchoredDateKeys: Set<string>): EventListItem[] => {
     return events.map((event, index) => {
       const eventDateKey = formatEventDateKey(new Date(event.started_at));
       const previousEvent = events[index - 1];
@@ -214,18 +217,12 @@ function Root({startYear}: {startYear: number}) {
         anchoredDateKeys.add(eventDateKey);
       }
 
-      return <AnimatedEventItem key={event.uid} date={event.started_at} section={section}>
-              <EventBody event={event}
-                        anchorId={anchorId}
-                        selectedKeyword={selectedKeyword}
-                        onKeywordClick={handleKeywordClick}
-                        enableSummarizer
-                        />
-            </AnimatedEventItem>;
+      return { event, anchorId };
     });
   };
 
   const anchoredDateKeys = new Set<string>();
+  const viewMode = useSyncExternalStore(subscribeViewMode, getViewModeSnapshot);
 
   const structuredData = !data.isLoading && !data.errorMessage
     ? buildEventListJsonLd([...futureEvents, ...pastEvents], `${SITE_URL}/`)
@@ -395,26 +392,34 @@ function Root({startYear}: {startYear: number}) {
                                  onClearArea={() => handleAreaSelect(null)}
                                  />
               <Spacer />
-              <YearSwitcher startYear={startYear} selectedYear={null} showChevrons={false} />
+              <Box display={hasActiveFilter ? { base: 'none', md: 'block' } : 'block'} flexShrink={0}>
+                <YearSwitcher startYear={startYear} selectedYear={null} />
+              </Box>
+              <Box flexShrink={0}>
+                <ViewModeToggle />
+              </Box>
             </Stack>
-            <Card variant={{base: 'unstyled', md: 'outline'}}
+            <Card variant={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && futureEvents.length > 0)) ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
+                  bg={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && futureEvents.length > 0)) ? 'gray.100' : undefined}
                   >
               <CardBody>
-                <Stack spacing={EVENT_LIST_SPACING}>
-                  {data.isLoading ? (
-                    <SkeletonEventBody />
-                  ) : data.errorMessage ? (
-                    <ErrorEventBody message={ data.errorMessage } />
-                  ) : futureEvents.length === 0 ? (
-                    <EmptyEventBody />
-                  ) : (
-                    <AnimatePresence initial={false}>
-                      {renderEventBodies(futureEvents, anchoredDateKeys, 'future')}
-                    </AnimatePresence>
-                  )}
-                </Stack>
+                {data.isLoading ? (
+                  <SkeletonEventListView viewMode={viewMode} />
+                ) : data.errorMessage ? (
+                  <ErrorEventBody message={ data.errorMessage } />
+                ) : futureEvents.length === 0 ? (
+                  <EmptyEventBody />
+                ) : (
+                  <EventListView items={buildEventListItems(futureEvents, anchoredDateKeys)}
+                                 viewMode={viewMode}
+                                 section={'future'}
+                                 selectedKeyword={selectedKeyword}
+                                 onKeywordClick={handleKeywordClick}
+                                 enableSummarizer
+                                 />
+                )}
               </CardBody>
             </Card>
             {data.lastModified &&
@@ -447,23 +452,32 @@ function Root({startYear}: {startYear: number}) {
                                  onClearGroup={() => handleGroupSelect(null)}
                                  onClearArea={() => handleAreaSelect(null)}
                                  />
+              <Spacer />
+              <Box flexShrink={0}>
+                <ViewModeToggle />
+              </Box>
             </Stack>
-            <Card variant={{base: 'unstyled', md: 'outline'}}
+            <Card variant={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && pastEvents.length > 0)) ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
+                  bg={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && pastEvents.length > 0)) ? 'gray.100' : undefined}
                   >
               <CardBody>
                 <Stack spacing={EVENT_LIST_SPACING}>
                   {data.isLoading ? (
-                    <SkeletonEventBody />
+                    <SkeletonEventListView viewMode={viewMode} />
                   ) : data.errorMessage ? (
                     <ErrorEventBody message={ data.errorMessage } />
                   ) : pastEvents.length === 0 ? (
                     <EmptyEventBody />
                   ) : (
-                    <AnimatePresence initial={false}>
-                      {renderEventBodies(pastEvents, anchoredDateKeys, 'past')}
-                    </AnimatePresence>
+                    <EventListView items={buildEventListItems(pastEvents, anchoredDateKeys)}
+                                   viewMode={viewMode}
+                                   section={'past'}
+                                   selectedKeyword={selectedKeyword}
+                                   onKeywordClick={handleKeywordClick}
+                                   enableSummarizer
+                                   />
                   )}
                   {!data.isLoading && !data.errorMessage && selectedGroup && (
                     <GroupMoreEventsLink groupKey={selectedGroup}

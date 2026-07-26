@@ -27,7 +27,6 @@ import {
   WrapItem,
   useDisclosure
 } from '@chakra-ui/react';
-import { isMobile } from 'react-device-detect';
 import { ChevronLeftIcon, ChevronRightIcon, RepeatClockIcon } from "@chakra-ui/icons";
 import { Github, Calendar3 } from '@chakra-icons/bootstrap';
 import { FiCopy, FiCheck, FiCalendar } from 'react-icons/fi';
@@ -460,9 +459,7 @@ export function ICalendarButton() {
               errorMessage={errorMessage}
               onDayActivate={(_dayEvents, dayKey) => {
                 jumpToAnchor(getEventDateAnchorId(dayKey));
-                if (isMobile) {
-                  closePopover();
-                }
+                closePopover();
               }}
             />
             {!isIcalExpanded ? (

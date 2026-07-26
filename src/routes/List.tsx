@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useParams, useSearchParams } from "react-router-dom";
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { PageBreadcrumb } from '../components/PageBreadcrumb';
 import { YearSwitcher, YEAR_HEADING_ANCHOR_ID } from '../components/YearSwitcher';
-import { EventBody, SkeletonEventBody, EmptyEventBody, ErrorEventBody } from '../components/EventBody';
+import { EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { EventFilterTabs } from '../components/EventFilterTabs';
 import { ActiveFilterBadge } from '../components/ActiveFilterBadge';
-import { AnimatedEventItem, EVENT_LIST_SPACING } from '../components/AnimatedEventItem';
+import { EventListView, SkeletonEventListView } from '../components/EventListView';
+import { ViewModeToggle } from '../components/ViewModeToggle';
 import { EventScrollGutter } from '../components/EventScrollGutter';
 import { StructuredData } from '../components/StructuredData';
 import '../style.css';
@@ -19,7 +20,6 @@ import {
   Heading,
   Spacer,
 } from '@chakra-ui/react';
-import { AnimatePresence } from 'framer-motion';
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { enrichEventsWithGroups, isVisibleEvent, countGroups, filterEventsByGroup } from '../utils/eventGroups';
 import { countKeywords, filterEventsByKeyword } from '../utils/eventKeywords';
@@ -28,6 +28,7 @@ import { scrollToCurrentHash } from '../utils/hashScroll';
 import { fetchEventsByYear, fetchGroups } from '../utils/api';
 import { buildEventListJsonLd } from '../utils/structuredData';
 import { SITE_URL } from '../utils/site';
+import { subscribeViewMode, getViewModeSnapshot } from '../utils/viewModeStore';
 import type { ApiGroup, EventWithGroup } from '../types/events';
 
 type ListState = {
@@ -92,7 +93,9 @@ function List({ startYear} : {startYear: number}) {
     ? (data.groups.find((group) => group.key === selectedGroup)?.title ?? selectedGroup)
     : null;
   const selectedAreaName = selectedArea ? (AREA_LABELS[selectedArea] ?? selectedArea) : null;
+  const hasActiveFilter = Boolean(selectedGroup || selectedKeyword || selectedArea);
   const events = filterEventsByArea(filterEventsByGroup(filterEventsByKeyword(data.events, selectedKeyword), selectedGroup), selectedArea);
+  const viewMode = useSyncExternalStore(subscribeViewMode, getViewModeSnapshot);
 
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLDivElement>();
 
@@ -190,7 +193,12 @@ function List({ startYear} : {startYear: number}) {
                                  onClearArea={() => handleAreaSelect(null)}
                                  />
               <Spacer />
-              <YearSwitcher startYear={startYear} selectedYear={year} />
+              <Box display={hasActiveFilter ? { base: 'none', md: 'block' } : 'block'} flexShrink={0}>
+                <YearSwitcher startYear={startYear} selectedYear={year} />
+              </Box>
+              <Box flexShrink={0}>
+                <ViewModeToggle />
+              </Box>
             </Stack>
             <EventFilterTabs selectedGroup={selectedGroup}
                              selectedKeyword={selectedKeyword}
@@ -205,33 +213,27 @@ function List({ startYear} : {startYear: number}) {
                              errorMessage={data.errorMessage}
                              showGroupBadges={false}
                              />
-            <Card variant={{base: 'unstyled', md: 'outline'}}
+            <Card variant={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && events.length > 0)) ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
+                  bg={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && events.length > 0)) ? 'gray.100' : undefined}
                   >
               <CardBody>
-                <Stack spacing={EVENT_LIST_SPACING}>
                 {data.isLoading ? (
-                    <SkeletonEventBody />
-                  ) : data.errorMessage ? (
-                    <ErrorEventBody message={ data.errorMessage } />
-                  ) : events.length === 0 ? (
-                    <EmptyEventBody />
-                  ) : (
-                    <AnimatePresence initial={false}>
-                      {events.map((event) => (
-                        <AnimatedEventItem key={event.uid} date={event.started_at}>
-                          <EventBody event={event}
-                                     selectedKeyword={selectedKeyword}
-                                     onKeywordClick={handleKeywordClick}
-                                     enableSummarizer
-                                     summaryDescriptionYear={year}
-                                     />
-                        </AnimatedEventItem>
-                      ))}
-                    </AnimatePresence>
-                  )}
-                </Stack>
+                  <SkeletonEventListView viewMode={viewMode} />
+                ) : data.errorMessage ? (
+                  <ErrorEventBody message={ data.errorMessage } />
+                ) : events.length === 0 ? (
+                  <EmptyEventBody />
+                ) : (
+                  <EventListView items={events.map((event) => ({ event }))}
+                                 viewMode={viewMode}
+                                 selectedKeyword={selectedKeyword}
+                                 onKeywordClick={handleKeywordClick}
+                                 enableSummarizer
+                                 summaryDescriptionYear={year}
+                                 />
+                )}
               </CardBody>
             </Card>
             {data.lastModified &&

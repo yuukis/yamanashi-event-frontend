@@ -50,8 +50,7 @@ export function ActiveFilterBadge({
   };
 
   return (
-    <HStack maxW={{base: '40%', md: '260px'}}
-            flexShrink={1}
+    <HStack flexShrink={1}
             minW={0}
             px={'3'} py={'1'}
             spacing={'1'}
