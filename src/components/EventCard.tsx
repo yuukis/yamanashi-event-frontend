@@ -142,6 +142,10 @@ export function EventCard({ event, anchorId }: EventCardProps) {
   // メニューと同じ考え方)。スクロール中の指の動きで誤って開かないよう、
   // ページスクロール中は長押し判定そのものを行わない。
   const [isScrolling, setIsScrolling] = useState(false);
+  // 長押し判定のsetTimeoutコールバック(600ms後)から読む用に、常に最新値を
+  // 持つrefも並行して更新する。useStateの値をそのままコールバック内で
+  // 読むと、タイマー開始時点の古い値を参照し続けてしまうため。
+  const isScrollingRef = useRef(false);
   useEffect(() => {
     let lastScrollY = window.scrollY;
     let scrollTimer: ReturnType<typeof setTimeout> | undefined;
@@ -150,8 +154,12 @@ export function EventCard({ event, anchorId }: EventCardProps) {
       const currentScrollY = window.scrollY;
       if (Math.abs(currentScrollY - lastScrollY) > 5) {
         setIsScrolling(true);
+        isScrollingRef.current = true;
         clearTimeout(scrollTimer);
-        scrollTimer = setTimeout(() => setIsScrolling(false), 150);
+        scrollTimer = setTimeout(() => {
+          setIsScrolling(false);
+          isScrollingRef.current = false;
+        }, 150);
       }
       lastScrollY = currentScrollY;
     };
@@ -183,7 +191,7 @@ export function EventCard({ event, anchorId }: EventCardProps) {
     movedRef.current = false;
     clearPressTimer();
     pressTimerRef.current = setTimeout(() => {
-      if (!movedRef.current && !isScrolling) {
+      if (!movedRef.current && !isScrollingRef.current) {
         onMenuOpen();
       }
     }, LONG_PRESS_DURATION_MS);
@@ -300,7 +308,7 @@ export function EventCard({ event, anchorId }: EventCardProps) {
             <AspectRatio ratio={16 / 9} borderBottom={'1px solid'} borderColor={'gray.200'}>
               {event.image_url ? (
                 <Image src={event.image_url}
-                       alt={''}
+                       alt={event.title}
                        fit={'cover'}
                        fallback={<Skeleton w={'100%'} h={'100%'} />}
                        />

@@ -98,10 +98,13 @@ export function useEventBodyData(data: EventBodyProps) {
     };
   }, []);
 
-  const [isLongPress, setIsLongPress] = useState(false);
-  const [pressTimer, setPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
-  const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null);
-  const [moved, setMoved] = useState(false);
+  // 長押し判定用の内部状態はレンダリングに影響しないため、すべてrefで
+  // 保持する(useStateだとタイマーのコールバック内で古い値を参照してしまい、
+  // 直後のtouchmoveでタイマーを止め損ねたり、moved判定が効かなかったりする)。
+  const isLongPressRef = useRef(false);
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const movedRef = useRef(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isMarkPopoverOpen, onOpen: onMarkPopoverOpen, onClose: onMarkPopoverClose } = useDisclosure();
   const toast = useToast();
@@ -181,7 +184,11 @@ export function useEventBodyData(data: EventBodyProps) {
   };
 
   const [isScrolling, setIsScrolling] = useState(false);
-  const [scrollTimer, setScrollTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  // setTimeoutのコールバック(600ms後)から読む用に、常に最新値を持つrefも
+  // 並行して更新する。useStateの値をそのままコールバック内で読むと、
+  // タイマー開始時点の古い値を参照し続けてしまう(stale closure)ため。
+  const isScrollingRef = useRef(false);
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -191,16 +198,16 @@ export function useEventBodyData(data: EventBodyProps) {
 
       if (Math.abs(currentScrollY - lastScrollY) > 5) {
         setIsScrolling(true);
+        isScrollingRef.current = true;
 
-        if (scrollTimer) {
-          clearTimeout(scrollTimer);
+        if (scrollTimerRef.current) {
+          clearTimeout(scrollTimerRef.current);
         }
 
-        const timer = setTimeout(() => {
+        scrollTimerRef.current = setTimeout(() => {
           setIsScrolling(false);
+          isScrollingRef.current = false;
         }, 150); // judge scrolling stopped after 150ms of no scroll events
-
-        setScrollTimer(timer);
       }
 
       lastScrollY = currentScrollY;
@@ -210,11 +217,11 @@ export function useEventBodyData(data: EventBodyProps) {
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (scrollTimer) {
-        clearTimeout(scrollTimer);
+      if (scrollTimerRef.current) {
+        clearTimeout(scrollTimerRef.current);
       }
     };
-  }, [scrollTimer]);
+  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isScrolling) {
@@ -222,50 +229,50 @@ export function useEventBodyData(data: EventBodyProps) {
     }
 
     const touch = e.touches[0];
-    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
-    setMoved(false);
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    movedRef.current = false;
 
     const timer = setTimeout(() => {
-      if (!moved && !isScrolling) {
-        setIsLongPress(true);
+      if (!movedRef.current && !isScrollingRef.current) {
+        isLongPressRef.current = true;
         onOpen();
       }
     }, 600);
-    setPressTimer(timer);
+    pressTimerRef.current = timer;
   };
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartPos || isScrolling) return;
+    if (!touchStartPosRef.current || isScrolling) return;
 
     const touch = e.touches[0];
-    const dx = Math.abs(touch.clientX - touchStartPos.x);
-    const dy = Math.abs(touch.clientY - touchStartPos.y);
+    const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
 
     if (dx > 8 || dy > 8) {
-      setMoved(true);
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        setPressTimer(null);
+      movedRef.current = true;
+      if (pressTimerRef.current) {
+        clearTimeout(pressTimerRef.current);
+        pressTimerRef.current = null;
       }
     }
   };
   const handleTouchEnd = () => {
-    if (pressTimer) {
-      clearTimeout(pressTimer);
-      setPressTimer(null);
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
     }
 
-    if (!isScrolling && !isLongPress && !moved && touchStartPos) {
+    if (!isScrolling && !isLongPressRef.current && !movedRef.current && touchStartPosRef.current) {
       window.open(event_url, '_self');
     }
     resetState();
   };
   const resetState = () => {
-    setIsLongPress(false);
-    setMoved(false);
-    setTouchStartPos(null);
-    if (pressTimer) {
-      clearTimeout(pressTimer);
-      setPressTimer(null);
+    isLongPressRef.current = false;
+    movedRef.current = false;
+    touchStartPosRef.current = null;
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
     }
   }
 

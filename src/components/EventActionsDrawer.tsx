@@ -48,13 +48,18 @@ export function EventActionsDrawer({
   xSearchLabel,
   isArchiveEvent,
 }: EventActionsDrawerProps) {
+  // オーバーレイ/ESCで閉じた場合だけでなく、ボタンでの操作で閉じた場合も
+  // 一貫して内部状態(長押し判定など)がリセットされるよう、閉じる経路は
+  // すべてこの関数を経由させる。
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
+
   return (
     <Drawer placement="bottom"
             isOpen={isOpen}
-            onClose={() => {
-              resetState();
-              onClose();
-            }}
+            onClose={handleClose}
             >
       <DrawerOverlay />
       <DrawerContent pb={6}
@@ -75,12 +80,12 @@ export function EventActionsDrawer({
                     >
               { attendanceMarkLabel }
             </Button>
-            <ShareButton event={event} onAfterAction={onClose} label={nativeShareLabel} />
+            <ShareButton event={event} onAfterAction={handleClose} label={nativeShareLabel} />
             <Button w="full"
                     leftIcon={<FiExternalLink />}
                     onClick={() => {
                       window.open(event.event_url);
-                      onClose();
+                      handleClose();
                     }}
                     >
               情報提供元のページを開く
@@ -90,7 +95,7 @@ export function EventActionsDrawer({
                       leftIcon={<People />}
                       onClick={() => {
                         window.open(buildGroupPagePath(event.group_key!), '_self');
-                        onClose();
+                        handleClose();
                       }}
                       >
                 コミュニティページを見る
@@ -101,7 +106,7 @@ export function EventActionsDrawer({
                       leftIcon={<FiMap />}
                       onClick={() => {
                         window.open(eventMapUrl);
-                        onClose();
+                        handleClose();
                       }}
                       >
                 マップで会場を見る
@@ -111,7 +116,7 @@ export function EventActionsDrawer({
                     leftIcon={<FaXTwitter />}
                     onClick={() => {
                       window.open(eventXSearchUrl);
-                      onClose();
+                      handleClose();
                     }}
                     >
               { xSearchLabel }
@@ -121,7 +126,7 @@ export function EventActionsDrawer({
                       leftIcon={<FiArchive />}
                       onClick={() => {
                         window.open(event.archive_url!);
-                        onClose();
+                        handleClose();
                       }}
                       >
                 アーカイブ元を開く
@@ -129,7 +134,7 @@ export function EventActionsDrawer({
             )}
             <Button w="full"
                     colorScheme="red"
-                    onClick={onClose}
+                    onClick={handleClose}
                     >
               キャンセル
             </Button>
