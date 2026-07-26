@@ -356,9 +356,8 @@ describe('EventScrollGutter', () => {
     }
   });
 
-  it('xl未満: passes a plain tap through to the content under the gutter, but scrolls once dragged past the threshold', async () => {
+  it('xl未満: a plain tap on the drag track does not scroll, but dragging past the threshold does', async () => {
     vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(1000);
-    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390);
     vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(10000);
 
     const topByCard = new Map<Element, number>();
@@ -385,6 +384,13 @@ describe('EventScrollGutter', () => {
 
     const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
 
+    // jsdomはPointer Capture APIを実装していないため、簡易なno-opを補う。
+    if (!Element.prototype.setPointerCapture) {
+      Element.prototype.setPointerCapture = () => {};
+      Element.prototype.releasePointerCapture = () => {};
+      Element.prototype.hasPointerCapture = () => true;
+    }
+
     try {
       const { container } = render(<EventScrollGutter />);
       const gutterEl = () => container.querySelector('[data-testid="event-scroll-gutter"]') as HTMLElement;
@@ -395,25 +401,19 @@ describe('EventScrollGutter', () => {
       window.dispatchEvent(new Event('scroll'));
       await waitFor(() => expect(gutterEl().style.opacity).toBe('1'));
 
-      const edgeX = 390 - 10; // MOBILE_GUTTER_WIDTH(90px)の内側
-      const dispatch = (type: string, opts: { clientX: number; clientY: number; pointerId: number }) => {
-        document.dispatchEvent(new PointerEvent(type, { ...opts, bubbles: true, cancelable: true }));
+      const trackEl = gutterEl().firstElementChild as HTMLElement;
+      const dispatch = (type: string, clientY: number, pointerId: number) => {
+        trackEl.dispatchEvent(new PointerEvent(type, { clientX: 380, clientY, pointerId, bubbles: true, cancelable: true }));
       };
 
-      dispatch('pointerdown', { clientX: edgeX, clientY: 300, pointerId: 1 });
-      dispatch('pointerup', { clientX: edgeX, clientY: 300, pointerId: 1 });
+      dispatch('pointerdown', 300, 1);
+      dispatch('pointerup', 300, 1);
       expect(scrollToSpy).not.toHaveBeenCalled();
 
-      dispatch('pointerdown', { clientX: edgeX, clientY: 300, pointerId: 2 });
-      dispatch('pointermove', { clientX: edgeX, clientY: 320, pointerId: 2 });
+      dispatch('pointerdown', 300, 2);
+      dispatch('pointermove', 320, 2);
       expect(scrollToSpy).toHaveBeenCalled();
-      dispatch('pointerup', { clientX: edgeX, clientY: 320, pointerId: 2 });
-
-      scrollToSpy.mockClear();
-      dispatch('pointerdown', { clientX: 50, clientY: 300, pointerId: 3 });
-      dispatch('pointermove', { clientX: 50, clientY: 340, pointerId: 3 });
-      dispatch('pointerup', { clientX: 50, clientY: 340, pointerId: 3 });
-      expect(scrollToSpy).not.toHaveBeenCalled();
+      dispatch('pointerup', 320, 2);
     } finally {
       cardA.remove();
       cardB.remove();
