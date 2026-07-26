@@ -1,5 +1,5 @@
 import icon from "../assets/images/icon.png"
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { NotificationButton } from '../components/Notification';
 import { useSyncCodeFromUrl } from '../utils/sync';
 import { MiniEventCalendar } from '../components/MiniEventCalendar';
@@ -68,6 +68,48 @@ export function useFixedHeaderBoundary<T extends HTMLElement>() {
 }
 
 export const STICKY_HEADING_TOP = '0';
+
+export function useIsHeadingStuck<T extends HTMLElement>() {
+  const [isStuck, setIsStuck] = useState(false);
+  const cleanupRef = useRef<() => void>();
+
+  const ref = useCallback((el: T | null) => {
+    cleanupRef.current?.();
+    cleanupRef.current = undefined;
+
+    if (!el) {
+      return;
+    }
+
+    let rafId: number | null = null;
+    const checkStuck = () => {
+      rafId = null;
+      setIsStuck(el.getBoundingClientRect().top <= 0);
+    };
+    const onScroll = () => {
+      if (rafId === null) {
+        rafId = window.requestAnimationFrame(checkStuck);
+      }
+    };
+
+    checkStuck();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    cleanupRef.current = () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
+    };
+  }, []);
+
+  useEffect(() => () => cleanupRef.current?.(), []);
+
+  return { ref, isStuck };
+}
+
+export const STICKY_HEADING_STUCK_SHADOW = '0 6px 6px -6px rgba(0, 0, 0, 0.2)';
 
 function SiteHeaderContent() {
   return (

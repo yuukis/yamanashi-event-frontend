@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
+import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, useIsHeadingStuck, STICKY_HEADING_TOP, STICKY_HEADING_STUCK_SHADOW } from '../components/Site';
 import { YearSwitcher, FUTURE_EVENTS_ANCHOR_ID } from '../components/YearSwitcher';
 import { EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { EventFilterTabs } from '../components/EventFilterTabs';
@@ -109,6 +109,8 @@ function Root({startYear}: {startYear: number}) {
   });
 
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLDivElement>();
+  const { ref: futureHeadingRef, isStuck: isFutureHeadingStuck } = useIsHeadingStuck<HTMLDivElement>();
+  const { ref: pastHeadingRef, isStuck: isPastHeadingStuck } = useIsHeadingStuck<HTMLDivElement>();
 
   document.title = `Yamanashi Developer Hub - 山梨のIT勉強会イベント情報ポータルサイト`;
 
@@ -366,6 +368,7 @@ function Root({startYear}: {startYear: number}) {
           <Box ref={headerBoundaryRef} />
           <Stack>
             <Stack id={FUTURE_EVENTS_ANCHOR_ID}
+                   ref={futureHeadingRef}
                    direction={'row'} spacing={'2'}
                    position={'sticky'}
                    top={STICKY_HEADING_TOP}
@@ -377,6 +380,8 @@ function Root({startYear}: {startYear: number}) {
                    scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
                    display={'flex'} alignItems={'center'}
                    minH={'2.75rem'}
+                   boxShadow={isFutureHeadingStuck ? STICKY_HEADING_STUCK_SHADOW : 'none'}
+                   transition={'box-shadow 150ms ease-out'}
                    >
               <Heading size={{base: 'sm', md: 'md'}}
                        color={'gray.600'}
@@ -428,7 +433,8 @@ function Root({startYear}: {startYear: number}) {
           </Stack>
 
           <Stack>
-            <Stack direction={'row'} spacing={'2'}
+            <Stack ref={pastHeadingRef}
+                   direction={'row'} spacing={'2'}
                    position={'sticky'}
                    top={STICKY_HEADING_TOP}
                    zIndex={'docked'}
@@ -438,6 +444,8 @@ function Root({startYear}: {startYear: number}) {
                    py={'2'}
                    display={'flex'} alignItems={'center'}
                    minH={'2.75rem'}
+                   boxShadow={isPastHeadingStuck ? STICKY_HEADING_STUCK_SHADOW : 'none'}
+                   transition={'box-shadow 150ms ease-out'}
                    >
               <Heading size={{base: 'sm', md: 'md'}}
                        color={'gray.600'}

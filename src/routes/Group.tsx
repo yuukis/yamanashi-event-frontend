@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useParams } from "react-router-dom";
-import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
+import { SiteHeader, SiteFooter, FooterLastModified, useFixedHeaderBoundary, useIsHeadingStuck, STICKY_HEADING_TOP, STICKY_HEADING_STUCK_SHADOW } from '../components/Site';
 import { PageBreadcrumb } from '../components/PageBreadcrumb';
 import { EmptyEventBody, ErrorEventBody } from '../components/EventBody';
 import { EventListView, SkeletonEventListView } from '../components/EventListView';
@@ -219,6 +219,8 @@ function Group() {
   const [startYearSummary, setStartYearSummary] = useState<StartYearSummaryState>(IDLE_START_YEAR_SUMMARY);
 
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLDivElement>();
+  const { ref: upcomingHeadingRef, isStuck: isUpcomingHeadingStuck } = useIsHeadingStuck<HTMLDivElement>();
+  const { ref: pastHeadingRef, isStuck: isPastHeadingStuck } = useIsHeadingStuck<HTMLDivElement>();
 
   useEffect(() => {
     setData(initialGroupState());
@@ -568,7 +570,8 @@ function Group() {
         {!data.isLoading && !data.isNotFound && !data.errorMessage && group && (
           <Stack>
             <Stack>
-              <Stack direction={'row'} spacing={'2'}
+              <Stack ref={upcomingHeadingRef}
+                     direction={'row'} spacing={'2'}
                      position={'sticky'}
                      top={STICKY_HEADING_TOP}
                      zIndex={'docked'}
@@ -578,6 +581,8 @@ function Group() {
                      py={'2'}
                      display={'flex'} alignItems={'center'}
                      minH={'2.75rem'}
+                     boxShadow={isUpcomingHeadingStuck ? STICKY_HEADING_STUCK_SHADOW : 'none'}
+                     transition={'box-shadow 150ms ease-out'}
                      >
                 <Heading size={{base: 'sm', md: 'md'}}
                          color={'gray.600'}
@@ -615,7 +620,8 @@ function Group() {
             </Stack>
 
             <Stack>
-              <Stack direction={'row'} spacing={'2'}
+              <Stack ref={pastHeadingRef}
+                     direction={'row'} spacing={'2'}
                      position={'sticky'}
                      top={STICKY_HEADING_TOP}
                      zIndex={'docked'}
@@ -625,6 +631,8 @@ function Group() {
                      py={'2'}
                      display={'flex'} alignItems={'center'}
                      minH={'2.75rem'}
+                     boxShadow={isPastHeadingStuck ? STICKY_HEADING_STUCK_SHADOW : 'none'}
+                     transition={'box-shadow 150ms ease-out'}
                      >
                 <Heading size={{base: 'sm', md: 'md'}}
                          color={'gray.600'}

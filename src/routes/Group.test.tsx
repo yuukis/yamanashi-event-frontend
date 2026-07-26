@@ -24,7 +24,9 @@ vi.mock('../components/Site', () => ({
   SiteFooter: () => null,
   FooterLastModified: () => null,
   useFixedHeaderBoundary: () => ({ current: null }),
+  useIsHeadingStuck: () => ({ ref: () => {}, isStuck: false }),
   STICKY_HEADING_TOP: '0',
+  STICKY_HEADING_STUCK_SHADOW: 'none',
 }));
 
 function renderGroupPage(groupKey = 'aibase') {
