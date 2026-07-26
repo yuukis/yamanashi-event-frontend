@@ -1,5 +1,5 @@
 import icon from "../assets/images/icon.png"
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { NotificationButton } from '../components/Notification';
 import { useSyncCodeFromUrl } from '../utils/sync';
 import { MiniEventCalendar } from '../components/MiniEventCalendar';
@@ -68,6 +68,56 @@ export function useFixedHeaderBoundary<T extends HTMLElement>() {
 }
 
 export const STICKY_HEADING_TOP = '0';
+
+// sticky 化した見出しが実際に画面上端へ張り付いている(スタックしている)かを
+// 検知する。IntersectionObserver の交差率だけでは「スタック中」と「まだ
+// スクロールが届いておらず画面外にあるだけ」を区別できない(どちらも
+// ratio<1 になりうる)ため、要素自身の getBoundingClientRect().top を直接
+// 見る。sticky で top:0 に固定されている間だけ top は 0 以下になり、それ
+// 以外(通常フロー中・画面外)は常に正の値になる。
+// データ取得後にはじめて描画される見出し(例: Group ページ)にも対応できる
+// よう、useRef + マウント時1回だけの useEffect ではなく、DOM ノードの
+// 着脱そのものをトリガーにできるコールバック ref で監視を張り直す。
+export function useIsHeadingStuck<T extends HTMLElement>() {
+  const [isStuck, setIsStuck] = useState(false);
+  const cleanupRef = useRef<() => void>();
+
+  const ref = useCallback((el: T | null) => {
+    cleanupRef.current?.();
+    cleanupRef.current = undefined;
+
+    if (!el) {
+      return;
+    }
+
+    let isTicking = false;
+    const checkStuck = () => {
+      isTicking = false;
+      setIsStuck(el.getBoundingClientRect().top <= 0);
+    };
+    const onScroll = () => {
+      if (!isTicking) {
+        isTicking = true;
+        window.requestAnimationFrame(checkStuck);
+      }
+    };
+
+    checkStuck();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    cleanupRef.current = () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, []);
+
+  useEffect(() => () => cleanupRef.current?.(), []);
+
+  return { ref, isStuck };
+}
+
+// スタック時にのみ現れる、見出しと一覧の境目を示す控えめな影。
+export const STICKY_HEADING_STUCK_SHADOW = '0 6px 6px -6px rgba(0, 0, 0, 0.2)';
 
 function SiteHeaderContent() {
   return (

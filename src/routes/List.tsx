@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useParams, useSearchParams } from "react-router-dom";
-import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
+import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, useIsHeadingStuck, STICKY_HEADING_TOP, STICKY_HEADING_STUCK_SHADOW } from '../components/Site';
 import { PageBreadcrumb } from '../components/PageBreadcrumb';
 import { YearSwitcher, YEAR_HEADING_ANCHOR_ID } from '../components/YearSwitcher';
 import { EmptyEventBody, ErrorEventBody } from '../components/EventBody';
@@ -98,6 +98,7 @@ function List({ startYear} : {startYear: number}) {
   const viewMode = useSyncExternalStore(subscribeViewMode, getViewModeSnapshot);
 
   const headerBoundaryRef = useFixedHeaderBoundary<HTMLDivElement>();
+  const { ref: yearHeadingRef, isStuck: isYearHeadingStuck } = useIsHeadingStuck<HTMLDivElement>();
 
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
 
@@ -168,6 +169,7 @@ function List({ startYear} : {startYear: number}) {
           <Box ref={headerBoundaryRef} />
           <Stack>
             <Stack id={YEAR_HEADING_ANCHOR_ID}
+                   ref={yearHeadingRef}
                    direction={'row'} spacing={'2'}
                    position={'sticky'}
                    top={STICKY_HEADING_TOP}
@@ -178,6 +180,8 @@ function List({ startYear} : {startYear: number}) {
                    scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
                    display={'flex'} alignItems={'center'}
                    minH={'2.75rem'}
+                   boxShadow={isYearHeadingStuck ? STICKY_HEADING_STUCK_SHADOW : 'none'}
+                   transition={'box-shadow 150ms ease-out'}
                    >
               <Heading size={{base: 'sm', md: 'md'}}
                        color={'gray.600'}
