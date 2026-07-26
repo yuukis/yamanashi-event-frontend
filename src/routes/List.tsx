@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useParams, useSearchParams } from "react-router-dom";
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { PageBreadcrumb } from '../components/PageBreadcrumb';
@@ -11,7 +11,6 @@ import { ViewModeToggle } from '../components/ViewModeToggle';
 import { EventScrollGutter } from '../components/EventScrollGutter';
 import { StructuredData } from '../components/StructuredData';
 import '../style.css';
-import { useSyncExternalStore } from 'react';
 import {
   Container,
   Box,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SiteHeader, SiteFooter, SelectYearButtons, FooterLastModified, useFixedHeaderBoundary, STICKY_HEADING_TOP } from '../components/Site';
 import { YearSwitcher, FUTURE_EVENTS_ANCHOR_ID } from '../components/YearSwitcher';
@@ -15,7 +15,6 @@ import '../style.css';
 import eyecatch from "../assets/images/eyecatch.png"
 import root_bg from "../assets/images/root_bg.png";
 import root_top_bg from "../assets/images/root_top_bg.png";
-import { useSyncExternalStore } from 'react';
 import {
   Container,
   Box,
