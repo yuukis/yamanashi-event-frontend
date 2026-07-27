@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { buildGutterLayout, withMarkerFlags, EventScrollGutter, EVENT_CARD_LAYOUT_SETTLED } from './EventScrollGutter';
+import { buildGutterLayout, withMarkerFlags, markerTopAdjuster, EventScrollGutter, EVENT_CARD_LAYOUT_SETTLED } from './EventScrollGutter';
 import type { RawMarker, SectionExtent } from './EventScrollGutter';
 
 function marker(overrides: Partial<RawMarker>): RawMarker {
@@ -249,6 +249,43 @@ describe('buildGutterLayout', () => {
     expect(labeledMarkers[1]).toEqual(expect.objectContaining({ yearText: null, monthText: null }));
     expect(labeledMarkers[0]).toEqual(expect.objectContaining({ yearText: '2025年', monthText: null }));
     expect(labeledMarkers[2]).toEqual(expect.objectContaining({ yearText: null, monthText: '6月' }));
+  });
+});
+
+describe('markerTopAdjuster', () => {
+  it('spreads out markers that share a row (grid view) between that row and the next one, by column', () => {
+    // row0: 3 items at top=100 (grid columns=3), row1: 1 item at top=400
+    const adjust = markerTopAdjuster([100, 100, 100, 400]);
+
+    expect(adjust(0)).toBe(100);
+    expect(adjust(1)).toBe(100 + (400 - 100) * (1 / 3));
+    expect(adjust(2)).toBe(100 + (400 - 100) * (2 / 3));
+    expect(adjust(3)).toBe(400);
+  });
+
+  it('falls back to the previous row height when the shared row is the last one', () => {
+    // row0: 1 item at top=100, row1 (last): 3 items at top=400
+    const adjust = markerTopAdjuster([100, 400, 400, 400]);
+
+    expect(adjust(1)).toBe(400);
+    expect(adjust(2)).toBe(400 + (400 - 100) * (1 / 3));
+    expect(adjust(3)).toBe(400 + (400 - 100) * (2 / 3));
+  });
+
+  it('leaves markers untouched when every item is on its own row (list/compact view)', () => {
+    const adjust = markerTopAdjuster([100, 250, 600]);
+
+    expect(adjust(0)).toBe(100);
+    expect(adjust(1)).toBe(250);
+    expect(adjust(2)).toBe(600);
+  });
+
+  it('does not offset a shared row with no other row to interpolate against', () => {
+    const adjust = markerTopAdjuster([100, 100, 100]);
+
+    expect(adjust(0)).toBe(100);
+    expect(adjust(1)).toBe(100);
+    expect(adjust(2)).toBe(100);
   });
 });
 
