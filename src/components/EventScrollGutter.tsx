@@ -62,21 +62,57 @@ const MIN_LABEL_GAP = 14;
 const SECTION_GAP = 16;
 const LINE_PAD = 6;
 
+const ROW_TOP_EPSILON = 1;
+
+export function markerTopAdjuster(tops: number[]): (index: number) => number {
+  type Row = { top: number; count: number };
+  const rows: Row[] = [];
+  const rowIndexes: number[] = [];
+  const colIndexes: number[] = [];
+
+  tops.forEach((top) => {
+    const lastRow = rows[rows.length - 1];
+    if (lastRow && Math.abs(top - lastRow.top) < ROW_TOP_EPSILON) {
+      colIndexes.push(lastRow.count);
+      lastRow.count += 1;
+    } else {
+      rows.push({ top, count: 1 });
+      colIndexes.push(0);
+    }
+    rowIndexes.push(rows.length - 1);
+  });
+
+  return (index: number) => {
+    const colIdx = colIndexes[index];
+    if (colIdx === 0) {
+      return tops[index];
+    }
+    const row = rows[rowIndexes[index]];
+    const nextRow = rows[rowIndexes[index] + 1];
+    const prevRow = rows[rowIndexes[index] - 1];
+    const rowHeight = nextRow ? nextRow.top - row.top : prevRow ? row.top - prevRow.top : 0;
+    return row.top + (rowHeight * colIdx) / row.count;
+  };
+}
+
 function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } {
-  const elements = document.querySelectorAll<HTMLElement>('[data-event-start]');
+  const elements = Array.from(document.querySelectorAll<HTMLElement>('[data-event-start]'));
+  const rects = elements.map((el) => el.getBoundingClientRect());
+  const tops = rects.map((rect) => rect.top + window.scrollY);
+  const markerTopFor = markerTopAdjuster(tops);
+
   const markers: RawMarker[] = [];
   const extents: SectionExtent[] = [];
   let previousMarkerKey: string | null = null;
 
-  elements.forEach((el) => {
+  elements.forEach((el, index) => {
     const dateValue = el.dataset.eventStart;
     if (!dateValue) {
       return;
     }
     const section = el.dataset.eventSection ?? 'all';
-    const rect = el.getBoundingClientRect();
-    const top = rect.top + window.scrollY;
-    const bottom = rect.bottom + window.scrollY;
+    const top = tops[index];
+    const bottom = rects[index].bottom + window.scrollY;
 
     const currentExtent = extents[extents.length - 1];
     if (currentExtent && currentExtent.section === section) {
@@ -92,7 +128,7 @@ function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } 
       return;
     }
     previousMarkerKey = markerKey;
-    markers.push({ top, year, month, section });
+    markers.push({ top: markerTopFor(index), year, month, section });
   });
 
   return { markers, extents };
