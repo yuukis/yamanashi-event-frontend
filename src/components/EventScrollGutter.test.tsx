@@ -258,8 +258,8 @@ describe('markerTopAdjuster', () => {
     const adjust = markerTopAdjuster([100, 100, 100, 400]);
 
     expect(adjust(0)).toBe(100);
-    expect(adjust(1)).toBe(100 + (400 - 100) * (1 / 3));
-    expect(adjust(2)).toBe(100 + (400 - 100) * (2 / 3));
+    expect(adjust(1)).toBe(100 + ((400 - 100) * 1) / 3);
+    expect(adjust(2)).toBe(100 + ((400 - 100) * 2) / 3);
     expect(adjust(3)).toBe(400);
   });
 
@@ -268,8 +268,8 @@ describe('markerTopAdjuster', () => {
     const adjust = markerTopAdjuster([100, 400, 400, 400]);
 
     expect(adjust(1)).toBe(400);
-    expect(adjust(2)).toBe(400 + (400 - 100) * (1 / 3));
-    expect(adjust(3)).toBe(400 + (400 - 100) * (2 / 3));
+    expect(adjust(2)).toBe(400 + ((400 - 100) * 1) / 3);
+    expect(adjust(3)).toBe(400 + ((400 - 100) * 2) / 3);
   });
 
   it('leaves markers untouched when every item is on its own row (list/compact view)', () => {

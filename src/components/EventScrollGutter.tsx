@@ -103,7 +103,8 @@ export function markerTopAdjuster(tops: number[]): (index: number) => number {
 
 function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } {
   const elements = Array.from(document.querySelectorAll<HTMLElement>('[data-event-start]'));
-  const tops = elements.map((el) => el.getBoundingClientRect().top + window.scrollY);
+  const rects = elements.map((el) => el.getBoundingClientRect());
+  const tops = rects.map((rect) => rect.top + window.scrollY);
   const markerTopFor = markerTopAdjuster(tops);
 
   const markers: RawMarker[] = [];
@@ -117,7 +118,7 @@ function collectEventData(): { markers: RawMarker[]; extents: SectionExtent[] } 
     }
     const section = el.dataset.eventSection ?? 'all';
     const top = tops[index];
-    const bottom = el.getBoundingClientRect().bottom + window.scrollY;
+    const bottom = rects[index].bottom + window.scrollY;
 
     const currentExtent = extents[extents.length - 1];
     if (currentExtent && currentExtent.section === section) {
