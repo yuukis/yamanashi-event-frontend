@@ -1,7 +1,7 @@
 import { useSyncExternalStore, type ReactElement } from 'react';
 import {
   Button, ButtonGroup, IconButton, Tooltip, Show, Hide,
-  Menu, MenuButton, MenuList, MenuItem,
+  Menu, MenuButton, MenuList, MenuItem, Portal,
 } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { FiList, FiAlignJustify, FiGrid } from 'react-icons/fi';
@@ -51,18 +51,20 @@ export function ViewModeToggle() {
                       _hover={{ bg: 'gray.100' }}
                       px={'2'}
                       />
-          <MenuList fontSize={'sm'} minW={'40'} zIndex={'popover'}>
-            {VIEW_MODE_OPTIONS.map((option) => (
-              <MenuItem key={option.value}
-                        icon={option.icon}
-                        fontWeight={option.value === viewMode ? 'bold' : 'normal'}
-                        bg={option.value === viewMode ? 'gray.100' : undefined}
-                        onClick={() => setViewMode(option.value)}
-                        >
-                { option.label }
-              </MenuItem>
-            ))}
-          </MenuList>
+          <Portal>
+            <MenuList fontSize={'sm'} minW={'40'} zIndex={'popover'}>
+              {VIEW_MODE_OPTIONS.map((option) => (
+                <MenuItem key={option.value}
+                          icon={option.icon}
+                          fontWeight={option.value === viewMode ? 'bold' : 'normal'}
+                          bg={option.value === viewMode ? 'gray.100' : undefined}
+                          onClick={() => setViewMode(option.value)}
+                          >
+                  { option.label }
+                </MenuItem>
+              ))}
+            </MenuList>
+          </Portal>
         </Menu>
       </Hide>
     </>
