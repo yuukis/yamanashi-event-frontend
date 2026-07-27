@@ -37,9 +37,6 @@ import { useEventBodyData, type EventBodyProps } from './useEventBodyData';
 const GROUP_LOGO_SIZE = { w: '44px', h: '30px' };
 const RIGHT_RESERVE_PR_DESKTOP = '108px';
 const GROUP_LOGO_RIGHT_OFFSET = { base: '40px', md: '56px' };
-// 年表示ありの日付列(年+月日)の実測高さ。年を表示しない行にも同じ
-// minHを与えることで、行の高さと日付ブロックの上下中央が年の有無で
-// ずれないようにする。
 const DATE_COLUMN_MIN_H = { base: '51px', md: '56px' };
 
 export function EventBodyCompact(data: EventBodyProps) {
