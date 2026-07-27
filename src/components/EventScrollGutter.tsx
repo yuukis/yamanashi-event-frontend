@@ -62,14 +62,8 @@ const MIN_LABEL_GAP = 14;
 const SECTION_GAP = 16;
 const LINE_PAD = 6;
 
-// 同じ行内のカードは(誤差程度の差はあっても)ほぼ同じrect.topを持つ。
 const ROW_TOP_EPSILON = 1;
 
-// グリッド表示では複数のカードが横並びになるため、月替わりが2列目・
-// 3列目のカードで起きるとドットが同じY座標(=行のtop)に重なってしまう。
-// 次の行(最終行なら前の行)までの間隔を列数で分割し、列位置に応じて
-// ドットのY座標をずらす。リスト/コンパクト表示は1行1カードのため
-// 常にcolIdx=0となり、このずらしは効かない(=無害)。
 export function markerTopAdjuster(tops: number[]): (index: number) => number {
   type Row = { top: number; count: number };
   const rows: Row[] = [];

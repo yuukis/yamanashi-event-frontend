@@ -254,7 +254,6 @@ describe('buildGutterLayout', () => {
 
 describe('markerTopAdjuster', () => {
   it('spreads out markers that share a row (grid view) between that row and the next one, by column', () => {
-    // row0: 3 items at top=100 (grid columns=3), row1: 1 item at top=400
     const adjust = markerTopAdjuster([100, 100, 100, 400]);
 
     expect(adjust(0)).toBe(100);
@@ -264,7 +263,6 @@ describe('markerTopAdjuster', () => {
   });
 
   it('falls back to the previous row height when the shared row is the last one', () => {
-    // row0: 1 item at top=100, row1 (last): 3 items at top=400
     const adjust = markerTopAdjuster([100, 400, 400, 400]);
 
     expect(adjust(1)).toBe(400);
