@@ -37,6 +37,7 @@ import { useEventBodyData, type EventBodyProps } from './useEventBodyData';
 const GROUP_LOGO_SIZE = { w: '44px', h: '30px' };
 const RIGHT_RESERVE_PR_DESKTOP = '108px';
 const GROUP_LOGO_RIGHT_OFFSET = { base: '40px', md: '56px' };
+const DATE_COLUMN_MIN_H = { base: '51px', md: '56px' };
 
 export function EventBodyCompact(data: EventBodyProps) {
   const d = useEventBodyData(data);
@@ -85,6 +86,7 @@ export function EventBodyCompact(data: EventBodyProps) {
                 justifyContent={'center'}
                 mr={{base: '3', md: '0'}}
                 color={'gray.600'}
+                minH={d.now_year !== d.start_year ? undefined : DATE_COLUMN_MIN_H}
                 >
             { d.now_year !== d.start_year && (
               <HStack spacing={'0'} justifyContent={'flex-start'}>
@@ -106,7 +108,7 @@ export function EventBodyCompact(data: EventBodyProps) {
                     direction={{base: 'column', md: 'row'}}
                     justifyContent={'flex-start'}
                     alignItems={{base: 'flex-start', md: 'baseline'}}
-                    mt={d.now_year !== d.start_year ? '-1' : '0'}
+                    mt={d.now_year !== d.start_year ? {base: '-2', md: '-2.5'} : '0'}
                     >
               <Box w={{base: 'auto', md: '2.7em'}}
                    flexShrink={0}
