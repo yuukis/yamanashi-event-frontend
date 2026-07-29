@@ -12,6 +12,7 @@ import Group from './routes/Group.jsx'
 import Guide from './routes/Guide.jsx'
 import WidgetEvents from './routes/WidgetEvents.jsx'
 import WidgetGroupEvents from './routes/WidgetGroupEvents.jsx'
+import WidgetNextEvent from './routes/WidgetNextEvent.jsx'
 import WidgetCalendar from './routes/WidgetCalendar.jsx'
 import AppTheme from './theme.tsx'
 import { ChakraProvider } from '@chakra-ui/react'
@@ -50,6 +51,10 @@ const router = createBrowserRouter([
   {
     path: "/widget/groups/:groupKey/events",
     element: <WidgetGroupEvents />,
+  },
+  {
+    path: "/widget/groups/:groupKey/next-event",
+    element: <WidgetNextEvent />,
   },
   {
     path: "/widget/calendar",
