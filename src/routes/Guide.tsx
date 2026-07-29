@@ -32,7 +32,7 @@ import {
 } from "@chakra-ui/icons";
 import { FaXTwitter } from 'react-icons/fa6';
 import { fetchEvents, fetchGroups } from '../utils/api';
-import { buildListWidgetPath } from '../utils/widgetPaths';
+import { buildListWidgetPath, buildNextEventWidgetPath } from '../utils/widgetPaths';
 import { collectActiveGroupKeys, splitGroupsByActivity } from '../utils/groupActivity';
 import { X_ACCOUNT_URL } from '../utils/site';
 import { SyncButton } from '../components/Sync';
@@ -44,6 +44,7 @@ function Guide() {
   const [groups, setGroups] = useState<ApiGroup[]>([]);
   const [activeGroupKeys, setActiveGroupKeys] = useState<Set<string>>(new Set());
   const [selectedGroupKey, setSelectedGroupKey] = useState('');
+  const [selectedBannerGroupKey, setSelectedBannerGroupKey] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -84,12 +85,24 @@ function Guide() {
     [groups, activeGroupKeys],
   );
 
+  useEffect(() => {
+    if (selectedBannerGroupKey || groups.length === 0) {
+      return;
+    }
+    setSelectedBannerGroupKey((activeGroups[0] ?? inactiveGroups[0] ?? groups[0]).key);
+  }, [groups, activeGroups, inactiveGroups, selectedBannerGroupKey]);
+
   const { isOpen: isWidgetSectionExpanded, onToggle: toggleWidgetSection } = useDisclosure();
 
   const selectedGroup = groups.find((group) => group.key === selectedGroupKey);
   const listWidgetPath = buildListWidgetPath(selectedGroupKey);
   const listIframeTitle = selectedGroup ? `${selectedGroup.title} イベント情報` : '山梨イベント情報';
   const listElementId = selectedGroup ? `yamanashi-hub-widget-events-${selectedGroup.key}` : 'yamanashi-hub-widget-events';
+
+  const selectedBannerGroup = groups.find((group) => group.key === selectedBannerGroupKey);
+  const bannerWidgetPath = buildNextEventWidgetPath(selectedBannerGroupKey);
+  const bannerIframeTitle = selectedBannerGroup ? `${selectedBannerGroup.title} 次回イベント予定` : '次回イベント予定';
+  const bannerElementId = selectedBannerGroup ? `yamanashi-hub-widget-next-event-${selectedBannerGroup.key}` : 'yamanashi-hub-widget-next-event';
 
   document.title = 'はじめての方へ - Yamanashi Developer Hub';
 
@@ -297,6 +310,37 @@ function Guide() {
                                    iframeTitle={'山梨イベントカレンダー'}
                                    elementId={'yamanashi-hub-widget-calendar'}
                                    />
+                {selectedBannerGroupKey && (
+                  <WidgetPreviewCard title={'次回イベント予定バナー'}
+                                     description={'コミュニティのロゴと次回のイベント予定を表示する小さなバナーです。プルダウンでコミュニティを選べます。'}
+                                     previewPath={bannerWidgetPath}
+                                     embedPath={bannerWidgetPath}
+                                     iframeTitle={bannerIframeTitle}
+                                     elementId={bannerElementId}
+                                     controls={
+                                       <Select size={'sm'}
+                                               aria-label={'プレビューするコミュニティを選択'}
+                                               value={selectedBannerGroupKey}
+                                               onChange={(e) => setSelectedBannerGroupKey(e.target.value)}
+                                               >
+                                         {activeGroups.length > 0 && (
+                                           <optgroup label={'イベント情報のあるコミュニティ'}>
+                                             {activeGroups.map((group) => (
+                                               <option key={group.key} value={group.key}>{ group.title }</option>
+                                             ))}
+                                           </optgroup>
+                                         )}
+                                         {inactiveGroups.length > 0 && (
+                                           <optgroup label={'その他のコミュニティ'}>
+                                             {inactiveGroups.map((group) => (
+                                               <option key={group.key} value={group.key}>{ group.title }</option>
+                                             ))}
+                                           </optgroup>
+                                         )}
+                                       </Select>
+                                     }
+                                     />
+                )}
               </SimpleGrid>
               {!isWidgetSectionExpanded && (
                 <Box position={'absolute'}

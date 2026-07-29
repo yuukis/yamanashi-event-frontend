@@ -59,6 +59,31 @@ The `/widget/groups/:groupKey/events` page shows the same two lists (直近開�
 
 It supports the same `limit` parameter. Give each embedded widget's `<iframe>` its own unique `id` (as above) so its receiver script only ever resizes that one iframe.
 
+## A single community's next event (banner)
+
+The `/widget/groups/:groupKey/next-event` page is a small banner showing one community's logo and its next upcoming (or currently ongoing) event. It has no `limit` parameter — it always shows just the single next event, or a "現在予定されているイベントはありません。" message when there is none:
+
+```html
+<iframe id="yamanashi-hub-widget-next-event-techmujin"
+        src="https://hub.yamanashi.dev/widget/groups/techmujin/next-event"
+        style="width:100%;border:0;"
+        scrolling="no"
+        title="テック無尽 次回イベント予定"></iframe>
+<script>
+  (function () {
+    var iframe = document.getElementById('yamanashi-hub-widget-next-event-techmujin');
+    if (!iframe) return;
+    window.addEventListener('message', function (event) {
+      if (event.source !== iframe.contentWindow) return;
+      if (!event.data || event.data.type !== 'yamanashi-hub:widget-resize') return;
+      var height = event.data.height;
+      if (typeof height !== 'number' || !isFinite(height) || height < 0) return;
+      iframe.style.height = height + 'px';
+    });
+  })();
+</script>
+```
+
 ## Mini calendar
 
 The `/widget/calendar` page shows a one-month calendar grid with event days highlighted; hovering/focusing a highlighted day shows that day's events in a tooltip, and clicking a highlighted day opens a dialog listing that day's events with links to their primary source. It has its own month navigation (◀/▶, limited to 4 months before/after the current month) and does not take a `limit` parameter:
