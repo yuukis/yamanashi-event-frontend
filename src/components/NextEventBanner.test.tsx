@@ -12,12 +12,13 @@ vi.mock('../utils/nowTicker', () => ({
 }));
 
 describe('NextEventBanner', () => {
-  it('shows a skeleton while loading, without any content text', () => {
+  it('shows a skeleton while loading, without any links or the empty-state message', () => {
     renderWithChakra(
       <NextEventBanner isLoading errorMessage={''} group={null} nextEvent={null} />,
     );
 
-    expect(screen.queryByText('次回のイベント予定')).not.toBeInTheDocument();
+    expect(screen.queryAllByRole('link')).toHaveLength(0);
+    expect(screen.queryByText('現在予定されているイベントはありません。')).not.toBeInTheDocument();
   });
 
   it('shows the error state when errorMessage is set', () => {
@@ -38,8 +39,8 @@ describe('NextEventBanner', () => {
                         />,
     );
 
-    expect(screen.getByText('次回のイベント予定')).toBeInTheDocument();
     expect(screen.getByText('現在予定されているイベントはありません。')).toBeInTheDocument();
+    expect(screen.queryAllByRole('link')).toHaveLength(0);
   });
 
   it('renders the community logo image when the group has one', () => {
@@ -54,7 +55,7 @@ describe('NextEventBanner', () => {
     expect(screen.getByRole('img', { name: 'テック無尽' })).toHaveAttribute('src', 'https://example.com/logo.png');
   });
 
-  it('shows the event date and a linked title for the next event', () => {
+  it('shows the event date and title, with the whole banner as a single link to the event', () => {
     renderWithChakra(
       <NextEventBanner isLoading={false}
                         errorMessage={''}
@@ -69,11 +70,26 @@ describe('NextEventBanner', () => {
     );
 
     expect(screen.getByText('(木) 19:00〜', { exact: false })).toBeInTheDocument();
-    const link = screen.getByRole('link', { name: '甲府もくもく会 #1' });
-    expect(link).toHaveAttribute('href', 'https://example.com/event/1');
-    expect(link).toHaveAttribute('target', '_blank');
+    expect(screen.getByText('甲府もくもく会 #1')).toBeInTheDocument();
+    const links = screen.getAllByRole('link', { name: '甲府もくもく会 #1' });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', 'https://example.com/event/1');
+    expect(links[0]).toHaveAttribute('target', '_blank');
     expect(screen.queryByText('本日開催')).not.toBeInTheDocument();
     expect(screen.queryByText('開催中')).not.toBeInTheDocument();
+  });
+
+  it('falls back to the decorative background pattern when the event has no image', () => {
+    const { container } = renderWithChakra(
+      <NextEventBanner isLoading={false}
+                        errorMessage={''}
+                        group={makeGroupDetail()}
+                        nextEvent={makeEvent({ image_url: null })}
+                        />,
+    );
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(container.querySelector('.scroll-row-bg-pattern')).toBeInTheDocument();
   });
 
   it('shows a "本日開催" badge for an event later today that has not started yet', () => {

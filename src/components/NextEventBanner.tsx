@@ -1,20 +1,17 @@
-import { useRef, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 import {
   Box,
   HStack,
-  Stack,
   Text,
   Badge,
   Link,
   Image,
   Skeleton,
-  SkeletonCircle,
 } from '@chakra-ui/react';
 import { People } from '@chakra-icons/bootstrap';
 import { WidgetEventError } from './WidgetEventItem';
 import { subscribeNow, getNow } from '../utils/nowTicker';
 import { formatEventDateKey } from '../utils/eventAnchors';
-import { useReportWidgetHeight } from '../utils/widgetResize';
 import type { ApiEvent, ApiGroupDetail } from '../types/events';
 
 const DAY_OF_WEEK = ['日', '月', '火', '水', '木', '金', '土'];
@@ -25,6 +22,20 @@ type NextEventBannerProps = {
   nextEvent: ApiEvent | null;
   errorMessage: string;
 };
+
+const EVENT_THUMBNAIL_HEIGHT = '96px';
+
+function EventThumbnail({ nextEvent }: { nextEvent: ApiEvent }) {
+  return (
+    <Box flexShrink={0} h={'100%'} overflow={'hidden'} sx={{ aspectRatio: '16 / 9' }}>
+      {nextEvent.image_url ? (
+        <Image src={nextEvent.image_url} w={'100%'} h={'100%'} objectFit={'cover'} alt={''} />
+      ) : (
+        <Box className={'scroll-row-bg-pattern'} w={'100%'} h={'100%'} />
+      )}
+    </Box>
+  );
+}
 
 function GroupLogo({ group }: { group: ApiGroupDetail }) {
   return (
@@ -37,6 +48,7 @@ function GroupLogo({ group }: { group: ApiGroupDetail }) {
          alignItems={'center'}
          justifyContent={'center'}
          flexShrink={0}
+         overflow={'hidden'}
          >
       {group.image_url ? (
         <Image src={group.image_url} boxSize={'100%'} fit={'contain'} alt={group.title} />
@@ -48,19 +60,17 @@ function GroupLogo({ group }: { group: ApiGroupDetail }) {
 }
 
 export function NextEventBanner({ isLoading, group, nextEvent, errorMessage }: NextEventBannerProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  useReportWidgetHeight(containerRef);
   const now = useSyncExternalStore(subscribeNow, getNow);
 
   if (isLoading) {
     return (
-      <Box ref={containerRef} bg={'white'} p={'3'}>
-        <HStack spacing={'3'} align={'center'}>
-          <SkeletonCircle size={'12'} />
-          <Stack spacing={'1'} flex={'1'}>
-            <Skeleton height={'0.75rem'} width={'40%'} />
-            <Skeleton height={'0.875rem'} width={'70%'} />
-          </Stack>
+      <Box bg={'white'} h={EVENT_THUMBNAIL_HEIGHT}>
+        <HStack spacing={'3'} align={'stretch'} h={'100%'}>
+          <Skeleton flexShrink={0} h={'100%'} sx={{ aspectRatio: '16 / 9' }} />
+          <Box minW={0} flex={'1'} py={'3'} pr={'3'} display={'flex'} flexDirection={'column'} justifyContent={'center'}>
+            <Skeleton height={'0.75rem'} width={'30%'} mb={'2'} />
+            <Skeleton height={'0.875rem'} width={'80%'} />
+          </Box>
         </HStack>
       </Box>
     );
@@ -68,61 +78,76 @@ export function NextEventBanner({ isLoading, group, nextEvent, errorMessage }: N
 
   if (errorMessage || !group) {
     return (
-      <Box ref={containerRef} bg={'white'} p={'3'}>
+      <Box bg={'white'} h={EVENT_THUMBNAIL_HEIGHT} p={'3'} display={'flex'} alignItems={'center'}>
         <WidgetEventError message={errorMessage || undefined} />
       </Box>
     );
   }
 
-  const start_date = nextEvent ? new Date(nextEvent.started_at) : null;
-  const end_date = nextEvent ? new Date(nextEvent.ended_at) : null;
+  if (!nextEvent) {
+    return (
+      <Box bg={'white'} h={EVENT_THUMBNAIL_HEIGHT} p={'3'}>
+        <HStack spacing={'3'} align={'center'} h={'100%'}>
+          <GroupLogo group={group} />
+          <Box minW={0} flex={'1'}>
+            <Text fontSize={'sm'} color={'gray.600'}>現在予定されているイベントはありません。</Text>
+          </Box>
+        </HStack>
+      </Box>
+    );
+  }
+
+  const start_date = new Date(nextEvent.started_at);
+  const end_date = new Date(nextEvent.ended_at);
   const now_year = now.getFullYear();
-  const start_year = start_date?.getFullYear();
-  const start_month = start_date ? start_date.getMonth() + 1 : null;
-  const start_day = start_date?.getDate();
-  const start_dow = start_date ? DAY_OF_WEEK[start_date.getDay()] : null;
-  const start_time = start_date ? start_date.getHours() + ':' + ('0' + start_date.getMinutes()).slice(-2) : null;
-  const is_today = start_date ? formatEventDateKey(start_date) === formatEventDateKey(now) : false;
-  const has_ended = end_date ? now.getTime() > end_date.getTime() : false;
-  const is_ongoing = start_date ? now.getTime() >= start_date.getTime() && !has_ended : false;
+  const start_year = start_date.getFullYear();
+  const start_month = start_date.getMonth() + 1;
+  const start_day = start_date.getDate();
+  const start_dow = DAY_OF_WEEK[start_date.getDay()];
+  const start_time = start_date.getHours() + ':' + ('0' + start_date.getMinutes()).slice(-2);
+  const is_today = formatEventDateKey(start_date) === formatEventDateKey(now);
+  const has_ended = now.getTime() > end_date.getTime();
+  const is_ongoing = now.getTime() >= start_date.getTime() && !has_ended;
 
   return (
-    <Box ref={containerRef} bg={'white'} p={'3'}>
-      <HStack spacing={'3'} align={'center'}>
-        <GroupLogo group={group} />
-        <Box minW={0} flex={'1'}>
-          <Text fontSize={'xs'} color={'gray.500'}>次回のイベント予定</Text>
-          {nextEvent ? (
-            <>
-              <HStack spacing={'1'} align={'baseline'} mt={'1'}>
-                {now_year !== start_year && (
-                  <Text fontSize={'xs'} fontWeight={'light'} color={'gray.600'}>{ start_year }年</Text>
-                )}
-                <Text fontSize={'md'} fontWeight={'bold'} color={'gray.700'}>{ start_month }</Text>
-                <Text fontSize={'md'} fontWeight={'light'} color={'gray.700'}>/{ start_day }</Text>
-                <Text fontSize={'xs'} color={'gray.600'}>({ start_dow }) { start_time }〜</Text>
-                {(is_today || is_ongoing) && !has_ended && (
-                  <Badge bg={'#f9f1e8'}
-                         color={'impact.700'}
-                         border={'1px solid'}
-                         borderColor={'impact.500'}
-                         fontSize={'xs'}
-                         fontWeight={'bold'}
-                         w={'fit-content'}
-                         >
-                    { is_ongoing ? '開催中' : '本日開催' }
-                  </Badge>
-                )}
-              </HStack>
-              <Text fontSize={'sm'} fontWeight={'bold'} noOfLines={2}>
-                <Link href={nextEvent.event_url} color={'primary.800'} isExternal>{ nextEvent.title }</Link>
-              </Text>
-            </>
-          ) : (
-            <Text fontSize={'sm'} color={'gray.600'} mt={'1'}>現在予定されているイベントはありません。</Text>
-          )}
-        </Box>
-      </HStack>
+    <Box bg={'white'} h={EVENT_THUMBNAIL_HEIGHT}>
+      <Link href={nextEvent.event_url}
+            isExternal
+            aria-label={nextEvent.title}
+            display={'block'}
+            h={'100%'}
+            textDecoration={'none'}
+            _hover={{ textDecoration: 'none', bg: 'gray.50' }}
+            >
+        <HStack spacing={'3'} align={'stretch'} h={'100%'}>
+          <EventThumbnail nextEvent={nextEvent} />
+          <Box minW={0} flex={'1'} py={'3'} pr={'3'} display={'flex'} flexDirection={'column'} justifyContent={'center'} overflow={'hidden'}>
+            <HStack spacing={'1'} align={'baseline'}>
+              {now_year !== start_year && (
+                <Text fontSize={'xs'} fontWeight={'light'} color={'gray.600'}>{ start_year }年</Text>
+              )}
+              <Text fontSize={'md'} fontWeight={'bold'} color={'gray.700'}>{ start_month }</Text>
+              <Text fontSize={'md'} fontWeight={'light'} color={'gray.700'}>/{ start_day }</Text>
+              <Text fontSize={'xs'} color={'gray.600'}>({ start_dow }) { start_time }〜</Text>
+              {(is_today || is_ongoing) && !has_ended && (
+                <Badge bg={'#f9f1e8'}
+                       color={'impact.700'}
+                       border={'1px solid'}
+                       borderColor={'impact.500'}
+                       fontSize={'xs'}
+                       fontWeight={'bold'}
+                       w={'fit-content'}
+                       >
+                  { is_ongoing ? '開催中' : '本日開催' }
+                </Badge>
+              )}
+            </HStack>
+            <Text fontSize={'sm'} fontWeight={'bold'} color={'primary.800'} noOfLines={2}>
+              { nextEvent.title }
+            </Text>
+          </Box>
+        </HStack>
+      </Link>
     </Box>
   );
 }

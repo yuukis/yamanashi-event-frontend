@@ -19,6 +19,7 @@ export const WIDGET_NEXT_EVENT_FIELDS = [
   'started_at',
   'ended_at',
   'open_status',
+  'image_url',
 ].join(',');
 
 export const WIDGET_GROUP_FIELDS = [
