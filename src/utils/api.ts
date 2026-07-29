@@ -147,8 +147,8 @@ export async function fetchEventDescription(uid: string, options?: { year?: numb
   return (event?.description ?? '') as string;
 }
 
-export async function fetchGroup(groupKey: string): Promise<ApiGroupDetail> {
-  const res = await axios.get(`${GROUPS_API_URL}/${encodeURIComponent(groupKey)}`, { params: { fields: GROUP_DETAIL_FIELDS } });
+export async function fetchGroup(groupKey: string, fields: string = GROUP_DETAIL_FIELDS): Promise<ApiGroupDetail> {
+  const res = await axios.get(`${GROUPS_API_URL}/${encodeURIComponent(groupKey)}`, { params: { fields } });
   return res.data as ApiGroupDetail;
 }
 
