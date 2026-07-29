@@ -317,6 +317,7 @@ function Guide() {
                                      embedPath={bannerWidgetPath}
                                      iframeTitle={bannerIframeTitle}
                                      elementId={bannerElementId}
+                                     fixedHeight={'96px'}
                                      controls={
                                        <Select size={'sm'}
                                                aria-label={'プレビューするコミュニティを選択'}
