@@ -17,11 +17,23 @@ function escapeJsSingleQuotedString(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/'/g, '\\\'');
 }
 
-function buildSnippet(embedPath: string, iframeTitle: string, elementId: string): string {
+function buildSnippet(embedPath: string, iframeTitle: string, elementId: string, fixedHeight?: string): string {
   const src = escapeHtmlAttribute(`${SITE_ORIGIN}${embedPath}`);
   const idAttr = escapeHtmlAttribute(elementId);
-  const idJs = escapeJsSingleQuotedString(elementId);
   const title = escapeHtmlAttribute(iframeTitle);
+
+  if (fixedHeight) {
+    const height = escapeHtmlAttribute(fixedHeight);
+    return [
+      `<iframe id="${idAttr}"`,
+      `        src="${src}"`,
+      `        style="width:100%;height:${height};border:0;"`,
+      `        scrolling="no"`,
+      `        title="${title}"></iframe>`,
+    ].join('\n');
+  }
+
+  const idJs = escapeJsSingleQuotedString(elementId);
   return [
     `<iframe id="${idAttr}"`,
     `        src="${src}"`,
@@ -58,6 +70,7 @@ type WidgetPreviewCardProps = {
   controls?: ReactNode;
   // side-by-sideはプレビューがカード幅いっぱいに間延びするのを防ぐ
   layout?: 'stacked' | 'side-by-side';
+  fixedHeight?: string;
 };
 
 export function WidgetPreviewCard({
@@ -69,6 +82,7 @@ export function WidgetPreviewCard({
   elementId,
   controls,
   layout = 'stacked',
+  fixedHeight,
 }: WidgetPreviewCardProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   useWidgetIframeAutoHeight(iframeRef);
@@ -98,11 +112,11 @@ export function WidgetPreviewCard({
                       src={previewPath}
                       title={iframeTitle}
                       loading={'lazy'}
-                      style={{ width: '100%', border: 0, display: 'block' }}
+                      style={{ width: '100%', height: fixedHeight, border: 0, display: 'block' }}
                       />
             </Box>
             <Box w={'100%'} minW={'0'} flex={isSideBySide ? '1' : undefined}>
-              <CopySnippetBlock code={buildSnippet(embedPath, iframeTitle, elementId)}
+              <CopySnippetBlock code={buildSnippet(embedPath, iframeTitle, elementId, fixedHeight)}
                                 label={`${title}の埋め込みスニペット`}
                                 />
             </Box>
