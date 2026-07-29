@@ -312,7 +312,7 @@ function Guide() {
                                    />
                 {selectedBannerGroupKey && (
                   <WidgetPreviewCard title={'次回イベント予定バナー'}
-                                     description={'コミュニティのロゴと次回のイベント予定を表示する小さなバナーです。プルダウンでコミュニティを選べます。'}
+                                     description={'コミュニティの次回のイベント予定を表示する小さなバナーです。プルダウンでコミュニティを選べます。'}
                                      previewPath={bannerWidgetPath}
                                      embedPath={bannerWidgetPath}
                                      iframeTitle={bannerIframeTitle}
