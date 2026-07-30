@@ -46,6 +46,7 @@ export function WidgetPickerCard({
                     tabIndex={-1}
                     aria-hidden
                     loading={'lazy'}
+                    scrolling={'no'}
                     style={{ width: '100%', height: peekHeight, border: 0, pointerEvents: 'none' }}
                     />
             {showFadeOverlay && (
