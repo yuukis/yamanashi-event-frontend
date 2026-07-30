@@ -33,15 +33,21 @@ function WidgetNextEvent() {
     setData({ isLoading: true, group: null, nextEvent: null, errorMessage: '' });
     (async () => {
       try {
-        const [group, eventsPage] = await Promise.all([
-          fetchGroup(groupKey, WIDGET_GROUP_FIELDS),
-          fetchGroupEvents(groupKey, { fields: WIDGET_NEXT_EVENT_FIELDS }),
-        ]);
+        const eventsPage = await fetchGroupEvents(groupKey, { fields: WIDGET_NEXT_EVENT_FIELDS });
         if (cancelled) {
           return;
         }
         const nextEvent = eventsPage.events.filter(isFutureEvent).sort(sortByStartedAtAsc)[0] ?? null;
-        setData({ isLoading: false, group, nextEvent, errorMessage: '' });
+        if (nextEvent) {
+          setData({ isLoading: false, group: null, nextEvent, errorMessage: '' });
+          return;
+        }
+
+        const group = await fetchGroup(groupKey, WIDGET_GROUP_FIELDS);
+        if (cancelled) {
+          return;
+        }
+        setData({ isLoading: false, group, nextEvent: null, errorMessage: '' });
       } catch (err) {
         if (cancelled) {
           return;
