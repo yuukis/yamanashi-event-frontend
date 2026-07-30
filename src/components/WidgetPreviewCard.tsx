@@ -71,6 +71,8 @@ type WidgetPreviewCardProps = {
   // side-by-sideはプレビューがカード幅いっぱいに間延びするのを防ぐ
   layout?: 'stacked' | 'side-by-side';
   fixedHeight?: string;
+  showTitle?: boolean;
+  variant?: 'card' | 'plain';
 };
 
 export function WidgetPreviewCard({
@@ -83,45 +85,53 @@ export function WidgetPreviewCard({
   controls,
   layout = 'stacked',
   fixedHeight,
+  showTitle = true,
+  variant = 'card',
 }: WidgetPreviewCardProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   useWidgetIframeAutoHeight(iframeRef);
 
   const isSideBySide = layout === 'side-by-side';
 
+  const content = (
+    <Stack spacing={'3'}>
+      {showTitle && (
+        <Heading size={'sm'} color={'gray.700'}>{ title }</Heading>
+      )}
+      <Text fontSize={'sm'} color={'gray.600'} lineHeight={'1.8'}>{ description }</Text>
+      { controls }
+      <Stack direction={isSideBySide ? {base: 'column', md: 'row'} : 'column'}
+             spacing={isSideBySide ? '4' : '3'}
+             align={'flex-start'}
+             >
+        <Box bg={'white'}
+             w={isSideBySide ? {base: '100%', md: SIDE_BY_SIDE_PREVIEW_WIDTH} : '100%'}
+             flexShrink={0}
+             >
+          <iframe ref={iframeRef}
+                  src={previewPath}
+                  title={iframeTitle}
+                  loading={'lazy'}
+                  style={{ width: '100%', height: fixedHeight, border: 0, display: 'block' }}
+                  />
+        </Box>
+        <Box w={'100%'} minW={'0'} flex={isSideBySide ? '1' : undefined}>
+          <CopySnippetBlock code={buildSnippet(embedPath, iframeTitle, elementId, fixedHeight)}
+                            label={`${title}の埋め込みスニペット`}
+                            />
+        </Box>
+      </Stack>
+    </Stack>
+  );
+
+  if (variant === 'plain') {
+    return content;
+  }
+
   return (
     <Card variant={'outline'} borderRadius={'md'}>
       <CardBody>
-        <Stack spacing={'3'}>
-          <Heading size={'sm'} color={'gray.700'}>{ title }</Heading>
-          <Text fontSize={'sm'} color={'gray.600'} lineHeight={'1.8'}>{ description }</Text>
-          { controls }
-          <Stack direction={isSideBySide ? {base: 'column', md: 'row'} : 'column'}
-                 spacing={isSideBySide ? '4' : '3'}
-                 align={'flex-start'}
-                 >
-            <Box borderWidth={'1px'}
-                 borderColor={'gray.200'}
-                 borderRadius={'md'}
-                 overflow={'hidden'}
-                 bg={'white'}
-                 w={isSideBySide ? {base: '100%', md: SIDE_BY_SIDE_PREVIEW_WIDTH} : '100%'}
-                 flexShrink={0}
-                 >
-              <iframe ref={iframeRef}
-                      src={previewPath}
-                      title={iframeTitle}
-                      loading={'lazy'}
-                      style={{ width: '100%', height: fixedHeight, border: 0, display: 'block' }}
-                      />
-            </Box>
-            <Box w={'100%'} minW={'0'} flex={isSideBySide ? '1' : undefined}>
-              <CopySnippetBlock code={buildSnippet(embedPath, iframeTitle, elementId, fixedHeight)}
-                                label={`${title}の埋め込みスニペット`}
-                                />
-            </Box>
-          </Stack>
-        </Stack>
+        { content }
       </CardBody>
     </Card>
   );

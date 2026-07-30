@@ -7,7 +7,8 @@ import { EventListView, SkeletonEventListView } from '../components/EventListVie
 import { ViewModeToggle } from '../components/ViewModeToggle';
 import { EventScrollGutter } from '../components/EventScrollGutter';
 import { ShareContextIconRow } from '../components/ShareButtons';
-import { WidgetPreviewCard } from '../components/WidgetPreviewCard';
+import { WidgetPartsSection } from '../components/WidgetPartsSection';
+import type { WidgetDefinition } from '../components/WidgetPartsSection';
 import { StructuredData } from '../components/StructuredData';
 import '../style.css';
 import {
@@ -38,7 +39,7 @@ import { fetchGroup, fetchGroupEvents, fetchGroupStartYear } from '../utils/api'
 import type { GroupEventsPage } from '../utils/api';
 import { buildGroupPageUrl, buildGroupPagePath, buildGroupExternalLinks, buildGroupFeedUrl, buildGroupFeedTitle } from '../utils/groupPage';
 import { buildGroupPageJsonLd } from '../utils/structuredData';
-import { buildListWidgetPath } from '../utils/widgetPaths';
+import { buildListWidgetPath, buildNextEventWidgetPath } from '../utils/widgetPaths';
 import { sanitizeDescriptionHtml } from '../utils/descriptionHtml';
 import { scrollToCurrentHash } from '../utils/hashScroll';
 import { subscribeViewMode, getViewModeSnapshot } from '../utils/viewModeStore';
@@ -288,6 +289,28 @@ function Group() {
   }, [groupKey]);
 
   const group = data.group;
+
+  const groupWidgetDefinitions: WidgetDefinition[] = group ? [
+    {
+      key: 'events',
+      title: 'イベント一覧',
+      description: `${group.title} のイベント一覧をブログやWebサイトに埋め込めます。`,
+      previewPath: buildListWidgetPath(group.key),
+      embedPath: buildListWidgetPath(group.key),
+      iframeTitle: `${group.title} イベント情報`,
+      elementId: `yamanashi-hub-widget-events-${group.key}`,
+    },
+    {
+      key: 'next-event',
+      title: '次回イベント予定バナー',
+      description: `${group.title} の次回のイベント予定を表示する小さなバナーです。`,
+      previewPath: buildNextEventWidgetPath(group.key),
+      embedPath: buildNextEventWidgetPath(group.key),
+      iframeTitle: `${group.title} 次回イベント予定`,
+      elementId: `yamanashi-hub-widget-next-event-${group.key}`,
+      fixedHeight: '96px',
+    },
+  ] : [];
 
   // 素のアンカーリンク(#blog-parts への遷移)に任せると、大きくスクロール
   // した際に固定ヘッダーの自動非表示ロジックが働いてヘッダーが消え、
@@ -686,23 +709,12 @@ function Group() {
               )}
             </Stack>
 
-            <Box id={BLOG_PARTS_ANCHOR_ID}
-                 px={{base: '4', md: '0'}}
-                 mt={'4'}
-                 scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
-                 >
-              <Heading size={{base: 'sm', md: 'md'}} color={'gray.600'} mb={'4'}>
-                ブログパーツ
-              </Heading>
-              <WidgetPreviewCard title={'イベント一覧を埋め込む'}
-                                 description={`${group.title} のイベント一覧をブログやWebサイトに埋め込めます。プレビューを確認して、下のスニペットをコピーしてお使いください。`}
-                                 previewPath={buildListWidgetPath(group.key)}
-                                 embedPath={buildListWidgetPath(group.key)}
-                                 iframeTitle={`${group.title} イベント情報`}
-                                 elementId={`yamanashi-hub-widget-events-${group.key}`}
-                                 layout={'side-by-side'}
-                                 />
-            </Box>
+            <WidgetPartsSection id={BLOG_PARTS_ANCHOR_ID}
+                                px={{base: '4', md: '0'}}
+                                mt={'4'}
+                                scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}
+                                widgets={groupWidgetDefinitions}
+                                />
           </Stack>
         )}
         {data.isLoading && (
