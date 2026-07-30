@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildListWidgetPath } from './widgetPaths';
+import { buildListWidgetPath, buildNextEventWidgetPath } from './widgetPaths';
 
 describe('buildListWidgetPath', () => {
   it('builds the all-events widget path when no group key is given', () => {
@@ -12,5 +12,15 @@ describe('buildListWidgetPath', () => {
 
   it('encodes URL-reserved characters in the group key', () => {
     expect(buildListWidgetPath('a/b?c')).toBe('/widget/groups/a%2Fb%3Fc/events?limit=5');
+  });
+});
+
+describe('buildNextEventWidgetPath', () => {
+  it('builds the next-event widget path for a group key', () => {
+    expect(buildNextEventWidgetPath('techmujin')).toBe('/widget/groups/techmujin/next-event');
+  });
+
+  it('encodes URL-reserved characters in the group key', () => {
+    expect(buildNextEventWidgetPath('a/b?c')).toBe('/widget/groups/a%2Fb%3Fc/next-event');
   });
 });

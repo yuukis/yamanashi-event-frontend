@@ -320,6 +320,14 @@ describe('fetchGroup', () => {
   it('requests the description field for the community profile', () => {
     expect(GROUP_DETAIL_FIELDS.split(',')).toContain('description');
   });
+
+  it('requests a caller-provided field set instead of the default', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: { key: 'g1' } });
+
+    await fetchGroup('g1', 'key,title,image_url');
+
+    expect(axios.get).toHaveBeenCalledWith(`${GROUPS_API_URL}/g1`, { params: { fields: 'key,title,image_url' } });
+  });
 });
 
 describe('fetchEventsSummary', () => {

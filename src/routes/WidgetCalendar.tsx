@@ -111,7 +111,15 @@ function WidgetCalendar() {
   document.title = 'Yamanashi Developer Hub - イベントカレンダーウィジェット';
 
   return (
-    <Box ref={containerRef} bg={'white'} p={'4'} minH={'100vh'} display={'flex'} flexDirection={'column'}>
+    <Box ref={containerRef}
+         bg={'white'}
+         p={'4'}
+         minH={'100vh'}
+         display={'flex'}
+         flexDirection={'column'}
+         borderRadius={'md'}
+         boxShadow={'inset 0 0 0 1px #e2e8f0'}
+         >
       <HStack spacing={'2'} mb={'3'} flexShrink={0}>
         <IconButton aria-label='前月を表示'
                     icon={<ChevronLeftIcon />}

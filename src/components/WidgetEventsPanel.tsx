@@ -36,7 +36,7 @@ export function WidgetEventsPanel({ isLoading, futureEvents, pastEvents, errorMe
   };
 
   return (
-    <Box ref={containerRef} bg={'white'} p={'4'}>
+    <Box ref={containerRef} bg={'white'} p={'4'} borderRadius={'md'} boxShadow={'inset 0 0 0 1px #e2e8f0'}>
       {heading && (
         <Heading size={'md'} mb={'4'}>{ heading }</Heading>
       )}

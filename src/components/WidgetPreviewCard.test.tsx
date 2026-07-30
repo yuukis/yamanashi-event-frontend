@@ -101,6 +101,26 @@ describe('WidgetPreviewCard', () => {
     expect(screen.getByTestId('custom-controls')).toBeInTheDocument();
   });
 
+  it('omits the resize script and sets a fixed height when fixedHeight is given', () => {
+    renderWithChakra(
+      <WidgetPreviewCard title={'次回イベント予定バナー'}
+                          description={'説明'}
+                          previewPath={'/widget/groups/techmujin/next-event'}
+                          embedPath={'/widget/groups/techmujin/next-event'}
+                          iframeTitle={'テック無尽 次回イベント予定'}
+                          elementId={'yamanashi-hub-widget-next-event-techmujin'}
+                          fixedHeight={'96px'}
+                          />,
+    );
+
+    const iframe = screen.getByTitle('テック無尽 次回イベント予定');
+    expect(iframe).toHaveStyle({ height: '96px' });
+
+    const snippet = (screen.getByRole('textbox') as HTMLTextAreaElement).value;
+    expect(snippet).toContain('style="width:100%;height:96px;border:0;"');
+    expect(snippet).not.toContain('<script>');
+  });
+
   it('still renders the preview and the copyable snippet when using the side-by-side layout', () => {
     renderWithChakra(
       <WidgetPreviewCard title={'イベント一覧'}

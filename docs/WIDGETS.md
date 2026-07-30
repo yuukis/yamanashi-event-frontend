@@ -59,6 +59,18 @@ The `/widget/groups/:groupKey/events` page shows the same two lists (直近開�
 
 It supports the same `limit` parameter. Give each embedded widget's `<iframe>` its own unique `id` (as above) so its receiver script only ever resizes that one iframe.
 
+## A single community's next event (banner)
+
+The `/widget/groups/:groupKey/next-event` page is a small banner showing one community's next upcoming (or currently ongoing) event — an event image on the left, date/title on the right, linking to the event's primary source — or a "現在予定されているイベントはありません。" message when there is none. Unlike the other widgets, its height never changes (always 96px), so it doesn't need the `postMessage`-based resize script — just a plain iframe with a fixed height:
+
+```html
+<iframe id="yamanashi-hub-widget-next-event-techmujin"
+        src="https://hub.yamanashi.dev/widget/groups/techmujin/next-event"
+        style="width:100%;height:96px;border:0;"
+        scrolling="no"
+        title="テック無尽 次回イベント予定"></iframe>
+```
+
 ## Mini calendar
 
 The `/widget/calendar` page shows a one-month calendar grid with event days highlighted; hovering/focusing a highlighted day shows that day's events in a tooltip, and clicking a highlighted day opens a dialog listing that day's events with links to their primary source. It has its own month navigation (◀/▶, limited to 4 months before/after the current month) and does not take a `limit` parameter:

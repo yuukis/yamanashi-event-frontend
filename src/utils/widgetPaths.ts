@@ -4,3 +4,7 @@ export function buildListWidgetPath(groupKey: string): string {
   const path = groupKey ? `/widget/groups/${encodeURIComponent(groupKey)}/events` : '/widget/events';
   return `${path}?limit=${WIDGET_LIST_LIMIT}`;
 }
+
+export function buildNextEventWidgetPath(groupKey: string): string {
+  return `/widget/groups/${encodeURIComponent(groupKey)}/next-event`;
+}
