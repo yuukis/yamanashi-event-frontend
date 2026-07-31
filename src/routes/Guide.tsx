@@ -310,8 +310,7 @@ function Guide() {
                   <Flex key={row.year} className={'guide-c-archive-row'} align={'center'} gap={{base: '3', sm: '5'}}>
                     <Text className={'guide-c-archive-year'}>{row.year}</Text>
                     <Flex className={'guide-c-archive-community'} align={'center'}>
-                      {Array.from({length: Math.min(row.groups, 4)}).map((_, index) => <Box key={index} className={'guide-c-avatar-dot'} />)}
-                      <Text fontSize={'xs'} color={'#617278'} ml={'2'}>+{row.groups}</Text>
+                      {Array.from({length: row.groups}).map((_, index) => <Box key={index} className={'guide-c-avatar-dot'} />)}
                     </Flex>
                     <Flex className={'guide-c-archive-bars'} align={'flex-end'} gap={'2px'} aria-hidden>
                       {row.counts.map((count, index) => <Box key={index} h={`${Math.max(3, count * 4)}px`} />)}
