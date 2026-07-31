@@ -69,7 +69,7 @@ describe('NextEventBanner', () => {
                         />,
     );
 
-    expect(screen.getByText('(木) 19:00〜', { exact: false })).toBeInTheDocument();
+    expect(screen.getByText('(木) 19:00-', { exact: false })).toBeInTheDocument();
     expect(screen.getByText('甲府もくもく会 #1')).toBeInTheDocument();
     const links = screen.getAllByRole('link', { name: '甲府もくもく会 #1' });
     expect(links).toHaveLength(1);
@@ -77,6 +77,39 @@ describe('NextEventBanner', () => {
     expect(links[0]).toHaveAttribute('target', '_blank');
     expect(screen.queryByText('本日開催')).not.toBeInTheDocument();
     expect(screen.queryByText('開催中')).not.toBeInTheDocument();
+  });
+
+  it('shows the year as a bare number (no 年 suffix) when the event is in a different year', () => {
+    renderWithChakra(
+      <NextEventBanner isLoading={false}
+                        errorMessage={''}
+                        group={makeGroupDetail({ title: 'テック無尽' })}
+                        nextEvent={makeEvent({
+                          title: '甲府もくもく会 #2',
+                          started_at: '2027-03-05T19:00:00+09:00',
+                          ended_at: '2027-03-05T21:00:00+09:00',
+                        })}
+                        />,
+    );
+
+    expect(screen.getByText('2027')).toBeInTheDocument();
+    expect(screen.queryByText('2027年')).not.toBeInTheDocument();
+  });
+
+  it('omits the year when the event is in the current year', () => {
+    renderWithChakra(
+      <NextEventBanner isLoading={false}
+                        errorMessage={''}
+                        group={makeGroupDetail({ title: 'テック無尽' })}
+                        nextEvent={makeEvent({
+                          title: '甲府もくもく会 #1',
+                          started_at: '2026-01-15T19:00:00+09:00',
+                          ended_at: '2026-01-15T21:00:00+09:00',
+                        })}
+                        />,
+    );
+
+    expect(screen.queryByText('2026')).not.toBeInTheDocument();
   });
 
   it('falls back to the decorative background pattern when the event has no image', () => {

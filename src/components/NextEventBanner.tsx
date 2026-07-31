@@ -130,15 +130,22 @@ export function NextEventBanner({ isLoading, group, nextEvent, errorMessage }: N
         <HStack spacing={'3'} align={'stretch'} h={'100%'}>
           <EventThumbnail nextEvent={nextEvent} />
           <Box minW={0} flex={'1'} py={'3'} pr={'3'} display={'flex'} flexDirection={'column'} justifyContent={'center'} overflow={'hidden'}>
-            <HStack spacing={'1'} align={'baseline'}>
-              {now_year !== start_year && (
-                <Text fontSize={'xs'} fontWeight={'light'} color={'gray.600'}>{ start_year }年</Text>
-              )}
-              <HStack spacing={'0'} align={'baseline'}>
+            {now_year !== start_year && (
+              <Text fontSize={'xs'} fontWeight={'light'} color={'gray.600'}>{ start_year }</Text>
+            )}
+            <HStack spacing={'1'}
+                    align={'baseline'}
+                    overflow={'hidden'}
+                    whiteSpace={'nowrap'}
+                    mt={now_year !== start_year ? '-1' : '0'}
+                    >
+              <HStack spacing={'0'} align={'baseline'} flexShrink={0}>
                 <Text fontSize={'md'} fontWeight={'bold'} color={'gray.700'}>{ start_month }</Text>
                 <Text fontSize={'md'} fontWeight={'light'} color={'gray.700'}>/{ start_day }</Text>
               </HStack>
-              <Text fontSize={'xs'} color={'gray.600'}>({ start_dow }) { start_time }〜</Text>
+              <Text fontSize={'xs'} color={'gray.600'} minW={0} overflow={'hidden'} textOverflow={'ellipsis'}>
+                ({ start_dow }) { start_time }-
+              </Text>
             </HStack>
             <Text fontSize={'sm'} fontWeight={'bold'} color={'primary.800'} noOfLines={2}>
               { nextEvent.title }
