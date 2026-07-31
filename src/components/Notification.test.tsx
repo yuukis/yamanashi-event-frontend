@@ -83,7 +83,7 @@ describe('NotificationButton', () => {
     openPopover();
 
     expect(await screen.findByText('甲府もくもく会')).toBeInTheDocument();
-    expect(screen.getByText('1/15(木) 19:00〜')).toBeInTheDocument();
+    expect(screen.getByText('1/15(木) 19:00-')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('甲府もくもく会'));
 
