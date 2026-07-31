@@ -129,3 +129,470 @@
       rgba(255, 255, 255, 0.2) 24px, rgba(255, 255, 255, 0.2) 27px, transparent 27px, transparent 48px,
       rgba(255, 255, 255, 0.2) 48px, rgba(255, 255, 255, 0.2) 51px, transparent 51px, transparent 96px);
 }
+
+/* Guide pattern C: a playful community noticeboard */
+.guide-c {
+  --guide-c-ink: #153f49;
+  --guide-c-coral: #ff745f;
+  --guide-c-yellow: #ffd45c;
+  --guide-c-blue: #a9e5f1;
+  background: #fffaf0;
+}
+
+.guide-c-hero {
+  position: relative;
+  overflow: hidden;
+  background-color: #dff4f3;
+  background-image: radial-gradient(rgba(21, 63, 73, 0.11) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.guide-c-label,
+.guide-c-kicker {
+  color: var(--guide-c-ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.guide-c-label {
+  padding: 8px 12px;
+  border: 1px solid rgba(21, 63, 73, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.guide-c-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--guide-c-coral);
+  box-shadow: 0 0 0 4px rgba(255, 116, 95, 0.16);
+}
+
+.guide-c-title {
+  color: var(--guide-c-ink);
+  line-height: 1.16 !important;
+  letter-spacing: -0.055em;
+}
+
+.guide-c-primary-button {
+  color: var(--guide-c-ink) !important;
+  background: var(--guide-c-yellow) !important;
+  border: 1px solid var(--guide-c-ink) !important;
+  box-shadow: 5px 5px 0 var(--guide-c-ink);
+  transition: transform 150ms ease, box-shadow 150ms ease !important;
+}
+
+.guide-c-primary-button:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 var(--guide-c-ink);
+}
+
+.guide-c-collage {
+  position: relative;
+  min-height: 500px;
+}
+
+.guide-c-image-card {
+  position: absolute;
+  inset: 5% 8% 4% 8%;
+  z-index: 2;
+  overflow: hidden;
+  border: 2px solid var(--guide-c-ink);
+  border-radius: 42% 42% 18px 18px;
+  background: var(--guide-c-ink);
+  box-shadow: 12px 12px 0 rgba(21, 63, 73, 0.18);
+  transform: rotate(2deg);
+}
+
+.guide-c-image-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.guide-c-shape {
+  position: absolute;
+  z-index: 1;
+}
+
+.guide-c-shape-yellow {
+  width: 180px;
+  height: 180px;
+  top: 0;
+  right: -10px;
+  border-radius: 50%;
+  background: var(--guide-c-yellow);
+}
+
+.guide-c-shape-blue {
+  width: 160px;
+  height: 120px;
+  left: 0;
+  bottom: 0;
+  background: #69c9dd;
+  transform: rotate(-8deg);
+}
+
+.guide-c-sticker {
+  position: absolute;
+  z-index: 3;
+  padding: 14px 16px;
+  border: 2px solid var(--guide-c-ink);
+  color: var(--guide-c-ink);
+  box-shadow: 5px 5px 0 var(--guide-c-ink);
+}
+
+.guide-c-sticker-top {
+  top: 11%;
+  left: -2%;
+  background: var(--guide-c-coral);
+  transform: rotate(-5deg);
+}
+
+.guide-c-sticker-bottom {
+  right: -1%;
+  bottom: 9%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  transform: rotate(4deg);
+}
+
+.guide-c-marquee {
+  overflow: hidden;
+  padding: 11px 0;
+  color: var(--guide-c-ink);
+  background: var(--guide-c-yellow);
+  border-top: 2px solid var(--guide-c-ink);
+  border-bottom: 2px solid var(--guide-c-ink);
+  white-space: nowrap;
+}
+
+.guide-c-marquee p {
+  width: max-content;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.guide-c-bento {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+
+.guide-c-bento-card {
+  overflow: hidden;
+  border: 1px solid var(--guide-c-ink) !important;
+  border-radius: 18px !important;
+  box-shadow: 5px 5px 0 rgba(21, 63, 73, 0.16) !important;
+  color: var(--guide-c-ink) !important;
+}
+
+.guide-c-bento-search {
+  grid-column: span 4;
+  grid-row: span 2;
+  min-height: 360px;
+  background: var(--guide-c-coral) !important;
+}
+
+.guide-c-bento-archive,
+.guide-c-bento-mark {
+  grid-column: span 2;
+  background: #fff !important;
+}
+
+.guide-c-bento-mark {
+  background: var(--guide-c-yellow) !important;
+}
+
+.guide-c-bento-follow {
+  grid-column: span 4;
+  background: var(--guide-c-blue) !important;
+}
+
+.guide-c-follow-option {
+  min-height: 190px;
+  padding: 16px;
+  border: 1px solid rgba(21, 63, 73, 0.2);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.guide-c-follow-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--guide-c-ink);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.guide-c-follow-option .chakra-popover__popper {
+  color: initial;
+}
+
+.guide-c-bento-source {
+  grid-column: span 2;
+  background: #cce9c3 !important;
+}
+
+.guide-c-card-number {
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  opacity: 0.62;
+}
+
+.guide-c-archive-feature {
+  color: white;
+  background-color: #153f49;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(105, 201, 221, 0.12), transparent 22%),
+    radial-gradient(circle at 90% 80%, rgba(255, 116, 95, 0.12), transparent 24%);
+}
+
+.guide-c-archive-preview {
+  padding: 26px;
+  color: var(--guide-c-ink);
+  border: 2px solid var(--guide-c-ink);
+  border-radius: 18px;
+  background: #fffaf0;
+  box-shadow: 10px 10px 0 #69c9dd;
+  transform: rotate(0.6deg);
+}
+
+.guide-c-archive-preview-header {
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(21, 63, 73, 0.2);
+}
+
+.guide-c-archive-row {
+  min-height: 78px;
+  padding: 13px 16px;
+  border: 1px solid rgba(21, 63, 73, 0.16);
+  border-radius: 12px;
+  background: white;
+}
+
+.guide-c-archive-year {
+  flex: 0 0 auto;
+  width: 82px;
+  font-size: 1.75rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.guide-c-archive-community {
+  min-width: 120px;
+}
+
+.guide-c-avatar-dot {
+  width: 27px;
+  height: 27px;
+  margin-left: -6px;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: #69c9dd;
+}
+
+.guide-c-avatar-dot:first-child {
+  margin-left: 0;
+}
+
+.guide-c-avatar-dot:nth-child(2) {
+  background: #ff745f;
+}
+
+.guide-c-avatar-dot:nth-child(3) {
+  background: #ffd45c;
+}
+
+.guide-c-avatar-dot:nth-child(4) {
+  background: #9bcf8d;
+}
+
+.guide-c-archive-bars {
+  flex: 1;
+  height: 42px;
+}
+
+.guide-c-archive-bars > div {
+  flex: 1;
+  min-height: 3px;
+  border-radius: 2px 2px 0 0;
+  background: #69c9dd;
+}
+
+.guide-c-first {
+  background-color: #e9f4df;
+  background-image: linear-gradient(90deg, transparent 49.5%, rgba(21, 63, 73, 0.05) 50%, transparent 50.5%);
+  background-size: 32px 100%;
+  border-top: 1px solid rgba(21, 63, 73, 0.14);
+  border-bottom: 1px solid rgba(21, 63, 73, 0.14);
+}
+
+.guide-c-mode {
+  padding: 18px;
+  border: 1px solid rgba(21, 63, 73, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.guide-c-mode-icon {
+  flex: 0 0 auto;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  color: var(--guide-c-ink);
+  background: var(--guide-c-yellow);
+}
+
+.guide-c-widget-area {
+  background: #ffc4b5;
+  border-bottom: 1px solid rgba(21, 63, 73, 0.16);
+}
+
+.guide-c-widget-shell {
+  padding: 24px;
+  border: 2px solid var(--guide-c-ink);
+  border-radius: 20px;
+  background: #fffaf0;
+  box-shadow: 9px 9px 0 var(--guide-c-ink);
+}
+
+.guide-c-widget-shell h2:empty,
+.guide-c-widget-shell h3:empty,
+.guide-c-widget-shell p:empty {
+  display: none;
+}
+
+.guide-c-about {
+  padding: 32px;
+  border: 1px solid rgba(21, 63, 73, 0.2);
+  border-radius: 20px;
+  background: #dff4f3;
+}
+
+/* Tablet: keep the lively bento rhythm without squeezing cards into the
+   desktop 4:2 ratio. 768px is Chakra's md boundary, so it needs its own layout. */
+@media (min-width: 768px) and (max-width: 991px) {
+  .guide-c-collage {
+    min-height: 430px;
+  }
+
+  .guide-c-image-card {
+    inset: 3% 15%;
+  }
+
+  .guide-c-shape-yellow {
+    right: 7%;
+  }
+
+  .guide-c-shape-blue {
+    left: 8%;
+  }
+
+  .guide-c-sticker-top {
+    left: 8%;
+  }
+
+  .guide-c-sticker-bottom {
+    right: 7%;
+  }
+
+  .guide-c-bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .guide-c-bento-search,
+  .guide-c-bento-follow,
+  .guide-c-bento-source {
+    grid-column: span 2;
+  }
+
+  .guide-c-bento-archive,
+  .guide-c-bento-mark {
+    grid-column: span 1;
+  }
+
+  .guide-c-bento-search {
+    grid-row: auto;
+    min-height: 320px;
+  }
+
+  .guide-c-bento-archive,
+  .guide-c-bento-mark,
+  .guide-c-bento-source {
+    min-height: 0;
+  }
+
+  .guide-c-follow-option {
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 767px) {
+  .guide-c-collage {
+    min-height: 390px;
+  }
+
+  .guide-c-bento {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-c-bento-search,
+  .guide-c-bento-archive,
+  .guide-c-bento-mark,
+  .guide-c-bento-follow,
+  .guide-c-bento-source {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .guide-c-bento-search {
+    min-height: 320px;
+  }
+
+  .guide-c-archive-preview {
+    padding: 17px;
+    box-shadow: 6px 6px 0 #69c9dd;
+    transform: none;
+  }
+
+  .guide-c-archive-row {
+    padding: 11px;
+  }
+
+  .guide-c-archive-year {
+    width: 58px;
+    font-size: 1.25rem;
+  }
+
+  .guide-c-archive-community {
+    min-width: 82px;
+  }
+
+  .guide-c-avatar-dot {
+    width: 22px;
+    height: 22px;
+  }
+
+  .guide-c-widget-shell {
+    padding: 15px;
+    box-shadow: 6px 6px 0 var(--guide-c-ink);
+  }
+
+  .guide-c-about {
+    padding: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide-c-primary-button {
+    transition: none !important;
+  }
+}
