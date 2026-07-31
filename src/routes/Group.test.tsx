@@ -72,6 +72,7 @@ describe('Group', () => {
     renderGroupPage();
 
     expect(await screen.findByRole('heading', { name: 'AI BASE', level: 1 })).toBeInTheDocument();
+    expect(document.querySelector('.group-detail-hero-layout--with-description')).toBeInTheDocument();
     expect(fetchGroupEvents).toHaveBeenCalledWith('aibase', { perPage: 20, order: 'desc' });
     expect(screen.getByText('山梨の生成AIコミュニティ')).toBeInTheDocument();
     const description = screen.getByTestId('group-description');
@@ -82,6 +83,14 @@ describe('Group', () => {
     const descriptionLink = description.querySelector('a');
     expect(descriptionLink).toHaveAttribute('href', 'https://discord.gg/example');
     expect(descriptionLink).toHaveAttribute('target', '_blank');
+    Object.defineProperty(description, 'scrollHeight', { configurable: true, value: 240 });
+    fireEvent(window, new Event('resize'));
+    const readMoreButton = await screen.findByRole('button', { name: '続きを読む' });
+    expect(readMoreButton).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(readMoreButton);
+    expect(readMoreButton).toHaveAttribute('aria-expanded', 'true');
+    expect(description).toHaveStyle({ maxHeight: '240px' });
+    expect(description).toHaveStyle({ transition: 'max-height 360ms cubic-bezier(0.22, 1, 0.36, 1)' });
     expect(screen.getByTestId('group-stat-events')).toHaveTextContent('開催イベント2件');
     expect(screen.getByTestId('group-stat-since')).toHaveTextContent('活動開始2025年');
     expect(screen.getByTestId('group-stat-members')).toHaveTextContent('メンバー44人');
@@ -100,6 +109,53 @@ describe('Group', () => {
     expect(screen.getByRole('heading', { name: '過去のイベント' })).toBeInTheDocument();
     expect(screen.getByText('AI BASE #9')).toBeInTheDocument();
     expect(document.title).toBe('AI BASE - 山梨のITコミュニティ | Yamanashi Developer Hub');
+  });
+
+  it('omits the about area when neither a description nor external links exist', async () => {
+    vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({
+      key: 'quiet-group',
+      title: 'Quiet Group',
+      url: '',
+      description: '',
+    }));
+    vi.mocked(fetchGroupEvents).mockResolvedValue({
+      events: [],
+      lastModified: null,
+      page: 1,
+      perPage: 20,
+      totalCount: 0,
+      totalPages: 0,
+    });
+
+    renderGroupPage('quiet-group');
+
+    expect(await screen.findByRole('heading', { name: 'Quiet Group', level: 1 })).toBeInTheDocument();
+    expect(screen.queryByTestId('group-about')).not.toBeInTheDocument();
+    expect(document.querySelector('.group-detail-hero-layout--profile-only')).toBeInTheDocument();
+  });
+
+  it('shows a compact links area when a description does not exist', async () => {
+    vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({
+      key: 'links-only-group',
+      title: 'Links Only Group',
+      description: '',
+    }));
+    vi.mocked(fetchGroupEvents).mockResolvedValue({
+      events: [],
+      lastModified: null,
+      page: 1,
+      perPage: 20,
+      totalCount: 0,
+      totalPages: 0,
+    });
+
+    renderGroupPage('links-only-group');
+
+    expect(await screen.findByRole('heading', { name: 'Links Only Group', level: 1 })).toBeInTheDocument();
+    expect(screen.getByTestId('group-about')).toHaveClass('group-detail-about--links-only');
+    expect(document.querySelector('.group-detail-hero-layout--links-only')).toBeInTheDocument();
+    expect(screen.getByText('LINKS')).toBeInTheDocument();
+    expect(screen.queryByTestId('group-description')).not.toBeInTheDocument();
   });
 
   it('shows a not-found message when the group does not exist', async () => {

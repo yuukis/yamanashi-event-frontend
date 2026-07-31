@@ -47,13 +47,13 @@ export function WidgetPartsSection({
 
   return (
     <Box {...boxProps}>
-      <Heading size={{base: 'sm', md: 'md'}} mb={'4'} color={'gray.600'}>
+      <Heading className={'widget-parts-heading'} size={{base: 'sm', md: 'md'}} mb={'4'} color={'gray.600'}>
         { heading }
       </Heading>
-      <Text fontSize={'sm'} color={'gray.600'} mb={'4'} lineHeight={'1.8'}>
+      <Text className={'widget-parts-description'} fontSize={'sm'} color={'gray.600'} mb={'4'} lineHeight={'1.8'}>
         { description }
       </Text>
-      <SimpleGrid columns={{base: 1, sm: 2, md: 3}} spacing={'4'}>
+      <SimpleGrid className={'widget-parts-grid'} columns={{base: 1, sm: 2, md: 3}} spacing={'4'}>
         {widgets.map((widget) => (
           <WidgetPickerCard key={widget.key}
                             title={widget.title}
