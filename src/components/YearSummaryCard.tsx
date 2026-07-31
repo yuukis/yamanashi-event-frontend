@@ -26,6 +26,8 @@ type YearSummaryCardProps = {
 export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryCardProps) {
   return (
     <LinkBox as={'article'}
+             className={'events-year-card'}
+             data-accent={['coral', 'green', 'sky'][Math.abs(summary.year) % 3]}
              display={'flex'}
              flexWrap={'nowrap'}
              alignItems={'center'}
@@ -39,7 +41,8 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
              _hover={{ borderColor: 'gray.300', shadow: 'sm' }}
              transition={'box-shadow 120ms ease-out, border-color 120ms ease-out'}
              >
-      <Box flexShrink={0}
+      <Box className={'events-year-label'}
+           flexShrink={0}
            px={YEAR_PX}
            py={YEAR_PY}
            borderRadius={'md'}
@@ -53,9 +56,10 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
         </LinkOverlay>
       </Box>
 
-      <Box alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
+      <Box className={'events-year-divider'} alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
 
-      <Flex flex={'1'}
+      <Flex className={'events-year-communities'}
+            flex={'1'}
             minW={'0'}
             align={'center'}
             gap={AVATAR_GAP}
@@ -65,6 +69,7 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
           summary.groups.map((group) => (
             <Tooltip key={group.key} label={group.name ?? group.key} hasArrow fontSize={'xs'}>
               <Center as={'a'}
+                      className={'events-year-community'}
                       href={buildGroupPagePath(group.key)}
                       position={'relative'}
                       zIndex={1}
@@ -91,9 +96,9 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
         )}
       </Flex>
 
-      <Box alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
+      <Box className={'events-year-divider'} alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
 
-      <Flex flexShrink={0} h={CHART_HEIGHT} align={'flex-end'} gap={BAR_GAP}>
+      <Flex className={'events-year-chart'} flexShrink={0} h={CHART_HEIGHT} align={'flex-end'} gap={BAR_GAP}>
         {months.map((bucket) => {
           const heightPct = getBarHeightPercent(bucket.count, maxMonthCount);
           return (
@@ -108,6 +113,7 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
                    tabIndex={0}
                    aria-label={formatMonthCountTooltip(bucket.period, bucket.count)}
                    data-month-bar={bucket.period}
+                   data-has-events={bucket.count > 0}
                    />
             </Tooltip>
           );
@@ -120,6 +126,7 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
 export function YearSummaryCardSkeleton() {
   return (
     <Flex alignItems={'center'}
+          className={'events-year-card events-year-card-skeleton'}
           gap={ROW_GAP}
           borderRadius={'md'}
           border={'1px solid'}
@@ -128,24 +135,24 @@ export function YearSummaryCardSkeleton() {
           px={ROW_PX}
           py={ROW_PY}
           >
-      <Box flexShrink={0} px={YEAR_PX} py={YEAR_PY}>
+      <Box className={'events-year-label'} flexShrink={0} px={YEAR_PX} py={YEAR_PY}>
         <Skeleton h={{base: '7', md: '8', lg: '9'}}
                   w={{base: '10', md: '12', lg: '14'}}
                   borderRadius={'sm'}
                   />
       </Box>
 
-      <Box alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
+      <Box className={'events-year-divider'} alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
 
-      <Flex flex={'1'} minW={'0'} align={'center'} gap={AVATAR_GAP} wrap={'wrap'}>
+      <Flex className={'events-year-communities'} flex={'1'} minW={'0'} align={'center'} gap={AVATAR_GAP} wrap={'wrap'}>
         {Array.from({length: SKELETON_AVATAR_COUNT}).map((_, i) => (
           <SkeletonCircle key={i} size={AVATAR_SIZE} flexShrink={0} />
         ))}
       </Flex>
 
-      <Box alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
+      <Box className={'events-year-divider'} alignSelf={'stretch'} w={'1px'} bg={'gray.100'} flexShrink={0} />
 
-      <Flex flexShrink={0} h={CHART_HEIGHT} align={'flex-end'} gap={BAR_GAP}>
+      <Flex className={'events-year-chart'} flexShrink={0} h={CHART_HEIGHT} align={'flex-end'} gap={BAR_GAP}>
         {SKELETON_BAR_HEIGHTS.map((heightPct, i) => (
           <Skeleton key={i} w={BAR_WIDTH} h={`${heightPct}%`} borderRadius={'1px 1px 0 0'} />
         ))}

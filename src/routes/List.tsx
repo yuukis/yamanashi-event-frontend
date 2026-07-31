@@ -18,6 +18,7 @@ import {
   Card,
   CardBody,
   Heading,
+  Text,
   Spacer,
 } from '@chakra-ui/react';
 import { sortByStartedAtAsc } from '../utils/eventSort';
@@ -40,8 +41,8 @@ type ListState = {
 };
 
 function List({ startYear} : {startYear: number}) {
-  let { year: param_year } = useParams();
-  const year = parseInt(param_year as string);
+  const { year: paramYear } = useParams();
+  const year = parseInt(paramYear as string);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedGroup = searchParams.get('group');
@@ -110,13 +111,13 @@ function List({ startYear} : {startYear: number}) {
         eventsResponse = await fetchEventsByYear(year);
         groups = await fetchGroups();
       }
-      catch (err: any) {
+      catch (err: unknown) {
         const data = {
           isLoading: false,
           events: [],
           groups: [],
           lastModified: null,
-          errorMessage: err.message
+          errorMessage: err instanceof Error ? err.message : String(err)
         }
         setData(data);
         return;
@@ -136,7 +137,7 @@ function List({ startYear} : {startYear: number}) {
       setData(data);
     }
     getData();
-  }, []);
+  }, [year]);
 
   useEffect(() => {
     if (data.isLoading || data.errorMessage) {
@@ -151,7 +152,7 @@ function List({ startYear} : {startYear: number}) {
     : null;
 
   return (
-    <Box className={'section-bg-pattern'} w={'100vw'} minH={'100vh'}>
+    <Box className={'section-bg-pattern groups-page events-year-page'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-events'} data={structuredData} />
       <SiteHeader />
       <EventScrollGutter />
@@ -160,7 +161,7 @@ function List({ startYear} : {startYear: number}) {
                         { label: `${year}年`, href: `/events/${year}` },
                       ]}
                       />
-      <Container maxW={'980px'} w={'100%'}
+      <Container className={'events-year-shell'} maxW={'980px'} w={'100%'}
                  mt={'4'}
                  p={{base: '0', md: '4'}}
                  >
@@ -168,8 +169,38 @@ function List({ startYear} : {startYear: number}) {
           {/* sticky 化した見出しバーは座標が動かず境界にできないため、目印として使う */}
           <Box ref={headerBoundaryRef} />
           <Stack>
+            <Card variant={'outline'} className={'group-detail-hero events-year-hero'} mx={{base: '4', md: '0'}}>
+              <CardBody className={'group-detail-hero-body'}>
+                <Box className={'group-detail-hero-layout group-detail-hero-layout--profile-only'}>
+                  <Box className={'group-detail-profile'}>
+                    <Text className={'groups-eyebrow'}>YEAR ARCHIVE</Text>
+                    <Stack className={'group-detail-identity'} direction={'row'} spacing={{base: '4', md: '6'}} alignItems={'center'}>
+                      <Box className={'group-detail-logo events-year-hero-calendar'}
+                           display={'flex'}
+                           flexDirection={'column'}
+                           alignItems={'center'}
+                           justifyContent={'center'}
+                           flexShrink={0}
+                           >
+                        <Text className={'events-year-hero-calendar-label'}>YEAR</Text>
+                        <Text className={'events-year-hero-calendar-number'}>{year}</Text>
+                      </Box>
+                      <Box minW={'0'}>
+                        <Heading as={'h1'} className={'group-detail-title'} size={{base: 'lg', md: 'xl'}}>
+                          {year}年のイベント
+                        </Heading>
+                        <Text className={'group-detail-subtitle'} fontSize={'sm'} mt={'2'}>
+                          山梨県内で開催されたITイベントを、開催月やコミュニティから振り返れます。
+                        </Text>
+                      </Box>
+                    </Stack>
+                  </Box>
+                </Box>
+              </CardBody>
+            </Card>
             <Stack id={YEAR_HEADING_ANCHOR_ID}
                    ref={yearHeadingRef}
+                   className={'group-detail-section-heading events-year-toolbar'}
                    direction={'row'} spacing={'2'}
                    position={'sticky'}
                    top={STICKY_HEADING_TOP}
@@ -183,11 +214,12 @@ function List({ startYear} : {startYear: number}) {
                    boxShadow={isYearHeadingStuck ? STICKY_HEADING_STUCK_SHADOW : 'none'}
                    transition={'box-shadow 150ms ease-out'}
                    >
-              <Heading size={{base: 'sm', md: 'md'}}
+              <Heading as={'h2'}
+                       size={{base: 'sm', md: 'md'}}
                        color={'gray.600'}
                        flexShrink={0}
                        >
-                { year }年 開催イベント
+                イベント一覧
               </Heading>
               <ActiveFilterBadge selectedKeyword={selectedKeyword}
                                  selectedGroupName={selectedGroupName}
@@ -204,20 +236,23 @@ function List({ startYear} : {startYear: number}) {
                 <ViewModeToggle />
               </Box>
             </Stack>
-            <EventFilterTabs selectedGroup={selectedGroup}
-                             selectedKeyword={selectedKeyword}
-                             selectedArea={selectedArea}
-                             onGroupSelect={handleGroupSelect}
-                             onKeywordSelect={handleKeywordSelect}
-                             onAreaSelect={handleAreaSelect}
-                             groupSelectorItems={groupSelectorItems}
-                             keywordCounts={keywordCounts}
-                             areaCounts={areaCounts}
-                             isLoading={data.isLoading}
-                             errorMessage={data.errorMessage}
-                             showGroupBadges={false}
-                             />
+            <Box className={'events-year-filters'}>
+              <EventFilterTabs selectedGroup={selectedGroup}
+                               selectedKeyword={selectedKeyword}
+                               selectedArea={selectedArea}
+                               onGroupSelect={handleGroupSelect}
+                               onKeywordSelect={handleKeywordSelect}
+                               onAreaSelect={handleAreaSelect}
+                               groupSelectorItems={groupSelectorItems}
+                               keywordCounts={keywordCounts}
+                               areaCounts={areaCounts}
+                               isLoading={data.isLoading}
+                               errorMessage={data.errorMessage}
+                               showGroupBadges={false}
+                               />
+            </Box>
             <Card variant={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && events.length > 0)) ? 'unstyled' : {base: 'unstyled', md: 'outline'}}
+                  className={'events-year-content'}
                   size={{base: 'sm', md: 'md'}}
                   p={'0'}
                   bg={viewMode === 'grid' && (data.isLoading || (!data.errorMessage && events.length > 0)) ? 'gray.100' : undefined}
@@ -246,6 +281,7 @@ function List({ startYear} : {startYear: number}) {
           </Stack>
 
           <Card variant={{base: 'unstyled', md: 'outline'}}
+                className={'events-year-footer-nav'}
                 size={{base: 'sm', md: 'md'}}
                 p={{base: '4', md: '0'}}
                 >

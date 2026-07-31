@@ -18,11 +18,12 @@ function makeMonths(counts: number[]): ApiHeatmapBucket[] {
 
 describe('YearSummaryCard', () => {
   it('links the year to its /events/:year page', () => {
-    renderWithChakra(
+    const { container } = renderWithChakra(
       <YearSummaryCard summary={makeYearSummary({ year: 2019 })} months={makeMonths(Array(12).fill(0))} maxMonthCount={0} />,
     );
 
     expect(screen.getByRole('link', { name: '2019' })).toHaveAttribute('href', '/events/2019');
+    expect(container.querySelector('.events-year-card')).toHaveAttribute('data-accent', 'coral');
   });
 
   it('shows "活動記録なし" when the year has no groups', () => {
@@ -60,6 +61,15 @@ describe('YearSummaryCard', () => {
     );
 
     expect(container.querySelectorAll('[data-month-bar]')).toHaveLength(12);
+  });
+
+  it('marks only months with events for accent styling', () => {
+    const { container } = renderWithChakra(
+      <YearSummaryCard summary={makeYearSummary()} months={makeMonths([0, 3, 0])} maxMonthCount={3} />,
+    );
+
+    expect(container.querySelector('[data-month-bar="2020-01"]')).toHaveAttribute('data-has-events', 'false');
+    expect(container.querySelector('[data-month-bar="2020-02"]')).toHaveAttribute('data-has-events', 'true');
   });
 
   it('reveals a month bar tooltip on hover', async () => {
