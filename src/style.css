@@ -882,6 +882,7 @@
   border-radius: 50%;
   color: var(--groups-ink);
   background: #edf5f5;
+  pointer-events: none;
   transform: rotate(-45deg);
   transition: color 160ms ease, background 160ms ease, transform 160ms ease;
 }
