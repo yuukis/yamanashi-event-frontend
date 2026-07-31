@@ -48,6 +48,19 @@ describe('Group', () => {
     vi.mocked(fetchGroupStartYear).mockResolvedValue(null);
   });
 
+  it('uses the decorated profile layout while the community is loading', () => {
+    vi.mocked(fetchGroup).mockReturnValue(new Promise(() => {}));
+    vi.mocked(fetchGroupEvents).mockReturnValue(new Promise(() => {}));
+
+    renderGroupPage();
+
+    expect(screen.getByTestId('group-detail-skeleton')).toHaveClass('group-detail-hero');
+    expect(document.querySelector('.group-detail-hero-skeleton .group-detail-hero-layout--with-description')).toBeInTheDocument();
+    expect(screen.getByTestId('group-detail-skeleton-about')).toBeInTheDocument();
+    expect(screen.getByText('COMMUNITY PROFILE')).toBeInTheDocument();
+    expect(screen.getByText('ABOUT')).toBeInTheDocument();
+  });
+
   it('renders the community profile with description, stats and external links', async () => {
     vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({
       key: 'aibase',

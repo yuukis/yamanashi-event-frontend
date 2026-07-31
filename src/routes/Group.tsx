@@ -87,6 +87,55 @@ function GroupStatSkeleton({ label, testId }: { label: string; testId: string })
   );
 }
 
+function GroupHeroSkeleton() {
+  return (
+    <Card variant={'outline'} className={'group-detail-hero group-detail-hero-skeleton'} data-testid={'group-detail-skeleton'}>
+      <CardBody className={'group-detail-hero-body'}>
+        <Box className={'group-detail-hero-layout group-detail-hero-layout--with-description'}>
+          <Box className={'group-detail-profile'}>
+            <Text className={'groups-eyebrow'}>COMMUNITY PROFILE</Text>
+            <Stack className={'group-detail-identity'} direction={'row'} spacing={{base: '4', md: '6'}} alignItems={'flex-start'}>
+              <Skeleton boxSize={{base: '72px', md: '104px'}} borderRadius={{base: '15px', md: '18px'}} flexShrink={0} />
+              <Stack flex={'1'} minW={'0'} spacing={'3'} pt={'1'}>
+                <Skeleton h={{base: '1.75rem', md: '2.25rem'}} w={'82%'} borderRadius={'md'} />
+                <Skeleton h={'1rem'} w={'58%'} borderRadius={'full'} />
+                <Wrap spacing={'2'} pt={'1'}>
+                  <Skeleton h={'1.25rem'} w={'4.5rem'} borderRadius={'full'} />
+                  <Skeleton h={'1.25rem'} w={'3.75rem'} borderRadius={'full'} />
+                  <Skeleton h={'1.25rem'} w={'5rem'} borderRadius={'full'} />
+                </Wrap>
+              </Stack>
+            </Stack>
+            <Wrap className={'group-detail-stats'} spacing={{base: '4', md: '6'}}>
+              {['開催イベント', '活動開始', 'メンバー'].map((label) => (
+                <Stack key={label} spacing={'2'} minW={'4.5rem'}>
+                  <Skeleton h={'0.75rem'} w={'3.75rem'} borderRadius={'full'} />
+                  <Skeleton h={'1.35rem'} w={'3rem'} borderRadius={'md'} />
+                </Stack>
+              ))}
+            </Wrap>
+          </Box>
+          <Box className={'group-detail-about'} data-testid={'group-detail-skeleton-about'}>
+            <Text className={'groups-eyebrow'}>ABOUT</Text>
+            <Stack className={'group-detail-description'} spacing={'3'}>
+              <Skeleton h={'0.9rem'} w={'96%'} borderRadius={'full'} />
+              <Skeleton h={'0.9rem'} w={'88%'} borderRadius={'full'} />
+              <Skeleton h={'0.9rem'} w={'92%'} borderRadius={'full'} />
+              <Skeleton h={'0.9rem'} w={'64%'} borderRadius={'full'} />
+            </Stack>
+            <Skeleton h={'2rem'} w={'9.5rem'} mt={'5'} borderRadius={'md'} />
+          </Box>
+        </Box>
+        <Wrap className={'group-detail-tools'} spacing={'4'} align={'center'}>
+          <Skeleton h={'1.5rem'} w={'3.5rem'} borderRadius={'md'} />
+          <Skeleton h={'1.5rem'} w={'6.5rem'} borderRadius={'md'} />
+          <Skeleton h={'1rem'} w={'8rem'} borderRadius={'full'} />
+        </Wrap>
+      </CardBody>
+    </Card>
+  );
+}
+
 // sanitizeDescriptionHtml が出力する許可タグと desc-hN(見出し由来の
 // 段落)に対するスタイル。見出しは文字の大きさ・太さを変えるだけで、
 // 文書のアウトラインには参加させない。
@@ -435,19 +484,7 @@ function Group() {
         <Box ref={headerBoundaryRef} />
         <Stack px={{base: '4', md: '0'}}>
           {data.isLoading ? (
-            <Card variant={'outline'}>
-              <CardBody>
-                <Stack direction={{base: 'column', md: 'row'}} spacing={'6'}>
-                  <Skeleton boxSize={'96px'} borderRadius={'md'} flexShrink={0} />
-                  <Stack flex={'1'} spacing={'3'}>
-                    <Skeleton h={'1.5rem'} w={'40%'} />
-                    <Skeleton h={'1rem'} w={'60%'} />
-                    <Skeleton h={'1rem'} w={'90%'} />
-                    <Skeleton h={'1rem'} w={'80%'} />
-                  </Stack>
-                </Stack>
-              </CardBody>
-            </Card>
+            <GroupHeroSkeleton />
           ) : data.isNotFound ? (
             <Card variant={'outline'}>
               <CardBody>
