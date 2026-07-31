@@ -1,3 +1,4 @@
+import { ArrowForwardIcon } from '@chakra-ui/icons';
 import { Box, Heading, Image, LinkBox, LinkOverlay, Skeleton, SkeletonCircle, SkeletonText, Stack, Text } from '@chakra-ui/react';
 import { People } from '@chakra-icons/bootstrap';
 import type { ApiGroup } from '../types/events';
@@ -7,23 +8,19 @@ const AVATAR_SIZE = '56px';
 
 type GroupCardProps = {
   group: ApiGroup;
+  isActive?: boolean;
 };
 
-export function GroupCard({ group }: GroupCardProps) {
+export function GroupCard({ group, isActive = false }: GroupCardProps) {
   return (
     <LinkBox as={'article'}
+             className={`groups-card${isActive ? ' groups-card-active' : ''}`}
              display={'flex'}
              gap={'3'}
              alignItems={'flex-start'}
-             borderRadius={'md'}
-             border={'1px solid'}
-             borderColor={'gray.200'}
-             bg={'white'}
-             p={'4'}
-             _hover={{ borderColor: 'gray.300', shadow: 'sm' }}
-             transition={'box-shadow 120ms ease-out, border-color 120ms ease-out'}
              >
-      <Box boxSize={AVATAR_SIZE}
+      <Box className={'groups-card-avatar'}
+           boxSize={AVATAR_SIZE}
            bg={'gray.50'}
            borderRadius={'md'}
            border={'1px solid'}
@@ -41,7 +38,7 @@ export function GroupCard({ group }: GroupCardProps) {
         )}
       </Box>
       <Box minW={'0'} flex={'1'}>
-        <Heading size={'sm'} color={'primary.800'}>
+        <Heading size={'sm'} color={'primary.800'} pr={'6'}>
           <LinkOverlay href={buildGroupPagePath(group.key)}>{group.title}</LinkOverlay>
         </Heading>
         {group.sub_title && (
@@ -55,6 +52,9 @@ export function GroupCard({ group }: GroupCardProps) {
           </Text>
         )}
       </Box>
+      <Box className={'groups-card-arrow'} aria-hidden={'true'}>
+        <ArrowForwardIcon />
+      </Box>
     </LinkBox>
   );
 }
@@ -62,13 +62,9 @@ export function GroupCard({ group }: GroupCardProps) {
 export function GroupCardSkeleton() {
   return (
     <Stack direction={'row'}
+           className={'groups-card groups-card-skeleton'}
            gap={'3'}
            alignItems={'flex-start'}
-           borderRadius={'md'}
-           border={'1px solid'}
-           borderColor={'gray.200'}
-           bg={'white'}
-           p={'4'}
            >
       <SkeletonCircle size={AVATAR_SIZE} flexShrink={0} />
       <Stack flex={'1'} spacing={'2'}>

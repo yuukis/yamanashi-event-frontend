@@ -27,6 +27,7 @@ import {
   Button,
   Skeleton,
   Tag,
+  usePrefersReducedMotion,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { FiCode } from 'react-icons/fi';
@@ -87,6 +88,55 @@ function GroupStatSkeleton({ label, testId }: { label: string; testId: string })
   );
 }
 
+function GroupHeroSkeleton() {
+  return (
+    <Card variant={'outline'} className={'group-detail-hero group-detail-hero-skeleton'} data-testid={'group-detail-skeleton'}>
+      <CardBody className={'group-detail-hero-body'}>
+        <Box className={'group-detail-hero-layout group-detail-hero-layout--with-description'}>
+          <Box className={'group-detail-profile'}>
+            <Text className={'groups-eyebrow'}>COMMUNITY PROFILE</Text>
+            <Stack className={'group-detail-identity'} direction={'row'} spacing={{base: '4', md: '6'}} alignItems={'flex-start'}>
+              <Skeleton boxSize={{base: '72px', md: '104px'}} borderRadius={{base: '15px', md: '18px'}} flexShrink={0} />
+              <Stack flex={'1'} minW={'0'} spacing={'3'} pt={'1'}>
+                <Skeleton h={{base: '1.75rem', md: '2.25rem'}} w={'82%'} borderRadius={'md'} />
+                <Skeleton h={'1rem'} w={'58%'} borderRadius={'full'} />
+                <Wrap spacing={'2'} pt={'1'}>
+                  <Skeleton h={'1.25rem'} w={'4.5rem'} borderRadius={'full'} />
+                  <Skeleton h={'1.25rem'} w={'3.75rem'} borderRadius={'full'} />
+                  <Skeleton h={'1.25rem'} w={'5rem'} borderRadius={'full'} />
+                </Wrap>
+              </Stack>
+            </Stack>
+            <Wrap className={'group-detail-stats'} spacing={{base: '4', md: '6'}}>
+              {['開催イベント', '活動開始', 'メンバー'].map((label) => (
+                <Stack key={label} spacing={'2'} minW={'4.5rem'}>
+                  <Skeleton h={'0.75rem'} w={'3.75rem'} borderRadius={'full'} />
+                  <Skeleton h={'1.35rem'} w={'3rem'} borderRadius={'md'} />
+                </Stack>
+              ))}
+            </Wrap>
+          </Box>
+          <Box className={'group-detail-about'} data-testid={'group-detail-skeleton-about'}>
+            <Text className={'groups-eyebrow'}>ABOUT</Text>
+            <Stack className={'group-detail-description'} spacing={'3'}>
+              <Skeleton h={'0.9rem'} w={'96%'} borderRadius={'full'} />
+              <Skeleton h={'0.9rem'} w={'88%'} borderRadius={'full'} />
+              <Skeleton h={'0.9rem'} w={'92%'} borderRadius={'full'} />
+              <Skeleton h={'0.9rem'} w={'64%'} borderRadius={'full'} />
+            </Stack>
+            <Skeleton h={'2rem'} w={'9.5rem'} mt={'5'} borderRadius={'md'} />
+          </Box>
+        </Box>
+        <Wrap className={'group-detail-tools'} spacing={'4'} align={'center'}>
+          <Skeleton h={'1.5rem'} w={'3.5rem'} borderRadius={'md'} />
+          <Skeleton h={'1.5rem'} w={'6.5rem'} borderRadius={'md'} />
+          <Skeleton h={'1rem'} w={'8rem'} borderRadius={'full'} />
+        </Wrap>
+      </CardBody>
+    </Card>
+  );
+}
+
 // sanitizeDescriptionHtml が出力する許可タグと desc-hN(見出し由来の
 // 段落)に対するスタイル。見出しは文字の大きさ・太さを変えるだけで、
 // 文書のアウトラインには参加させない。
@@ -112,18 +162,25 @@ const DESCRIPTION_STYLES = {
 function CollapsibleDescription({ html }: { html: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
+  const [contentHeight, setContentHeight] = useState<number | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const el = bodyRef.current;
     if (!el) {
       return;
     }
-    const check = () => setHasOverflow(el.scrollHeight > el.clientHeight + 1);
+    const check = () => {
+      const fontSize = Number.parseFloat(window.getComputedStyle(el).fontSize) || 14;
+      const collapsedHeight = fontSize * Number.parseFloat(DESCRIPTION_COLLAPSED_MAX_H);
+      setContentHeight(el.scrollHeight);
+      setHasOverflow(el.scrollHeight > collapsedHeight + 1);
+    };
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
-  }, [html, isExpanded]);
+  }, [html]);
 
   if (!html) {
     return null;
@@ -134,18 +191,23 @@ function CollapsibleDescription({ html }: { html: string }) {
       <Box position={'relative'}>
         <Box ref={bodyRef}
              data-testid={'group-description'}
-             maxH={isExpanded ? undefined : DESCRIPTION_COLLAPSED_MAX_H}
+             maxH={isExpanded && contentHeight !== null ? `${contentHeight}px` : DESCRIPTION_COLLAPSED_MAX_H}
              overflow={'hidden'}
+             transition={prefersReducedMotion ? 'none' : 'max-height 360ms cubic-bezier(0.22, 1, 0.36, 1)'}
+             willChange={!prefersReducedMotion && hasOverflow ? 'max-height' : undefined}
              sx={DESCRIPTION_STYLES}
              dangerouslySetInnerHTML={{ __html: html }}
              />
-        {!isExpanded && hasOverflow && (
-          <Box position={'absolute'}
+        {hasOverflow && (
+          <Box data-testid={'group-description-fade'}
+               position={'absolute'}
                bottom={'0'}
                left={'0'}
                right={'0'}
                h={'3em'}
                bgGradient={'linear(to-t, white, transparent)'}
+               opacity={isExpanded ? 0 : 1}
+               transition={prefersReducedMotion ? 'none' : 'opacity 180ms ease'}
                pointerEvents={'none'}
                aria-hidden
                />
@@ -158,6 +220,7 @@ function CollapsibleDescription({ html }: { html: string }) {
                 fontWeight={'normal'}
                 color={'primary.800'}
                 rightIcon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                aria-expanded={isExpanded}
                 onClick={() => setIsExpanded(!isExpanded)}
                 >
           {isExpanded ? '閉じる' : '続きを読む'}
@@ -382,6 +445,13 @@ function Group() {
   const isFirstEventYearLoading = firstEventYear === null && startYearSummary.isLoading;
   const descriptionHtml = group?.description ? sanitizeDescriptionHtml(group.description) : '';
   const externalLinks = group ? buildGroupExternalLinks(group) : [];
+  const hasDescription = descriptionHtml.length > 0;
+  const hasAboutContent = hasDescription || externalLinks.length > 0;
+  const heroLayoutModifier = !hasAboutContent
+    ? ' group-detail-hero-layout--profile-only'
+    : !hasDescription
+      ? ' group-detail-hero-layout--links-only'
+      : ' group-detail-hero-layout--with-description';
   const featuredKeywords = countKeywords(data.initialEvents)
     .slice(0, FEATURED_KEYWORDS_LIMIT)
     .map(([keyword]) => keyword);
@@ -397,7 +467,7 @@ function Group() {
     : null;
 
   return (
-    <Box className={'section-bg-pattern'} w={'100vw'} minH={'100vh'}>
+    <Box className={'section-bg-pattern groups-page group-detail-page'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-group'} data={structuredData} />
       <SiteHeader />
       <EventScrollGutter />
@@ -417,19 +487,7 @@ function Group() {
         <Box ref={headerBoundaryRef} />
         <Stack px={{base: '4', md: '0'}}>
           {data.isLoading ? (
-            <Card variant={'outline'}>
-              <CardBody>
-                <Stack direction={{base: 'column', md: 'row'}} spacing={'6'}>
-                  <Skeleton boxSize={'96px'} borderRadius={'md'} flexShrink={0} />
-                  <Stack flex={'1'} spacing={'3'}>
-                    <Skeleton h={'1.5rem'} w={'40%'} />
-                    <Skeleton h={'1rem'} w={'60%'} />
-                    <Skeleton h={'1rem'} w={'90%'} />
-                    <Skeleton h={'1rem'} w={'80%'} />
-                  </Stack>
-                </Stack>
-              </CardBody>
-            </Card>
+            <GroupHeroSkeleton />
           ) : data.isNotFound ? (
             <Card variant={'outline'}>
               <CardBody>
@@ -449,11 +507,14 @@ function Group() {
             </Card>
           ) : group && (
             <>
-              <Card variant={'outline'}>
-                <CardBody>
-                  <Stack spacing={'4'}>
-                    <Stack direction={'row'} spacing={{base: '4', md: '6'}} alignItems={'flex-start'}>
-                      <Box boxSize={{base: '72px', md: '96px'}}
+              <Card variant={'outline'} className={'group-detail-hero'}>
+                <CardBody className={'group-detail-hero-body'}>
+                  <Box className={`group-detail-hero-layout${heroLayoutModifier}`}>
+                    <Box className={'group-detail-profile'}>
+                      <Text className={'groups-eyebrow'}>COMMUNITY PROFILE</Text>
+                      <Stack className={'group-detail-identity'} direction={'row'} spacing={{base: '4', md: '6'}} alignItems={'flex-start'}>
+                        <Box className={'group-detail-logo'}
+                             boxSize={{base: '72px', md: '104px'}}
                            bg={'gray.50'}
                            borderRadius={'md'}
                            border={'1px solid'}
@@ -468,85 +529,98 @@ function Group() {
                         ) : (
                           <People boxSize={'8'} color={'gray.400'} />
                         )}
-                      </Box>
-                      <Box minW={'0'}>
-                        <Heading as={'h1'} size={{base: 'md', md: 'lg'}} color={'primary.800'}>
-                          {group.title}
-                        </Heading>
-                        {group.sub_title && (
-                          <Text fontSize={'sm'} color={'gray.600'} mt={'1'}>
-                            {group.sub_title}
-                          </Text>
-                        )}
-                        {featuredKeywords.length > 0 && (
-                          <HStack data-testid={'group-featured-keywords'} alignItems={'flex-start'} color={'gray.500'} mt={'2'}>
-                            <Tags mt={'3px'} />
-                            <Wrap spacing={'1'}>
-                              {featuredKeywords.map((keyword) => (
-                                <WrapItem key={keyword}>
-                                  <Tag size={'sm'}
-                                       fontSize={'xs'}
-                                       fontWeight={'normal'}
-                                       bg={'blackAlpha.100'}
-                                       color={'gray.500'}
-                                       >
-                                    {keyword}
-                                  </Tag>
-                                </WrapItem>
-                              ))}
-                            </Wrap>
-                          </HStack>
-                        )}
-                      </Box>
-                    </Stack>
-                    <Wrap spacing={{base: '6', md: '10'}}
-                          borderTop={'1px solid'}
-                          borderBottom={'1px solid'}
-                          borderColor={'gray.100'}
-                          py={'3'}
-                          >
-                      {eventCount > 0 && (
-                        <WrapItem>
-                          <GroupStat label={'開催イベント'} value={eventCount} unit={eventCountUnit} testId={'group-stat-events'} />
-                        </WrapItem>
-                      )}
-                      {firstEventYear ? (
-                        <WrapItem>
-                          <GroupStat label={'活動開始'} value={firstEventYear} unit={'年'} testId={'group-stat-since'} />
-                        </WrapItem>
-                      ) : isFirstEventYearLoading ? (
-                        <WrapItem>
-                          <GroupStatSkeleton label={'活動開始'} testId={'group-stat-since-loading'} />
-                        </WrapItem>
-                      ) : null}
-                      {(group.member_users_count ?? 0) > 0 && (
-                        <WrapItem>
-                          <GroupStat label={'メンバー'} value={group.member_users_count!} unit={'人'} testId={'group-stat-members'} />
-                        </WrapItem>
-                      )}
-                    </Wrap>
-                    <CollapsibleDescription html={descriptionHtml} />
-                    {externalLinks.length > 0 && (
-                      <Wrap spacing={'2'} align={'center'}>
-                        {externalLinks.map((link) => (
-                          <WrapItem key={link.id}>
-                            <Button as={'a'}
-                                    href={link.url}
-                                    target={'_blank'}
-                                    rel={'noopener'}
-                                    size={{base: 'sm', md: 'md'}}
-                                    variant={link.variant}
-                                    colorScheme={'primary'}
-                                    fontWeight={link.fontWeight}
-                                    rightIcon={<ExternalLinkIcon />}
+                        </Box>
+                        <Box minW={'0'}>
+                          <Heading as={'h1'} className={'group-detail-title'} size={{base: 'lg', md: 'xl'}}>
+                            {group.title}
+                          </Heading>
+                          {group.sub_title && (
+                            <Text className={'group-detail-subtitle'} fontSize={'sm'} mt={'1'}>
+                              {group.sub_title}
+                            </Text>
+                          )}
+                          {featuredKeywords.length > 0 && (
+                            <HStack className={'group-detail-keywords'} data-testid={'group-featured-keywords'} alignItems={'flex-start'} mt={'3'}>
+                              <Tags mt={'3px'} />
+                              <Wrap spacing={'1'}>
+                                {featuredKeywords.map((keyword) => (
+                                  <WrapItem key={keyword}>
+                                    <Tag
+                                      className={'group-detail-keyword'}
+                                      size={'sm'}
+                                      fontSize={'xs'}
+                                      fontWeight={'normal'}
+                                      bg={'#163f49'}
+                                      borderColor={'#163f49'}
+                                      color={'white'}
                                     >
-                              {link.label}
-                            </Button>
+                                      {keyword}
+                                    </Tag>
+                                  </WrapItem>
+                                ))}
+                              </Wrap>
+                            </HStack>
+                          )}
+                        </Box>
+                      </Stack>
+                      <Wrap className={'group-detail-stats'} spacing={{base: '4', md: '6'}}>
+                        {eventCount > 0 && (
+                          <WrapItem>
+                            <GroupStat label={'開催イベント'} value={eventCount} unit={eventCountUnit} testId={'group-stat-events'} />
                           </WrapItem>
-                        ))}
+                        )}
+                        {firstEventYear ? (
+                          <WrapItem>
+                            <GroupStat label={'活動開始'} value={firstEventYear} unit={'年'} testId={'group-stat-since'} />
+                          </WrapItem>
+                        ) : isFirstEventYearLoading ? (
+                          <WrapItem>
+                            <GroupStatSkeleton label={'活動開始'} testId={'group-stat-since-loading'} />
+                          </WrapItem>
+                        ) : null}
+                        {(group.member_users_count ?? 0) > 0 && (
+                          <WrapItem>
+                            <GroupStat label={'メンバー'} value={group.member_users_count!} unit={'人'} testId={'group-stat-members'} />
+                          </WrapItem>
+                        )}
                       </Wrap>
+                    </Box>
+
+                    {hasAboutContent && (
+                    <Box
+                      className={`group-detail-about${hasDescription ? '' : ' group-detail-about--links-only'}`}
+                      data-testid={'group-about'}
+                    >
+                      <Text className={'groups-eyebrow'}>{hasDescription ? 'ABOUT' : 'LINKS'}</Text>
+                      {hasDescription && (
+                        <Box className={'group-detail-description'}>
+                          <CollapsibleDescription html={descriptionHtml} />
+                        </Box>
+                      )}
+                      {externalLinks.length > 0 && (
+                        <Wrap className={'group-detail-links'} spacing={'2'} align={'center'}>
+                          {externalLinks.map((link) => (
+                            <WrapItem key={link.id}>
+                              <Button as={'a'}
+                                      href={link.url}
+                                      target={'_blank'}
+                                      rel={'noopener'}
+                                      size={'sm'}
+                                      variant={link.variant}
+                                      colorScheme={'primary'}
+                                      fontWeight={link.fontWeight}
+                                      rightIcon={<ExternalLinkIcon />}
+                                      >
+                                {link.label}
+                              </Button>
+                            </WrapItem>
+                          ))}
+                        </Wrap>
+                      )}
+                    </Box>
                     )}
-                    <Wrap spacing={'4'} align={'center'}>
+                  </Box>
+                  <Wrap className={'group-detail-tools'} spacing={'4'} align={'center'}>
                       <WrapItem>
                         <Button as={'a'}
                                 href={buildGroupFeedUrl(group.key)}
@@ -583,8 +657,7 @@ function Group() {
                                                />
                         </HStack>
                       </WrapItem>
-                    </Wrap>
-                  </Stack>
+                  </Wrap>
                 </CardBody>
               </Card>
             </>
@@ -594,6 +667,7 @@ function Group() {
           <Stack>
             <Stack>
               <Stack ref={upcomingHeadingRef}
+                     className={'group-detail-section-heading group-detail-section-heading-upcoming'}
                      direction={'row'} spacing={'2'}
                      position={'sticky'}
                      top={STICKY_HEADING_TOP}
@@ -644,6 +718,7 @@ function Group() {
 
             <Stack>
               <Stack ref={pastHeadingRef}
+                     className={'group-detail-section-heading group-detail-section-heading-past'}
                      direction={'row'} spacing={'2'}
                      position={'sticky'}
                      top={STICKY_HEADING_TOP}
@@ -710,6 +785,7 @@ function Group() {
             </Stack>
 
             <WidgetPartsSection id={BLOG_PARTS_ANCHOR_ID}
+                                className={'group-detail-widget-section'}
                                 px={{base: '4', md: '0'}}
                                 mt={'4'}
                                 scrollMarginTop={{base: '4.5rem', md: '5.5rem'}}

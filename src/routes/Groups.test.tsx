@@ -48,8 +48,9 @@ describe('Groups', () => {
 
     renderGroupsPage();
 
-    expect(await screen.findByRole('heading', { name: 'イベント情報のあるコミュニティ' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'その他のコミュニティ' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '最近イベントを開催したコミュニティ' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'このほかのコミュニティ' })).toBeInTheDocument();
+    expect(screen.getByText('各コミュニティのページから、これまでのイベント情報をご覧いただけます。')).toBeInTheDocument();
 
     const aibaseLink = screen.getByRole('link', { name: /AI BASE/ });
     expect(aibaseLink).toHaveAttribute('href', '/groups/aibase');
