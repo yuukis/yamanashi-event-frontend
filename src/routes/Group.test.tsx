@@ -62,6 +62,7 @@ describe('Group', () => {
   });
 
   it('renders the community profile with description, stats and external links', async () => {
+    mockMatchMedia(false);
     vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({
       key: 'aibase',
       title: 'AI BASE',
@@ -122,6 +123,33 @@ describe('Group', () => {
     expect(screen.getByRole('heading', { name: '過去のイベント' })).toBeInTheDocument();
     expect(screen.getByText('AI BASE #9')).toBeInTheDocument();
     expect(document.title).toBe('AI BASE - 山梨のITコミュニティ | Yamanashi Developer Hub');
+  });
+
+  it('disables description transitions when reduced motion is preferred', async () => {
+    vi.mocked(fetchGroup).mockResolvedValue(makeGroupDetail({
+      key: 'reduced-motion-group',
+      title: 'Reduced Motion Group',
+      description: '<p>長いコミュニティ紹介文です。</p>',
+    }));
+    vi.mocked(fetchGroupEvents).mockResolvedValue({
+      events: [],
+      lastModified: null,
+      page: 1,
+      perPage: 20,
+      totalCount: 0,
+      totalPages: 0,
+    });
+
+    renderGroupPage('reduced-motion-group');
+
+    const description = await screen.findByTestId('group-description');
+    Object.defineProperty(description, 'scrollHeight', { configurable: true, value: 240 });
+    fireEvent(window, new Event('resize'));
+    await screen.findByRole('button', { name: '続きを読む' });
+
+    expect(description).toHaveStyle({ transition: 'none' });
+    expect(description).not.toHaveStyle({ willChange: 'max-height' });
+    expect(screen.getByTestId('group-description-fade')).toHaveStyle({ transition: 'none' });
   });
 
   it('omits the about area when neither a description nor external links exist', async () => {

@@ -27,6 +27,7 @@ import {
   Button,
   Skeleton,
   Tag,
+  usePrefersReducedMotion,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { FiCode } from 'react-icons/fi';
@@ -163,6 +164,7 @@ function CollapsibleDescription({ html }: { html: string }) {
   const [hasOverflow, setHasOverflow] = useState(false);
   const [contentHeight, setContentHeight] = useState<number | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const el = bodyRef.current;
@@ -191,20 +193,21 @@ function CollapsibleDescription({ html }: { html: string }) {
              data-testid={'group-description'}
              maxH={isExpanded && contentHeight !== null ? `${contentHeight}px` : DESCRIPTION_COLLAPSED_MAX_H}
              overflow={'hidden'}
-             transition={'max-height 360ms cubic-bezier(0.22, 1, 0.36, 1)'}
-             willChange={hasOverflow ? 'max-height' : undefined}
+             transition={prefersReducedMotion ? 'none' : 'max-height 360ms cubic-bezier(0.22, 1, 0.36, 1)'}
+             willChange={!prefersReducedMotion && hasOverflow ? 'max-height' : undefined}
              sx={DESCRIPTION_STYLES}
              dangerouslySetInnerHTML={{ __html: html }}
              />
         {hasOverflow && (
-          <Box position={'absolute'}
+          <Box data-testid={'group-description-fade'}
+               position={'absolute'}
                bottom={'0'}
                left={'0'}
                right={'0'}
                h={'3em'}
                bgGradient={'linear(to-t, white, transparent)'}
                opacity={isExpanded ? 0 : 1}
-               transition={'opacity 180ms ease'}
+               transition={prefersReducedMotion ? 'none' : 'opacity 180ms ease'}
                pointerEvents={'none'}
                aria-hidden
                />
