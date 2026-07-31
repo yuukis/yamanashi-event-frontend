@@ -46,11 +46,11 @@ export function WidgetEventItem({ event }: WidgetEventItemProps) {
         {now_year !== start_year && (
           <Text fontSize={'xs'} fontWeight={'light'}>{ start_year }</Text>
         )}
-        <HStack spacing={'0'}>
+        <HStack spacing={'0'} mt={now_year !== start_year ? '-1' : '0'}>
           <Text fontSize={'xl'} fontWeight={'bold'}>{ start_month }</Text>
           <Text fontSize={'xl'} fontWeight={'light'}>/{ start_day }</Text>
         </HStack>
-        <Text fontSize={'xs'}>({ start_dow }) { start_time }〜</Text>
+        <Text fontSize={'xs'} mt={'-1'}>({ start_dow }) { start_time }-</Text>
         {(is_today || is_ongoing) && !has_ended ? (
           <Badge bg={'#f9f1e8'}
                  color={'impact.700'}

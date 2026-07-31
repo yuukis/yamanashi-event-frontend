@@ -53,7 +53,7 @@ function formatNewEventStartLabel(startedAt: string): string {
   const hours = date.getHours();
   const minutes = `${date.getMinutes()}`.padStart(2, '0');
 
-  return `${month}/${day}(${dow}) ${hours}:${minutes}〜`;
+  return `${month}/${day}(${dow}) ${hours}:${minutes}-`;
 }
 
 export function NotificationButton() {
