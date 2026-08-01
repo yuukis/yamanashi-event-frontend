@@ -45,6 +45,14 @@ import type { ApiEvent } from '../types/events';
 
 const DAY_OF_WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 
+const NOTIFICATION_EVENT_FIELDS = [
+  'uid',
+  'title',
+  'started_at',
+  'updated_at',
+  'open_status',
+].join(',');
+
 function formatNewEventStartLabel(startedAt: string): string {
   const date = new Date(startedAt);
   const month = date.getMonth() + 1;
@@ -74,7 +82,7 @@ export function NotificationButton() {
   useEffect(() => {
     isUnmountedRef.current = false;
 
-    fetchUpcomingEvents()
+    fetchUpcomingEvents(NOTIFICATION_EVENT_FIELDS)
       .then((res) => {
         if (!isUnmountedRef.current) {
           setEvents(res.events);

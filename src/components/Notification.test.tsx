@@ -187,4 +187,12 @@ describe('NotificationButton', () => {
 
     setItemSpy.mockRestore();
   });
+
+  it('requests only the fields it actually uses (uid, title, started_at, updated_at, open_status)', async () => {
+    renderWithChakra(<NotificationButton />);
+
+    await screen.findByRole('button', { name: 'Notification' });
+
+    expect(fetchUpcomingEvents).toHaveBeenCalledWith('uid,title,started_at,updated_at,open_status');
+  });
 });
