@@ -1003,6 +1003,10 @@
   margin-top: 18px;
 }
 
+.events-year-toolbar-year {
+  margin-right: 0.4em;
+}
+
 .events-year-filters {
   margin-top: 4px;
 }
@@ -1031,6 +1035,12 @@
 
   .events-year-filters {
     margin-top: 4px;
+  }
+}
+
+@media (max-width: 359px) {
+  .events-year-toolbar:not([data-has-active-filter='true']) .events-year-toolbar-year {
+    display: none;
   }
 }
 

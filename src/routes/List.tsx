@@ -201,6 +201,7 @@ function List({ startYear} : {startYear: number}) {
             <Stack id={YEAR_HEADING_ANCHOR_ID}
                    ref={yearHeadingRef}
                    className={'group-detail-section-heading events-year-toolbar'}
+                   data-has-active-filter={hasActiveFilter}
                    direction={'row'} spacing={'2'}
                    position={'sticky'}
                    top={STICKY_HEADING_TOP}
@@ -219,7 +220,7 @@ function List({ startYear} : {startYear: number}) {
                        color={'gray.600'}
                        flexShrink={0}
                        >
-                イベント一覧
+                <span className={'events-year-toolbar-year'}>{year}年</span>イベント一覧
               </Heading>
               <ActiveFilterBadge selectedKeyword={selectedKeyword}
                                  selectedGroupName={selectedGroupName}
