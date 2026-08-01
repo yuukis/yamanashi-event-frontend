@@ -104,6 +104,16 @@ function List({ startYear} : {startYear: number}) {
   document.title = `${year}年 開催イベント - Yamanashi Developer Hub`;
 
   useEffect(() => {
+    let cancelled = false;
+
+    setData({
+      isLoading: true,
+      events: [],
+      groups: [],
+      lastModified: null,
+      errorMessage: '',
+    });
+
     const getData = async () => {
       let eventsResponse = null;
       let groups = null;
@@ -112,14 +122,21 @@ function List({ startYear} : {startYear: number}) {
         groups = await fetchGroups();
       }
       catch (err: unknown) {
-        const data = {
+        if (cancelled) {
+          return;
+        }
+
+        setData({
           isLoading: false,
           events: [],
           groups: [],
           lastModified: null,
-          errorMessage: err instanceof Error ? err.message : String(err)
-        }
-        setData(data);
+          errorMessage: err instanceof Error ? err.message : String(err),
+        });
+        return;
+      }
+
+      if (cancelled) {
         return;
       }
 
@@ -127,16 +144,20 @@ function List({ startYear} : {startYear: number}) {
         eventsResponse.events,
         groups,
       );
-      const data = {
+      setData({
         isLoading: false,
         events: events.filter(isVisibleEvent).sort(sortByStartedAtAsc),
         groups,
         lastModified: eventsResponse.lastModified,
-        errorMessage: ''
-      }
-      setData(data);
-    }
+        errorMessage: '',
+      });
+    };
+
     getData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [year]);
 
   useEffect(() => {

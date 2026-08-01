@@ -108,8 +108,6 @@ export function YearSummaryCard({ summary, months, maxMonthCount }: YearSummaryC
                    h={`${heightPct}%`}
                    minH={'1px'}
                    borderRadius={'1px 1px 0 0'}
-                   bg={bucket.count > 0 ? 'primary.300' : 'gray.100'}
-                   _hover={{ bg: bucket.count > 0 ? 'primary.500' : 'gray.300' }}
                    tabIndex={0}
                    aria-label={formatMonthCountTooltip(bucket.period, bucket.count)}
                    data-month-bar={bucket.period}

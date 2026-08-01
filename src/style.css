@@ -845,8 +845,20 @@
   background: #f1f6f6;
 }
 
+.events-year-chart [data-month-bar] {
+  background: #edf2f7;
+}
+
+.events-year-chart [data-month-bar]:hover {
+  background: #cbd5e0;
+}
+
 .events-year-chart [data-month-bar][data-has-events='true'] {
-  background: var(--archive-sky) !important;
+  background: var(--archive-sky);
+}
+
+.events-year-chart [data-month-bar][data-has-events='true']:hover {
+  background: #27acd5;
 }
 
 .events-year-card-skeleton {
@@ -974,6 +986,11 @@
   .events-year-card,
   .events-year-community {
     transition: none !important;
+  }
+
+  .events-year-card:hover,
+  .events-year-community:hover {
+    transform: none;
   }
 }
 
