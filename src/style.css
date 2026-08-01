@@ -1455,6 +1455,13 @@
   }
 }
 
+@media (min-width: 480px) and (max-width: 767px) {
+  .groups-orbit {
+    width: 340px;
+    margin: -8px auto 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .groups-card,
   .groups-card-arrow {
