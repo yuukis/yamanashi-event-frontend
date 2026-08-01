@@ -735,7 +735,7 @@
   flex: 1 1 0;
   min-width: 3px;
   border-radius: 2px 2px 0 0;
-  background: var(--archive-coral);
+  background: var(--archive-sky);
 }
 
 .events-archive-hero-communities {
@@ -846,7 +846,7 @@
 }
 
 .events-year-chart [data-month-bar][data-has-events='true'] {
-  background: var(--archive-coral) !important;
+  background: var(--archive-sky) !important;
 }
 
 .events-year-card-skeleton {
