@@ -82,6 +82,28 @@ export async function fetchEvents(fields: string = EVENTS_FIELDS): Promise<{ eve
   return request;
 }
 
+const inFlightUpcomingEventsRequests = new Map<string, Promise<{ events: ApiEvent[]; lastModified: string | null }>>();
+
+export async function fetchUpcomingEvents(fields: string = EVENTS_FIELDS): Promise<{ events: ApiEvent[]; lastModified: string | null }> {
+  const inFlight = inFlightUpcomingEventsRequests.get(fields);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const request = axios.get(`${EVENTS_API_URL}/upcoming`, { params: { fields } })
+    .then((res) => ({
+      events: res.data as ApiEvent[],
+      lastModified: res.headers['last-modified'] ?? null,
+    }))
+    .finally(() => {
+      inFlightUpcomingEventsRequests.delete(fields);
+    });
+
+  inFlightUpcomingEventsRequests.set(fields, request);
+
+  return request;
+}
+
 export async function fetchEventsByYear(year: number): Promise<{ events: ApiEvent[]; lastModified: string | null }> {
   const res = await axios.get(`${EVENTS_API_URL}/year/${year}`, { params: { fields: EVENTS_FIELDS } });
   return {

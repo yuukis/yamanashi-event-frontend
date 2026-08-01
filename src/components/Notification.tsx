@@ -21,7 +21,7 @@ import {
 } from '@chakra-ui/react';
 import { FaXTwitter } from 'react-icons/fa6';
 import { isIOS } from 'react-device-detect';
-import { fetchEvents } from '../utils/api';
+import { fetchUpcomingEvents } from '../utils/api';
 import { isFutureEvent } from '../utils/eventGroups';
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { subscribeNow, getNow } from '../utils/nowTicker';
@@ -44,6 +44,14 @@ import { X_ACCOUNT_URL } from '../utils/site';
 import type { ApiEvent } from '../types/events';
 
 const DAY_OF_WEEK = ['日', '月', '火', '水', '木', '金', '土'];
+
+const NOTIFICATION_EVENT_FIELDS = [
+  'uid',
+  'title',
+  'started_at',
+  'updated_at',
+  'open_status',
+].join(',');
 
 function formatNewEventStartLabel(startedAt: string): string {
   const date = new Date(startedAt);
@@ -74,7 +82,7 @@ export function NotificationButton() {
   useEffect(() => {
     isUnmountedRef.current = false;
 
-    fetchEvents()
+    fetchUpcomingEvents(NOTIFICATION_EVENT_FIELDS)
       .then((res) => {
         if (!isUnmountedRef.current) {
           setEvents(res.events);
