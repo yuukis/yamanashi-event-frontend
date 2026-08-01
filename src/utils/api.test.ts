@@ -151,6 +151,84 @@ describe('fetchUpcomingEvents', () => {
 
     expect(result.lastModified).toBeNull();
   });
+
+  it('dedupes concurrent calls into a single in-flight request', async () => {
+    let resolveRequest: (value: unknown) => void;
+    vi.mocked(axios.get).mockReturnValue(
+      new Promise((resolve) => {
+        resolveRequest = resolve;
+      }) as ReturnType<typeof axios.get>,
+    );
+
+    const first = fetchUpcomingEvents();
+    const second = fetchUpcomingEvents();
+
+    expect(axios.get).toHaveBeenCalledTimes(1);
+
+    resolveRequest!({ data: [{ uid: 'a' }], headers: {} });
+
+    await expect(first).resolves.toEqual(await second);
+  });
+
+  it('issues a new request after the previous one settles', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    await fetchUpcomingEvents();
+    await fetchUpcomingEvents();
+
+    expect(axios.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('dedupes concurrent calls only when they request the same field set', async () => {
+    let resolveDefault: (value: unknown) => void;
+    let resolveCustom: (value: unknown) => void;
+    vi.mocked(axios.get).mockImplementation((_url, config) => {
+      const fields = (config as { params: { fields: string } }).params.fields;
+      return new Promise((resolve) => {
+        if (fields === EVENTS_FIELDS) {
+          resolveDefault = resolve;
+        } else {
+          resolveCustom = resolve;
+        }
+      }) as ReturnType<typeof axios.get>;
+    });
+
+    const defaultRequest = fetchUpcomingEvents();
+    const customRequest = fetchUpcomingEvents('uid,title');
+
+    expect(axios.get).toHaveBeenCalledTimes(2);
+
+    resolveDefault!({ data: [{ uid: 'a' }], headers: {} });
+    resolveCustom!({ data: [{ uid: 'b' }], headers: {} });
+
+    await expect(defaultRequest).resolves.toEqual({ events: [{ uid: 'a' }], lastModified: null });
+    await expect(customRequest).resolves.toEqual({ events: [{ uid: 'b' }], lastModified: null });
+  });
+
+  it('does not share in-flight requests with fetchEvents even for the same field set', async () => {
+    let resolvePlain: (value: unknown) => void;
+    let resolveUpcoming: (value: unknown) => void;
+    vi.mocked(axios.get).mockImplementation((url) => {
+      return new Promise((resolve) => {
+        if (url === EVENTS_API_URL) {
+          resolvePlain = resolve;
+        } else {
+          resolveUpcoming = resolve;
+        }
+      }) as ReturnType<typeof axios.get>;
+    });
+
+    const plainRequest = fetchEvents();
+    const upcomingRequest = fetchUpcomingEvents();
+
+    expect(axios.get).toHaveBeenCalledTimes(2);
+
+    resolvePlain!({ data: [{ uid: 'a' }], headers: {} });
+    resolveUpcoming!({ data: [{ uid: 'b' }], headers: {} });
+
+    await expect(plainRequest).resolves.toEqual({ events: [{ uid: 'a' }], lastModified: null });
+    await expect(upcomingRequest).resolves.toEqual({ events: [{ uid: 'b' }], lastModified: null });
+  });
 });
 
 describe('fetchEventsByYear', () => {
