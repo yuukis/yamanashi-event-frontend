@@ -5,7 +5,7 @@ import { YearSummaryCard, YearSummaryCardSkeleton } from '../components/YearSumm
 import { ErrorEventBody } from '../components/EventBody';
 import { StructuredData } from '../components/StructuredData';
 import '../style.css';
-import { Container, Box, Stack, Heading, Text } from '@chakra-ui/react';
+import { Container, Box, Stack, Heading, Text, Flex } from '@chakra-ui/react';
 import { fetchEventsSummary } from '../utils/api';
 import { sortYearsAscending, buildHeatmapGrid, getMaxHeatmapCount } from '../utils/eventsSummary';
 import { buildYearArchiveJsonLd } from '../utils/structuredData';
@@ -13,6 +13,7 @@ import type { ApiEventsSummary, ApiHeatmapBucket } from '../types/events';
 
 const SKELETON_ROW_COUNT = 8;
 const SLOW_LOADING_HINT_DELAY_MS = 5000;
+const ARCHIVE_HERO_BAR_HEIGHTS = [24, 42, 30, 64, 48, 78, 58, 86, 52, 70, 38, 60];
 
 type EventsState = {
   isLoading: boolean;
@@ -50,9 +51,10 @@ function Events() {
           setData({ isLoading: false, summary, lastModified, errorMessage: '' });
         }
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         if (!cancelled) {
-          setData({ isLoading: false, summary: null, lastModified: null, errorMessage: err.message });
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          setData({ isLoading: false, summary: null, lastModified: null, errorMessage });
         }
       })
       .finally(() => {
@@ -76,7 +78,7 @@ function Events() {
     : null;
 
   return (
-    <Box className={'section-bg-pattern'} w={'100vw'} minH={'100vh'}>
+    <Box className={'section-bg-pattern events-archive-page'} w={'100vw'} minH={'100vh'}>
       <StructuredData id={'structured-data-events'} data={structuredData} />
       <SiteHeader />
       <PageBreadcrumb items={[{ label: 'イベントアーカイブ', href: '/events' }]} />
@@ -85,18 +87,41 @@ function Events() {
                  p={{base: '0', md: '4'}}
                  >
         <Stack spacing={'8'}>
-          <Box>
-            <Heading ref={headerBoundaryRef}
-                     size={{base: 'sm', md: 'md'}}
-                     ml={{base: '4', md: '0'}}
-                     mb={'2'}
-                     color={'gray.600'}
-                     >
-              イベントアーカイブ
-            </Heading>
-            <Text fontSize={{base: 'sm', md: 'md'}} ml={{base: '4', md: '0'}} mr={{base: '4', md: '0'}} color={'gray.600'}>
-              2010年から現在まで、山梨県内で開催されたIT勉強会の記録を振り返れます。各カードの棒グラフは月ごとの開催件数で、全年で共通のスケールです。
-            </Text>
+          <Box className={'events-archive-hero'}>
+            <Box className={'events-archive-hero-copy'}>
+              <Text className={'events-archive-eyebrow'}>EVENT ARCHIVE</Text>
+              <Heading ref={headerBoundaryRef}
+                       as={'h1'}
+                       className={'events-archive-title'}
+                       >
+                山梨のITイベントを、<br />年ごとにたどる。
+              </Heading>
+              <Text className={'events-archive-description'}>
+                2010年から現在まで、山梨県内で開催されたIT勉強会の記録を振り返れます。気になる年を選んで、その頃のイベントやコミュニティをのぞいてみましょう。
+              </Text>
+              <Text className={'events-archive-hint'}>年のカードを選ぶと、その年のイベント一覧へ移動します。</Text>
+            </Box>
+            <Box className={'events-archive-hero-visual'} aria-hidden={'true'}>
+              <Flex className={'events-archive-range'} align={'baseline'} justify={'space-between'}>
+                <Text>2010</Text>
+                <Text>→</Text>
+                <Text>NOW</Text>
+              </Flex>
+              <Flex className={'events-archive-hero-bars'} align={'flex-end'}>
+                {ARCHIVE_HERO_BAR_HEIGHTS.map((height, index) => (
+                  <Box key={index} h={`${height}%`} />
+                ))}
+              </Flex>
+              <Flex className={'events-archive-hero-communities'}>
+                <Box /><Box /><Box /><Box /><Box />
+              </Flex>
+            </Box>
+          </Box>
+
+          <Box as={'section'} className={'events-archive-legend'} aria-label={'カードの見方'}>
+            <Box><Text>YEAR</Text><Text>年を選ぶ</Text></Box>
+            <Box><Text>COMMUNITIES</Text><Text>その年に活動したコミュニティ</Text></Box>
+            <Box><Text>MONTHLY ACTIVITY</Text><Text>月ごとの開催傾向</Text></Box>
           </Box>
 
           {data.errorMessage ? (
@@ -104,7 +129,7 @@ function Events() {
               <ErrorEventBody message={data.errorMessage} />
             </Box>
           ) : (
-            <Stack spacing={'3'}>
+            <Stack spacing={'3'} className={'events-archive-results'}>
               {data.isLoading && isSlowLoading && (
                 <Text fontSize={'xs'}
                       color={'gray.500'}
@@ -116,6 +141,7 @@ function Events() {
                 </Text>
               )}
               <Stack spacing={'3'}
+                     className={'events-archive-list'}
                      ml={{base: '4', md: '0'}}
                      mr={{base: '4', md: '0'}}
                      >
