@@ -134,7 +134,7 @@ function Guide() {
       <Box ref={headerBoundaryRef} className={'guide-c-hero'}>
         <PageBreadcrumb items={[{label: 'はじめての方へ', href: '/guide'}]} />
         <Container maxW={'1120px'} px={{base: '5', md: '8'}} py={{base: '9', md: '16'}}>
-          <SimpleGrid templateColumns={{base: '1fr', lg: '1.12fr 0.88fr'}} spacing={{base: '10', lg: '14'}} alignItems={'center'}>
+          <SimpleGrid templateColumns={{base: 'minmax(0, 1fr)', lg: 'minmax(0, 1.12fr) minmax(0, 0.88fr)'}} spacing={{base: '10', lg: '14'}} alignItems={'center'}>
             <Stack spacing={'6'} position={'relative'} zIndex={'2'}>
               <Flex className={'guide-c-label'} align={'center'} gap={'2'} alignSelf={'flex-start'}>
                 <Box className={'guide-c-live-dot'} />
