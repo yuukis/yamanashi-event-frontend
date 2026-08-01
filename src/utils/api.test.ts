@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
 import {
   fetchEvents,
+  fetchUpcomingEvents,
   fetchEventsByYear,
   fetchGroupEvents,
   fetchEventDescription,
@@ -112,6 +113,43 @@ describe('fetchEvents', () => {
 
     await expect(defaultRequest).resolves.toEqual({ events: [{ uid: 'a' }], lastModified: null });
     await expect(customRequest).resolves.toEqual({ events: [{ uid: 'b' }], lastModified: null });
+  });
+});
+
+describe('fetchUpcomingEvents', () => {
+  beforeEach(() => {
+    vi.mocked(axios.get).mockReset();
+  });
+
+  it('requests the upcoming events endpoint and returns events with last-modified', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      data: [{ uid: 'a' }],
+      headers: { 'last-modified': 'Wed, 01 Jan 2026 00:00:00 GMT' },
+    });
+
+    const result = await fetchUpcomingEvents();
+
+    expect(axios.get).toHaveBeenCalledWith(`${EVENTS_API_URL}/upcoming`, { params: { fields: EVENTS_FIELDS } });
+    expect(result).toEqual({
+      events: [{ uid: 'a' }],
+      lastModified: 'Wed, 01 Jan 2026 00:00:00 GMT',
+    });
+  });
+
+  it('requests a caller-provided field set instead of the default', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    await fetchUpcomingEvents('uid,title');
+
+    expect(axios.get).toHaveBeenCalledWith(`${EVENTS_API_URL}/upcoming`, { params: { fields: 'uid,title' } });
+  });
+
+  it('returns null last-modified when the header is absent', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: [], headers: {} });
+
+    const result = await fetchUpcomingEvents();
+
+    expect(result.lastModified).toBeNull();
   });
 });
 

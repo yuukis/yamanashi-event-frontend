@@ -82,6 +82,14 @@ export async function fetchEvents(fields: string = EVENTS_FIELDS): Promise<{ eve
   return request;
 }
 
+export async function fetchUpcomingEvents(fields: string = EVENTS_FIELDS): Promise<{ events: ApiEvent[]; lastModified: string | null }> {
+  const res = await axios.get(`${EVENTS_API_URL}/upcoming`, { params: { fields } });
+  return {
+    events: res.data as ApiEvent[],
+    lastModified: res.headers['last-modified'] ?? null,
+  };
+}
+
 export async function fetchEventsByYear(year: number): Promise<{ events: ApiEvent[]; lastModified: string | null }> {
   const res = await axios.get(`${EVENTS_API_URL}/year/${year}`, { params: { fields: EVENTS_FIELDS } });
   return {
