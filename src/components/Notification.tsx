@@ -21,7 +21,7 @@ import {
 } from '@chakra-ui/react';
 import { FaXTwitter } from 'react-icons/fa6';
 import { isIOS } from 'react-device-detect';
-import { fetchEvents } from '../utils/api';
+import { fetchUpcomingEvents } from '../utils/api';
 import { isFutureEvent } from '../utils/eventGroups';
 import { sortByStartedAtAsc } from '../utils/eventSort';
 import { subscribeNow, getNow } from '../utils/nowTicker';
@@ -74,7 +74,7 @@ export function NotificationButton() {
   useEffect(() => {
     isUnmountedRef.current = false;
 
-    fetchEvents()
+    fetchUpcomingEvents()
       .then((res) => {
         if (!isUnmountedRef.current) {
           setEvents(res.events);

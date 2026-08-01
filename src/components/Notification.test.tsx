@@ -5,7 +5,7 @@ import { NotificationButton } from './Notification';
 import { makeEvent } from '../test/fixtures';
 import { updateTrackingData } from '../utils/newEventTrackingStore';
 import { mergeTrackingData, type NewEventTrackingData } from '../utils/newEventTracking';
-import { fetchEvents } from '../utils/api';
+import { fetchUpcomingEvents } from '../utils/api';
 import { jumpToAnchor } from '../utils/hashScroll';
 import { getEventAnchorId } from '../utils/eventAnchors';
 import type { EventWithGroup } from '../types/events';
@@ -19,7 +19,7 @@ vi.mock('../utils/nowTicker', () => ({
 }));
 
 vi.mock('../utils/api', () => ({
-  fetchEvents: vi.fn(),
+  fetchUpcomingEvents: vi.fn(),
 }));
 
 vi.mock('../utils/hashScroll', () => ({
@@ -42,7 +42,7 @@ function makeFutureEvent(overrides: Partial<EventWithGroup> = {}) {
 }
 
 function mockFetchEvents(events: EventWithGroup[]) {
-  vi.mocked(fetchEvents).mockResolvedValue({ events, lastModified: null });
+  vi.mocked(fetchUpcomingEvents).mockResolvedValue({ events, lastModified: null });
 }
 
 function openPopover() {
